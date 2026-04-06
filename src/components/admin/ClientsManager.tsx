@@ -1,0 +1,144 @@
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, RefreshCw } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
+
+type ClientLogo = Tables<"client_logos">;
+
+const API = (table: string, query = "") => `/api/db/${table}${query ? `?${query}` : ""}`;
+const patch = (table: string, id: string, body: any) =>
+  fetch(API(table, `id=${id}`), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
+const del = (table: string, id: string) =>
+  fetch(API(table, `id=${id}`), { method: "DELETE" }).then(r => r.json());
+const post = (table: string, body: any) =>
+  fetch(API(table), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
+
+const inputCls = "w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none";
+const emptyForm = { name: "", logo_url: "" };
+
+const ClientsManager = () => {
+  const [clients, setClients] = useState<ClientLogo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ ...emptyForm });
+  const [newForm, setNewForm] = useState({ ...emptyForm });
+  const [adding, setAdding] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    const res = await fetch(API("client_logos", "_order=sort_order&_asc=true")).then(r => r.json());
+    if (res.data) setClients(res.data);
+    setLoading(false);
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setSaving(true);
+    const res = await patch("client_logos", editingId, editData);
+    if (res.error) { toast.error("Failed to save."); }
+    else { setClients(prev => prev.map(c => c.id === editingId ? { ...c, ...editData } : c)); toast.success("Client updated!"); setEditingId(null); }
+    setSaving(false);
+  };
+
+  const toggleVisible = async (id: string, current: boolean) => {
+    await patch("client_logos", id, { is_visible: !current });
+    setClients(prev => prev.map(c => c.id === id ? { ...c, is_visible: !current } : c));
+  };
+
+  const deleteClient = async (id: string) => {
+    if (!confirm("Delete this client logo?")) return;
+    const res = await del("client_logos", id);
+    if (res.error) { toast.error("Failed to delete."); return; }
+    setClients(prev => prev.filter(c => c.id !== id));
+    toast.success("Client deleted.");
+  };
+
+  const addClient = async () => {
+    if (!newForm.name || !newForm.logo_url) { toast.error("Name and logo URL required."); return; }
+    setSaving(true);
+    const maxOrder = clients.length > 0 ? Math.max(...clients.map(c => c.sort_order)) + 1 : 0;
+    const res = await post("client_logos", { ...newForm, sort_order: maxOrder });
+    if (res.error) { toast.error("Failed to add."); }
+    else if (res.data) { setClients(prev => [...prev, res.data]); setNewForm({ ...emptyForm }); setAdding(false); toast.success("Client added!"); }
+    setSaving(false);
+  };
+
+  if (loading) return <div className="text-muted-foreground text-center py-12">Loading clients...</div>;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-heading font-bold text-2xl text-foreground">Client Logos</h1>
+          <p className="text-muted-foreground text-sm mt-1">Manage client logos shown in the marquee slider</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted"><RefreshCw size={14} /></button>
+          <button onClick={() => setAdding(true)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
+            <Plus size={16} /> Add Client
+          </button>
+        </div>
+      </div>
+
+      {adding && (
+        <div className="glass-card p-5 mb-4 border-2 border-secondary/30">
+          <h3 className="font-heading font-semibold text-foreground mb-4">New Client</h3>
+          <div className="space-y-3">
+            <input value={newForm.name} onChange={e => setNewForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. OBLU Resorts" className={inputCls} />
+            <input value={newForm.logo_url} onChange={e => setNewForm(p => ({ ...p, logo_url: e.target.value }))} placeholder="/assets/clients/filename.png" className={inputCls} />
+            {newForm.logo_url && <img src={newForm.logo_url} alt="preview" className="mt-2 h-12 object-contain rounded-lg border border-border p-1" />}
+            <div className="flex gap-2">
+              <button onClick={addClient} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium disabled:opacity-50">
+                <Check size={14} /> {saving ? "Saving..." : "Add Client"}
+              </button>
+              <button onClick={() => { setAdding(false); setNewForm({ ...emptyForm }); }} className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium"><X size={14} /></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {clients.map(client => (
+          <div key={client.id} className={`glass-card p-4 ${!client.is_visible ? "opacity-60" : ""}`}>
+            {editingId === client.id ? (
+              <div className="space-y-2">
+                <input value={editData.name} onChange={e => setEditData(p => ({ ...p, name: e.target.value }))} placeholder="Company Name" className={inputCls} />
+                <input value={editData.logo_url} onChange={e => setEditData(p => ({ ...p, logo_url: e.target.value }))} placeholder="Logo URL" className={inputCls} />
+                {editData.logo_url && <img src={editData.logo_url} alt="preview" className="h-10 object-contain rounded border border-border p-1" />}
+                <div className="flex gap-2">
+                  <button onClick={saveEdit} disabled={saving} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium disabled:opacity-50">
+                    <Check size={12} /> {saving ? "..." : "Save"}
+                  </button>
+                  <button onClick={() => setEditingId(null)} className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-lg text-xs font-medium"><X size={12} /></button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-start justify-between mb-2">
+                  <span className="font-semibold text-foreground text-sm">{client.name}</span>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => { setEditingId(client.id); setEditData({ name: client.name, logo_url: client.logo_url }); }} className="p-1 rounded hover:bg-muted text-muted-foreground"><Edit2 size={14} /></button>
+                    <button onClick={() => toggleVisible(client.id, client.is_visible)} className={`p-1 rounded hover:bg-muted ${client.is_visible ? "text-secondary" : "text-muted-foreground"}`}>
+                      {client.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+                    <button onClick={() => deleteClient(client.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 size={14} /></button>
+                  </div>
+                </div>
+                <div className="h-14 flex items-center justify-center bg-muted/30 rounded-lg p-2">
+                  <img src={client.logo_url} alt={client.name} className="max-h-full max-w-full object-contain" loading="lazy" />
+                </div>
+                {!client.is_visible && <span className="text-xs text-muted-foreground mt-1 block">Hidden from site</span>}
+              </div>
+            )}
+          </div>
+        ))}
+        {clients.length === 0 && <div className="col-span-3 text-muted-foreground text-center py-12">No clients yet.</div>}
+      </div>
+    </div>
+  );
+};
+
+export default ClientsManager;
