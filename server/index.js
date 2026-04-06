@@ -26,7 +26,8 @@ const TRUSTED_ORIGINS = new Set([
 const SAFE_TABLES = new Set([
   "contact_submissions", "job_applications", "services", "testimonials", "career_jobs",
   "products", "client_logos", "site_content", "seo_settings", "users", "chat_threads",
-  "chat_messages", "submission_replies", "application_replies", "appointments", "hero_stats"
+  "chat_messages", "submission_replies", "application_replies", "appointments", "hero_stats",
+  "technologies"
 ]);
 
 app.use(cors({ origin: Array.from(TRUSTED_ORIGINS), credentials: true }));
@@ -574,6 +575,7 @@ const TABLE_COLS = {
   application_replies: ["id", "application_id", "sender", "message", "created_at"],
   appointments: ["id", "reference_type", "reference_id", "name", "email", "title", "description", "notes", "appointment_date", "created_at"],
   hero_stats: ["id", "count", "suffix", "label", "color", "is_visible", "sort_order", "created_at", "updated_at"],
+  technologies: ["id", "name", "description", "image_url", "icon", "category", "name_color", "category_color", "is_visible", "sort_order", "created_at", "updated_at"],
 };
 
 function filterCols(table, row) {

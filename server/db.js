@@ -196,6 +196,21 @@ db.exec(`
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS technologies (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    image_url TEXT,
+    icon TEXT,
+    category TEXT NOT NULL DEFAULT 'General',
+    name_color TEXT NOT NULL DEFAULT '#3178C6',
+    category_color TEXT NOT NULL DEFAULT '#3178C6',
+    is_visible INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 try {
@@ -357,6 +372,33 @@ try {
     `);
   }
 
+  // Technologies: add name_color and category_color columns if missing
+  const techCols = db.prepare("PRAGMA table_info(technologies)").all().map(c => c.name);
+  if (!techCols.includes("name_color")) db.exec("ALTER TABLE technologies ADD COLUMN name_color TEXT NOT NULL DEFAULT '#3178C6';");
+  if (!techCols.includes("category_color")) db.exec("ALTER TABLE technologies ADD COLUMN category_color TEXT NOT NULL DEFAULT '#3178C6';");
+  // Seed brand colors for existing rows that have default color
+  const techColorSeeds = [
+    { name: ".NET",       name_color: "#512BD4", category_color: "#512BD4" },
+    { name: "SQL Server", name_color: "#CC2927", category_color: "#CC2927" },
+    { name: "Vue.js",     name_color: "#4FC08D", category_color: "#4FC08D" },
+    { name: "Firebase",   name_color: "#FFCA28", category_color: "#FFCA28" },
+    { name: "Node.js",    name_color: "#339933", category_color: "#339933" },
+    { name: "Cordova",    name_color: "#E8E8E8", category_color: "#E8E8E8" },
+    { name: "Kendo UI",   name_color: "#FF6358", category_color: "#FF6358" },
+    { name: "Git",        name_color: "#F05032", category_color: "#F05032" },
+    { name: "Flutter",    name_color: "#02569B", category_color: "#02569B" },
+    { name: "Angular",    name_color: "#DD0031", category_color: "#DD0031" },
+    { name: "TypeScript", name_color: "#3178C6", category_color: "#3178C6" },
+    { name: "Dart",       name_color: "#0175C2", category_color: "#0175C2" },
+    { name: "React",      name_color: "#61DAFB", category_color: "#61DAFB" },
+    { name: "Python",     name_color: "#3776AB", category_color: "#3776AB" },
+    { name: "Docker",     name_color: "#2496ED", category_color: "#2496ED" },
+    { name: "AWS",        name_color: "#FF9900", category_color: "#FF9900" },
+  ];
+  for (const s of techColorSeeds) {
+    db.prepare("UPDATE technologies SET name_color=?, category_color=? WHERE name=? AND (name_color='#3178C6' OR name_color IS NULL)").run(s.name_color, s.category_color, s.name);
+  }
+
   // Hero Stats: add suffix column if missing
   const heroStatsCols = db.prepare("PRAGMA table_info(hero_stats)").all().map(c => c.name);
   if (!heroStatsCols.includes("suffix")) {
@@ -472,14 +514,22 @@ try {
     }
     if (!Array.isArray(c.nav_items) || c.nav_items.length === 0) {
       c.nav_items = [
-        { label: 'Home',     href: '#home' },
-        { label: 'About',    href: '#about' },
-        { label: 'Services', href: '#services' },
-        { label: 'Products', href: '#products' },
-        { label: 'Portfolio',href: '#portfolio' },
-        { label: 'Careers',  href: '#careers' },
-        { label: 'Contact',  href: '#contact' },
+        { label: 'Home',         href: '#home' },
+        { label: 'About',        href: '#about' },
+        { label: 'Services',     href: '#services' },
+        { label: 'Products',     href: '#products' },
+        { label: 'Portfolio',    href: '#portfolio' },
+        { label: 'Technologies', href: '#technologies' },
+        { label: 'Careers',      href: '#careers' },
+        { label: 'Contact',      href: '#contact' },
       ];
+      dirty = true;
+    }
+    // Patch existing nav_items to add Technologies if missing
+    if (Array.isArray(c.nav_items) && !c.nav_items.some(n => n.href === '#technologies')) {
+      const careersIdx = c.nav_items.findIndex(n => n.href === '#careers');
+      const insertAt = careersIdx >= 0 ? careersIdx : c.nav_items.length;
+      c.nav_items.splice(insertAt, 0, { label: 'Technologies', href: '#technologies' });
       dirty = true;
     }
     if (dirty) {
@@ -495,6 +545,7 @@ const siteContentSeeds = [
   { section_key: "services",     content: JSON.stringify({ title: "Services & Solutions We Deliver", subtitle: "Team up with the perfect digital partner for all your technical needs to achieve your business goals, reduce costs and accelerate growth." }) },
   { section_key: "testimonials", content: JSON.stringify({ badge: "Testimonials", title: "What Our", highlight: "Clients Say" }) },
   { section_key: "careers",      content: JSON.stringify({ badge: "Careers", title: "Join Our", highlight: "Team", description: "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide." }) },
+  { section_key: "technologies",  content: JSON.stringify({ badge: "Our Stack", title: "Technologies", highlight: "We Use", description: "We leverage cutting-edge technologies to build robust, scalable, and future-proof solutions for our clients." }) },
   { section_key: "our_network",  content: JSON.stringify({ companies: [
     { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", flag: "🇲🇻", accent: "#3b82f6", is_visible: true },
     { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", flag: "🇧🇹", accent: "#10b981", is_visible: true },
@@ -508,6 +559,25 @@ for (const seed of siteContentSeeds) {
     console.log(`[db] Seeded site_content: ${seed.section_key}`);
   }
 }
+
+seedIfEmpty("technologies", [
+  { id: "tech-1",  name: ".NET",        description: "Microsoft's powerful framework for building enterprise-grade web, desktop, and cloud applications.",          image_url: "/assets/technologies/dotnet.png",      category: "Backend",  name_color: "#512BD4", category_color: "#512BD4", is_visible: 1, sort_order: 0,  created_at: t0, updated_at: t0 },
+  { id: "tech-2",  name: "SQL Server",  description: "Microsoft's relational database management system for secure, scalable data storage and analytics.",       image_url: "/assets/technologies/sqlserver.png",   category: "Database", name_color: "#CC2927", category_color: "#CC2927", is_visible: 1, sort_order: 1,  created_at: t0, updated_at: t0 },
+  { id: "tech-3",  name: "Vue.js",      description: "Progressive JavaScript framework for building modern, reactive user interfaces and single-page apps.",      image_url: "/assets/technologies/vuejs.png",       category: "Frontend", name_color: "#4FC08D", category_color: "#4FC08D", is_visible: 1, sort_order: 2,  created_at: t0, updated_at: t0 },
+  { id: "tech-4",  name: "Firebase",    description: "Google's platform for real-time databases, authentication, hosting, and serverless cloud functions.",       image_url: "/assets/technologies/firebase.png",    category: "Backend",  name_color: "#FFCA28", category_color: "#FFCA28", is_visible: 1, sort_order: 3,  created_at: t0, updated_at: t0 },
+  { id: "tech-5",  name: "Node.js",     description: "Fast, event-driven JavaScript runtime for building scalable server-side and network applications.",         image_url: "/assets/technologies/nodejs.png",      category: "Backend",  name_color: "#339933", category_color: "#339933", is_visible: 1, sort_order: 4,  created_at: t0, updated_at: t0 },
+  { id: "tech-6",  name: "Cordova",     description: "Open-source framework for building cross-platform mobile apps using HTML, CSS, and JavaScript.",           image_url: "/assets/technologies/cordova.png",     category: "Mobile",   name_color: "#4CC2E4", category_color: "#4CC2E4", is_visible: 1, sort_order: 5,  created_at: t0, updated_at: t0 },
+  { id: "tech-7",  name: "Kendo UI",    description: "Comprehensive UI component library for building rich, data-driven web applications with ease.",             image_url: "/assets/technologies/kendoui.png",     category: "Frontend", name_color: "#FF6358", category_color: "#FF6358", is_visible: 1, sort_order: 6,  created_at: t0, updated_at: t0 },
+  { id: "tech-8",  name: "Git",         description: "Industry-standard distributed version control system for tracking code changes and team collaboration.",    image_url: "/assets/technologies/git.png",         category: "DevOps",   name_color: "#F05032", category_color: "#F05032", is_visible: 1, sort_order: 7,  created_at: t0, updated_at: t0 },
+  { id: "tech-9",  name: "Flutter",     description: "Google's UI toolkit for crafting natively compiled, beautiful apps for mobile, web, and desktop.",         image_url: "/assets/technologies/flutter.png",     category: "Mobile",   name_color: "#02569B", category_color: "#02569B", is_visible: 1, sort_order: 8,  created_at: t0, updated_at: t0 },
+  { id: "tech-10", name: "Angular",     description: "TypeScript-based web application framework by Google for building scalable enterprise front-ends.",         image_url: "/assets/technologies/angular.png",     category: "Frontend", name_color: "#DD0031", category_color: "#DD0031", is_visible: 1, sort_order: 9,  created_at: t0, updated_at: t0 },
+  { id: "tech-11", name: "TypeScript",  description: "Strongly typed superset of JavaScript that compiles to plain JS, enabling safer and more scalable code.",  image_url: "/assets/technologies/typescript.png",  category: "Language", name_color: "#3178C6", category_color: "#3178C6", is_visible: 1, sort_order: 10, created_at: t0, updated_at: t0 },
+  { id: "tech-12", name: "Dart",        description: "Client-optimized language by Google, powering Flutter apps with fast performance and expressive syntax.",   image_url: "/assets/technologies/dart.png",        category: "Language", name_color: "#0175C2", category_color: "#0175C2", is_visible: 1, sort_order: 11, created_at: t0, updated_at: t0 },
+  { id: "tech-13", name: "React",       description: "Facebook's declarative JavaScript library for building fast, component-based user interfaces.",              image_url: "/assets/technologies/react.png",       category: "Frontend", name_color: "#61DAFB", category_color: "#61DAFB", is_visible: 1, sort_order: 12, created_at: t0, updated_at: t0 },
+  { id: "tech-14", name: "Python",      description: "Versatile, high-level programming language widely used for AI, data science, automation, and web backends.", image_url: "/assets/technologies/python.png",      category: "Language", name_color: "#3776AB", category_color: "#3776AB", is_visible: 1, sort_order: 13, created_at: t0, updated_at: t0 },
+  { id: "tech-15", name: "Docker",      description: "Platform for containerizing applications to ensure consistent environments across development and production.", image_url: "/assets/technologies/docker.png",      category: "DevOps",   name_color: "#2496ED", category_color: "#2496ED", is_visible: 1, sort_order: 14, created_at: t0, updated_at: t0 },
+  { id: "tech-16", name: "AWS",         description: "Amazon Web Services — the world's most comprehensive cloud platform for hosting, storage, and AI services.",  image_url: "/assets/technologies/aws.png",         category: "Cloud",    name_color: "#FF9900", category_color: "#FF9900", is_visible: 1, sort_order: 15, created_at: t0, updated_at: t0 },
+]);
 
 seedIfEmpty("users", [
   { id: "admin-local", email: "admin@solutions.com.mv", password: "Admin@1234", userrole: "admin", created_at: t0, updated_at: t0 }

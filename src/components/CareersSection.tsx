@@ -223,6 +223,8 @@ const CareersSection = () => {
   const [applyForm, setApplyForm] = useState({ name: "", email: "", phone: "", cover: "", website: "" });
   const [submitting, setSubmitting] = useState(false);
 
+  const [sectionVisible, setSectionVisible] = useState(true);
+
   useEffect(() => {
     const load = async () => {
       const [jobsRes, contentRes] = await Promise.all([
@@ -230,12 +232,21 @@ const CareersSection = () => {
         fetch("/api/db/site_content?section_key=careers&_single=1").then(r => r.json()),
       ]);
       if (jobsRes.data && jobsRes.data.length > 0) setJobs(jobsRes.data);
-      if (contentRes.data?.content) setHeader(h => ({ ...h, ...contentRes.data.content }));
+      if (contentRes.data?.content) {
+        setHeader(h => ({ ...h, ...contentRes.data.content }));
+        if (contentRes.data.content.section_visible === false || contentRes.data.content.section_visible === "false") {
+          setSectionVisible(false);
+        } else {
+          setSectionVisible(true);
+        }
+      }
     };
     load();
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
   }, []);
+
+  if (!sectionVisible) return null;
 
   if (jobs.length === 0) {
     return (

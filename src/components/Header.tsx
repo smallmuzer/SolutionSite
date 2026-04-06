@@ -3,13 +3,14 @@ import { Menu, X, ExternalLink, Sun, Moon, LayoutDashboard, Settings } from "luc
 import logo from "@/assets/logo.png";
 
 const DEFAULT_NAV = [
-  { label: "Home",     href: "#home" },
-  { label: "About",    href: "#about" },
-  { label: "Services", href: "#services" },
-  { label: "Products", href: "#products" },
-  { label: "Portfolio",href: "#portfolio" },
-  { label: "Careers",  href: "#careers" },
-  { label: "Contact",  href: "#contact" },
+  { label: "Home",         href: "#home" },
+  { label: "About",        href: "#about" },
+  { label: "Services",     href: "#services" },
+  { label: "Products",     href: "#products" },
+  { label: "Portfolio",    href: "#portfolio" },
+  { label: "Technologies", href: "#technologies" },
+  { label: "Careers",      href: "#careers" },
+  { label: "Contact",      href: "#contact" },
 ];
 
 interface NavItem { label: string; href: string; }
@@ -79,6 +80,8 @@ const Header = () => {
   const [tourCompleted, setTourCompleted] = useState(() => localStorage.getItem("bss_tour_completed_v2") === "true");
   const mobileTimer = useRef<ReturnType<typeof setTimeout>>();
 
+  const [careersSectionVisible, setCareersSectionVisible] = useState(true);
+
   // Load settings from SQLite via REST API
   useEffect(() => {
     fetchSettings().then((c) => {
@@ -87,6 +90,11 @@ const Header = () => {
       if (c.site_name) setSiteName(c.site_name);
       if (Array.isArray(c.nav_items) && c.nav_items.length > 0) setNavItems(c.nav_items);
     });
+    // Check careers section visibility
+    fetch("/api/db/site_content?section_key=careers&_single=1").then(r => r.json()).then(json => {
+      const visible = json?.data?.content?.section_visible;
+      setCareersSectionVisible(visible !== false && visible !== "false");
+    }).catch(() => {});
 
     // Live updates when admin saves settings
     const handler = (e: Event) => {
@@ -196,7 +204,7 @@ const Header = () => {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navItems.map((item) => (
+          {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
             <button key={item.href} onClick={() => scrollTo(item.href)} className={navBtn(activeSection === item.href)}>
               {item.label}
               <span
@@ -272,7 +280,7 @@ const Header = () => {
           }}
         >
           <nav className="flex flex-col p-4 gap-1">
-            {navItems.map((item) => (
+            {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
               <button
                 key={item.href}
                 onClick={() => scrollTo(item.href)}

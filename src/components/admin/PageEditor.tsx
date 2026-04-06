@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import RichTextEditor from "./RichTextEditor";
 import ProductsManager from "./ProductsManager";
+import TechnologiesManager from "./TechnologiesManager";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -181,6 +182,12 @@ const DEFAULT_CONTENT: Record<string, Record<string, string>> = {
     highlight: "Team",
     description: "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide.",
   },
+  technologies: {
+    badge: "Our Stack",
+    title: "Technologies",
+    highlight: "We Use",
+    description: "We leverage cutting-edge technologies to build robust, scalable, and future-proof solutions for our clients.",
+  },
   global_presence_header: {
     badge: "Global Presence",
     title: "Our",
@@ -319,6 +326,7 @@ const PageEditor = () => {
     { id: "clients", label: "Client Logos", icon: Users },
     { id: "testimonials", label: "Testimonials", icon: Star },
     { id: "careers", label: "Career Portal", icon: Globe },
+    { id: "technologies", label: "Our Technology", icon: Cpu },
     { id: "global_presence", label: "Global Presence", icon: MapPin },
     { id: "our_network", label: "Our Network", icon: Building },
     { id: "contact", label: "Contact Info", icon: Phone },
@@ -1160,6 +1168,33 @@ const PageEditor = () => {
               <Globe size={20} className="text-secondary" /> Career Portal
             </h3>
             <div className="glass-card p-6 space-y-6">
+              {/* Section Visibility Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-muted/20">
+                <div>
+                  <p className="text-sm font-bold text-foreground">Careers Section Visibility</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Hide the entire Careers section on the website when there are no open positions</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const current = siteContent.careers?.section_visible;
+                    const newVal = current === false || current === "false" ? true : false;
+                    updateContent("careers", "section_visible", newVal as any);
+                    await dbFetch("site_content", { method: "POST", body: { section_key: "careers", content: { ...(siteContent.careers || {}), section_visible: newVal } } });
+                    toast.success(newVal ? "Careers section is now visible on website." : "Careers section is now hidden from website.");
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border ${
+                    siteContent.careers?.section_visible === false || siteContent.careers?.section_visible === "false"
+                      ? "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                      : "bg-secondary/10 text-secondary border-secondary/30 hover:bg-secondary/20"
+                  }`}
+                >
+                  {siteContent.careers?.section_visible === false || siteContent.careers?.section_visible === "false"
+                    ? <><EyeOff size={15} /> Section Hidden</>
+                    : <><Eye size={15} /> Section Visible</>
+                  }
+                </button>
+              </div>
+
               <div className="space-y-4 border-b border-border/50 pb-6">
                 <div className="grid sm:grid-cols-3 gap-4">
                   <InlineField label="Badge Text" value={siteContent.careers?.badge || ""} onChange={(v) => updateContent("careers", "badge", v)} />
@@ -1280,6 +1315,33 @@ const PageEditor = () => {
                   })}
                 </div>
               </div>
+            </div>
+          </div>
+        );
+
+      case "technologies":
+        return (
+          <div className="space-y-4 pt-2">
+            <h3 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
+              <Cpu size={20} className="text-secondary" /> Our Technology
+            </h3>
+            <div className="glass-card p-6 space-y-6">
+              {/* Section header content */}
+              <div className="space-y-4 border-b border-border/50 pb-6">
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <InlineField label="Badge Text" value={siteContent.technologies?.badge || ""} onChange={(v) => updateContent("technologies", "badge", v)} />
+                  <InlineField label="Section Title" value={siteContent.technologies?.title || ""} onChange={(v) => updateContent("technologies", "title", v)} />
+                  <InlineField label="Highlight" value={siteContent.technologies?.highlight || ""} onChange={(v) => updateContent("technologies", "highlight", v)} />
+                </div>
+                <InlineField label="Description" value={siteContent.technologies?.description || ""} onChange={(v) => updateContent("technologies", "description", v)} multiline />
+                <div className="flex justify-end">
+                  <button onClick={() => upsertSection("technologies")} disabled={saving === "technologies"}
+                    className="flex items-center gap-2 px-4 py-2 bg-secondary/20 text-secondary border border-secondary/30 rounded-lg text-xs font-bold hover:bg-secondary hover:text-secondary-foreground transition-all">
+                    <Save size={14} /> Save Header Info
+                  </button>
+                </div>
+              </div>
+              <TechnologiesManager />
             </div>
           </div>
         );

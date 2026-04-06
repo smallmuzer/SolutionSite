@@ -94,7 +94,7 @@ const WhatsAppButton = () => {
           onClick={chatOpen ? closeChat : openChat}
           title="Chat with us"
           className="animate-float"
-          style={{ width: 40, height: 40, borderRadius: "50%", background: "hsl(217 91% 60%)", color: "#fff", border: "none", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", cursor: "pointer", transition: "transform 0.2s ease" }}
+          style={{ width: 46, height: 46, borderRadius: "50%", background: "hsl(217 91% 60%)", color: "#fff", border: "none", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", cursor: "pointer", transition: "transform 0.2s ease" }}
           onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.1)")}
           onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
         >
@@ -107,11 +107,11 @@ const WhatsAppButton = () => {
           onClick={handleWAOpen}
           aria-label="Chat on WhatsApp"
           className="animate-float"
-          style={{ width: 40, height: 40, borderRadius: "50%", background: "#25D366", color: "white", border: "none", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", cursor: "pointer", transition: "transform 0.2s ease", animationDelay: "0.5s" }}
+          style={{ width: 46, height: 46, borderRadius: "50%", background: "#25D366", color: "white", border: "none", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", cursor: "pointer", transition: "transform 0.2s ease", animationDelay: "0.5s" }}
           onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.1)")}
           onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
         >
-          <svg viewBox="0 0 32 32" width="24" height="24" fill="white">
+          <svg viewBox="0 0 32 32" width="30" height="30" fill="white">
             <path d="M16.004 2.667A13.26 13.26 0 002.667 15.89a13.16 13.16 0 001.907 6.848L2.667 29.333l6.81-1.786a13.3 13.3 0 006.527 1.706h.006c7.32 0 13.323-5.953 13.323-13.27a13.19 13.19 0 00-3.9-9.41 13.24 13.24 0 00-9.43-3.906zm0 24.29a11.04 11.04 0 01-5.627-1.54l-.404-.24-4.184 1.097 1.117-4.08-.263-.418a10.96 10.96 0 01-1.683-5.886c0-6.075 4.946-11.02 11.044-11.02a10.96 10.96 0 017.8 3.23 10.95 10.95 0 013.23 7.8c0 6.08-4.953 11.027-11.03 11.027v.03zm6.05-8.26c-.332-.166-1.963-.969-2.268-1.08-.305-.11-.527-.165-.749.167-.222.332-.86 1.08-1.054 1.302-.194.222-.388.25-.72.083-.332-.166-1.402-.517-2.67-1.648-.988-.88-1.654-1.966-1.848-2.298-.194-.332-.02-.512.146-.677.149-.149.332-.388.498-.582.166-.194.222-.332.332-.555.111-.222.056-.416-.028-.582-.083-.166-.748-1.804-1.025-2.47-.27-.648-.544-.56-.748-.57-.194-.01-.416-.012-.638-.012a1.224 1.224 0 00-.887.416c-.305.332-1.164 1.136-1.164 2.77 0 1.635 1.192 3.214 1.358 3.436.166.222 2.346 3.58 5.685 5.02.794.343 1.414.548 1.898.701.797.253 1.523.217 2.096.132.64-.095 1.963-.803 2.24-1.578.277-.775.277-1.44.194-1.578-.083-.138-.305-.222-.637-.388z" />
           </svg>
         </button>

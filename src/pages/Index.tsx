@@ -14,6 +14,7 @@ const ClientsSection     = lazy(() => import("@/components/ClientsSection"));
 const WorldMap           = lazy(() => import("@/components/WorldMap"));
 const TestimonialsSection= lazy(() => import("@/components/TestimonialsSection"));
 const CareersSection     = lazy(() => import("@/components/CareersSection"));
+const TechnologiesSection = lazy(() => import("@/components/TechnologiesSection"));
 const ContactSection     = lazy(() => import("@/components/ContactSection"));
 const Footer             = lazy(() => import("@/components/Footer"));
 const WhatsAppButton     = lazy(() => import("@/components/WhatsAppButton"));
@@ -70,6 +71,10 @@ const Index = () => {
 
       <Suspense fallback={<SkeletonSection />}>
         <CareersSection />
+      </Suspense>
+
+      <Suspense fallback={<SkeletonSection />}>
+        <TechnologiesSection />
       </Suspense>
 
       <Suspense fallback={<SkeletonSection />}>
