@@ -12,7 +12,7 @@ import {
   MapPin, Home, Settings, Layers, Phone, FileText,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { useGlobalView, useCardStyle } from "./UICustomizer";
+import { useGlobalView, useCardStyle } from "./ui-customizer-context";
 
 type Service = Tables<"services">;
 

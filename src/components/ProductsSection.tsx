@@ -3,7 +3,7 @@ import AnimatedSection from "./AnimatedSection";
 import { dbSelect } from "@/lib/api";
 import { ShoppingCart, PlayCircle, Tag, CheckCircle2, XCircle, List, LayoutGrid,
   Database, Users, Anchor, Building2, Plane, Star } from "lucide-react";
-import { useGlobalView } from "./UICustomizer";
+import { useGlobalView } from "./ui-customizer-context";
 
 const PRODUCT_ICON_CONFIG: Record<string, { Icon: React.ElementType; bg: string }> = {
   BSOL:        { Icon: Database,  bg: "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)" },

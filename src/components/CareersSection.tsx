@@ -7,7 +7,7 @@ import {
   Monitor, Cloud, Search, Megaphone, Lock, Server, Cpu,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { useGlobalView, useCardStyle } from "./UICustomizer";
+import { useGlobalView, useCardStyle } from "./ui-customizer-context";
 import { toast } from "sonner";
 
 type CareerJob = Tables<"career_jobs">;

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { dbSelect } from "@/lib/api";
-import { useGlobalView } from "./UICustomizer";
+import { useGlobalView } from "./ui-customizer-context";
 
 const AVATAR_MAP: Record<string, string> = {
   "Ahmed Rasheed":  "/assets/testimonials/ahmed.jpg",

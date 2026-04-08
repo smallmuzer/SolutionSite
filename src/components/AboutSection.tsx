@@ -1,7 +1,7 @@
 import AnimatedSection from "./AnimatedSection";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
-import { useCardStyle, useGlobalView } from "./UICustomizer";
+import { useCardStyle, useGlobalView } from "./ui-customizer-context";
 import { Target, Users, Award, Globe } from "lucide-react";
 
 const cardData = [

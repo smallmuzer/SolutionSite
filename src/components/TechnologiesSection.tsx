@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AnimatedSection from "./AnimatedSection";
-import { useGlobalView } from "./UICustomizer";
+import { useGlobalView } from "./ui-customizer-context";
 import { ArrowRight, Code2, Database, Smartphone, Globe, Server, Cloud, GitBranch, Layers } from "lucide-react";
 
 interface Technology {

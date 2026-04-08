@@ -3,6 +3,7 @@ import {
   X, ArrowRight, ArrowLeft, Navigation, Settings, Mail,
   ExternalLink, MessageCircle, ChevronRight, ChevronLeft
 } from "lucide-react";
+import { dbSelect } from "@/lib/api";
 
 /**
  * Modern Redesigned Guided Tour
@@ -96,7 +97,7 @@ const GuidedTour = () => {
       try {
         // Timeout after 3s so a slow/offline server doesn't block the tour
         const result = await Promise.race([
-          import("@/lib/api").then(m => m.dbSelect("site_content", { section_key: "settings" }, { single: true })),
+          dbSelect("site_content", { section_key: "settings" }, { single: true }),
           new Promise<{ data: null }>(res => setTimeout(() => res({ data: null }), 3000))
         ]);
         const content = (result as any)?.data?.content;
