@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { dbSelect } from "@/lib/api";
 import type { Tables } from "@/integrations/supabase/types";
@@ -48,24 +48,46 @@ const SEED_CLIENTS = [
 
 type ClientLogo = Tables<"client_logos">;
 
-// ── Globe: auto-compute slots for any number of clients ──────────────────────
-function buildGlobeSlots(count: number) {
-  const slots: { cx: number; cy: number }[] = [];
-  if (count === 0) return slots;
-  // Distribute evenly across 2 rings
-  const ring1 = Math.ceil(count / 2);
-  const ring2 = count - ring1;
-  const r1 = 34, r2 = 20;
-  for (let i = 0; i < ring1; i++) {
-    const a = ((i * 360) / ring1 - 90) * (Math.PI / 180);
-    slots.push({ cx: 50 + r1 * Math.cos(a), cy: 50 + r1 * Math.sin(a) });
+// ── Compute static ring positions: 2 concentric rings inside globe ───────────
+// Globe border = 43% (215px). CTA button ~ 60px radius.
+// Card = 54×44px, half-width = 27px = 5.4%.
+// Inner ring: r=22% (110px) → edge 137px.  Gap from CTA: 110−60=50px ✓
+// Outer ring: r=34% (170px) → edge 197px < 215px border ✓
+// Ring gap: (34−22)% × 500 = 60px > card height (44px) ✓ no overlap
+function computeGlobePositions(count: number): { cx: number; cy: number }[] {
+  if (count === 0) return [];
+  const pos: { cx: number; cy: number }[] = [];
+
+  const R_INNER = 22;  // 110px from center
+  const R_OUTER = 34;  // 170px from center
+
+  if (count <= 7) {
+    // Few cards → single ring centered between CTA and border
+    const r = count <= 3 ? R_OUTER : 28; // small count on outer, mid on 28%
+    for (let i = 0; i < count; i++) {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / count;
+      pos.push({ cx: 50 + r * Math.cos(a), cy: 50 + r * Math.sin(a) });
+    }
+  } else {
+    // Two rings: inner ~36%, outer ~64%
+    const inner = Math.max(3, Math.round(count * 0.36));
+    const outer = count - inner;
+
+    // Inner ring — starts at 12 o’clock
+    for (let i = 0; i < inner; i++) {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / inner;
+      pos.push({ cx: 50 + R_INNER * Math.cos(a), cy: 50 + R_INNER * Math.sin(a) });
+    }
+    // Outer ring — staggered so cards sit in the gaps of the inner ring
+    const stagger = Math.PI / outer;
+    for (let i = 0; i < outer; i++) {
+      const a = -Math.PI / 2 + stagger + (i * 2 * Math.PI) / outer;
+      pos.push({ cx: 50 + R_OUTER * Math.cos(a), cy: 50 + R_OUTER * Math.sin(a) });
+    }
   }
-  for (let i = 0; i < ring2; i++) {
-    const a = ((i * 360) / ring2 - 67.5) * (Math.PI / 180);
-    slots.push({ cx: 50 + r2 * Math.cos(a), cy: 50 + r2 * Math.sin(a) });
-  }
-  return slots;
+  return pos;
 }
+
 
 // ── Animated Globe ────────────────────────────────────────────────────────────
 const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
@@ -76,38 +98,59 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   const zoomRef = useRef(1);
   const targetZoomRef = useRef(1);
   const zoomRafRef = useRef<number>(0);
-  const [zoom, setZoom] = useState(1);
-  const SIZE = 500;
-  const MAX_GLOBE_CLIENTS = 20;
-  const globeClients = clients.slice(0, MAX_GLOBE_CLIENTS);
-  const slots = buildGlobeSlots(globeClients.length);
 
-  // ── Scroll-based zoom: scroll up = zoom in, scroll down = zoom out ──
+  const [zoom, setZoom] = useState(1);
+  const [batchIndex, setBatchIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  const SIZE = 500;
+  const BATCH_SIZE = 14;       // 5 inner + 9 outer per batch
+  const ROTATION_MS = 1_500;   // swap batch every 1.5 seconds
+
+  const batches = useMemo(() => {
+    const b: ClientLogo[][] = [];
+    for (let i = 0; i < clients.length; i += BATCH_SIZE)
+      b.push(clients.slice(i, i + BATCH_SIZE));
+    return b;
+  }, [clients]);
+
+  const currentBatch = batches[batchIndex] || [];
+  const positions = useMemo(() => computeGlobePositions(currentBatch.length), [currentBatch.length]);
+
+  // Auto-advance batch every 10s with a 400ms fade cross-dissolve
+  useEffect(() => {
+    if (batches.length <= 1) return;
+    const id = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setBatchIndex(prev => (prev + 1) % batches.length);
+        setVisible(true);
+      }, 400);
+    }, ROTATION_MS);
+    return () => clearInterval(id);
+  }, [batches.length]);
+
+  // Zoom wheel
   const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault(); // prevent page scroll while over globe
-    const delta = e.deltaY > 0 ? -0.12 : 0.12; // snappier scroll
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
     targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + delta));
   }, []);
+  const handleMouseLeave = useCallback(() => { targetZoomRef.current = 1; }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    targetZoomRef.current = 1; // reset to normal on leave
-  }, []);
-
-  // Smooth zoom lerp loop
   useEffect(() => {
     let running = true;
-    const animateZoom = () => {
+    const step = () => {
       if (!running) return;
-      const diff = targetZoomRef.current - zoomRef.current;
-      zoomRef.current += diff * 0.20; // more responsive (0.12 -> 0.20)
-      if (Math.abs(diff) > 0.001) setZoom(zoomRef.current);
-      zoomRafRef.current = requestAnimationFrame(animateZoom);
+      const d = targetZoomRef.current - zoomRef.current;
+      zoomRef.current += d * 0.2;
+      if (Math.abs(d) > 0.001) setZoom(zoomRef.current);
+      zoomRafRef.current = requestAnimationFrame(step);
     };
-    animateZoom();
+    step();
     return () => { running = false; cancelAnimationFrame(zoomRafRef.current); };
   }, []);
 
-  // Attach wheel listener (passive: false to allow preventDefault)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -119,6 +162,7 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
     };
   }, [handleWheel, handleMouseLeave]);
 
+  // Globe canvas — ONLY the longitude lines rotate
   useEffect(() => {
     const bg = bgRef.current, fg = fgRef.current;
     if (!bg || !fg) return;
@@ -130,11 +174,12 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
     const runDraw = () => {
       cancelAnimationFrame(rafRef.current);
       const dark = document.documentElement.classList.contains("dark");
-      const lineC = dark ? "rgba(96,165,250,0.65)" : "rgba(59,130,246,0.22)";
-      const longC = dark ? "rgba(96,165,250,0.60)" : "rgba(59,130,246,0.18)";
-      const borderC = dark ? "rgba(96,165,250,0.85)" : "rgba(59,130,246,0.28)";
-      const ringC = dark ? "rgba(147,197,253,0.65)" : "rgba(59,130,246,0.20)";
+      const lineC   = dark ? "rgba(96,165,250,0.65)"  : "rgba(59,130,246,0.22)";
+      const longC   = dark ? "rgba(96,165,250,0.60)"  : "rgba(59,130,246,0.18)";
+      const borderC = dark ? "rgba(96,165,250,0.85)"  : "rgba(59,130,246,0.28)";
+      const ringC   = dark ? "rgba(147,197,253,0.65)" : "rgba(59,130,246,0.20)";
 
+      // Static layers — drawn once per theme change
       bgCtx.clearRect(0, 0, SIZE, SIZE);
       bgCtx.lineWidth = 0.6; bgCtx.strokeStyle = lineC;
       for (let lat = -75; lat <= 75; lat += 25) {
@@ -147,6 +192,7 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
       bgCtx.beginPath(); bgCtx.arc(cx, cy, R * 0.30, 0, Math.PI * 2);
       bgCtx.strokeStyle = ringC; bgCtx.lineWidth = 1; bgCtx.stroke();
 
+      // Rotating longitude lines
       const draw = () => {
         fgCtx.clearRect(0, 0, SIZE, SIZE);
         fgCtx.lineWidth = 0.8; fgCtx.strokeStyle = longC;
@@ -158,7 +204,8 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
           fgCtx.beginPath(); fgCtx.ellipse(cx, cy, rx, R, 0, 0, Math.PI * 2); fgCtx.stroke();
         }
         fgCtx.restore();
-        offset += 0.003;
+        // 10-second full rotation: 2π / (10 * 60fps) ≈ 0.01047 rad/frame
+        offset += 0.01047;
         rafRef.current = requestAnimationFrame(draw);
       };
       rafRef.current = requestAnimationFrame(draw);
@@ -171,46 +218,35 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   }, []);
 
   return (
-    <div
-      style={{
-        width: SIZE, height: SIZE, maxWidth: "min(500px, 90vw)",
-        position: "relative",
-        overflow: "visible",
-      }}
-    >
+    <div style={{ width: SIZE, height: SIZE, maxWidth: "min(500px, 90vw)", position: "relative", overflow: "visible" }}>
       <div
         ref={containerRef}
         className="relative select-none group"
         style={{
-          width: "100%", height: "100%",
-          position: "relative", zIndex: 1,
+          width: "100%", height: "100%", position: "relative", zIndex: 1,
           transform: `scale(${zoom}) translateZ(0)`,
           transformOrigin: "center center",
           willChange: "transform",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
         }}
       >
-        {/* World map inside globe — continuously scrolling, fully filled */}
+        {/* World map background */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40"
           style={{ width: SIZE * 0.86, height: SIZE * 0.86 }}>
-          <div className="globe-map-scroll" style={{
-            display: "flex", width: "300%", height: "100%",
-            animation: "globeMapScroll 60s linear infinite",
-          }}>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="" style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="" style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="" style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />
+          <div style={{ display: "flex", width: "300%", height: "100%", animation: "globeMapScroll 60s linear infinite" }}>
+            {[0, 1, 2].map(k => (
+              <img key={k} src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt=""
+                style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />
+            ))}
           </div>
         </div>
 
-        <canvas ref={bgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105" />
-        <canvas ref={fgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105" />
+        <canvas ref={bgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full" />
+        <canvas ref={fgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full" />
 
         {/* Center CTA */}
         <button
           onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })}
-          className="absolute z-20 flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-110"
+          className="absolute z-20 flex flex-col items-center justify-center"
           style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: SIZE * 0.30 * 2, height: SIZE * 0.30 * 2, borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}
         >
           <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--secondary))", lineHeight: 1, opacity: 0.85 }}>JOIN</span>
@@ -218,22 +254,36 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
           <span className="blink-hint" style={{ fontSize: 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
         </button>
 
-        {/* Client cards — auto-positioned by computed slots */}
-        {globeClients.map((client, i) => {
-          const slot = slots[i];
-          if (!slot) return null;
+        {/* ── Client cards — STATIC positions, evenly spaced, batch fades every 10s ── */}
+        {currentBatch.map((client, i) => {
+          const pos = positions[i];
+          if (!pos) return null;
           return (
-            <div key={client.id} className="absolute z-10 transition-transform duration-300 pointer-events-auto hover:z-30 hover:scale-[1.2] cursor-default"
-              style={{ left: `${slot.cx}%`, top: `${slot.cy}%`, transform: "translate(-50%,-50%)", backfaceVisibility: "hidden" }}>
-              <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] bg-white dark:bg-[hsl(222,47%,11%)]"
-                style={{ width: 56, height: 46, padding: "4px 3px", backfaceVisibility: "hidden" }}>
+            <div
+              key={`b${batchIndex}-${client.id}`}
+              className="absolute z-10 pointer-events-auto hover:z-30 cursor-default"
+              style={{
+                left: `${pos.cx}%`,
+                top: `${pos.cy}%`,
+                transform: "translate(-50%,-50%)",
+                opacity: visible ? 1 : 0,
+                transition: "opacity 0.4s ease",
+              }}
+            >
+              <div
+                className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]"
+                style={{ width: 54, height: 44, padding: "3px 3px" }}
+              >
                 <div className="w-8 h-5 flex items-center justify-center">
-                  <img src={client.logo_url} alt={client.name}
-                    className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-300 group-hover/card:scale-110" loading="lazy"
-                    style={{ imageRendering: "auto" }}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  <img
+                    src={client.logo_url}
+                    alt={client.name}
+                    className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal"
+                    loading="lazy"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
                 </div>
-                <span className="text-[0.375rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
+                <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
               </div>
             </div>
           );
@@ -244,6 +294,7 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 };
 
 // ── Side scrolling grid ───────────────────────────────────────────────────────
+
 const COLS = 2, GAP = 20, CARD_W = 82, CARD_H = 68;
 const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
 const VISIBLE_H = 500, SPEED_PX = 0.8;
