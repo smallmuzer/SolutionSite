@@ -222,7 +222,7 @@ const Header = () => {
           <a
             href={demoLink}
             target="_blank" rel="noopener noreferrer"
-            className="ml-2 px-4 py-2.5 border border-secondary text-secondary rounded-lg font-semibold text-sm hover:bg-secondary hover:text-secondary-foreground transition-all flex items-center gap-1.5"
+            className="ml-2 px-4 py-2.5 border border-secondary text-secondary rounded-lg font-semibold text-sm hover:bg-secondary hover:text-secondary-foreground transition-all inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             <ExternalLink size={14} /> Get Access
           </a>
@@ -233,7 +233,7 @@ const Header = () => {
 
           <button
             onClick={() => scrollTo("#contact")}
-            className="ml-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+            className="ml-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap shrink-0"
           >
             Get Started
           </button>
