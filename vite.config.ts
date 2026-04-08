@@ -36,7 +36,28 @@ export default defineConfig(() => ({
       },
     },
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "local-assets-cache-control",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.startsWith("/assets/")) {
+            delete req.headers["if-none-match"];
+            delete req.headers["if-modified-since"];
+            const originalWriteHead = res.writeHead.bind(res);
+            res.writeHead = ((statusCode: number, ...args: any[]) => {
+              res.removeHeader("ETag");
+              res.removeHeader("Last-Modified");
+              res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+              return originalWriteHead(statusCode, ...(args as []));
+            }) as typeof res.writeHead;
+          }
+          next();
+        });
+      },
+    },
+  ],
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },

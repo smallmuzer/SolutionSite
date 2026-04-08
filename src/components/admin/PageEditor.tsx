@@ -12,9 +12,11 @@ import {
 import RichTextEditor from "./RichTextEditor";
 import ProductsManager from "./ProductsManager";
 import TechnologiesManager from "./TechnologiesManager";
+import AssetField from "./AssetField";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { uploadProjectAsset } from "@/lib/assets";
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -37,12 +39,7 @@ const CLIENT_LOCATION_MAP: Record<string, Omit<any, "clients">> = {
 };
 
 async function uploadFile(file: File, folder = "uploads"): Promise<string | null> {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("path", `${folder}/${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
-  const res = await fetch("/api/upload", { method: "POST", body: form });
-  const json = await res.json();
-  return json?.data?.publicUrl || null;
+  return uploadProjectAsset(folder, file).catch(() => null);
 }
 
 const ICON_OPTIONS = [
@@ -655,18 +652,15 @@ const PageEditor = () => {
                 <p className="text-[0.625rem] text-muted-foreground">Specify multiple image paths separated by commas or use the upload button.</p>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Primary Hero Image</label>
-                <div className="flex gap-2">
-                  <input value={siteContent.hero?.hero_image || ""} onChange={(e) => updateContent("hero", "hero_image", e.target.value)} className={fieldCls} placeholder="Example: /assets/hero_bg.jpg" />
-                  <label className="shrink-0 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-xs font-medium cursor-pointer hover:bg-secondary/20 flex items-center gap-1">
-                    Upload
-                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                      const f = e.target.files?.[0]; if (!f) return;
-                      const url = await uploadFile(f, "hero");
-                      if (url) updateContent("hero", "hero_image", url);
-                    }} />
-                  </label>
-                </div>
+                <AssetField
+                  label="Primary Hero Image"
+                  value={siteContent.hero?.hero_image || ""}
+                  onChange={(value) => updateContent("hero", "hero_image", value)}
+                  folder="hero"
+                  placeholder="Example: /assets/hero/hero_3d_glassy.png"
+                  inputClassName={fieldCls}
+                  previewClassName="h-16 rounded-lg object-cover border border-border/50 mt-1 shadow-sm"
+                />
                 <p className="text-[0.625rem] text-muted-foreground">This image takes priority and will show up as the first slide.</p>
               </div>
               <div className="flex justify-end pt-2 border-b border-border/50 pb-6">
@@ -812,21 +806,15 @@ const PageEditor = () => {
                   { key: "card_global_image", label: "Global Image", folder: "about" },
                 ].map((f) => (
                   <div key={f.key} className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{f.label}</label>
-                    <div className="flex gap-2">
-                      <input value={siteContent.about?.[f.key] || ""} onChange={(e) => updateContent("about", f.key, e.target.value)} className={fieldCls} placeholder="/assets/about/..." />
-                      <label className="shrink-0 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-xs font-medium cursor-pointer hover:bg-secondary/20 flex items-center gap-1">
-                        Upload
-                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                          const file = e.target.files?.[0]; if (!file) return;
-                          const url = await uploadFile(file, f.folder);
-                          if (url) updateContent("about", f.key, url);
-                        }} />
-                      </label>
-                    </div>
-                    {siteContent.about?.[f.key] && (
-                      <img src={siteContent.about[f.key]} alt={f.label} className="h-16 rounded-lg object-cover border border-border/50 mt-1 shadow-sm" />
-                    )}
+                    <AssetField
+                      label={f.label}
+                      value={siteContent.about?.[f.key] || ""}
+                      onChange={(value) => updateContent("about", f.key, value)}
+                      folder={f.folder}
+                      placeholder="/assets/about/..."
+                      inputClassName={fieldCls}
+                      previewClassName="h-16 rounded-lg object-cover border border-border/50 mt-1 shadow-sm"
+                    />
                   </div>
                 ))}
               </div>
@@ -915,19 +903,15 @@ const PageEditor = () => {
                             })()}
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Service Image</label>
-                            <div className="flex gap-2">
-                              <input value={tempService.image_url || ""} onChange={(e) => setTempService({ ...tempService, image_url: e.target.value })} className={fieldCls} placeholder="/assets/services/..." />
-                              <label className="shrink-0 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-xs font-medium cursor-pointer hover:bg-secondary/20 flex items-center gap-1">
-                                Upload
-                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                                  const f = e.target.files?.[0]; if (!f) return;
-                                  const url = await uploadFile(f, "services");
-                                  if (url) setTempService((p) => ({ ...p, image_url: url }));
-                                }} />
-                              </label>
-                            </div>
-                            {tempService.image_url && <img src={tempService.image_url} alt="preview" className="h-14 rounded-lg object-cover mt-2 shadow-sm border border-border/50" />}
+                            <AssetField
+                              label="Service Image"
+                              value={tempService.image_url || ""}
+                              onChange={(image_url) => setTempService({ ...tempService, image_url })}
+                              folder="services"
+                              placeholder="/assets/services/..."
+                              inputClassName={fieldCls}
+                              previewClassName="h-14 rounded-lg object-cover mt-2 shadow-sm border border-border/50"
+                            />
                           </div>
                           <div className="flex justify-end gap-2 pt-2">
                             <button onClick={() => setEditingService(null)} className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Cancel</button>
@@ -1026,18 +1010,15 @@ const PageEditor = () => {
                           <div className="space-y-3">
                             <InlineField label="Partner Name" value={tempClient.name || ""} onChange={(v) => setTempClient({ ...tempClient, name: v })} />
                             <div className="space-y-1">
-                              <label className="text-[0.625rem] font-bold text-muted-foreground uppercase tracking-widest px-1">Logo Asset Path</label>
-                              <div className="flex gap-2">
-                                <input value={tempClient.logo_url || ""} onChange={(e) => setTempClient({ ...tempClient, logo_url: e.target.value })} className={fieldCls} placeholder="/assets/clients/..." />
-                                <label className="shrink-0 px-3 py-2 bg-secondary text-secondary-foreground rounded-lg text-xs font-bold cursor-pointer hover:opacity-90 flex items-center gap-1.5 transition-all shadow-md shadow-secondary/10 active:scale-95">
-                                  <Plus size={14} />
-                                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                                    const f = e.target.files?.[0]; if (!f) return;
-                                    const url = await uploadFile(f, "clients");
-                                    if (url) setTempClient((p) => ({ ...p, logo_url: url }));
-                                  }} />
-                                </label>
-                              </div>
+                              <AssetField
+                                label="Logo Asset Path"
+                                value={tempClient.logo_url || ""}
+                                onChange={(logo_url) => setTempClient({ ...tempClient, logo_url })}
+                                folder="clients"
+                                placeholder="/assets/clients/..."
+                                inputClassName={fieldCls}
+                                previewClassName="max-h-16 max-w-full object-contain transition-transform group-hover/prev:scale-110"
+                              />
                             </div>
                             {tempClient.logo_url && (
                               <div className="bg-white rounded-xl p-4 border border-border/50 shadow-inner flex items-center justify-center min-h-[100px] mt-2 group/prev relative">
@@ -1260,19 +1241,16 @@ const PageEditor = () => {
                           </div>
                           {/* Job Image */}
                           <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Image <span className="text-[0.6rem] normal-case text-muted-foreground/60">(shown in Image mode)</span></label>
-                            <div className="flex gap-2">
-                              <input value={tempCareer.image_url || ""} onChange={(e) => setTempCareer({ ...tempCareer, image_url: e.target.value })} className={fieldCls} placeholder="/assets/careers/..." />
-                              <label className="shrink-0 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-xs font-medium cursor-pointer hover:bg-secondary/20 flex items-center gap-1">
-                                Upload
-                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                                  const f = e.target.files?.[0]; if (!f) return;
-                                  const url = await uploadFile(f, "careers");
-                                  if (url) setTempCareer((p) => ({ ...p, image_url: url }));
-                                }} />
-                              </label>
-                            </div>
-                            {tempCareer.image_url && <img src={tempCareer.image_url} alt="preview" className="h-14 rounded-lg object-cover mt-2 shadow-sm border border-border/50" />}
+                            <AssetField
+                              label="Job Image"
+                              value={tempCareer.image_url || ""}
+                              onChange={(image_url) => setTempCareer({ ...tempCareer, image_url })}
+                              folder="careers"
+                              placeholder="/assets/careers/..."
+                              inputClassName={fieldCls}
+                              previewClassName="h-14 rounded-lg object-cover mt-2 shadow-sm border border-border/50"
+                            />
+                            <p className="text-[0.6rem] normal-case text-muted-foreground/60">(shown in Image mode)</p>
                           </div>
                           <div className="flex justify-end gap-2 pt-2">
                             <button onClick={() => setEditingCareer(null)} className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Cancel</button>
@@ -1488,18 +1466,15 @@ const PageEditor = () => {
                         <div className="grid sm:grid-cols-3 gap-4">
                           <InlineField label="Emoji Icon" value={tempNetwork.flag || ""} onChange={(v) => setTempNetwork({ ...tempNetwork, flag: v })} />
                           <div className="space-y-1 sm:col-span-2">
-                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Brand Logo URL</label>
-                            <div className="flex gap-2">
-                              <input value={(tempNetwork as any).logo_url || ""} onChange={(e) => setTempNetwork({ ...tempNetwork, logo_url: e.target.value })} className={fieldCls} placeholder="/assets/clients/..." />
-                              <label className="shrink-0 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-xs font-bold cursor-pointer hover:bg-secondary/20 flex items-center gap-1.5 border border-secondary/20">
-                                Upload Asset
-                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                                  const f = e.target.files?.[0]; if (!f) return;
-                                  const url = await uploadFile(f, "clients");
-                                  if (url) setTempNetwork((p) => ({ ...p, logo_url: url }));
-                                }} />
-                              </label>
-                            </div>
+                            <AssetField
+                              label="Brand Logo URL"
+                              value={(tempNetwork as any).logo_url || ""}
+                              onChange={(logo_url) => setTempNetwork({ ...tempNetwork, logo_url })}
+                              folder="clients"
+                              placeholder="/assets/clients/..."
+                              inputClassName={fieldCls}
+                              previewClassName="h-16 w-16 object-contain"
+                            />
                           </div>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">

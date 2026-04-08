@@ -8,16 +8,10 @@ import {
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import RichTextEditor from "./RichTextEditor";
+import AssetField from "./AssetField";
+import { dbDelete, dbInsert, dbSelect, dbUpdate } from "@/lib/api";
 
 type Service = Tables<"services">;
-
-const API = (table: string, query = "") => `/api/db/${table}${query ? `?${query}` : ""}`;
-const patch = (table: string, id: string, body: any) =>
-  fetch(API(table, `id=${id}`), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
-const del = (table: string, id: string) =>
-  fetch(API(table, `id=${id}`), { method: "DELETE" }).then(r => r.json());
-const post = (table: string, body: any) =>
-  fetch(API(table), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
 
 const ICON_OPTIONS = [
   { name: "Monitor", Icon: Monitor }, { name: "Globe", Icon: Globe },
@@ -61,7 +55,7 @@ const ServicesManager = () => {
 
   const load = async () => {
     setLoading(true);
-    const res = await fetch(API("services", "_order=sort_order&_asc=true")).then(r => r.json());
+    const res = await dbSelect<Service[]>("services", {}, { order: "sort_order", asc: true });
     if (res.data) setServices(res.data);
     setLoading(false);
   };
@@ -69,7 +63,7 @@ const ServicesManager = () => {
   const saveEdit = async () => {
     if (!editingId) return;
     setSaving(true);
-    const res = await patch("services", editingId, {
+    const res = await dbUpdate("services", { id: editingId }, {
       title: editData.title, description: editData.description,
       image_url: editData.image_url || null, icon: editData.icon || null,
     });
@@ -79,13 +73,13 @@ const ServicesManager = () => {
   };
 
   const toggleVisible = async (id: string, current: boolean) => {
-    await patch("services", id, { is_visible: !current });
+    await dbUpdate("services", { id }, { is_visible: !current });
     setServices(prev => prev.map(s => s.id === id ? { ...s, is_visible: !current } : s));
   };
 
   const deleteService = async (id: string) => {
     if (!confirm("Delete this service?")) return;
-    await del("services", id);
+    await dbDelete("services", { id });
     setServices(prev => prev.filter(s => s.id !== id));
     toast.success("Deleted.");
   };
@@ -94,7 +88,7 @@ const ServicesManager = () => {
     if (!newForm.title || !newForm.description) { toast.error("Title and description required."); return; }
     setSaving(true);
     const maxOrder = services.length > 0 ? Math.max(...services.map(s => s.sort_order)) + 1 : 0;
-    const res = await post("services", {
+    const res = await dbInsert("services", {
       title: newForm.title, description: newForm.description,
       image_url: newForm.image_url || null, icon: newForm.icon || null, sort_order: maxOrder,
     });
@@ -125,7 +119,14 @@ const ServicesManager = () => {
           <h3 className="font-heading font-semibold text-foreground">New Service</h3>
           <input value={newForm.title} onChange={e => setNewForm(p => ({ ...p, title: e.target.value }))} placeholder="Service title" className={fieldCls} />
           <RichTextEditor value={newForm.description} onChange={v => setNewForm(p => ({ ...p, description: v }))} placeholder="Service description..." />
-          <input value={newForm.image_url} onChange={e => setNewForm(p => ({ ...p, image_url: e.target.value }))} placeholder="Image URL (optional)" className={fieldCls} />
+          <AssetField
+            label="Service Image"
+            value={newForm.image_url}
+            onChange={(image_url) => setNewForm(p => ({ ...p, image_url }))}
+            folder="services"
+            placeholder="/assets/services/..."
+            inputClassName={fieldCls}
+          />
           <IconPicker value={newForm.icon} onChange={v => setNewForm(p => ({ ...p, icon: v }))} />
           <div className="flex justify-end gap-2 pt-1">
             <button onClick={() => { setAdding(false); setNewForm({ title: "", description: "", image_url: "", icon: "" }); }} className="px-4 py-2 bg-muted text-foreground rounded-lg text-sm"><X size={14} /></button>
@@ -143,7 +144,14 @@ const ServicesManager = () => {
               <div className="space-y-3">
                 <input value={editData.title} onChange={e => setEditData(p => ({ ...p, title: e.target.value }))} placeholder="Title" className={fieldCls} />
                 <RichTextEditor value={editData.description} onChange={v => setEditData(p => ({ ...p, description: v }))} />
-                <input value={editData.image_url} onChange={e => setEditData(p => ({ ...p, image_url: e.target.value }))} placeholder="Image URL (optional)" className={fieldCls} />
+                <AssetField
+                  label="Service Image"
+                  value={editData.image_url}
+                  onChange={(image_url) => setEditData(p => ({ ...p, image_url }))}
+                  folder="services"
+                  placeholder="/assets/services/..."
+                  inputClassName={fieldCls}
+                />
                 <IconPicker value={editData.icon} onChange={v => setEditData(p => ({ ...p, icon: v }))} />
                 <div className="flex justify-end gap-2 pt-1">
                   <button onClick={() => setEditingId(null)} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-xs">Cancel</button>

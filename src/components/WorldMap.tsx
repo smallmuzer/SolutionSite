@@ -91,8 +91,9 @@ const WorldMap = () => {
       }
     };
     load();
-    const t = setInterval(load, 15000);
-    return () => clearInterval(t);
+    const reload = () => { void load(); };
+    window.addEventListener("ss:contentSaved", reload);
+    return () => window.removeEventListener("ss:contentSaved", reload);
   }, []);
 
   const handleLocationClick = (loc: LocationData) => {

@@ -48,6 +48,17 @@ const SEED_CLIENTS = [
 
 type ClientLogo = Tables<"client_logos">;
 
+const ClientLogoImage = ({ client }: { client: ClientLogo }) => (
+  <img
+    src={client.logo_url}
+    alt={client.name}
+    className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal"
+    loading="lazy"
+    decoding="async"
+    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+  />
+);
+
 // ── Compute static ring positions: 2 concentric rings inside globe ───────────
 // Globe border = 43% (215px). CTA button ~ 60px radius.
 // Card = 54×44px, half-width = 27px = 5.4%.
@@ -101,11 +112,10 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 
   const [zoom, setZoom] = useState(1);
   const [batchIndex, setBatchIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
 
   const SIZE = 500;
   const BATCH_SIZE = 14;       // 5 inner + 9 outer per batch
-  const ROTATION_MS = 1_500;   // swap batch every 1.5 seconds
+  const ROTATION_MS = 10_000;  // swap batch every 10 seconds
 
   const batches = useMemo(() => {
     const b: ClientLogo[][] = [];
@@ -113,19 +123,19 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
       b.push(clients.slice(i, i + BATCH_SIZE));
     return b;
   }, [clients]);
-
-  const currentBatch = batches[batchIndex] || [];
-  const positions = useMemo(() => computeGlobePositions(currentBatch.length), [currentBatch.length]);
+  const batchLayouts = useMemo(
+    () => batches.map((batch) => ({
+      batch,
+      positions: computeGlobePositions(batch.length),
+    })),
+    [batches]
+  );
 
   // Auto-advance batch every 10s with a 400ms fade cross-dissolve
   useEffect(() => {
     if (batches.length <= 1) return;
     const id = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setBatchIndex(prev => (prev + 1) % batches.length);
-        setVisible(true);
-      }, 400);
+      setBatchIndex(prev => (prev + 1) % batches.length);
     }, ROTATION_MS);
     return () => clearInterval(id);
   }, [batches.length]);
@@ -254,40 +264,44 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
           <span className="blink-hint" style={{ fontSize: 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
         </button>
 
-        {/* ── Client cards — STATIC positions, evenly spaced, batch fades every 10s ── */}
-        {currentBatch.map((client, i) => {
-          const pos = positions[i];
-          if (!pos) return null;
-          return (
-            <div
-              key={`b${batchIndex}-${client.id}`}
-              className="absolute z-10 pointer-events-auto hover:z-30 cursor-default"
-              style={{
-                left: `${pos.cx}%`,
-                top: `${pos.cy}%`,
-                transform: "translate(-50%,-50%)",
-                opacity: visible ? 1 : 0,
-                transition: "opacity 0.4s ease",
-              }}
-            >
-              <div
-                className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]"
-                style={{ width: 54, height: 44, padding: "3px 3px" }}
-              >
-                <div className="w-8 h-5 flex items-center justify-center">
-                  <img
-                    src={client.logo_url}
-                    alt={client.name}
-                    className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal"
-                    loading="lazy"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                  />
+        {/* ── Client cards — keep DOM mounted so image requests do not churn during rotation ── */}
+        {batchLayouts.map(({ batch, positions }, layoutIndex) => (
+          <div
+            key={`batch-${layoutIndex}`}
+            className="absolute inset-0"
+            style={{
+              opacity: layoutIndex === batchIndex ? 1 : 0,
+              transition: "opacity 0.4s ease",
+              pointerEvents: layoutIndex === batchIndex ? "auto" : "none",
+            }}
+          >
+            {batch.map((client, i) => {
+              const pos = positions[i];
+              if (!pos) return null;
+              return (
+                <div
+                  key={client.id}
+                  className="absolute z-10 pointer-events-auto hover:z-30 cursor-default"
+                  style={{
+                    left: `${pos.cx}%`,
+                    top: `${pos.cy}%`,
+                    transform: "translate(-50%,-50%)",
+                  }}
+                >
+                  <div
+                    className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]"
+                    style={{ width: 54, height: 44, padding: "3px 3px" }}
+                  >
+                    <div className="w-8 h-5 flex items-center justify-center">
+                      <ClientLogoImage client={client} />
+                    </div>
+                    <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
+                  </div>
                 </div>
-                <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -303,11 +317,12 @@ const ClientCard = ({ client }: { client: ClientLogo }) => (
   <div className="flex flex-col items-center justify-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-110 hover:shadow-xl hover:z-10 group"
     style={{ width: CARD_W, height: CARD_H, padding: "6px 5px", gap: 4 }}>
     <div style={{ width: CARD_W - 14, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <img src={client.logo_url} alt={client.name}
-        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }}
-        className="mix-blend-multiply dark:mix-blend-normal transition-transform duration-300 group-hover:scale-110"
-        loading="lazy"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+      <div
+        style={{ maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+        className="transition-transform duration-300 group-hover:scale-110"
+      >
+        <ClientLogoImage client={client} />
+      </div>
     </div>
     <span style={{ fontSize: 9, lineHeight: 1.3, textAlign: "center", fontWeight: 700, color: "hsl(var(--foreground))", width: "100%", padding: "0 3px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
       {client.name}
@@ -413,9 +428,9 @@ const ClientsSection = () => {
               {clients.map((client) => (
                 <div key={client.id} className="flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/card">
                   <div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2">
-                    <img src={client.logo_url} alt={client.name}
-                      className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-300 group-hover/card:scale-110" loading="lazy"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    <div className="max-h-full max-w-full transition-transform duration-300 group-hover/card:scale-110">
+                      <ClientLogoImage client={client} />
+                    </div>
                   </div>
                   <span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full">{client.name}</span>
                 </div>

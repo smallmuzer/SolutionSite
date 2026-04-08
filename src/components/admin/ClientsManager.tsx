@@ -2,16 +2,10 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, RefreshCw } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import AssetField from "./AssetField";
+import { dbDelete, dbInsert, dbSelect, dbUpdate } from "@/lib/api";
 
 type ClientLogo = Tables<"client_logos">;
-
-const API = (table: string, query = "") => `/api/db/${table}${query ? `?${query}` : ""}`;
-const patch = (table: string, id: string, body: any) =>
-  fetch(API(table, `id=${id}`), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
-const del = (table: string, id: string) =>
-  fetch(API(table, `id=${id}`), { method: "DELETE" }).then(r => r.json());
-const post = (table: string, body: any) =>
-  fetch(API(table), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
 
 const inputCls = "w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none";
 const emptyForm = { name: "", logo_url: "" };
@@ -29,7 +23,7 @@ const ClientsManager = () => {
 
   const load = async () => {
     setLoading(true);
-    const res = await fetch(API("client_logos", "_order=sort_order&_asc=true")).then(r => r.json());
+    const res = await dbSelect<ClientLogo[]>("client_logos", {}, { order: "sort_order", asc: true });
     if (res.data) setClients(res.data);
     setLoading(false);
   };
@@ -37,20 +31,20 @@ const ClientsManager = () => {
   const saveEdit = async () => {
     if (!editingId) return;
     setSaving(true);
-    const res = await patch("client_logos", editingId, editData);
+    const res = await dbUpdate("client_logos", { id: editingId }, editData);
     if (res.error) { toast.error("Failed to save."); }
     else { setClients(prev => prev.map(c => c.id === editingId ? { ...c, ...editData } : c)); toast.success("Client updated!"); setEditingId(null); }
     setSaving(false);
   };
 
   const toggleVisible = async (id: string, current: boolean) => {
-    await patch("client_logos", id, { is_visible: !current });
+    await dbUpdate("client_logos", { id }, { is_visible: !current });
     setClients(prev => prev.map(c => c.id === id ? { ...c, is_visible: !current } : c));
   };
 
   const deleteClient = async (id: string) => {
     if (!confirm("Delete this client logo?")) return;
-    const res = await del("client_logos", id);
+    const res = await dbDelete("client_logos", { id });
     if (res.error) { toast.error("Failed to delete."); return; }
     setClients(prev => prev.filter(c => c.id !== id));
     toast.success("Client deleted.");
@@ -60,7 +54,7 @@ const ClientsManager = () => {
     if (!newForm.name || !newForm.logo_url) { toast.error("Name and logo URL required."); return; }
     setSaving(true);
     const maxOrder = clients.length > 0 ? Math.max(...clients.map(c => c.sort_order)) + 1 : 0;
-    const res = await post("client_logos", { ...newForm, sort_order: maxOrder });
+    const res = await dbInsert("client_logos", { ...newForm, sort_order: maxOrder });
     if (res.error) { toast.error("Failed to add."); }
     else if (res.data) { setClients(prev => [...prev, res.data]); setNewForm({ ...emptyForm }); setAdding(false); toast.success("Client added!"); }
     setSaving(false);
@@ -88,8 +82,15 @@ const ClientsManager = () => {
           <h3 className="font-heading font-semibold text-foreground mb-4">New Client</h3>
           <div className="space-y-3">
             <input value={newForm.name} onChange={e => setNewForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. OBLU Resorts" className={inputCls} />
-            <input value={newForm.logo_url} onChange={e => setNewForm(p => ({ ...p, logo_url: e.target.value }))} placeholder="/assets/clients/filename.png" className={inputCls} />
-            {newForm.logo_url && <img src={newForm.logo_url} alt="preview" className="mt-2 h-12 object-contain rounded-lg border border-border p-1" />}
+            <AssetField
+              label="Client Logo"
+              value={newForm.logo_url}
+              onChange={(logo_url) => setNewForm(p => ({ ...p, logo_url }))}
+              folder="clients"
+              placeholder="/assets/clients/filename.png"
+              previewClassName="mt-2 h-12 object-contain rounded-lg border border-border p-1"
+              inputClassName={inputCls}
+            />
             <div className="flex gap-2">
               <button onClick={addClient} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium disabled:opacity-50">
                 <Check size={14} /> {saving ? "Saving..." : "Add Client"}
@@ -106,8 +107,15 @@ const ClientsManager = () => {
             {editingId === client.id ? (
               <div className="space-y-2">
                 <input value={editData.name} onChange={e => setEditData(p => ({ ...p, name: e.target.value }))} placeholder="Company Name" className={inputCls} />
-                <input value={editData.logo_url} onChange={e => setEditData(p => ({ ...p, logo_url: e.target.value }))} placeholder="Logo URL" className={inputCls} />
-                {editData.logo_url && <img src={editData.logo_url} alt="preview" className="h-10 object-contain rounded border border-border p-1" />}
+                <AssetField
+                  label="Client Logo"
+                  value={editData.logo_url}
+                  onChange={(logo_url) => setEditData(p => ({ ...p, logo_url }))}
+                  folder="clients"
+                  placeholder="/assets/clients/filename.png"
+                  previewClassName="h-10 object-contain rounded border border-border p-1"
+                  inputClassName={inputCls}
+                />
                 <div className="flex gap-2">
                   <button onClick={saveEdit} disabled={saving} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium disabled:opacity-50">
                     <Check size={12} /> {saving ? "..." : "Save"}

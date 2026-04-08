@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, Save, Star, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, Save, Star } from "lucide-react";
+import AssetField from "./AssetField";
+import { dbDelete, dbInsert, dbSelect, dbUpdate } from "@/lib/api";
 
 interface Product {
   id: string;
@@ -54,7 +56,6 @@ const ProductsManager = () => {
   const [temp, setTemp] = useState<Partial<Product>>({});
   const [saving, setSaving] = useState(false);
   const [savingHeader, setSavingHeader] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [tempBadges, setTempBadges] = useState<{ text: string; color: string }[]>([]);
 
   useEffect(() => { load(); }, []);
@@ -62,13 +63,11 @@ const ProductsManager = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const hRes = await fetch("/api/db/site_content?section_key=our_products&_single=1");
-      const hJson = await hRes.json();
+      const hJson = await dbSelect<any>("site_content", { section_key: "our_products" }, { single: true });
       if (hJson.data?.content?.header) {
         setHeader({ ...DEFAULT_HEADER, ...hJson.data.content.header });
       }
-      const res = await fetch("/api/db/products?_order=sort_order&_asc=true");
-      const json = await res.json();
+      const json = await dbSelect<Product[]>("products", {}, { order: "sort_order", asc: true });
       if (json.data && json.data.length > 0) setProducts(json.data as Product[]);
     } catch {
       toast.error("Failed to load products.");
@@ -78,30 +77,9 @@ const ProductsManager = () => {
 
   const saveHeader = async () => {
     setSavingHeader(true);
-    await fetch("/api/db/site_content", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section_key: "our_products", content: { header } }),
-    });
+    await dbInsert("site_content", { section_key: "our_products", content: { header } });
     setSavingHeader(false);
     toast.success("Products section header saved!");
-  };
-
-  const handleImageUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("path", `products/${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      setTemp(t => ({ ...t, image_url: json.data.publicUrl }));
-      toast.success("Image uploaded!");
-    } catch (err: any) {
-      toast.error(`Upload failed: ${err?.message || "Unknown error"}`);
-    }
-    setUploading(false);
   };
 
   const addProduct = async () => {
@@ -117,12 +95,7 @@ const ProductsManager = () => {
       is_visible: true,
       sort_order: products.length,
     };
-    const res = await fetch("/api/db/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newProduct),
-    });
-    const json = await res.json();
+    const json = await dbInsert<Product>("products", newProduct);
     if (json.error || !json.data) { toast.error("Failed to add product."); return; }
     const data = json.data as Product;
     setProducts(prev => [...prev, data]);
@@ -149,12 +122,7 @@ const ProductsManager = () => {
       extra_text, extra_color,
     };
     try {
-      const res = await fetch(`/api/db/products?id=${encodeURIComponent(editing)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const json = await res.json();
+      const json = await dbUpdate("products", { id: editing }, patch);
       if (json.error) throw new Error(json.error.message);
       setProducts(prev => prev.map(p => p.id === editing ? { ...p, ...patch } as Product : p));
       toast.success("Product saved!");
@@ -168,25 +136,19 @@ const ProductsManager = () => {
   const toggleVisible = async (id: string) => {
     const p = products.find(p => p.id === id);
     if (!p) return;
-    await fetch(`/api/db/products?id=${encodeURIComponent(id)}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_visible: !p.is_visible }),
-    });
+    await dbUpdate("products", { id }, { is_visible: !p.is_visible });
     setProducts(prev => prev.map(p => p.id === id ? { ...p, is_visible: !p.is_visible } : p));
   };
 
   const togglePopular = async (id: string) => {
     const p = products.find(p => p.id === id);
     if (!p) return;
-    await fetch(`/api/db/products?id=${encodeURIComponent(id)}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_popular: !p.is_popular }),
-    });
+    await dbUpdate("products", { id }, { is_popular: !p.is_popular });
     setProducts(prev => prev.map(p => p.id === id ? { ...p, is_popular: !p.is_popular } : p));
   };
 
   const deleteProduct = async (id: string) => {
-    await fetch(`/api/db/products?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    await dbDelete("products", { id });
     setProducts(prev => prev.filter(p => p.id !== id));
     toast.success("Deleted!");
   };
@@ -299,24 +261,14 @@ const ProductsManager = () => {
                 <InlineField label="Contact / Link URL" value={temp.contact_url || ""} onChange={(v) => setTemp({ ...temp, contact_url: v })} />
 
                 {/* Image */}
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product Image</label>
-                  <div className="flex gap-2 items-start">
-                    {temp.image_url && (
-                      <img src={temp.image_url} alt="" className="w-20 h-14 object-cover rounded-lg border border-border shrink-0" />
-                    )}
-                    <div className="flex-1 space-y-1">
-                      <input value={temp.image_url || ""} onChange={(e) => setTemp({ ...temp, image_url: e.target.value })}
-                        placeholder="Paste image URL..."
-                        className="w-full px-3 py-2 rounded-lg bg-transparent border border-border/60 text-foreground text-sm outline-none focus:border-secondary/70" />
-                      <label className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg text-xs cursor-pointer hover:bg-muted/80 w-fit">
-                        <Upload size={11} /> {uploading ? "Uploading..." : "Upload Image"}
-                        <input type="file" accept="image/*" className="hidden"
-                          onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                <AssetField
+                  label="Product Image"
+                  value={temp.image_url || ""}
+                  onChange={(image_url) => setTemp({ ...temp, image_url })}
+                  folder="products"
+                  placeholder="/assets/products/..."
+                  previewClassName="w-20 h-14 object-cover rounded-lg border border-border"
+                />
 
                 <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer w-fit">
                   <input type="checkbox" checked={!!temp.is_popular} onChange={(e) => setTemp({ ...temp, is_popular: e.target.checked })} />

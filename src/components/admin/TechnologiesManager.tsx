@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, RefreshCw, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, RefreshCw } from "lucide-react";
+import AssetField from "./AssetField";
+import { dbDelete, dbInsert, dbSelect, dbUpdate } from "@/lib/api";
 
 interface Technology {
   id: string;
@@ -13,23 +15,6 @@ interface Technology {
   category_color: string;
   is_visible: boolean;
   sort_order: number;
-}
-
-const API = (q = "") => `/api/db/technologies${q ? `?${q}` : ""}`;
-const patch = (id: string, body: any) =>
-  fetch(API(`id=${id}`), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
-const del = (id: string) =>
-  fetch(API(`id=${id}`), { method: "DELETE" }).then(r => r.json());
-const post = (body: any) =>
-  fetch(API(), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
-
-async function uploadFile(file: File): Promise<string | null> {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("path", `uploads/${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
-  const res = await fetch("/api/upload", { method: "POST", body: form });
-  const json = await res.json();
-  return json?.data?.publicUrl || null;
 }
 
 const CATEGORIES = ["Frontend", "Backend", "Mobile", "Database", "DevOps", "Cloud", "Language", "General"];
@@ -103,8 +88,6 @@ const TechForm = ({ data, onChange, onSave, onCancel, saving, isNew }: {
   onSave: () => void; onCancel: () => void;
   saving: boolean; isNew?: boolean;
 }) => {
-  const [uploading, setUploading] = useState(false);
-
   return (
     <div className="space-y-4">
       {/* Name + Category */}
@@ -158,35 +141,19 @@ const TechForm = ({ data, onChange, onSave, onCancel, saving, isNew }: {
       </div>
 
       {/* Image upload */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Logo / Image URL</label>
-        <div className="flex gap-2">
-          <input value={data.image_url} onChange={e => onChange({ ...data, image_url: e.target.value })}
-            placeholder="/assets/technologies/react.png or CDN URL" className={inputCls} />
-          <label className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors ${uploading ? "bg-muted text-muted-foreground" : "bg-secondary/10 text-secondary hover:bg-secondary/20"}`}>
-            <Upload size={13} /> {uploading ? "..." : "Upload"}
-            <input type="file" accept="image/*" className="hidden" disabled={uploading}
-              onChange={async e => {
-                const f = e.target.files?.[0]; if (!f) return;
-                setUploading(true);
-                const url = await uploadFile(f).catch(() => null);
-                setUploading(false);
-                if (url) { onChange({ ...data, image_url: url }); toast.success("Uploaded!"); }
-                else toast.error("Upload failed.");
-                e.target.value = "";
-              }} />
-          </label>
-        </div>
-        {data.image_url && (
-          <img src={data.image_url} alt="preview"
-            className="h-10 w-10 rounded-lg object-contain border border-border/50 mt-1 bg-muted/30 p-1"
-            onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-        )}
-      </div>
+      <AssetField
+        label="Logo / Image URL"
+        value={data.image_url}
+        onChange={(image_url) => onChange({ ...data, image_url })}
+        folder="Technology"
+        placeholder="/assets/Technology/react.png"
+        previewClassName="h-10 w-10 rounded-lg object-contain border border-border/50 mt-1 bg-muted/30 p-1"
+        inputClassName={inputCls}
+      />
 
       {/* Actions */}
       <div className="flex gap-2 pt-1">
-        <button onClick={onSave} disabled={saving || uploading}
+        <button onClick={onSave} disabled={saving}
           className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium disabled:opacity-50">
           <Check size={14} /> {saving ? "Saving..." : isNew ? "Add Technology" : "Save Changes"}
         </button>
@@ -212,7 +179,7 @@ const TechnologiesManager = () => {
 
   const load = async () => {
     setLoading(true);
-    const res = await fetch(API("_order=sort_order&_asc=true")).then(r => r.json());
+    const res = await dbSelect<Technology[]>("technologies", {}, { order: "sort_order", asc: true });
     if (res.data) setTechs(res.data);
     setLoading(false);
   };
@@ -220,7 +187,7 @@ const TechnologiesManager = () => {
   const saveEdit = async () => {
     if (!editingId) return;
     setSaving(true);
-    const res = await patch(editingId, {
+    const res = await dbUpdate("technologies", { id: editingId }, {
       name: editData.name, description: editData.description,
       image_url: editData.image_url || null, icon: editData.icon || null,
       category: editData.category,
@@ -237,13 +204,13 @@ const TechnologiesManager = () => {
   };
 
   const toggleVisible = async (id: string, current: boolean) => {
-    await patch(id, { is_visible: !current });
+    await dbUpdate("technologies", { id }, { is_visible: !current });
     setTechs(prev => prev.map(t => t.id === id ? { ...t, is_visible: !current } : t));
   };
 
   const deleteTech = async (id: string) => {
     if (!confirm("Delete this technology?")) return;
-    const res = await del(id);
+    const res = await dbDelete("technologies", { id });
     if (res.error) { toast.error("Failed to delete."); return; }
     setTechs(prev => prev.filter(t => t.id !== id));
     toast.success("Deleted.");
@@ -253,7 +220,7 @@ const TechnologiesManager = () => {
     if (!newForm.name) { toast.error("Name is required."); return; }
     setSaving(true);
     const maxOrder = techs.length > 0 ? Math.max(...techs.map(t => t.sort_order)) + 1 : 0;
-    const res = await post({
+    const res = await dbInsert("technologies", {
       name: newForm.name, description: newForm.description,
       image_url: newForm.image_url || null, icon: newForm.icon || null,
       category: newForm.category, sort_order: maxOrder,

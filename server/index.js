@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { mkdirSync, existsSync, appendFileSync } from "fs";
+import { mkdirSync, existsSync, appendFileSync, readdirSync } from "fs";
 import { db, uuid } from "./db.js";
 import { DB_PATH } from "./db.js";
 import crypto from "crypto";
@@ -122,24 +122,85 @@ const PUBLIC_ASSETS = join(__dirname, "../public/assets");
 const UPLOADS_DIR = join(PUBLIC_ASSETS, "uploads");
 if (!existsSync(UPLOADS_DIR)) mkdirSync(UPLOADS_DIR, { recursive: true });
 
-const ALLOWED_FOLDERS = ["products", "services", "testimonials", "about", "careers", "hero", "uploads", "clients"];
+const ALLOWED_FOLDERS = ["products", "services", "testimonials", "about", "careers", "hero", "uploads", "clients", "Technology"];
+const FOLDER_ALIASES = {
+  "hero-gallery": "hero",
+  technologies: "Technology",
+  technology: "Technology",
+};
+const ALLOWED_IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]);
+
+function normaliseAssetFolder(folder) {
+  const safeFolder = String(folder || "").replace(/[^a-zA-Z0-9_-]/g, "");
+  const mapped = FOLDER_ALIASES[safeFolder] || safeFolder;
+  return ALLOWED_FOLDERS.includes(mapped) ? mapped : "uploads";
+}
+
+function resolveAssetTarget(requestedPath = "") {
+  const rawPath = String(requestedPath || "").replace(/\\/g, "/").trim();
+  const [rawFolder = "uploads", ...rest] = rawPath.split("/").filter(Boolean);
+  const folder = normaliseAssetFolder(rawFolder);
+  const fallbackName = "upload.jpg";
+  const requestedName = basename(rest.length ? rest.join("/") : fallbackName);
+  const rawExt = extname(requestedName).toLowerCase();
+  const extension = ALLOWED_IMAGE_EXTS.has(rawExt) ? rawExt : ".jpg";
+  const safeBase = basename(requestedName, rawExt || extname(requestedName))
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80) || "file";
+  const filename = `${safeBase}${extension}`;
+  const dir = join(PUBLIC_ASSETS, folder);
+  return { folder, dir, filename };
+}
 
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
-    const requestedPath = String(req.body?.path || "");
-    const folder = requestedPath.split("/")[0].replace(/[^a-zA-Z0-9_-]/g, "");
-    const dir = ALLOWED_FOLDERS.includes(folder) ? join(PUBLIC_ASSETS, folder) : UPLOADS_DIR;
+    const { dir } = resolveAssetTarget(req.body?.path);
     mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
     const original = String(file.originalname || "upload.jpg");
-    const extension = extname(original).replace(/^\./, "").toLowerCase() || "jpg";
-    const safeBase = basename(original, extname(original)).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 40) || "file";
-    cb(null, `${safeBase}_${Date.now()}.${extension}`);
+    const requestedPath = String(req.body?.path || original);
+    const target = resolveAssetTarget(requestedPath.includes("/") ? requestedPath : `uploads/${original}`);
+    cb(null, target.filename);
   },
 });
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = extname(String(file.originalname || "")).toLowerCase();
+    if (!ALLOWED_IMAGE_EXTS.has(ext) || !String(file.mimetype || "").startsWith("image/")) {
+      cb(new Error("Only image uploads are allowed."));
+      return;
+    }
+    cb(null, true);
+  },
+});
+
+app.get("/api/assets", (req, res) => {
+  try {
+    const folder = normaliseAssetFolder(req.query.folder || "uploads");
+    const dir = join(PUBLIC_ASSETS, folder);
+    if (!existsSync(dir)) {
+      return res.json({ data: { folder, files: [] }, error: null });
+    }
+
+    const files = readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => ({
+        name: entry.name,
+        publicUrl: `/assets/${folder}/${entry.name}`.replace(/\/+/g, "/"),
+      }))
+      .filter((entry) => ALLOWED_IMAGE_EXTS.has(extname(entry.name).toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    res.json({ data: { folder, files }, error: null });
+  } catch (e) {
+    res.status(500).json({ data: null, error: { message: e.message } });
+  }
+});
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 // token → { id, email, userrole }

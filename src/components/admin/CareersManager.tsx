@@ -1,31 +1,16 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, RefreshCw, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Check, X, RefreshCw } from "lucide-react";
 import {
   Briefcase, Code2, Smartphone, Palette, BarChart2, Database,
   Users, Globe, Shield, Headphones, PenTool, TrendingUp,
   Monitor, Cloud, Search, Megaphone, Lock, Server, Cpu,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import AssetField from "./AssetField";
+import { dbDelete, dbInsert, dbSelect, dbUpdate } from "@/lib/api";
 
 type CareerJob = Tables<"career_jobs">;
-
-const API = (table: string, query = "") => `/api/db/${table}${query ? `?${query}` : ""}`;
-const patch = (table: string, id: string, body: any) =>
-  fetch(API(table, `id=${id}`), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
-const del = (table: string, id: string) =>
-  fetch(API(table, `id=${id}`), { method: "DELETE" }).then(r => r.json());
-const post = (table: string, body: any) =>
-  fetch(API(table), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
-
-async function uploadFile(file: File): Promise<string | null> {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("path", `careers/${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
-  const res = await fetch("/api/upload", { method: "POST", body: form });
-  const json = await res.json();
-  return json?.data?.publicUrl || null;
-}
 
 const ICON_OPTIONS = [
   { name: "Briefcase",  Icon: Briefcase  },
@@ -79,36 +64,15 @@ const ImageField = ({ value, onChange, uploading, setUploading }: {
   value: string; onChange: (v: string) => void;
   uploading: boolean; setUploading: (v: boolean) => void;
 }) => (
-  <div className="space-y-1.5">
-    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Image</label>
-    <div className="flex gap-2">
-      <input
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder="/assets/careers/image.jpg"
-        className={inputCls}
-      />
-      <label className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors ${uploading ? "bg-muted text-muted-foreground" : "bg-secondary/10 text-secondary hover:bg-secondary/20"}`}>
-        <Upload size={13} /> {uploading ? "..." : "Upload"}
-        <input type="file" accept="image/*" className="hidden" disabled={uploading}
-          onChange={async e => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            setUploading(true);
-            const url = await uploadFile(f).catch(() => null);
-            setUploading(false);
-            if (url) { onChange(url); toast.success("Image uploaded!"); }
-            else toast.error("Upload failed.");
-            e.target.value = "";
-          }}
-        />
-      </label>
-    </div>
-    {value && (
-      <img src={value} alt="preview" className="h-16 rounded-lg object-cover border border-border/50 mt-1"
-        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-    )}
-  </div>
+  <AssetField
+    label="Job Image"
+    value={value}
+    onChange={onChange}
+    folder="careers"
+    placeholder="/assets/careers/image.jpg"
+    previewClassName="h-16 rounded-lg object-cover border border-border/50 mt-1"
+    inputClassName={inputCls}
+  />
 );
 
 // ── Job Form ──────────────────────────────────────────────────────────────────
@@ -161,7 +125,7 @@ const CareersManager = () => {
 
   const load = async () => {
     setLoading(true);
-    const res = await fetch(API("career_jobs", "_order=sort_order&_asc=true")).then(r => r.json());
+    const res = await dbSelect<CareerJob[]>("career_jobs", {}, { order: "sort_order", asc: true });
     if (res.data) setJobs(res.data);
     setLoading(false);
   };
@@ -169,7 +133,7 @@ const CareersManager = () => {
   const saveEdit = async () => {
     if (!editingId) return;
     setSaving(true);
-    const res = await patch("career_jobs", editingId, {
+    const res = await dbUpdate("career_jobs", { id: editingId }, {
       title: editData.title, description: editData.description,
       location: editData.location, job_type: editData.job_type,
       image_url: editData.image_url || null, icon: editData.icon || null,
@@ -180,13 +144,13 @@ const CareersManager = () => {
   };
 
   const toggleVisible = async (id: string, current: boolean) => {
-    await patch("career_jobs", id, { is_visible: !current });
+    await dbUpdate("career_jobs", { id }, { is_visible: !current });
     setJobs(prev => prev.map(j => j.id === id ? { ...j, is_visible: !current } : j));
   };
 
   const deleteJob = async (id: string) => {
     if (!confirm("Delete this job listing?")) return;
-    const res = await del("career_jobs", id);
+    const res = await dbDelete("career_jobs", { id });
     if (res.error) { toast.error("Failed to delete."); return; }
     setJobs(prev => prev.filter(j => j.id !== id));
     toast.success("Job deleted.");
@@ -196,7 +160,7 @@ const CareersManager = () => {
     if (!newForm.title || !newForm.description) { toast.error("Title and description required."); return; }
     setSaving(true);
     const maxOrder = jobs.length > 0 ? Math.max(...jobs.map(j => j.sort_order)) + 1 : 0;
-    const res = await post("career_jobs", {
+    const res = await dbInsert("career_jobs", {
       title: newForm.title, description: newForm.description,
       location: newForm.location, job_type: newForm.job_type,
       image_url: newForm.image_url || null, icon: newForm.icon || null,
