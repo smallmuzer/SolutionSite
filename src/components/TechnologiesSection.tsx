@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { useGlobalView } from "./ui-customizer-context";
 import { ArrowRight, Code2, Database, Smartphone, Globe, Server, Cloud, GitBranch, Layers } from "lucide-react";
-import { dbSelect } from "@/lib/api";
+import { useDbQuery } from "@/hooks/useDbQuery";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 interface Technology {
   id: string;
@@ -28,7 +29,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   General:  Layers,
 };
 
-// Local assets — exact filenames from /public/assets/Technology/
 const LOCAL_LOGOS: Record<string, string> = {
   ".NET":       "/assets/Technology/dotnet.png",
   "SQL Server": "/assets/Technology/sqlserveer.png",
@@ -60,29 +60,17 @@ const LogoImg = ({ src, name, size = 24 }: { src: string; name: string; size?: n
 
 const TechnologiesSection = () => {
   const view = useGlobalView();
-  const [techs, setTechs] = useState<Technology[]>([]);
-  const [header, setHeader] = useState({
-    badge: "Our Stack", title: "Technologies", highlight: "We Use",
-    description: "We leverage cutting-edge technologies to build robust, scalable, and future-proof solutions for our clients.",
-  });
-  const [loaded, setLoaded] = useState(false);
+  const { data: techs, isLoading } = useDbQuery<Technology[]>("technologies", { is_visible: true }, { order: "sort_order", asc: true });
+  const content = useSiteContent("technologies");
 
-  useEffect(() => {
-    const load = async () => {
-      const [techRes, contentRes] = await Promise.all([
-        dbSelect<any[]>("technologies", { is_visible: true }, { order: "sort_order", asc: true }),
-        dbSelect<any>("site_content", { section_key: "technologies" }, { single: true }),
-      ]);
-      if (techRes.data && techRes.data.length > 0) setTechs(techRes.data);
-      if (contentRes.data?.content) setHeader(h => ({ ...h, ...contentRes.data.content }));
-      setLoaded(true);
-    };
-    load();
-    window.addEventListener("ss:contentSaved", load);
-    return () => window.removeEventListener("ss:contentSaved", load);
-  }, []);
+  const header = {
+    badge: content.badge || "Our Stack",
+    title: content.title || "Technologies",
+    highlight: content.highlight || "We Use",
+    description: content.description || "cutting-edge technologies..."
+  };
 
-  if (!loaded) return (
+  if (isLoading) return (
     <section id="technologies" className="section-padding section-alt relative overflow-hidden">
       <div className="container-wide relative z-10 animate-pulse">
         <div className="text-center mb-12">
@@ -99,7 +87,7 @@ const TechnologiesSection = () => {
     </section>
   );
 
-  if (techs.length === 0) return null;
+  if (!techs || techs.length === 0) return null;
 
   const scrollToContact = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 

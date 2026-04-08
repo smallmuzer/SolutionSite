@@ -4,35 +4,15 @@ import path from "path";
 
 export default defineConfig(() => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 5173,
+    strictPort: false,
     hmr: { overlay: false },
     proxy: {
-      "/api/events": {
-        target: "http://localhost:3001",
-        changeOrigin: true,
-        ws: false,
-        selfHandleResponse: true,
-        configure: (proxy) => {
-          proxy.on("proxyReq", (proxyReq) => {
-            proxyReq.setHeader("Accept", "text/event-stream");
-            proxyReq.setHeader("Cache-Control", "no-cache");
-            proxyReq.setHeader("Connection", "keep-alive");
-          });
-          proxy.on("proxyRes", (proxyRes, req, res) => {
-            res.setHeader("Content-Type", "text/event-stream");
-            res.setHeader("Cache-Control", "no-cache");
-            res.setHeader("Connection", "keep-alive");
-            res.setHeader("X-Accel-Buffering", "no");
-            res.flushHeaders?.();
-            proxyRes.pipe(res);
-            req.on("close", () => proxyRes.destroy());
-          });
-        },
-      },
       "/api": {
         target: "http://localhost:3001",
         changeOrigin: true,
+        timeout: 30000,
       },
     },
   },
@@ -42,9 +22,22 @@ export default defineConfig(() => ({
       name: "local-assets-cache-control",
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (req.url?.startsWith("/assets/")) {
+          const isStatic = req.url?.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css|js|woff|woff2)$/) || 
+                           req.url?.startsWith("/assets/") || 
+                           req.url?.startsWith("/node_modules/");
+
+          if (isStatic) {
             delete req.headers["if-none-match"];
             delete req.headers["if-modified-since"];
+
+            const originalSetHeader = res.setHeader.bind(res);
+            res.setHeader = (name: string, value: any) => {
+              const low = name.toLowerCase();
+              if (low === "etag" || low === "last-modified") return res;
+              if (low === "cache-control") value = "public, max-age=31536000, immutable";
+              return originalSetHeader(name, value);
+            };
+
             const originalWriteHead = res.writeHead.bind(res);
             res.writeHead = ((statusCode: number, ...args: any[]) => {
               res.removeHeader("ETag");

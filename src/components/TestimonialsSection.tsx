@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { dbSelect } from "@/lib/api";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useDbQuery } from "@/hooks/useDbQuery";
 import { useGlobalView } from "./ui-customizer-context";
 
 const AVATAR_MAP: Record<string, string> = {
@@ -29,30 +28,37 @@ const StarRating = ({ rating }: { rating: number }) => (
 
 const TestimonialsSection = () => {
   const view = useGlobalView();
-  const headerContent = useSiteContent("testimonials");
-  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
+
+  const { data: headerContent, isLoading: isHeaderLoading } = useDbQuery<any>("site_content", { section_key: "testimonials" }, { single: true });
+  const { data: rawTestimonials, isLoading: isDataLoading } = useDbQuery<any[]>("testimonials", { is_visible: true }, { order: "created_at", asc: false });
+
   const header = {
-    badge: headerContent.badge || "Testimonials",
-    title: headerContent.title || "What Our",
-    highlight: headerContent.highlight || "Clients Say",
+    badge: headerContent?.content?.badge || "Testimonials",
+    title: headerContent?.content?.title || "What Our",
+    highlight: headerContent?.content?.highlight || "Clients Say",
   };
 
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await dbSelect("testimonials", { is_visible: true }, { order: "created_at", asc: false });
-      if (data && (data as any[]).length > 0) {
-        setTestimonials((data as any[]).map((t: any) => ({
-          id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
-          message: t.message,
-          avatar_url: AVATAR_MAP[t.name] || t.avatar_url || "/assets/testimonials/ahmed.jpg",
-        })));
-      }
-    };
-    load();
-    window.addEventListener("ss:contentSaved", load);
-    return () => window.removeEventListener("ss:contentSaved", load);
-  }, []);
+  const testimonials = useMemo(() => {
+    if (!rawTestimonials) return [];
+    return rawTestimonials.map((t: any) => ({
+      id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
+      message: t.message,
+      avatar_url: AVATAR_MAP[t.name] || t.avatar_url || "/assets/testimonials/ahmed.jpg",
+    }));
+  }, [rawTestimonials]);
+
+  if (isHeaderLoading || isDataLoading) return (
+     <section className="section-padding section-alt animate-pulse">
+        <div className="container-wide">
+          <div className="h-4 w-24 bg-muted mx-auto rounded mb-3" />
+          <div className="h-10 w-64 bg-muted mx-auto rounded mb-14" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1,2,3].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
+          </div>
+        </div>
+     </section>
+  );
 
   const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);
   const goTo = (p: number) => setCurrentPage(((p % totalPages) + totalPages) % totalPages);
@@ -107,7 +113,7 @@ const TestimonialsSection = () => {
         ) : (
           <div className="max-w-3xl mx-auto">
             <div className="flex flex-col gap-5">
-              {pageCards.map((t) => (
+              {pageCards.map((t: any) => (
                 <ListCard key={t.id} t={t} />
               ))}
             </div>

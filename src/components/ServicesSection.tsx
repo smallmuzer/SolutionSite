@@ -1,16 +1,7 @@
-import { useEffect, useState } from "react";
+import { ArrowUpRight, ArrowRight, Monitor, Globe, Smartphone, Database, Users, BarChart2, Search, Megaphone, Palette as PaletteIcon, Briefcase, Cloud, Shield, Code, Server, Terminal, Cpu, HardDrive, Wifi, Building, ShoppingCart, CreditCard, Truck, HeartHandshake, LineChart, PieChart, Zap, Camera, Video, Printer, BookOpen, Lock, Headphones, Star, Mail, MapPin, Home, Settings, Layers, Phone, FileText } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 import { useSiteContent } from "@/hooks/useSiteContent";
-import { dbSelect } from "@/lib/api";
-import {
-  ArrowUpRight, ArrowRight,
-  Monitor, Globe, Smartphone, Database, Users, BarChart2, Search, Megaphone,
-  Palette as PaletteIcon, Briefcase, Cloud, Shield, Code,
-  Server, Terminal, Cpu, HardDrive, Wifi, Building, ShoppingCart,
-  CreditCard, Truck, HeartHandshake, LineChart, PieChart, Zap,
-  Camera, Video, Printer, BookOpen, Lock, Headphones, Star, Mail,
-  MapPin, Home, Settings, Layers, Phone, FileText,
-} from "lucide-react";
+import { useDbQuery } from "@/hooks/useDbQuery";
 import type { Tables } from "@/integrations/supabase/types";
 import { useGlobalView, useCardStyle } from "./ui-customizer-context";
 
@@ -72,24 +63,15 @@ function getIcon(service: Service): React.ElementType {
 const ServicesSection = () => {
   const cardStyle = useCardStyle();
   const view      = useGlobalView();
-  const [services, setServices] = useState<Service[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const content   = useSiteContent("services");
   const scrollTo  = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const { data } = await dbSelect<any[]>("services", { is_visible: true }, { order: "sort_order" });
-        if (data && data.length > 0) setServices(data);
-      } catch { } finally { setLoaded(true); }
-    };
-    load();
-    window.addEventListener("ss:contentSaved", load);
-    return () => window.removeEventListener("ss:contentSaved", load);
-  }, []);
+  const { data: services, isLoading } = useDbQuery<Service[]>("services", 
+    { is_visible: true }, 
+    { order: "sort_order" }
+  );
 
-  if (!loaded) return (
+  if (isLoading) return (
     <section id="services" className="section-padding section-alt relative overflow-hidden">
       <div className="container-wide relative z-10 animate-pulse">
         <div className="text-center mb-8">
@@ -105,7 +87,8 @@ const ServicesSection = () => {
       </div>
     </section>
   );
-  if (services.length === 0) return null;
+
+  if (!services || services.length === 0) return null;
 
   return (
     <section id="services" className="section-padding section-alt relative overflow-hidden">
@@ -138,7 +121,6 @@ const ServicesSection = () => {
                   >
                     {useImg ? (
                       <>
-                        {/* Top Image */}
                         <div className="relative h-[110px] w-full overflow-hidden shrink-0">
                           <img
                             src={theme.img}
@@ -154,8 +136,6 @@ const ServicesSection = () => {
                             </div>
                           </div>
                         </div>
-
-                        {/* Bottom Content / Card Footer */}
                         <div className="relative flex-1 w-full px-3 pt-2.5 pb-4 flex flex-col bg-card dark:bg-card/40 z-10 border-t border-border/50">
                            <h3 className="font-heading font-extrabold text-[0.9375rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
                             {service.title}

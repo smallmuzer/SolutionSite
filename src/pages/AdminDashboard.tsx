@@ -808,6 +808,8 @@ const AdminDashboard = () => {
           if (typeof value === "string") url.searchParams.set(key, value);
         });
       }
+      // Add cache-busting timestamp
+      url.searchParams.set("_t", Date.now().toString());
       const resp = await fetch(url.toString(), {
         method: options.method || "GET",
         headers: { "Content-Type": "application/json" },

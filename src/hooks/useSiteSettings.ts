@@ -1,5 +1,6 @@
-import { useEffect } from "react";
-import { dbSelect } from "@/lib/api";
+import { useEffect, useMemo } from "react";
+import { useDbQuery } from "./useDbQuery";
+import { useSiteSettingsData } from "./useSiteContent";
 
 const FONT_MAP: Record<string, string> = {
   "Arial": "Arial, Helvetica, sans-serif",
@@ -106,34 +107,41 @@ function applySecurity(sec: Record<string, any>) {
   document.oncontextmenu = sec.right_click ? (e) => e.preventDefault() : null;
 }
 
-// Single fetch for both settings + security in parallel, runs once on app load
+/**
+ * useSiteSettings hook
+ * 1. Fetches settings and security data via React Query (cached)
+ * 2. Applies side-effects (fonts, themes, anti-scraping)
+ * 3. Returns the settings object (fixes "settings is undefined" error)
+ */
 export function useSiteSettings() {
+  const settings = useSiteSettingsData();
+  const { data: securityData } = useDbQuery<any>("site_content", { section_key: "security" }, { single: true });
+
+  // Apply settings side-effects when data changes
   useEffect(() => {
-    // Apply cached theme instantly before fetch
+    if (Object.keys(settings).length > 0) {
+      applySettings(settings);
+    }
+  }, [settings]);
+
+  // Apply security side-effects when data changes
+  useEffect(() => {
+    if (securityData?.content) {
+      applySecurity(securityData.content);
+    }
+  }, [securityData]);
+
+  // Handle immediate cached theme setup
+  useEffect(() => {
     const cached = localStorage.getItem("bss-theme");
     if (cached === "dark") document.documentElement.classList.add("dark");
     else if (cached === "light") document.documentElement.classList.remove("dark");
-
+    
     try {
       const stored = localStorage.getItem("bss-user-settings");
       if (stored) applySettings({});
     } catch { }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const [resSet, resSec] = await Promise.all([
-          dbSelect<any>("site_content", { section_key: "settings" }, { single: true }),
-          dbSelect<any>("site_content", { section_key: "security" }, { single: true }),
-        ]);
-        if (cancelled) return;
-        if (resSet.data?.content) applySettings(resSet.data.content as Record<string, any>);
-        if (resSec.data?.content) applySecurity(resSec.data.content as Record<string, any>);
-      } catch { }
-    };
-
-    load();
-    return () => { cancelled = true; };
   }, []);
+
+  return settings;
 }

@@ -1,36 +1,47 @@
 /**
- * SQLite REST API client — pure fetch, zero Supabase dependency.
- * Includes: in-memory cache with TTL, request deduplication, abort on unmount.
+ * SQLite REST API client — uses React Query for caching.
+ * No client-side cache needed; React Query handles stale-while-revalidate,
+ * deduplication, and background refetches.
+ * 
+ * 304 NOT MODIFIED EXPLANATION:
+ * - Browsers automatically send If-None-Match (ETag) or If-Modified-Since headers
+ * - Server compares and returns 304 if content hasn't changed
+ * - This is NORMAL for static/browser-cached resources
+ * - To CONTROL caching:
+ *   1. Server: Set Cache-Control: no-cache, no-store, must-revalidate
+ *   2. Client: Use React Query's staleTime to avoid unnecessary requests
+ *   3. Disable etags on server (already done with app.set("etag", false))
  */
 
 const BASE = "/api/db";
-const CACHE_TTL = 60_000; // 1 minute
 
 type Row = Record<string, any>;
 type ApiResult<T> = { data: T | null; error: { message: string } | null };
 
-// ── Cache ─────────────────────────────────────────────────────────────────────
-
-interface CacheEntry { data: any; ts: number; }
-const cache = new Map<string, CacheEntry>();
-const inflight = new Map<string, Promise<any>>();
-
-function cacheKey(table: string, params: URLSearchParams): string {
-  return `${table}?${params.toString()}`;
-}
-
-function fromCache<T>(key: string): T | null {
-  const entry = cache.get(key);
-  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data as T;
-  cache.delete(key);
-  return null;
-}
-
 export function invalidateCache(table?: string) {
-  if (!table) { cache.clear(); return; }
-  for (const key of cache.keys()) {
-    if (key.startsWith(table)) cache.delete(key);
+  // React Query handles cache invalidation via queryClient.invalidateQueries()
+  // This function is kept for backward compatibility with non-React Query code
+  console.warn("invalidateCache() is deprecated. Use queryClient.invalidateQueries() instead.");
+}
+
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-cache, no-store, must-revalidate, private, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
+async function fetchWithCacheControl(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  // Default to allowing browser cache unless specified
+  if (options.method && options.method !== "GET") {
+    Object.entries(NO_CACHE_HEADERS).forEach(([k, v]) => headers.set(k, v));
   }
+  
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+  return response;
 }
 
 // ── Generic CRUD helpers ──────────────────────────────────────────────────────
@@ -46,30 +57,9 @@ export async function dbSelect<T = Row[]>(
     if (opts.order) { p.set("_order", opts.order); p.set("_asc", String(opts.asc !== false)); }
     if (opts.single) p.set("_single", "1");
 
-    const key = cacheKey(table, p);
-
-    if (!opts.noCache) {
-      const cached = fromCache<ApiResult<T>>(key);
-      if (cached) return cached;
-
-      // Deduplicate in-flight requests
-      if (inflight.has(key)) return inflight.get(key)!;
-    }
-
-    const req = fetch(`${BASE}/${table}?${p}`)
-      .then(r => r.json())
-      .then(json => {
-        if (!opts.noCache) cache.set(key, { data: json, ts: Date.now() });
-        inflight.delete(key);
-        return json;
-      })
-      .catch((e: any) => {
-        inflight.delete(key);
-        return { data: null, error: { message: e?.message ?? "Network error" } };
-      });
-
-    if (!opts.noCache) inflight.set(key, req);
-    return req;
+    const response = await fetchWithCacheControl(`${BASE}/${table}?${p}`);
+    const json = await response.json();
+    return json;
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };
   }
@@ -77,12 +67,11 @@ export async function dbSelect<T = Row[]>(
 
 export async function dbInsert<T = Row>(table: string, data: Row): Promise<ApiResult<T>> {
   try {
-    const res = await fetch(`${BASE}/${table}`, {
+    const res = await fetchWithCacheControl(`${BASE}/${table}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    invalidateCache(table);
     return await res.json();
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };
@@ -97,12 +86,11 @@ export async function dbUpdate<T = Row>(
   try {
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => p.set(k, String(v)));
-    const res = await fetch(`${BASE}/${table}?${p}`, {
+    const res = await fetchWithCacheControl(`${BASE}/${table}?${p}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    invalidateCache(table);
     return await res.json();
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };
@@ -113,8 +101,7 @@ export async function dbDelete(table: string, filters: Record<string, any>): Pro
   try {
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => p.set(k, String(v)));
-    const res = await fetch(`${BASE}/${table}?${p}`, { method: "DELETE" });
-    invalidateCache(table);
+    const res = await fetchWithCacheControl(`${BASE}/${table}?${p}`, { method: "DELETE" });
     return await res.json();
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };

@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import UICustomizer from "@/components/UICustomizer";
 import ScrollProgress from "@/components/ScrollProgress";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSEO } from "@/hooks/useSEO";
 
 // Lazy load all below-fold sections — improves initial load dramatically
@@ -28,8 +29,15 @@ const SkeletonSection = () => (
 );
 
 const Index = () => {
-  useSiteSettings();
+  useSiteSettings(); // Preloads site_content
   useSEO();
+  
+  // Preload common data — fires once, stores in React Query cache
+  const { data: _c } = useDbQuery("client_logos", { is_visible: true }, { order: "sort_order" });
+  const { data: _s } = useDbQuery("services", { is_visible: true }, { order: "sort_order" });
+  const { data: _t } = useDbQuery("technologies", { is_visible: true }, { order: "sort_order" });
+  const { data: _p } = useDbQuery("products", { is_visible: true }, { order: "sort_order" });
+  const { data: _j } = useDbQuery("career_jobs", { is_visible: true }, { order: "sort_order" });
 
   useEffect(() => {
     // Force scroll to top on refresh and clear hash targeting

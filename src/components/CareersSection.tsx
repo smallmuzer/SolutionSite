@@ -9,7 +9,9 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 import { useGlobalView, useCardStyle } from "./ui-customizer-context";
 import { toast } from "sonner";
-import { dbSelect, dbInsert } from "@/lib/api";
+import { dbInsert } from "@/lib/api";
+import { useDbQuery } from "@/hooks/useDbQuery";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 type CareerJob = Tables<"career_jobs">;
 
@@ -171,31 +173,22 @@ const CareersSection = () => {
   const cardStyle = useCardStyle();
   const useImg = cardStyle === "image";
 
-  const [jobs, setJobs] = useState<CareerJob[]>([]);
-  const [header, setHeader] = useState({ badge: "Careers", title: "Join Our", highlight: "Team", description: "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide." });
+  const { data: jobs = [] } = useDbQuery<CareerJob[]>("career_jobs", { is_visible: true }, { order: "sort_order", asc: true });
+  const content = useSiteContent("careers");
+  
+  const header = {
+    badge: content.badge || "Careers",
+    title: content.title || "Join Our",
+    highlight: content.highlight || "Team",
+    description: content.description || "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide."
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<CareerJob | null>(null);
   const [applyForm, setApplyForm] = useState({ name: "", email: "", phone: "", cover: "", website: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [sectionVisible, setSectionVisible] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      const [jobsRes, contentRes] = await Promise.all([
-        dbSelect<any[]>("career_jobs", { is_visible: true }, { order: "sort_order", asc: true }),
-        dbSelect<any>("site_content", { section_key: "careers" }, { single: true }),
-      ]);
-      if (jobsRes.data && jobsRes.data.length > 0) setJobs(jobsRes.data);
-      if (contentRes.data?.content) {
-        setHeader(h => ({ ...h, ...contentRes.data.content }));
-        const sv = contentRes.data.content.section_visible;
-        setSectionVisible(sv !== false && sv !== "false");
-      }
-    };
-    load();
-    window.addEventListener("ss:contentSaved", load);
-    return () => window.removeEventListener("ss:contentSaved", load);
-  }, []);
+  
+  const sectionVisible = content.section_visible !== false && content.section_visible !== "false";
 
   if (!sectionVisible) return null;
 

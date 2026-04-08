@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Sun, Moon, Save, GripHorizontal, LayoutGrid, List, Image, Layers } from "lucide-react";
 import { toast } from "sonner";
-import { dbSelect } from "@/lib/api";
-import { applySettings } from "@/hooks/useSiteSettings";
+import { applySettings, useSiteSettings } from "@/hooks/useSiteSettings";
 import { UIPrefs, defaultPrefs } from "./ui-customizer-context";
 
 const LOCAL_STORAGE_KEY = "bss-user-settings";
@@ -34,41 +33,24 @@ const accentColors = ["#3b82f6", "#2db8a0", "#8b5cf6", "#f43f5e", "#f59e0b", "#1
 const TOUR_CACHE_KEY = "bss-tour-enabled";
 
 const UICustomizer = () => {
+  const settings = useSiteSettings();
+
   // tri-state: null = still loading, true = tour ON, false = tour OFF
   const [tourEnabled, setTourEnabled] = useState<boolean | null>(() => {
     try {
       const cached = localStorage.getItem(TOUR_CACHE_KEY);
-      // Return cached value immediately (can be "true" or "false")
       if (cached !== null) return cached === "true";
     } catch { }
-    return null; // Unknown until API responds
+    return null;
   });
 
   useEffect(() => {
-    // Fetch show_tour from DB and cache it
-    const fetchTourSetting = async () => {
-      try {
-        const result = await Promise.race([
-          dbSelect("site_content", { section_key: "settings" }, { single: true }),
-          new Promise<{ data: null }>(r => setTimeout(() => r({ data: null }), 3000))
-        ]);
-        const content = (result as any)?.data?.content;
-        // When content exists, respect show_tour; default ON if not set
-        const enabled = content ? content.show_tour !== false : true;
-        setTourEnabled(enabled);
-        localStorage.setItem(TOUR_CACHE_KEY, String(enabled));
-      } catch {
-        // On error keep cached value, or default to true
-        if (localStorage.getItem(TOUR_CACHE_KEY) === null) setTourEnabled(true);
-      }
-    };
-    fetchTourSetting();
-
-    // Re-check when settings are saved from Admin panel
-    const onSaved = () => fetchTourSetting();
-    window.addEventListener("ss:contentSaved", onSaved);
-    return () => window.removeEventListener("ss:contentSaved", onSaved);
-  }, []);
+    if (Object.keys(settings).length > 0) {
+      const enabled = settings.show_tour !== false;
+      setTourEnabled(enabled);
+      localStorage.setItem(TOUR_CACHE_KEY, String(enabled));
+    }
+  }, [settings]);
 
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState<UIPrefs>(() => {

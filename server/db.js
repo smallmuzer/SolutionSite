@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const DB_PATH = join(__dirname, "app.db");
 
-const db = new Database(DB_PATH);
+const db = new Database(DB_PATH, { timeout: 5000 });
 // Use DELETE mode instead of WAL so all changes are in the main file
 db.pragma("journal_mode = DELETE");
 db.pragma("foreign_keys = ON");

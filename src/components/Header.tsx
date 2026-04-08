@@ -57,56 +57,24 @@ function useDarkMode() {
   return { isDark, toggle };
 }
 
-async function fetchSettings(): Promise<Record<string, any>> {
-  try {
-    const res = await fetch("/api/db/site_content?section_key=settings&_single=1");
-    const json = await res.json();
-    return (json?.data?.content as Record<string, any>) ?? {};
-  } catch {
-    return {};
-  }
-}
+import { useSiteContent, useSiteSettingsData as useSiteSettings } from "@/hooks/useSiteContent";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileVisible, setMobileVisible] = useState(false);
   const [activeSection, setActiveSection] = useState("#home");
-  const [demoLink, setDemoLink] = useState("https://demo.hrmetrics.mv/");
-  const [logoPath, setLogoPath] = useState<string | null>(null);
-  const [siteName, setSiteName] = useState("Systems Solutions");
-  const [navItems, setNavItems] = useState<NavItem[]>(DEFAULT_NAV);
+  const settings = useSiteSettings();
+  const careersContent = useSiteContent("careers");
   const { isDark, toggle } = useDarkMode();
   const [tourCompleted, setTourCompleted] = useState(() => localStorage.getItem("bss_tour_completed_v2") === "true");
   const mobileTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const [careersSectionVisible, setCareersSectionVisible] = useState(true);
-
-  // Load settings from SQLite via REST API
-  useEffect(() => {
-    fetchSettings().then((c) => {
-      if (c.demo_url)  setDemoLink(c.demo_url);
-      if (c.site_logo) setLogoPath(c.site_logo);
-      if (c.site_name) setSiteName(c.site_name);
-      if (Array.isArray(c.nav_items) && c.nav_items.length > 0) setNavItems(c.nav_items);
-    });
-    // Check careers section visibility
-    fetch("/api/db/site_content?section_key=careers&_single=1").then(r => r.json()).then(json => {
-      const visible = json?.data?.content?.section_visible;
-      setCareersSectionVisible(visible !== false && visible !== "false");
-    }).catch(() => {});
-
-    // Live updates when admin saves settings
-    const handler = (e: Event) => {
-      const d = (e as CustomEvent).detail;
-      if (d.demo_url)  setDemoLink(d.demo_url);
-      if (d.site_logo) setLogoPath(d.site_logo);
-      if (d.site_name) setSiteName(d.site_name);
-      if (Array.isArray(d.nav_items) && d.nav_items.length > 0) setNavItems(d.nav_items);
-    };
-    window.addEventListener("ss:siteSettings", handler);
-    return () => window.removeEventListener("ss:siteSettings", handler);
-  }, []);
+  const demoLink = settings.demo_url || "https://demo.hrmetrics.com.mv/";
+  const logoPath = settings.site_logo || null;
+  const siteName = settings.site_name || "Systems Solutions";
+  const navItems = Array.isArray(settings.nav_items) && settings.nav_items.length > 0 ? settings.nav_items : DEFAULT_NAV;
+  const careersSectionVisible = careersContent.section_visible !== false && careersContent.section_visible !== "false";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);

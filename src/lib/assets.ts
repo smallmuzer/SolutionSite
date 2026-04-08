@@ -1,3 +1,6 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "./query-keys";
+
 type AssetFile = {
   name: string;
   publicUrl: string;
@@ -13,8 +16,24 @@ type AssetListResponse = {
   } | null;
 };
 
-const assetCache = new Map<string, AssetFile[]>();
-const inflight = new Map<string, Promise<AssetFile[]>>();
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-cache, no-store, must-revalidate, private, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
+async function fetchAssets(folder: string): Promise<AssetFile[]> {
+  const timestamp = Date.now();
+  const url = `/api/assets?folder=${encodeURIComponent(folder)}&_t=${timestamp}`;
+  const response = await fetch(url, {
+    headers: NO_CACHE_HEADERS,
+  });
+  const json = await response.json() as AssetListResponse;
+  if (!response.ok || json.error) {
+    throw new Error(json.error?.message || "Failed to load project assets.");
+  }
+  return json.data?.files || [];
+}
 
 function normaliseFolder(folder: string) {
   const cleaned = String(folder || "uploads").trim() || "uploads";
@@ -24,53 +43,46 @@ function normaliseFolder(folder: string) {
   return cleaned;
 }
 
-export async function listProjectAssets(folder: string, opts: { force?: boolean } = {}) {
-  const key = normaliseFolder(folder);
-  if (!opts.force && assetCache.has(key)) {
-    return assetCache.get(key) || [];
-  }
-  if (!opts.force && inflight.has(key)) {
-    return inflight.get(key) || [];
-  }
+export async function listProjectAssets(folder: string, _opts?: { force?: boolean }) {
+  return fetchAssets(normaliseFolder(folder));
+}
 
-  const request = fetch(`/api/assets?folder=${encodeURIComponent(key)}`)
-    .then(async (res) => {
-      const json = await res.json() as AssetListResponse;
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message || "Failed to load project assets.");
-      }
-      const files = json.data?.files || [];
-      assetCache.set(key, files);
-      inflight.delete(key);
-      return files;
-    })
-    .catch((error) => {
-      inflight.delete(key);
-      throw error;
-    });
-
-  inflight.set(key, request);
-  return request;
+export function useProjectAssets(folder: string, options?: { enabled?: boolean }) {
+  const normalized = normaliseFolder(folder);
+  
+  return useQuery({
+    queryKey: queryKeys.assets.folder(normalized),
+    queryFn: () => fetchAssets(normalized),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: options?.enabled !== false,
+  });
 }
 
 export function invalidateProjectAssets(folder?: string) {
+  const queryClient = useQueryClient();
+  
   if (!folder) {
-    assetCache.clear();
-    inflight.clear();
+    queryClient.invalidateQueries({ queryKey: ["assets"] });
     return;
   }
-  assetCache.delete(normaliseFolder(folder));
-  inflight.delete(normaliseFolder(folder));
+  queryClient.invalidateQueries({ queryKey: queryKeys.assets.folder(normaliseFolder(folder)) });
 }
 
 export async function uploadProjectAsset(folder: string, file: File) {
   const targetFolder = normaliseFolder(folder);
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const form = new FormData();
-  form.append("file", file);
   form.append("path", `${targetFolder}/${safeName}`);
+  form.append("file", file);
 
-  const res = await fetch("/api/upload", { method: "POST", body: form });
+  const res = await fetch("/api/upload", { 
+    method: "POST", 
+    body: form,
+    headers: NO_CACHE_HEADERS,
+  });
   const json = await res.json();
   if (!res.ok || json.error) {
     throw new Error(json.error?.message || json.error || "Upload failed.");

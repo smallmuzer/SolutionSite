@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import AnimatedSection from "./AnimatedSection";
-import { dbSelect } from "@/lib/api";
 import type { Tables } from "@/integrations/supabase/types";
 import { Play, LayoutGrid } from "lucide-react";
+import { useDbQuery } from "@/hooks/useDbQuery";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
-// ── Real client logos ─────────────────────────────────────────────────────────
 const SEED_CLIENTS = [
   { id: "cl-0", name: "aaa Hotels & Resorts", logo_url: "/assets/clients/aaa-1.png", is_visible: true, sort_order: 0 },
   { id: "cl-1", name: "Alia Investments", logo_url: "/assets/clients/Alia.png", is_visible: true, sort_order: 1 },
@@ -49,47 +49,25 @@ const SEED_CLIENTS = [
 type ClientLogo = Tables<"client_logos">;
 
 const ClientLogoImage = ({ client }: { client: ClientLogo }) => (
-  <img
-    src={client.logo_url}
-    alt={client.name}
-    className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal"
-    loading="lazy"
-    decoding="async"
-    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-  />
+  <img src={client.logo_url} alt={client.name} className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal" loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
 );
 
-// ── Compute static ring positions: 2 concentric rings inside globe ───────────
-// Globe border = 43% (215px). CTA button ~ 60px radius.
-// Card = 54×44px, half-width = 27px = 5.4%.
-// Inner ring: r=22% (110px) → edge 137px.  Gap from CTA: 110−60=50px ✓
-// Outer ring: r=34% (170px) → edge 197px < 215px border ✓
-// Ring gap: (34−22)% × 500 = 60px > card height (44px) ✓ no overlap
 function computeGlobePositions(count: number): { cx: number; cy: number }[] {
   if (count === 0) return [];
   const pos: { cx: number; cy: number }[] = [];
-
-  const R_INNER = 22;  // 110px from center
-  const R_OUTER = 34;  // 170px from center
-
+  const R_INNER = 22, R_OUTER = 34;
   if (count <= 7) {
-    // Few cards → single ring centered between CTA and border
-    const r = count <= 3 ? R_OUTER : 28; // small count on outer, mid on 28%
+    const r = count <= 3 ? R_OUTER : 28;
     for (let i = 0; i < count; i++) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / count;
       pos.push({ cx: 50 + r * Math.cos(a), cy: 50 + r * Math.sin(a) });
     }
   } else {
-    // Two rings: inner ~36%, outer ~64%
-    const inner = Math.max(3, Math.round(count * 0.36));
-    const outer = count - inner;
-
-    // Inner ring — starts at 12 o’clock
+    const inner = Math.max(3, Math.round(count * 0.36)), outer = count - inner;
     for (let i = 0; i < inner; i++) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / inner;
       pos.push({ cx: 50 + R_INNER * Math.cos(a), cy: 50 + R_INNER * Math.sin(a) });
     }
-    // Outer ring — staggered so cards sit in the gaps of the inner ring
     const stagger = Math.PI / outer;
     for (let i = 0; i < outer; i++) {
       const a = -Math.PI / 2 + stagger + (i * 2 * Math.PI) / outer;
@@ -99,80 +77,44 @@ function computeGlobePositions(count: number): { cx: number; cy: number }[] {
   return pos;
 }
 
-
-// ── Animated Globe ────────────────────────────────────────────────────────────
 const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
-  const bgRef = useRef<HTMLCanvasElement>(null);
-  const fgRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-  const zoomRef = useRef(1);
-  const targetZoomRef = useRef(1);
-  const zoomRafRef = useRef<number>(0);
-
+  const bgRef = useRef<HTMLCanvasElement>(null), fgRef = useRef<HTMLCanvasElement>(null), containerRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), zoomRef = useRef(1), targetZoomRef = useRef(1), zoomRafRef = useRef<number>(0);
   const [zoom, setZoom] = useState(1);
   const [batchIndex, setBatchIndex] = useState(0);
-
-  const SIZE = 500;
-  const BATCH_SIZE = 14;       // 5 inner + 9 outer per batch
-  const ROTATION_MS = 10_000;  // swap batch every 10 seconds
+  const SIZE = 500, BATCH_SIZE = 14, ROTATION_MS = 10_000;
 
   const batches = useMemo(() => {
     const b: ClientLogo[][] = [];
-    for (let i = 0; i < clients.length; i += BATCH_SIZE)
-      b.push(clients.slice(i, i + BATCH_SIZE));
+    for (let i = 0; i < clients.length; i += BATCH_SIZE) b.push(clients.slice(i, i + BATCH_SIZE));
     return b;
   }, [clients]);
-  const batchLayouts = useMemo(
-    () => batches.map((batch) => ({
-      batch,
-      positions: computeGlobePositions(batch.length),
-    })),
-    [batches]
-  );
 
-  // Auto-advance batch every 10s with a 400ms fade cross-dissolve
+  const batchLayouts = useMemo(() => batches.map((batch) => ({ batch, positions: computeGlobePositions(batch.length) })), [batches]);
+
   useEffect(() => {
     if (batches.length <= 1) return;
-    const id = setInterval(() => {
-      setBatchIndex(prev => (prev + 1) % batches.length);
-    }, ROTATION_MS);
+    const id = setInterval(() => setBatchIndex(prev => (prev + 1) % batches.length), ROTATION_MS);
     return () => clearInterval(id);
   }, [batches.length]);
 
-  // Zoom wheel
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.15 : 0.15;
-    targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + delta));
-  }, []);
+  const handleWheel = useCallback((e: WheelEvent) => { e.preventDefault(); targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15))); }, []);
   const handleMouseLeave = useCallback(() => { targetZoomRef.current = 1; }, []);
-
-  useEffect(() => {
-    let running = true;
-    const step = () => {
-      if (!running) return;
-      const d = targetZoomRef.current - zoomRef.current;
-      zoomRef.current += d * 0.2;
-      if (Math.abs(d) > 0.001) setZoom(zoomRef.current);
-      zoomRafRef.current = requestAnimationFrame(step);
-    };
-    step();
-    return () => { running = false; cancelAnimationFrame(zoomRafRef.current); };
-  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     el.addEventListener("wheel", handleWheel, { passive: false });
     el.addEventListener("mouseleave", handleMouseLeave);
-    return () => {
-      el.removeEventListener("wheel", handleWheel);
-      el.removeEventListener("mouseleave", handleMouseLeave);
-    };
+    return () => { el.removeEventListener("wheel", handleWheel); el.removeEventListener("mouseleave", handleMouseLeave); };
   }, [handleWheel, handleMouseLeave]);
 
-  // Globe canvas — ONLY the longitude lines rotate
+  useEffect(() => {
+    let running = true;
+    const step = () => { if (!running) return; const d = targetZoomRef.current - zoomRef.current; zoomRef.current += d * 0.2; if (Math.abs(d) > 0.001) setZoom(zoomRef.current); zoomRafRef.current = requestAnimationFrame(step); };
+    step();
+    return () => { running = false; cancelAnimationFrame(zoomRafRef.current); };
+  }, []);
+
   useEffect(() => {
     const bg = bgRef.current, fg = fgRef.current;
     if (!bg || !fg) return;
@@ -180,47 +122,25 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
     if (!bgCtx || !fgCtx) return;
     const cx = SIZE / 2, cy = SIZE / 2, R = SIZE * 0.43;
     let offset = 0;
-
     const runDraw = () => {
       cancelAnimationFrame(rafRef.current);
       const dark = document.documentElement.classList.contains("dark");
-      const lineC   = dark ? "rgba(96,165,250,0.65)"  : "rgba(59,130,246,0.22)";
-      const longC   = dark ? "rgba(96,165,250,0.60)"  : "rgba(59,130,246,0.18)";
-      const borderC = dark ? "rgba(96,165,250,0.85)"  : "rgba(59,130,246,0.28)";
-      const ringC   = dark ? "rgba(147,197,253,0.65)" : "rgba(59,130,246,0.20)";
-
-      // Static layers — drawn once per theme change
+      const lineC = dark ? "rgba(96,165,250,0.65)" : "rgba(59,130,246,0.22)", borderC = dark ? "rgba(96,165,250,0.85)" : "rgba(59,130,246,0.28)", longC = dark ? "rgba(96,165,250,0.60)" : "rgba(59,130,246,0.18)", ringC = dark ? "rgba(147,197,253,0.65)" : "rgba(59,130,246,0.20)";
       bgCtx.clearRect(0, 0, SIZE, SIZE);
       bgCtx.lineWidth = 0.6; bgCtx.strokeStyle = lineC;
       for (let lat = -75; lat <= 75; lat += 25) {
-        const y = cy + R * Math.sin((lat * Math.PI) / 180);
-        const r = R * Math.cos((lat * Math.PI) / 180);
+        const y = cy + R * Math.sin((lat * Math.PI) / 180), r = R * Math.cos((lat * Math.PI) / 180);
         bgCtx.beginPath(); bgCtx.ellipse(cx, y, r, r * 0.16, 0, 0, Math.PI * 2); bgCtx.stroke();
       }
-      bgCtx.beginPath(); bgCtx.arc(cx, cy, R, 0, Math.PI * 2);
-      bgCtx.strokeStyle = borderC; bgCtx.lineWidth = 1.5; bgCtx.stroke();
-      bgCtx.beginPath(); bgCtx.arc(cx, cy, R * 0.30, 0, Math.PI * 2);
-      bgCtx.strokeStyle = ringC; bgCtx.lineWidth = 1; bgCtx.stroke();
-
-      // Rotating longitude lines
+      bgCtx.beginPath(); bgCtx.arc(cx, cy, R, 0, Math.PI * 2); bgCtx.strokeStyle = borderC; bgCtx.lineWidth = 1.5; bgCtx.stroke();
+      bgCtx.beginPath(); bgCtx.arc(cx, cy, R * 0.30, 0, Math.PI * 2); bgCtx.strokeStyle = ringC; bgCtx.lineWidth = 1; bgCtx.stroke();
       const draw = () => {
-        fgCtx.clearRect(0, 0, SIZE, SIZE);
-        fgCtx.lineWidth = 0.8; fgCtx.strokeStyle = longC;
-        fgCtx.save();
-        fgCtx.beginPath(); fgCtx.arc(cx, cy, R - 0.5, 0, Math.PI * 2); fgCtx.clip();
-        for (let i = 0; i < 6; i++) {
-          const a = offset + (i * Math.PI) / 6;
-          const rx = R * Math.abs(Math.cos(a));
-          fgCtx.beginPath(); fgCtx.ellipse(cx, cy, rx, R, 0, 0, Math.PI * 2); fgCtx.stroke();
-        }
-        fgCtx.restore();
-        // 10-second full rotation: 2π / (10 * 60fps) ≈ 0.01047 rad/frame
-        offset += 0.01047;
-        rafRef.current = requestAnimationFrame(draw);
+        fgCtx.clearRect(0, 0, SIZE, SIZE); fgCtx.lineWidth = 0.8; fgCtx.strokeStyle = longC; fgCtx.save(); fgCtx.beginPath(); fgCtx.arc(cx, cy, R - 0.5, 0, Math.PI * 2); fgCtx.clip();
+        for (let i = 0; i < 6; i++) { const rx = R * Math.abs(Math.cos(offset + (i * Math.PI) / 6)); fgCtx.beginPath(); fgCtx.ellipse(cx, cy, rx, R, 0, 0, Math.PI * 2); fgCtx.stroke(); }
+        fgCtx.restore(); offset += 0.01047; rafRef.current = requestAnimationFrame(draw);
       };
       rafRef.current = requestAnimationFrame(draw);
     };
-
     runDraw();
     const obs = new MutationObserver(runDraw);
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -229,77 +149,29 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 
   return (
     <div style={{ width: SIZE, height: SIZE, maxWidth: "min(500px, 90vw)", position: "relative", overflow: "visible" }}>
-      <div
-        ref={containerRef}
-        className="relative select-none group"
-        style={{
-          width: "100%", height: "100%", position: "relative", zIndex: 1,
-          transform: `scale(${zoom}) translateZ(0)`,
-          transformOrigin: "center center",
-          willChange: "transform",
-        }}
-      >
-        {/* World map background */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40"
-          style={{ width: SIZE * 0.86, height: SIZE * 0.86 }}>
+      <div ref={containerRef} className="relative select-none group" style={{ width: "100%", height: "100%", position: "relative", zIndex: 1, transform: `scale(${zoom}) translateZ(0)`, transformOrigin: "center center", willChange: "transform" }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40" style={{ width: SIZE * 0.86, height: SIZE * 0.86 }}>
           <div style={{ display: "flex", width: "300%", height: "100%", animation: "globeMapScroll 60s linear infinite" }}>
-            {[0, 1, 2].map(k => (
-              <img key={k} src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt=""
-                style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />
-            ))}
+            {[0, 1, 2].map(k => <img key={k} src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="" style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />)}
           </div>
         </div>
-
         <canvas ref={bgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full" />
         <canvas ref={fgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full" />
-
-        {/* Center CTA */}
-        <button
-          onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })}
-          className="absolute z-20 flex flex-col items-center justify-center"
-          style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: SIZE * 0.30 * 2, height: SIZE * 0.30 * 2, borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}
-        >
+        <button onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })} className="absolute z-20 flex flex-col items-center justify-center" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: SIZE * 0.30 * 2, height: SIZE * 0.30 * 2, borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}>
           <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--secondary))", lineHeight: 1, opacity: 0.85 }}>JOIN</span>
           <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: "0.06em", color: "hsl(var(--secondary))", textShadow: "0 0 12px hsl(var(--secondary)/0.6)", lineHeight: 1.1 }}>Here</span>
           <span className="blink-hint" style={{ fontSize: 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
         </button>
-
-        {/* ── Client cards — keep DOM mounted so image requests do not churn during rotation ── */}
         {batchLayouts.map(({ batch, positions }, layoutIndex) => (
-          <div
-            key={`batch-${layoutIndex}`}
-            className="absolute inset-0"
-            style={{
-              opacity: layoutIndex === batchIndex ? 1 : 0,
-              transition: "opacity 0.4s ease",
-              pointerEvents: layoutIndex === batchIndex ? "auto" : "none",
-            }}
-          >
-            {batch.map((client, i) => {
-              const pos = positions[i];
-              if (!pos) return null;
-              return (
-                <div
-                  key={client.id}
-                  className="absolute z-10 pointer-events-auto hover:z-30 cursor-default"
-                  style={{
-                    left: `${pos.cx}%`,
-                    top: `${pos.cy}%`,
-                    transform: "translate(-50%,-50%)",
-                  }}
-                >
-                  <div
-                    className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]"
-                    style={{ width: 54, height: 44, padding: "3px 3px" }}
-                  >
-                    <div className="w-8 h-5 flex items-center justify-center">
-                      <ClientLogoImage client={client} />
-                    </div>
+          <div key={`batch-${layoutIndex}`} className="absolute inset-0" style={{ opacity: layoutIndex === batchIndex ? 1 : 0, transition: "opacity 0.4s ease", pointerEvents: layoutIndex === batchIndex ? "auto" : "none" }}>
+            {batch.map((client, i) => { const pos = positions[i]; if (!pos) return null; return (
+                <div key={client.id} className="absolute z-10 pointer-events-auto hover:z-30 cursor-default" style={{ left: `${pos.cx}%`, top: `${pos.cy}%`, transform: "translate(-50%,-50%)" }}>
+                  <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]" style={{ width: 54, height: 44, padding: "3px 3px" }}>
+                    <div className="w-8 h-5 flex items-center justify-center"><ClientLogoImage client={client} /></div>
                     <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
                   </div>
                 </div>
-              );
-            })}
+            );})}
           </div>
         ))}
       </div>
@@ -307,161 +179,63 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   );
 };
 
-// ── Side scrolling grid ───────────────────────────────────────────────────────
-
-const COLS = 2, GAP = 20, CARD_W = 82, CARD_H = 68;
+const COLS = 2, GAP = 20, CARD_W = 82, CARD_H = 68, VISIBLE_H = 500, SPEED_PX = 0.8;
 const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
-const VISIBLE_H = 500, SPEED_PX = 0.8;
 
 const ClientCard = ({ client }: { client: ClientLogo }) => (
-  <div className="flex flex-col items-center justify-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-110 hover:shadow-xl hover:z-10 group"
-    style={{ width: CARD_W, height: CARD_H, padding: "6px 5px", gap: 4 }}>
-    <div style={{ width: CARD_W - 14, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <div
-        style={{ maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
-        className="transition-transform duration-300 group-hover:scale-110"
-      >
-        <ClientLogoImage client={client} />
-      </div>
-    </div>
-    <span style={{ fontSize: 9, lineHeight: 1.3, textAlign: "center", fontWeight: 700, color: "hsl(var(--foreground))", width: "100%", padding: "0 3px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
-      {client.name}
-    </span>
+  <div className="flex flex-col items-center justify-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-110 hover:shadow-xl hover:z-10 group" style={{ width: CARD_W, height: CARD_H, padding: "6px 5px", gap: 4 }}>
+    <div style={{ width: CARD_W - 14, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><div style={{ maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }} className="transition-transform duration-300 group-hover:scale-110"><ClientLogoImage client={client} /></div></div>
+    <span style={{ fontSize: 9, lineHeight: 1.3, textAlign: "center", fontWeight: 700, color: "hsl(var(--foreground))", width: "100%", padding: "0 3px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>{client.name}</span>
   </div>
 );
 
 const GridSlideshow = ({ clients, startOffset = 0, reverse = false }: { clients: ClientLogo[]; startOffset?: number; reverse?: boolean }) => {
-  const total = clients.length;
-  const stripRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-  const posRef = useRef<number>(0);
-  const ordered = total === 0 ? [] : Array.from({ length: total }, (_, k) => clients[(startOffset + k) % total]);
-  const doubled = [...ordered, ...ordered, ...ordered];
-  const colCards = Math.ceil(total / COLS);
-  const stripH = colCards * (CARD_H + GAP);
-
+  const total = clients.length, stripRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), posRef = useRef<number>(0);
+  const ordered = total === 0 ? [] : Array.from({ length: total }, (_, k) => clients[(startOffset + k) % total]), doubled = [...ordered, ...ordered, ...ordered];
+  const stripH = Math.ceil(total / COLS) * (CARD_H + GAP);
   useEffect(() => {
-    if (total === 0) return;
-    const el = stripRef.current;
-    if (!el) return;
-    if (reverse) posRef.current = stripH;
-    const animate = () => {
-      if (reverse) {
-        posRef.current -= SPEED_PX;
-        if (posRef.current <= 0) posRef.current += stripH;
-      } else {
-        posRef.current += SPEED_PX;
-        if (posRef.current >= stripH) posRef.current -= stripH;
-      }
-      el.style.transform = `translateY(-${posRef.current}px)`;
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
+    if (total === 0) return; const el = stripRef.current; if (!el) return; if (reverse) posRef.current = stripH;
+    const animate = () => { if (reverse) { posRef.current -= SPEED_PX; if (posRef.current <= 0) posRef.current += stripH; } else { posRef.current += SPEED_PX; if (posRef.current >= stripH) posRef.current -= stripH; } el.style.transform = `translateY(-${posRef.current}px)`; rafRef.current = requestAnimationFrame(animate); };
+    rafRef.current = requestAnimationFrame(animate); return () => cancelAnimationFrame(rafRef.current);
   }, [total, stripH, reverse]);
-
   if (total === 0) return null;
   return (
     <div style={{ width: GRID_W, height: VISIBLE_H, overflow: "hidden", position: "relative", flexShrink: 0 }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)" }} />
-      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>
-        {doubled.map((client, k) => <ClientCard key={`${client.id}-${k}`} client={client} />)}
-      </div>
+      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>{doubled.map((client, k) => <ClientCard key={`${client.id}-${k}`} client={client} />)}</div>
     </div>
   );
 };
 
-// ── Main component ────────────────────────────────────────────────────────────
 const ClientsSection = () => {
-  const [clients, setClients] = useState<ClientLogo[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [header, setHeader] = useState({
-    badge: "Our Clients", title: "Trusted by", highlight: "Industry Leaders",
-    description: "We're proud to have served over 300+ successful projects for leading companies across the Maldives and beyond.",
-  });
+  const { data: dbClients } = useDbQuery<ClientLogo[]>("client_logos", { is_visible: true }, { order: "sort_order" });
+  const content = useSiteContent("clients");
 
-  useEffect(() => {
-    const load = async () => {
-      const [clientsRes, contentRes] = await Promise.all([
-        dbSelect<ClientLogo[]>("client_logos", { is_visible: true }, { order: "sort_order" }),
-        dbSelect<any>("site_content", { section_key: "clients" }, { single: true }),
-      ]);
-      const dbClients = clientsRes.data || [];
-      setClients(dbClients.length > 0 ? dbClients : (SEED_CLIENTS as ClientLogo[]));
-      if (contentRes.data?.content) {
-        const c = contentRes.data.content as any;
-        setHeader(h => ({ ...h, ...c }));
-      }
-    };
-    load();
-    window.addEventListener("ss:contentSaved", load);
-    return () => window.removeEventListener("ss:contentSaved", load);
-  }, []);
+  const clients = dbClients && dbClients.length > 0 ? dbClients : (SEED_CLIENTS as ClientLogo[]);
+  const header = {
+    badge: content.badge || "Our Clients",
+    title: content.title || "Trusted by",
+    highlight: content.highlight || "Industry Leaders",
+    description: content.description || "We're proud to have served over 300+ successful projects..."
+  };
 
   return (
     <section id="portfolio" className="section-padding" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div className="container-wide">
         <AnimatedSection className="text-center mb-14 relative group/header">
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="absolute -top-4 -right-2 p-2.5 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 flex items-center gap-2"
-            title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}
-          >
+          <button onClick={() => setShowAll(!showAll)} className="absolute -top-4 -right-2 p-2.5 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 flex items-center gap-2" title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}>
             {showAll ? <Play size={18} className="fill-secondary" /> : <LayoutGrid size={18} />}
-            <span className="text-[0.625rem] font-bold uppercase tracking-wider hidden sm:inline">
-              {showAll ? "Play Animation" : "View All"}
-            </span>
+            <span className="text-[0.625rem] font-bold uppercase tracking-wider hidden sm:inline">{showAll ? "Play Animation" : "View All"}</span>
           </button>
-
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest">{header.badge}</span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            {header.title} <span className="gradient-text">{header.highlight}</span>
-          </h2>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">{header.title} <span className="gradient-text">{header.highlight}</span></h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">{header.description}</p>
         </AnimatedSection>
-
         <AnimatedSection>
-          {showAll ? (
-            /* Full Grid View */
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {clients.map((client) => (
-                <div key={client.id} className="flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/card">
-                  <div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2">
-                    <div className="max-h-full max-w-full transition-transform duration-300 group-hover/card:scale-110">
-                      <ClientLogoImage client={client} />
-                    </div>
-                  </div>
-                  <span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full">{client.name}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              {/* Desktop: side grids + globe */}
-              <div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}>
-                <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} startOffset={0} reverse={false} />
-                </div>
-                <div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}>
-                  <StaticGlobe clients={clients} />
-                </div>
-                <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} startOffset={Math.floor(clients.length / 2)} reverse={true} />
-                </div>
-              </div>
-
-              {/* Mobile: globe + grid */}
-              <div className="flex sm:hidden flex-col items-center gap-10">
-                <StaticGlobe clients={clients} />
-                <GridSlideshow clients={clients} startOffset={0} />
-              </div>
-            </>
-          )}
-
-          <p className="text-xs text-muted-foreground mt-8 text-center bg-muted/20 py-2 px-4 rounded-full w-fit mx-auto">
-            {clients.length} clients across Maldives, Bhutan &amp; beyond
-          </p>
+          {showAll ? (<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">{clients.map((client) => (<div key={client.id} className="flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/card"><div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2"><div className="max-h-full max-w-full transition-transform duration-300 group-hover/card:scale-110"><ClientLogoImage client={client} /></div></div><span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full">{client.name}</span></div>))}</div>) : (<><div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={0} reverse={false} /></div><div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}><StaticGlobe clients={clients} /></div><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={Math.floor(clients.length / 2)} reverse={true} /></div></div><div className="flex sm:hidden flex-col items-center gap-10"><StaticGlobe clients={clients} /><GridSlideshow clients={clients} startOffset={0} /></div></>)}
+          <p className="text-xs text-muted-foreground mt-8 text-center bg-muted/20 py-2 px-4 rounded-full w-fit mx-auto">{clients.length} clients across Maldives, Bhutan &amp; beyond</p>
         </AnimatedSection>
       </div>
     </section>

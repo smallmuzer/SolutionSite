@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n API,VITE -c cyan,green \"node server/index.js\" \"vite\"",
+    "dev": "concurrently -n API,VITE -c cyan,green -k \"node server/index.js\" \"wait-on http://localhost:3001/api/db/services && vite --host\"",
     "server": "node server/index.js",
-    "client": "vite",
+    "client": "vite --host",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -101,6 +101,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^7.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wait-on": "^8.0.5"
   }
 }

@@ -4,15 +4,32 @@ import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { mkdirSync, existsSync, appendFileSync, readdirSync } from "fs";
-import { db, uuid } from "./db.js";
-import { DB_PATH } from "./db.js";
+import { db, uuid, DB_PATH } from "./db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { EventEmitter } from "events";
+import { createServer } from "http";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.set("etag", false);
+app.set("etag", false);
+app.disable("x-powered-by");
+app.disable("etag");
+const server = createServer(app);
 const PORT = 3001;
+
+const CACHE_CONTROL_NO_CACHE = "no-cache, no-store, must-revalidate, private, max-age=0";
+const CACHE_CONTROL_PUBLIC = "public, max-age=0, must-revalidate, no-cache";
+
+function setNoCache(res) {
+  res.setHeader("Cache-Control", CACHE_CONTROL_NO_CACHE);
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.removeHeader("Last-Modified");
+  res.removeHeader("ETag");
+  res.setHeader("Vary", "*");
+}
 
 const TRUSTED_ORIGINS = new Set([
   "http://localhost:5173",
@@ -25,6 +42,7 @@ const TRUSTED_ORIGINS = new Set([
   "http://syssolution",
   "https://syssolution",
 ]);
+
 const SAFE_TABLES = new Set([
   "contact_submissions", "job_applications", "services", "testimonials", "career_jobs",
   "products", "client_logos", "site_content", "seo_settings", "users", "chat_threads",
@@ -34,6 +52,17 @@ const SAFE_TABLES = new Set([
 
 app.use(cors({ origin: Array.from(TRUSTED_ORIGINS), credentials: true }));
 app.use(express.json({ limit: "20mb" }));
+
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private, max-age=0");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.removeHeader("Last-Modified");
+    res.removeHeader("ETag");
+  }
+  next();
+});
 
 let secCache = { data: {}, lastFetch: 0 };
 function getSecuritySettings() {
@@ -211,8 +240,8 @@ const DEFAULT_SETTINGS = {
   whatsapp_number: "9489477144",
   viber_number: "9489477144",
   contact_email: "info@solutions.com.mv",
-  contact_from_email: "devteam.bss@gmail.com",
-  hr_email: "hr.brillientsystem@zoho.com",
+  contact_from_email: "",
+  hr_email: "hr@company.com",
   demo_url: "https://demo.hrmetrics.mv/",
   bot_api_url: "",
   bot_api_token: "",
@@ -526,12 +555,17 @@ async function generateBotReply(messages, settings) {
 // ── Email helpers ────────────────────────────────────────────────────────────
 
 function createTransport(settings) {
-  // Priority: DB settings smtp_* fields > env vars > defaults
-  const host = settings.smtp_host || process.env.SMTP_HOST || "smtp.gmail.com";
+  const host = settings.smtp_host || process.env.SMTP_HOST || "";
   const port = Number(settings.smtp_port || process.env.SMTP_PORT || 465);
-  const user = settings.smtp_user || process.env.SMTP_USER || "devteam.bss@gmail.com";
-  const pass = settings.smtp_pass || process.env.SMTP_PASS || "prwxaevpwsuengmt";
+  const user = settings.smtp_user || process.env.SMTP_USER || "";
+  const pass = settings.smtp_pass || process.env.SMTP_PASS || "";
   const secure = port === 465;
+
+  if (!host || !user || !pass) {
+    console.log(`[email] SMTP not configured - host: ${!!host}, user: ${!!user}, pass: ${!!pass}`);
+    appendLog("email.transport", { host: !!host, user: !!user, pass: !!pass, reason: "missing_credentials" });
+    return null;
+  }
 
   console.log(`[email] Creating transport: ${host}:${port} (SSL: ${secure}) as ${user}`);
   appendLog("email.transport", { host, port, secure, user });
@@ -544,9 +578,14 @@ function createTransport(settings) {
 }
 
 function sendFallbackEmail({ subject, body, settings }) {
+  const transport = createTransport(settings);
+  if (!transport) {
+    appendLog("email.skipped", { subject, reason: "smtp_not_configured" });
+    return { queued: false, reason: "SMTP not configured" };
+  }
+  
   appendLog("email.queue", { subject, to: settings.hr_email });
   try {
-    const transport = createTransport(settings);
     transport.sendMail({
       from: settings.smtp_user || settings.contact_from_email || "devteam.bss@gmail.com",
       to: settings.hr_email || settings.contact_email,
@@ -560,8 +599,14 @@ function sendFallbackEmail({ subject, body, settings }) {
 }
 
 async function sendEmailNow({ to, subject, text, html, settings }) {
+  const transport = createTransport(settings);
+  if (!transport) {
+    console.warn(`[email] Cannot send email - SMTP not configured. To: ${to}, Subject: ${subject}`);
+    appendLog("email.skipped", { to, subject, reason: "smtp_not_configured" });
+    return { ok: false, error: "SMTP not configured" };
+  }
+  
   try {
-    const transport = createTransport(settings);
     const from = settings.smtp_user || settings.contact_from_email || "devteam.bss@gmail.com";
     console.log(`[email] Sending to ${to} from ${from} (Subject: ${subject})`);
     await transport.sendMail({ from, to, subject, text, ...(html ? { html } : {}) });
@@ -616,6 +661,7 @@ app.get("/api/db/:table", (req, res) => {
     if (wantSingle) return res.json({ data: rows[0] ?? null, error: null });
     res.json({ data: rows, error: null });
   } catch (e) {
+    console.error(`[db.get] Error fetching from ${req.params.table}:`, e);
     res.status(500).json({ data: null, error: { message: e.message } });
   }
 });
@@ -632,8 +678,8 @@ const TABLE_COLS = {
   site_content: ["id", "section_key", "content", "created_at", "updated_at"],
   seo_settings: ["id", "page_key", "title", "description", "keywords", "og_image", "updated_at", "updated_by"],
   users: ["id", "email", "password", "userrole", "created_at", "updated_at"],
-  chat_threads: ["id", "title", "contact", "channel", "last_message", "created_at", "updated_at"],
-  chat_messages: ["id", "thread_id", "direction", "channel", "message", "to_number", "from_number", "status", "model", "error", "meta", "created_at"],
+  chat_messages: ["id", "session_id", "ip_address", "channel", "status", "created_at", "updated_at"],
+  chat_threads: ["id", "message_id", "direction", "content", "sender", "timestamp", "meta"],
   submission_replies: ["id", "submission_id", "sender", "message", "created_at"],
   application_replies: ["id", "application_id", "sender", "message", "created_at"],
   appointments: ["id", "reference_type", "reference_id", "name", "email", "title", "description", "notes", "appointment_date", "created_at"],
@@ -1204,11 +1250,15 @@ app.get("/api/health/integrations", async (_req, res) => {
     results.bot = "invalid_url";
   }
   // Email health
-  try {
-    const transport = createTransport(settings);
-    await transport.verify();
-    results.email = "ok";
-  } catch (e) { results.email = "error"; }
+  const transport = createTransport(settings);
+  if (transport) {
+    try {
+      await transport.verify();
+      results.email = "ok";
+    } catch (e) { results.email = "error"; }
+  } else {
+    results.email = "not_configured";
+  }
   res.json({ data: results, error: null });
 });
 
@@ -1248,22 +1298,26 @@ app.get("/api/events", (req, res) => {
   bus.on("application", applicationHandler);
   bus.on("appointment", appointmentHandler);
 
-  // Heartbeat every 15s to keep proxy and browser connections alive
+  // Heartbeat every 25s to keep proxy and browser connections alive
   const heartbeat = setInterval(() => {
     if (!res.writableEnded) {
       try { res.write(": heartbeat\n\n"); } catch (_) {}
     } else {
       clearInterval(heartbeat);
     }
-  }, 15000);
+  }, 25000);
 
-  req.on("close", () => {
+  // Handle client disconnect gracefully
+  const cleanup = () => {
     clearInterval(heartbeat);
     bus.off("chat", chatHandler);
     bus.off("submission", submissionHandler);
     bus.off("application", applicationHandler);
     bus.off("appointment", appointmentHandler);
-  });
+  };
+
+  req.on("close", cleanup);
+  res.on("close", cleanup);
 });
 
 // ── Row normalisation helpers ─────────────────────────────────────────────────

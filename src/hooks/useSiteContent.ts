@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { dbSelect } from "@/lib/api";
-
-// ── Defaults ──────────────────────────────────────────────────────────────────
+import { queryKeys } from "@/lib/query-keys";
 
 const DEFAULT_CONTENT: Record<string, Record<string, any>> = {
   hero: {
@@ -64,124 +64,89 @@ const DEFAULT_NETWORK = [
   { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", flag: "🇧🇹", accent: "#10b981", is_visible: true },
 ];
 
-// ── Module-level shared store (single fetch for ALL sections) ─────────────────
+const CONTENT_STALE_TIME = 10 * 60 * 1000;
+const CONTENT_GC_TIME = 30 * 60 * 1000;
 
-type Listener = () => void;
-const store: Record<string, Record<string, any>> = {};
-const listeners = new Set<Listener>();
-let fetchPromise: Promise<void> | null = null;
-let fetched = false;
-
-function notify() { listeners.forEach(fn => fn()); }
-
-async function fetchAllContent() {
-  if (fetched) return;
-  if (fetchPromise) return fetchPromise;
-
-  fetchPromise = (async () => {
-    try {
-      const { data } = await dbSelect<any[]>("site_content", {}, {});
-      if (Array.isArray(data)) {
-        data.forEach(row => {
-          if (row.section_key && row.content) {
-            store[row.section_key] = {
-              ...(DEFAULT_CONTENT[row.section_key] || {}),
-              ...(typeof row.content === "object" ? row.content : {}),
-            };
-          }
-        });
-        fetched = true;
-        notify();
-      }
-    } catch {
-      // silently fall back to defaults
-    } finally {
-      fetchPromise = null;
+async function fetchSiteContent() {
+  const result = await dbSelect<any[]>("site_content", {}, {});
+  if (result.error || !Array.isArray(result.data)) {
+    return {};
+  }
+  
+  const content: Record<string, Record<string, any>> = {};
+  result.data.forEach(row => {
+    if (row.section_key && row.content) {
+      content[row.section_key] = {
+        ...(DEFAULT_CONTENT[row.section_key] || {}),
+        ...(typeof row.content === "object" ? row.content : {}),
+      };
     }
-  })();
-
-  return fetchPromise;
-}
-
-function refetchAllContent() {
-  fetched = false;
-  fetchPromise = null;
-  fetchAllContent();
-}
-
-// ── Hooks ─────────────────────────────────────────────────────────────────────
-
-export function useSiteContent(section: string): Record<string, any> {
-  const getSnapshot = useCallback(() =>
-    store[section] ?? DEFAULT_CONTENT[section] ?? {},
-    [section]
-  );
-
-  const [content, setContent] = useState<Record<string, any>>(getSnapshot);
-
-  useEffect(() => {
-    const update = () => setContent({ ...(store[section] ?? DEFAULT_CONTENT[section] ?? {}) });
-    listeners.add(update);
-    fetchAllContent();
-
-    const onSaved = () => { refetchAllContent(); };
-    window.addEventListener("ss:contentSaved", onSaved);
-
-    return () => {
-      listeners.delete(update);
-      window.removeEventListener("ss:contentSaved", onSaved);
-    };
-  }, [section]);
-
+  });
   return content;
 }
 
-export function useSiteSettings(): Record<string, any> {
-  const [settings, setSettings] = useState<Record<string, any>>(
-    () => store["settings"] ?? {}
-  );
+export function useSiteContent(section: string): Record<string, any> {
+  const { data: content = {} } = useQuery({
+    queryKey: queryKeys.siteContent.all,
+    queryFn: fetchSiteContent,
+    staleTime: CONTENT_STALE_TIME,
+    gcTime: CONTENT_GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
+  return content[section] ?? DEFAULT_CONTENT[section] ?? {};
+}
+
+export function useSiteSettingsData(): Record<string, any> {
+  const { data: content = {} } = useQuery({
+    queryKey: queryKeys.siteContent.all,
+    queryFn: fetchSiteContent,
+    staleTime: CONTENT_STALE_TIME,
+    gcTime: CONTENT_GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+
+  return content["settings"] ?? {};
+}
+
+// Alias for backward compatibility
+export const useSiteSettings = useSiteSettingsData;
+
+export function useInvalidateContent() {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.siteContent.all });
+  }, [queryClient]);
+}
+
+export function useContentSync() {
+  const invalidate = useInvalidateContent();
   useEffect(() => {
-    const update = () => setSettings({ ...(store["settings"] ?? {}) });
-    listeners.add(update);
-    fetchAllContent();
-
-    const onSettings = (e: Event) => {
-      const d = (e as CustomEvent).detail;
-      if (d && typeof d === "object") setSettings(d);
-      else refetchAllContent();
-    };
-    window.addEventListener("ss:siteSettings", onSettings);
-    window.addEventListener("ss:contentSaved", () => refetchAllContent());
-
+    const onSaved = () => invalidate();
+    window.addEventListener("ss:contentSaved", onSaved);
+    window.addEventListener("ss:siteSettings", onSaved);
     return () => {
-      listeners.delete(update);
-      window.removeEventListener("ss:siteSettings", onSettings);
+      window.removeEventListener("ss:contentSaved", onSaved);
+      window.removeEventListener("ss:siteSettings", onSaved);
     };
-  }, []);
-
-  return settings;
+  }, [invalidate]);
 }
 
-interface NetworkCompany {
-  id: string; name: string; subtitle: string; desc: string;
-  href: string; flag: string; accent: string; is_visible: boolean;
-}
+export function useNetworkCompanies(): { id: string; name: string; subtitle: string; desc: string; href: string; flag: string; accent: string; is_visible: boolean }[] {
+  const { data: content = {} } = useQuery({
+    queryKey: queryKeys.siteContent.all,
+    queryFn: fetchSiteContent,
+    staleTime: CONTENT_STALE_TIME,
+    gcTime: CONTENT_GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
-export function useNetworkCompanies(): NetworkCompany[] {
-  const [companies, setCompanies] = useState<NetworkCompany[]>(DEFAULT_NETWORK);
-
-  useEffect(() => {
-    const update = () => {
-      const c = store["our_network"];
-      if (Array.isArray(c?.companies) && c.companies.length > 0) {
-        setCompanies(c.companies);
-      }
-    };
-    listeners.add(update);
-    fetchAllContent();
-    return () => { listeners.delete(update); };
-  }, []);
-
-  return companies.filter(c => c.is_visible);
+  const network = content["our_network"]?.companies;
+  if (Array.isArray(network) && network.length > 0) {
+    return network.filter((c: { is_visible: boolean }) => c.is_visible);
+  }
+  return DEFAULT_NETWORK.filter(c => c.is_visible);
 }

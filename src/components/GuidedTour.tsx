@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   X, ArrowRight, ArrowLeft, Navigation, Settings, Mail,
-  ExternalLink, MessageCircle, ChevronRight, ChevronLeft
+  ExternalLink, MessageCircle
 } from "lucide-react";
-import { dbSelect } from "@/lib/api";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 /**
  * Modern Redesigned Guided Tour
@@ -55,8 +55,6 @@ const steps: Step[] = [
     anchor: "body",
     cardSide: "bottom",
   },
-
-
   {
     icon: MessageCircle,
     title: "AI & WhatsApp Support",
@@ -82,6 +80,7 @@ const PAD = 12;
 const CARD_W = 340;
 
 const GuidedTour = () => {
+  const settings = useSiteSettings();
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
@@ -91,36 +90,15 @@ const GuidedTour = () => {
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const retryRef = useRef(0);
 
-  // Initial check: if completed, don't mount
   useEffect(() => {
-    const checkSettings = async () => {
-      try {
-        // Timeout after 3s so a slow/offline server doesn't block the tour
-        const result = await Promise.race([
-          dbSelect("site_content", { section_key: "settings" }, { single: true }),
-          new Promise<{ data: null }>(res => setTimeout(() => res({ data: null }), 3000))
-        ]);
-        const content = (result as any)?.data?.content;
-        const globalOn = content ? content.show_tour !== false : true;
+    const globalOn = settings.show_tour !== false;
+    if (globalOn && !localStorage.getItem(TOUR_KEY)) {
+      const t = setTimeout(() => setMounted(true), 1500);
+      return () => clearTimeout(t);
+    }
 
-        if (globalOn && !localStorage.getItem(TOUR_KEY)) {
-          const t = setTimeout(() => setMounted(true), 1500);
-          return () => clearTimeout(t);
-        }
-      } catch (e) {
-        if (!localStorage.getItem(TOUR_KEY)) {
-          const t = setTimeout(() => setMounted(true), 1500);
-          return () => clearTimeout(t);
-        }
-      }
-    };
-    checkSettings();
-
-    // Listen for retake event from UICustomizer (no page reload needed)
     const handleRetake = () => {
-      // Only retake if tour is still enabled globally
-      const cached = localStorage.getItem("bss-tour-enabled");
-      if (cached === "false") return;
+      if (settings.show_tour === false) return;
       localStorage.removeItem(TOUR_KEY);
       setStep(0);
       setVisible(false);
@@ -129,7 +107,7 @@ const GuidedTour = () => {
     };
     window.addEventListener("bss:retakeTour", handleRetake);
     return () => window.removeEventListener("bss:retakeTour", handleRetake);
-  }, []);
+  }, [settings.show_tour]);
 
   const measureElement = useCallback(() => {
     const cur = steps[step];
@@ -137,7 +115,6 @@ const GuidedTour = () => {
 
     if (el) {
       const r = el.getBoundingClientRect();
-      // Only show if element has dimensions and is somewhat visible
       if (r.width > 0 && r.height > 0) {
         setSr({
           x: r.left - PAD,
@@ -159,7 +136,6 @@ const GuidedTour = () => {
       retryRef.current++;
       timerRef.current = setTimeout(runMeasurement, 200 * retryRef.current);
     } else if (!found) {
-      // If still not found, skip or default to center
       setVisible(false);
       setSr(null);
     }
@@ -175,7 +151,6 @@ const GuidedTour = () => {
 
     const cur = steps[step];
 
-    // Scroll logic
     if (cur.anchor === "body") {
       window.scrollTo({ top: 0, behavior: "smooth" });
       timerRef.current = setTimeout(runMeasurement, 500);
@@ -196,7 +171,6 @@ const GuidedTour = () => {
     if (completed) {
       localStorage.setItem(TOUR_KEY, "true");
       window.dispatchEvent(new CustomEvent("bss:tourCompleted"));
-      // Auto-scroll back to home after tour finishes
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }, 300);
@@ -220,14 +194,12 @@ const GuidedTour = () => {
   const Icon = current.icon;
   const isLast = step === steps.length - 1;
 
-  // Position card intelligently
   const isCentered = !!current.centerCard;
   let cardTop: number | undefined;
   let cardBottom: number | undefined;
   let cardLeft = Math.min(Math.max(sr.x + sr.w / 2 - CARD_W / 2, 20), window.innerWidth - CARD_W - 20);
 
   if (isCentered) {
-    // Center the card on screen
     cardTop = Math.max((window.innerHeight - 260) / 2, 40);
     cardLeft = Math.max((window.innerWidth - CARD_W) / 2, 20);
   } else if (current.cardSide === "bottom") {
@@ -246,7 +218,6 @@ const GuidedTour = () => {
 
   return (
     <div className="fixed inset-0 z-[99999] pointer-events-none font-sans">
-      {/* Background Mask */}
       <svg className="absolute inset-0 w-full h-full">
         <defs>
           <mask id="tour-mask-v2">
@@ -266,7 +237,6 @@ const GuidedTour = () => {
           onClick={() => close()}
         />
 
-        {/* Animated Highlight Ring */}
         <rect
           x={sr.x} y={sr.y} width={sr.w} height={sr.h}
           rx={16} ry={16} fill="none"
@@ -280,7 +250,6 @@ const GuidedTour = () => {
         />
       </svg>
 
-      {/* Tour Card */}
       <div
         className="absolute transition-all duration-500 pointer-events-auto"
         style={{
@@ -293,11 +262,9 @@ const GuidedTour = () => {
         }}
       >
         <div className="relative group overflow-hidden rounded-3xl border border-white/20 bg-card/95 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] p-5">
-          {/* Animated Gradientbg */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-secondary/20 blur-[60px] rounded-full pointer-events-none" />
 
           <div className="relative z-10">
-            {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-secondary/15 border border-secondary/20 flex items-center justify-center text-secondary">
@@ -320,12 +287,10 @@ const GuidedTour = () => {
               </button>
             </div>
 
-            {/* Content */}
             <p className="text-sm text-foreground leading-relaxed mb-4">
               {current.description}
             </p>
 
-            {/* Footer / Controls */}
             <div className="flex items-center justify-between pt-3 border-t border-border">
               <div className="flex flex-col gap-1.5">
                 <div className="flex gap-1">
@@ -372,13 +337,11 @@ const GuidedTour = () => {
       </div>
 
       <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes tour-pulse {
+        __html: `@keyframes tour-pulse {
           0% { stroke-dashoffset: 0; opacity: 1; stroke-width: 3; filter: drop-shadow(0 0 8px hsl(var(--secondary))); }
           50% { stroke-dashoffset: 24; opacity: 0.6; stroke-width: 6; filter: drop-shadow(0 0 12px hsl(var(--secondary))); }
           100% { stroke-dashoffset: 48; opacity: 1; stroke-width: 3; filter: drop-shadow(0 0 8px hsl(var(--secondary))); }
-        }
-      `}} />
+        }`}} />
     </div>
   );
 };

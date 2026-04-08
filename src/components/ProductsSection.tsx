@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import AnimatedSection from "./AnimatedSection";
-import { dbSelect } from "@/lib/api";
-import { ShoppingCart, PlayCircle, Tag, CheckCircle2, XCircle, List, LayoutGrid,
-  Database, Users, Anchor, Building2, Plane, Star } from "lucide-react";
+import { ShoppingCart, PlayCircle, Tag, CheckCircle2, XCircle, List, LayoutGrid, Database, Users, Anchor, Building2, Plane, Star } from "lucide-react";
 import { useGlobalView } from "./ui-customizer-context";
+import { useDbQuery } from "@/hooks/useDbQuery";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const PRODUCT_ICON_CONFIG: Record<string, { Icon: React.ElementType; bg: string }> = {
   BSOL:        { Icon: Database,  bg: "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)" },
@@ -41,28 +41,13 @@ interface SectionHeader {
 const FALLBACK_PRODUCTS: Product[] = [
   {
     id: "1", name: "BSOL", tagline: "Integrated ERP & CRM Ecosystem",
-    description: "BSOL seamlessly unifies your financial operations, inventory control, and customer relationships into a single dynamic platform. Empower your leadership with real-time, cross-departmental analytics and automated workflows for smarter, data-driven business maneuvers.",
+    description: "BSOL seamlessly unifies your financial operations, inventory control, and customer relationships into a single dynamic platform.",
     image_url: "/assets/products/bsol.jpg", contact_url: "#contact", is_popular: false, is_visible: true, sort_order: 0,
   },
   {
     id: "2", name: "HR-Metrics", tagline: "Modern Human Capital Hub",
-    description: "Revolutionize your workforce management. HR-Metrics blends traditional HR processes—from payroll to performance reviews—with agile task boards, OKR tracking, and smart notifications. Drive team alignment and cultivate a culture of high performance.",
+    description: "Revolutionize your workforce management. HR-Metrics blends traditional HR processes with agile task boards.",
     image_url: "/assets/products/hr-metrics.jpg", contact_url: "#contact", is_popular: true, is_visible: true, sort_order: 1,
-  },
-  {
-    id: "3", name: "GoBoat", tagline: "Connected Marine Operations",
-    description: "The ultimate command center for the marine industry. GoBoat synchronizes your entire fleet, proactively linking vessel scheduling, maintenance logs, crew deployment, and charter bookings to ensure absolute compliance and seamless on-water experiences.",
-    image_url: "/assets/products/goboat.jpg", contact_url: "#contact", is_popular: false, is_visible: true, sort_order: 2,
-  },
-  {
-    id: "4", name: "PromisePro", tagline: "Unified Hospitality Management",
-    description: "Transform your guest experience with an integrated property management core. PromisePro acts as the central nervous system for your resort, seamlessly connecting online reservations, housekeeping, and F&B into one frictionless, delightful guest journey.",
-    image_url: "/assets/products/promisepro.jpg", contact_url: "#contact", is_popular: false, is_visible: true, sort_order: 3,
-  },
-  {
-    id: "5", name: "Travel", tagline: "End-to-End Travel Ecosystem",
-    description: "A comprehensive digital infrastructure for modern travel operators. Effortlessly orchestrate global flights, premium accommodations, visa processing, and multifaceted customer itineraries, delivering world-class travel experiences from a single, intuitive hub.",
-    image_url: "/assets/products/travel.jpg", contact_url: "#contact", is_popular: false, is_visible: true, sort_order: 4,
   },
 ];
 
@@ -131,7 +116,7 @@ const ProductCard = ({ product, onDemo, cardStyle }: { product: Product; onDemo:
             </button>
           )}
         </div>
-        {/* Feature Tags List - Vertical Layout */}
+        
         <div className="flex flex-col gap-2 mt-1 border-t border-gray-100 dark:border-white/5 pt-3">
           {(product.extra_text ? product.extra_text.split(",") : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"]).map((feature, idx) => {
             const rawText = feature.trim();
@@ -209,7 +194,6 @@ const ProductListRow = ({ product, onDemo, cardStyle }: { product: Product; onDe
           {product.description}
         </p>
         <div className="flex flex-wrap items-center gap-3 mt-auto pt-2">
-          {/* Feature Tags List - Vertical Layout */}
           <div className="flex flex-col gap-2 mb-4 w-full">
             {(product.extra_text ? product.extra_text.split(",") : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"]).map((feature, idx) => {
               const rawText = feature.trim();
@@ -249,8 +233,6 @@ const ProductListRow = ({ product, onDemo, cardStyle }: { product: Product; onDe
 const ProductsSection = () => {
   const globalView = useGlobalView();
   const cardStyle = "image" as const;
-  const [products, setProducts] = useState<Product[]>([]);
-  const [header, setHeader] = useState<SectionHeader>(DEFAULT_HEADER);
   const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
   const posRef = useRef<number>(0);
@@ -259,23 +241,18 @@ const ProductsSection = () => {
   const GAP = 24;
   const CARD_W = 330;
 
-  useEffect(() => {
-    const load = async () => {
-      const [contentRes, prodRes] = await Promise.all([
-        dbSelect("site_content", { section_key: "our_products" }, { single: true }),
-        dbSelect("products", { is_visible: true }, { order: "sort_order" }),
-      ]);
-      if (contentRes.data?.content) {
-        const c = contentRes.data.content as any;
-        if (c.header) setHeader({ ...DEFAULT_HEADER, ...c.header });
-      }
-      if (prodRes.data && prodRes.data.length > 0) setProducts(prodRes.data);
-      else setProducts(FALLBACK_PRODUCTS.filter((p) => p.is_visible));
-    };
-    load();
-    window.addEventListener("ss:contentSaved", load);
-    return () => window.removeEventListener("ss:contentSaved", load);
-  }, []);
+  const { data: productsData } = useDbQuery<Product[]>("products", 
+    { is_visible: true }, 
+    { order: "sort_order" }
+  );
+
+  const content = useSiteContent("our_products");
+
+  const products = productsData && productsData.length > 0 ? productsData : FALLBACK_PRODUCTS;
+  const header = {
+    ...DEFAULT_HEADER,
+    ...(content.header || {})
+  };
 
   useEffect(() => {
     if (globalView !== "grid" || products.length === 0) return;
@@ -297,7 +274,7 @@ const ProductsSection = () => {
 
   const scrollToContact = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
-  if (products.length === 0) return null;
+  if (!productsData && !products.length) return null;
 
   const tripled = [...products, ...products, ...products];
 
