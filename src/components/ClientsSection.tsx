@@ -14,7 +14,7 @@ const SEED_CLIENTS = [
   { id: "cl-5", name: "Co Load", logo_url: "/assets/clients/Co-load-2.png", is_visible: true, sort_order: 5 },
   { id: "cl-6", name: "COLOURS OF OBLU", logo_url: "/assets/clients/Colors-of-OBLU-768x390.png", is_visible: true, sort_order: 6 },
   { id: "cl-7", name: "DAMAS", logo_url: "/assets/clients/DAMAS-768x397.jpg", is_visible: true, sort_order: 7 },
-  { id: "cl-8", name: "Election Commission of Maldives", logo_url: "/assets/clients/ecm.png", is_visible: true, sort_order: 8 },
+  { id: "cl-8", name: "Election Commission of Maldives", logo_url: "/assets/clients/ECM.png", is_visible: true, sort_order: 8 },
   { id: "cl-9", name: "ELL Mobiles", logo_url: "/assets/clients/ELL-Mobiles-768x768.png", is_visible: true, sort_order: 9 },
   { id: "cl-10", name: "Ensis Fisheries", logo_url: "/assets/clients/Ensis-2.png", is_visible: true, sort_order: 10 },
   { id: "cl-11", name: "Fuel Supplies Maldives", logo_url: "/assets/clients/FSM-1.png", is_visible: true, sort_order: 11 },
@@ -380,8 +380,8 @@ const ClientsSection = () => {
       }
     };
     load();
-    const t = setInterval(load, 15000);
-    return () => clearInterval(t);
+    window.addEventListener("ss:contentSaved", load);
+    return () => window.removeEventListener("ss:contentSaved", load);
   }, []);
 
   return (

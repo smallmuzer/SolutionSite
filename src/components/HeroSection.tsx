@@ -113,11 +113,10 @@ const HeroSection = () => {
 
   const [heroStats, setHeroStats] = useState<any[]>([]);
   useEffect(() => {
-    fetch("/api/db/hero_stats?is_visible=1&_order=sort_order")
-      .then(r => r.json())
-      .then(res => {
-        if (res.data) setHeroStats(res.data);
-      });
+    import("@/lib/api").then(({ dbSelect }) => {
+      dbSelect<any[]>("hero_stats", { is_visible: true }, { order: "sort_order" })
+        .then(res => { if (res.data) setHeroStats(res.data); });
+    });
   }, []);
 
   return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { dbSelect } from "@/lib/api";
+import { useSiteContent } from "@/hooks/useSiteContent";
 import { useGlobalView } from "./ui-customizer-context";
 
 const AVATAR_MAP: Record<string, string> = {
@@ -28,29 +29,29 @@ const StarRating = ({ rating }: { rating: number }) => (
 
 const TestimonialsSection = () => {
   const view = useGlobalView();
+  const headerContent = useSiteContent("testimonials");
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [header, setHeader] = useState({ badge: "Testimonials", title: "What Our", highlight: "Clients Say" });
+  const header = {
+    badge: headerContent.badge || "Testimonials",
+    title: headerContent.title || "What Our",
+    highlight: headerContent.highlight || "Clients Say",
+  };
 
   useEffect(() => {
     const load = async () => {
-      const [testRes, contentRes] = await Promise.all([
-        dbSelect("testimonials", { is_visible: true }, { order: "created_at", asc: false }),
-        dbSelect("site_content", { section_key: "testimonials" }, { single: true }),
-      ]);
-      if (testRes.data && testRes.data.length > 0) {
-        setTestimonials(testRes.data.map((t: any) => ({
+      const { data } = await dbSelect("testimonials", { is_visible: true }, { order: "created_at", asc: false });
+      if (data && (data as any[]).length > 0) {
+        setTestimonials((data as any[]).map((t: any) => ({
           id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
           message: t.message,
           avatar_url: AVATAR_MAP[t.name] || t.avatar_url || "/assets/testimonials/ahmed.jpg",
         })));
       }
-      if (contentRes.data?.content) {
-        const c = contentRes.data.content as any;
-        setHeader(h => ({ ...h, ...c }));
-      }
     };
     load();
+    window.addEventListener("ss:contentSaved", load);
+    return () => window.removeEventListener("ss:contentSaved", load);
   }, []);
 
   const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);

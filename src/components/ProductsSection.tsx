@@ -273,8 +273,8 @@ const ProductsSection = () => {
       else setProducts(FALLBACK_PRODUCTS.filter((p) => p.is_visible));
     };
     load();
-    const t = setInterval(load, 15000);
-    return () => clearInterval(t);
+    window.addEventListener("ss:contentSaved", load);
+    return () => window.removeEventListener("ss:contentSaved", load);
   }, []);
 
   useEffect(() => {
