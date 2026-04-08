@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, ExternalLink, Sun, Moon, LayoutDashboard, Settings } from "lucide-react";
+import { Menu, X, ExternalLink, Sun, Moon, ShieldCheck, Settings } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const DEFAULT_NAV = [
@@ -179,16 +179,16 @@ const Header = () => {
     >
       <div className="container-wide flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16 lg:h-20">
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-2.5">
+        <a href="#home" className="flex items-center gap-3 shrink-0 mr-4">
           <img
             src={resolvedLogo}
             alt={siteName}
             style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain" }}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
           />
-          <div className="flex flex-col leading-none">
+          <div className="flex flex-col justify-center leading-none">
             <span
-              className="font-heading font-bold text-[1.3rem] leading-tight"
+              className="font-heading font-bold text-lg sm:text-xl leading-tight"
               style={{
                 color: scrolled ? (isDark ? "#f1f5f9" : "#0f172a") : "#ffffff",
                 textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)",
@@ -196,7 +196,7 @@ const Header = () => {
             >
               {siteName.split(" ")[0] || "Systems"}
             </span>
-            <span className="font-heading font-bold text-[1.3rem] leading-tight gradient-text">
+            <span className="font-heading font-bold text-base sm:text-lg leading-tight gradient-text mt-0.5">
               {siteName.split(" ").slice(1).join(" ") || "Solutions"}
             </span>
           </div>
@@ -253,7 +253,7 @@ const Header = () => {
               title="Admin Panel"
               className="p-2.5 rounded-lg bg-secondary/15 border border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground transition-all"
             >
-              <LayoutDashboard size={17} />
+              <ShieldCheck size={17} />
             </a>
           </div>
         </nav>
@@ -295,7 +295,7 @@ const Header = () => {
             </a>
             <a href="/admin/login" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-3 rounded-lg text-secondary bg-secondary/10 hover:bg-secondary/20 font-medium">
-              <LayoutDashboard size={16} /> Admin Panel
+              <ShieldCheck size={16} /> Admin Panel
             </a>
             <button onClick={() => scrollTo("#contact")}
               className="mt-2 px-5 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold">

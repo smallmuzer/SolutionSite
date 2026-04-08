@@ -1,27 +1,75 @@
 /**
- * SQLite REST API client — pure fetch, zero Supabaxse dependency.
- * All data goes to the Express + better-sqlite3 backend at /api/db/:table
+ * SQLite REST API client — pure fetch, zero Supabase dependency.
+ * Includes: in-memory cache with TTL, request deduplication, abort on unmount.
  */
 
 const BASE = "/api/db";
+const CACHE_TTL = 60_000; // 1 minute
 
 type Row = Record<string, any>;
 type ApiResult<T> = { data: T | null; error: { message: string } | null };
+
+// ── Cache ─────────────────────────────────────────────────────────────────────
+
+interface CacheEntry { data: any; ts: number; }
+const cache = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<any>>();
+
+function cacheKey(table: string, params: URLSearchParams): string {
+  return `${table}?${params.toString()}`;
+}
+
+function fromCache<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data as T;
+  cache.delete(key);
+  return null;
+}
+
+export function invalidateCache(table?: string) {
+  if (!table) { cache.clear(); return; }
+  for (const key of cache.keys()) {
+    if (key.startsWith(table)) cache.delete(key);
+  }
+}
 
 // ── Generic CRUD helpers ──────────────────────────────────────────────────────
 
 export async function dbSelect<T = Row[]>(
   table: string,
   filters: Record<string, any> = {},
-  opts: { order?: string; asc?: boolean; single?: boolean } = {}
+  opts: { order?: string; asc?: boolean; single?: boolean; noCache?: boolean } = {}
 ): Promise<ApiResult<T>> {
   try {
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => p.set(k, String(v)));
     if (opts.order) { p.set("_order", opts.order); p.set("_asc", String(opts.asc !== false)); }
     if (opts.single) p.set("_single", "1");
-    const res = await fetch(`${BASE}/${table}?${p}`);
-    return await res.json();
+
+    const key = cacheKey(table, p);
+
+    if (!opts.noCache) {
+      const cached = fromCache<ApiResult<T>>(key);
+      if (cached) return cached;
+
+      // Deduplicate in-flight requests
+      if (inflight.has(key)) return inflight.get(key)!;
+    }
+
+    const req = fetch(`${BASE}/${table}?${p}`)
+      .then(r => r.json())
+      .then(json => {
+        if (!opts.noCache) cache.set(key, { data: json, ts: Date.now() });
+        inflight.delete(key);
+        return json;
+      })
+      .catch((e: any) => {
+        inflight.delete(key);
+        return { data: null, error: { message: e?.message ?? "Network error" } };
+      });
+
+    if (!opts.noCache) inflight.set(key, req);
+    return req;
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };
   }
@@ -34,6 +82,7 @@ export async function dbInsert<T = Row>(table: string, data: Row): Promise<ApiRe
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    invalidateCache(table);
     return await res.json();
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };
@@ -53,6 +102,7 @@ export async function dbUpdate<T = Row>(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    invalidateCache(table);
     return await res.json();
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };
@@ -64,6 +114,7 @@ export async function dbDelete(table: string, filters: Record<string, any>): Pro
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => p.set(k, String(v)));
     const res = await fetch(`${BASE}/${table}?${p}`, { method: "DELETE" });
+    invalidateCache(table);
     return await res.json();
   } catch (e: any) {
     return { data: null, error: { message: e?.message ?? "Network error" } };

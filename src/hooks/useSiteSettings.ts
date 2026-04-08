@@ -95,12 +95,9 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     whatsapp_number: s.whatsapp_number || "",
     viber_number: s.viber_number || "",
     nav_items: s.nav_items || [],
-    show_tour: s.show_tour !== false, // always propagate tour state
+    show_tour: s.show_tour !== false,
   }}));
-  // Cache tour setting for UICustomizer (instant read on next render)
-  try {
-    localStorage.setItem("bss-tour-enabled", String(s.show_tour !== false));
-  } catch {}
+  try { localStorage.setItem("bss-tour-enabled", String(s.show_tour !== false)); } catch {}
 }
 
 function applySecurity(sec: Record<string, any>) {
@@ -109,8 +106,10 @@ function applySecurity(sec: Record<string, any>) {
   document.oncontextmenu = sec.right_click ? (e) => e.preventDefault() : null;
 }
 
+// Single fetch for both settings + security in parallel, runs once on app load
 export function useSiteSettings() {
   useEffect(() => {
+    // Apply cached theme instantly before fetch
     const cached = localStorage.getItem("bss-theme");
     if (cached === "dark") document.documentElement.classList.add("dark");
     else if (cached === "light") document.documentElement.classList.remove("dark");
@@ -120,14 +119,21 @@ export function useSiteSettings() {
       if (stored) applySettings({});
     } catch { }
 
+    let cancelled = false;
+
     const load = async () => {
-      const [resSet, resSec] = await Promise.all([
-        dbSelect<any>("site_content", { section_key: "settings" }, { single: true }),
-        dbSelect<any>("site_content", { section_key: "security" }, { single: true }),
-      ]);
-      if (resSet.data?.content) applySettings(resSet.data.content as Record<string, any>);
-      if (resSec.data?.content) applySecurity(resSec.data.content as Record<string, any>);
+      try {
+        const [resSet, resSec] = await Promise.all([
+          dbSelect<any>("site_content", { section_key: "settings" }, { single: true }),
+          dbSelect<any>("site_content", { section_key: "security" }, { single: true }),
+        ]);
+        if (cancelled) return;
+        if (resSet.data?.content) applySettings(resSet.data.content as Record<string, any>);
+        if (resSec.data?.content) applySecurity(resSec.data.content as Record<string, any>);
+      } catch { }
     };
+
     load();
+    return () => { cancelled = true; };
   }, []);
 }
