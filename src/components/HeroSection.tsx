@@ -136,7 +136,7 @@ const HeroSection = () => {
             className="absolute inset-0 w-full h-full object-cover hero-parallax"
             style={{
               opacity: i === bgIndex ? 1 : 0,
-              transition: "opacity 1.5s ease-in-out",
+              transition: "opacity 0.8s ease-in-out",
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
               transform: "translateZ(0)",
@@ -155,7 +155,7 @@ const HeroSection = () => {
               : "linear-gradient(135deg, hsl(220 60% 12% / 0.75) 0%, hsl(220 50% 22% / 0.65) 50%, hsl(217 60% 30% / 0.5) 100%)",
           }}
         />
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.2) 100%)" }} />
       </div>
 
       {/* Grid pattern */}
