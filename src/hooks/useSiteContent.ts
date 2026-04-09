@@ -64,15 +64,16 @@ const DEFAULT_NETWORK = [
   { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", flag: "🇧🇹", accent: "#10b981", is_visible: true },
 ];
 
-const CONTENT_STALE_TIME = 10 * 60 * 1000;
-const CONTENT_GC_TIME = 30 * 60 * 1000;
+const CONTENT_STALE_TIME = 30 * 60 * 1000; // match global default
+const CONTENT_GC_TIME = 60 * 60 * 1000;
 
 async function fetchSiteContent() {
   const result = await dbSelect<any[]>("site_content", {}, {});
   if (result.error || !Array.isArray(result.data)) {
-    return {};
+    // Return null so React Query keeps the existing cached (seed) data
+    throw new Error(result.error?.message || "Failed to fetch site content");
   }
-  
+
   const content: Record<string, Record<string, any>> = {};
   result.data.forEach(row => {
     if (row.section_key && row.content) {
@@ -85,29 +86,24 @@ async function fetchSiteContent() {
   return content;
 }
 
-export function useSiteContent(section: string): Record<string, any> {
-  const { data: content = {} } = useQuery({
-    queryKey: queryKeys.siteContent.all,
-    queryFn: fetchSiteContent,
-    staleTime: CONTENT_STALE_TIME,
-    gcTime: CONTENT_GC_TIME,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+export const SHARED_QUERY_OPTIONS = {
+  queryKey: queryKeys.siteContent.all,
+  queryFn: fetchSiteContent,
+  staleTime: CONTENT_STALE_TIME,
+  gcTime: CONTENT_GC_TIME,
+  refetchOnMount: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  retry: 0,
+} as const;
 
+export function useSiteContent(section: string): Record<string, any> {
+  const { data: content = {} } = useQuery(SHARED_QUERY_OPTIONS);
   return content[section] ?? DEFAULT_CONTENT[section] ?? {};
 }
 
 export function useSiteSettingsData(): Record<string, any> {
-  const { data: content = {} } = useQuery({
-    queryKey: queryKeys.siteContent.all,
-    queryFn: fetchSiteContent,
-    staleTime: CONTENT_STALE_TIME,
-    gcTime: CONTENT_GC_TIME,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
-
+  const { data: content = {} } = useQuery(SHARED_QUERY_OPTIONS);
   return content["settings"] ?? {};
 }
 
@@ -135,14 +131,7 @@ export function useContentSync() {
 }
 
 export function useNetworkCompanies(): { id: string; name: string; subtitle: string; desc: string; href: string; flag: string; accent: string; is_visible: boolean }[] {
-  const { data: content = {} } = useQuery({
-    queryKey: queryKeys.siteContent.all,
-    queryFn: fetchSiteContent,
-    staleTime: CONTENT_STALE_TIME,
-    gcTime: CONTENT_GC_TIME,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data: content = {} } = useQuery(SHARED_QUERY_OPTIONS);
 
   const network = content["our_network"]?.companies;
   if (Array.isArray(network) && network.length > 0) {

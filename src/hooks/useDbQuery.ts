@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { dbSelect, dbInsert, dbUpdate, dbDelete } from "@/lib/api";
+import { dbSelect, dbInsert, dbUpdate, dbDelete, dbBatch } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 
 const DEFAULT_STALE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -47,7 +47,49 @@ export function useDbQuery<T = unknown[]>(
     gcTime,
     refetchOnMount,
     refetchOnWindowFocus,
-    retry: 1,
+    retry: 0,
+  });
+}
+
+// ── Batch hook: one API call, populates individual table caches ──────────────────
+
+export interface BatchTableSpec {
+  table: string;
+  filter?: Record<string, unknown>;
+  order?: string;
+  asc?: boolean;
+}
+
+export function useBatchQuery(specs: BatchTableSpec[], options: { enabled?: boolean } = {}) {
+  const queryClient = useQueryClient();
+  const { enabled = true } = options;
+
+  return useQuery({
+    queryKey: ["batch", specs.map(s => s.table).join(",")],
+    queryFn: async () => {
+      const result = await dbBatch(specs);
+      if (result.error) throw new Error(result.error.message);
+      // Populate individual table caches with fresh timestamp so
+      // useDbQuery calls in section components hit cache and never refetch
+      if (result.data) {
+        const now = Date.now();
+        for (const { table, filter = {}, order, asc = true } of specs) {
+          const tableData = (result.data as Record<string, unknown>)[table];
+          if (tableData && (tableData as any).data !== undefined) {
+            const key = [table, "list", filter, { order, asc, single: false }];
+            queryClient.setQueryData(key, (tableData as any).data, { updatedAt: now });
+          }
+        }
+      }
+      return result.data;
+    },
+    enabled,
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 0,
   });
 }
 

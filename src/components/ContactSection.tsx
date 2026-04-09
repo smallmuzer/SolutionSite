@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, Fragment } from "react";
+import React, { useState, useRef, Fragment } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { MapPin, Mail, Phone, Clock, Send, CheckCircle, Calendar, ChevronLeft, ChevronRight, X, Facebook, Twitter, Linkedin, Instagram, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { useSiteContent, useSiteSettings } from "@/hooks/useSiteContent";
 import { openViber, ViberIcon } from "@/lib/viber";
+import { useDbQuery } from "@/hooks/useDbQuery";
 
 // ————————————————————————————————————————————————————————————————————————————————
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -127,10 +128,11 @@ function DateTimePicker({ label, value, onChange, minDate }: {
 const ContactSection = () => {
   const content = useSiteContent("contact");
   const settings = useSiteSettings();
-  const [services, setServices] = useState<{ title: string }[]>([]);
+  const { data: servicesData } = useDbQuery<{ title: string }[]>("services", { is_visible: true }, { order: "sort_order" });
+  const services = servicesData || [];
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]     = useState(false);
-  
+
   const toLocalISO = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   const nowDate  = new Date();
   const nowLocal = toLocalISO(nowDate);
@@ -147,12 +149,6 @@ const ContactSection = () => {
   };
 
   const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", service: "", message: "", date1: "", date2: "", website: "" });
-
-  useEffect(() => {
-    fetch("/api/db/services?is_visible=1&_order=sort_order&_asc=true")
-      .then(r => r.json())
-      .then(({ data }) => { if (data) setServices(data); });
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

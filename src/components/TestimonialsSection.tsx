@@ -3,6 +3,7 @@ import AnimatedSection from "./AnimatedSection";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useGlobalView } from "./ui-customizer-context";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const AVATAR_MAP: Record<string, string> = {
   "Ahmed Rasheed":  "/assets/testimonials/ahmed.jpg",
@@ -30,13 +31,13 @@ const TestimonialsSection = () => {
   const view = useGlobalView();
   const [currentPage, setCurrentPage] = useState(0);
 
-  const { data: headerContent, isLoading: isHeaderLoading } = useDbQuery<any>("site_content", { section_key: "testimonials" }, { single: true });
+  const headerContent = useSiteContent("testimonials");
   const { data: rawTestimonials, isLoading: isDataLoading } = useDbQuery<any[]>("testimonials", { is_visible: true }, { order: "created_at", asc: false });
 
   const header = {
-    badge: headerContent?.content?.badge || "Testimonials",
-    title: headerContent?.content?.title || "What Our",
-    highlight: headerContent?.content?.highlight || "Clients Say",
+    badge: headerContent.badge || "Testimonials",
+    title: headerContent.title || "What Our",
+    highlight: headerContent.highlight || "Clients Say",
   };
 
   const testimonials = useMemo(() => {
@@ -48,7 +49,7 @@ const TestimonialsSection = () => {
     }));
   }, [rawTestimonials]);
 
-  if (isHeaderLoading || isDataLoading) return (
+  if (isDataLoading) return (
      <section className="section-padding section-alt animate-pulse">
         <div className="container-wide">
           <div className="h-4 w-24 bg-muted mx-auto rounded mb-3" />

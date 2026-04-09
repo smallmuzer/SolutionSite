@@ -4,7 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import UICustomizer from "@/components/UICustomizer";
 import ScrollProgress from "@/components/ScrollProgress";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useDbQuery } from "@/hooks/useDbQuery";
+import { useBatchQuery } from "@/hooks/useDbQuery";
 import { useSEO } from "@/hooks/useSEO";
 
 // Lazy load all below-fold sections — improves initial load dramatically
@@ -31,13 +31,18 @@ const SkeletonSection = () => (
 const Index = () => {
   useSiteSettings(); // Preloads site_content
   useSEO();
-  
-  // Preload common data — fires once, stores in React Query cache
-  const { data: _c } = useDbQuery("client_logos", { is_visible: true }, { order: "sort_order" });
-  const { data: _s } = useDbQuery("services", { is_visible: true }, { order: "sort_order" });
-  const { data: _t } = useDbQuery("technologies", { is_visible: true }, { order: "sort_order" });
-  const { data: _p } = useDbQuery("products", { is_visible: true }, { order: "sort_order" });
-  const { data: _j } = useDbQuery("career_jobs", { is_visible: true }, { order: "sort_order" });
+
+  // Single batch API call — fetches ALL section data at once on page load.
+  // Results populate individual React Query caches — sections read from cache (0 extra calls).
+  useBatchQuery([
+    { table: "client_logos",  filter: { is_visible: true }, order: "sort_order" },
+    { table: "services",      filter: { is_visible: true }, order: "sort_order" },
+    { table: "technologies",  filter: { is_visible: true }, order: "sort_order" },
+    { table: "products",      filter: { is_visible: true }, order: "sort_order" },
+    { table: "career_jobs",   filter: { is_visible: true }, order: "sort_order" },
+    { table: "hero_stats",    filter: { is_visible: true }, order: "sort_order" },
+    { table: "testimonials",  filter: { is_visible: true }, order: "created_at", asc: false },
+  ]);
 
   useEffect(() => {
     // Force scroll to top on refresh and clear hash targeting

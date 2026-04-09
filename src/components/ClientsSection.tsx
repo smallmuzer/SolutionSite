@@ -80,22 +80,42 @@ function computeGlobePositions(count: number): { cx: number; cy: number }[] {
 const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   const bgRef = useRef<HTMLCanvasElement>(null), fgRef = useRef<HTMLCanvasElement>(null), containerRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), zoomRef = useRef(1), targetZoomRef = useRef(1), zoomRafRef = useRef<number>(0);
   const [zoom, setZoom] = useState(1);
-  const [batchIndex, setBatchIndex] = useState(0);
-  const SIZE = 500, BATCH_SIZE = 14, ROTATION_MS = 10_000;
+  const SIZE = 500, SLOT_COUNT = 14, SLOT_MS = 3_000;
 
-  const batches = useMemo(() => {
-    const b: ClientLogo[][] = [];
-    for (let i = 0; i < clients.length; i += BATCH_SIZE) b.push(clients.slice(i, i + BATCH_SIZE));
-    return b;
-  }, [clients]);
+  // Each slot independently cycles through all clients, staggered by slot index
+  const positions = useMemo(() => computeGlobePositions(Math.min(clients.length, SLOT_COUNT)), [clients.length]);
+  const slotCount = positions.length;
 
-  const batchLayouts = useMemo(() => batches.map((batch) => ({ batch, positions: computeGlobePositions(batch.length) })), [batches]);
+  // slotIndices[i] = which client index is currently shown in slot i
+  const [slotIndices, setSlotIndices] = useState<number[]>(() =>
+    Array.from({ length: SLOT_COUNT }, (_, i) => i % Math.max(clients.length, 1))
+  );
 
   useEffect(() => {
-    if (batches.length <= 1) return;
-    const id = setInterval(() => setBatchIndex(prev => (prev + 1) % batches.length), ROTATION_MS);
-    return () => clearInterval(id);
-  }, [batches.length]);
+    if (clients.length === 0 || slotCount === 0) return;
+    // Stagger each slot by (slotIndex / slotCount) * SLOT_MS so they don't all flip at once
+    const timers = Array.from({ length: slotCount }, (_, slotIdx) => {
+      const delay = Math.round((slotIdx / slotCount) * SLOT_MS);
+      const t = setTimeout(() => {
+        const interval = setInterval(() => {
+          setSlotIndices(prev => {
+            const next = [...prev];
+            next[slotIdx] = (next[slotIdx] + slotCount) % clients.length;
+            return next;
+          });
+        }, SLOT_MS);
+        // store interval id on the timeout ref so we can clear it
+        (timers[slotIdx] as any)._interval = interval;
+      }, delay);
+      return t;
+    });
+    return () => {
+      timers.forEach(t => {
+        clearTimeout(t);
+        if ((t as any)._interval) clearInterval((t as any)._interval);
+      });
+    };
+  }, [clients.length, slotCount]);
 
   const handleWheel = useCallback((e: WheelEvent) => { e.preventDefault(); targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15))); }, []);
   const handleMouseLeave = useCallback(() => { targetZoomRef.current = 1; }, []);
@@ -162,24 +182,24 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
           <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: "0.06em", color: "hsl(var(--secondary))", textShadow: "0 0 12px hsl(var(--secondary)/0.6)", lineHeight: 1.1 }}>Here</span>
           <span className="blink-hint" style={{ fontSize: 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
         </button>
-        {batchLayouts.map(({ batch, positions }, layoutIndex) => (
-          <div key={`batch-${layoutIndex}`} className="absolute inset-0" style={{ opacity: layoutIndex === batchIndex ? 1 : 0, transition: "opacity 0.4s ease", pointerEvents: layoutIndex === batchIndex ? "auto" : "none" }}>
-            {batch.map((client, i) => { const pos = positions[i]; if (!pos) return null; return (
-                <div key={client.id} className="absolute z-10 pointer-events-auto hover:z-30 cursor-default" style={{ left: `${pos.cx}%`, top: `${pos.cy}%`, transform: "translate(-50%,-50%)" }}>
-                  <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]" style={{ width: 54, height: 44, padding: "3px 3px" }}>
-                    <div className="w-8 h-5 flex items-center justify-center"><ClientLogoImage client={client} /></div>
-                    <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
-                  </div>
-                </div>
-            );})}
-          </div>
-        ))}
+        {positions.map((pos, slotIdx) => {
+          const client = clients[slotIndices[slotIdx] ?? slotIdx % clients.length];
+          if (!client || !pos) return null;
+          return (
+            <div key={slotIdx} className="absolute z-10 pointer-events-auto hover:z-30 cursor-default" style={{ left: `${pos.cx}%`, top: `${pos.cy}%`, transform: "translate(-50%,-50%)", transition: "opacity 0.5s ease" }}>
+              <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]" style={{ width: 54, height: 44, padding: "3px 3px" }}>
+                <div className="w-8 h-5 flex items-center justify-center"><ClientLogoImage client={client} /></div>
+                <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
 
-const COLS = 2, GAP = 20, CARD_W = 82, CARD_H = 68, VISIBLE_H = 500, SPEED_PX = 0.8;
+const COLS = 2, GAP = 20, CARD_W = 82, CARD_H = 68, VISIBLE_H = 500, SPEED_PX = 0.4;
 const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
 
 const ClientCard = ({ client }: { client: ClientLogo }) => (
@@ -234,7 +254,7 @@ const ClientsSection = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">{header.description}</p>
         </AnimatedSection>
         <AnimatedSection>
-          {showAll ? (<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">{clients.map((client) => (<div key={client.id} className="flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/card"><div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2"><div className="max-h-full max-w-full transition-transform duration-300 group-hover/card:scale-110"><ClientLogoImage client={client} /></div></div><span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full">{client.name}</span></div>))}</div>) : (<><div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={0} reverse={false} /></div><div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}><StaticGlobe clients={clients} /></div><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={Math.floor(clients.length / 2)} reverse={true} /></div></div><div className="flex sm:hidden flex-col items-center gap-10"><StaticGlobe clients={clients} /><GridSlideshow clients={clients} startOffset={0} /></div></>)}
+          {showAll ? (<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">{clients.map((client) => (<div key={client.id} className="flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/card"><div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2"><div className="max-h-full max-w-full transition-transform duration-300 group-hover/card:scale-110"><ClientLogoImage client={client} /></div></div><span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full">{client.name}</span></div>))}</div>) : (<><div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={0} reverse={false} /></div><div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}><StaticGlobe clients={clients} /></div><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={Math.ceil(clients.length / 2)} reverse={true} /></div></div><div className="flex sm:hidden flex-col items-center gap-10"><StaticGlobe clients={clients} /><GridSlideshow clients={clients} startOffset={0} /></div></>)}
           <p className="text-xs text-muted-foreground mt-8 text-center bg-muted/20 py-2 px-4 rounded-full w-fit mx-auto">{clients.length} clients across Maldives, Bhutan &amp; beyond</p>
         </AnimatedSection>
       </div>

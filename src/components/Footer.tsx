@@ -2,29 +2,19 @@ import React from "react";
 import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall } from "lucide-react";
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
 import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
-import { useEffect, useState } from "react";
-import logo from "@/assets/logo.png";
+import { useDbQuery } from "@/hooks/useDbQuery";
 
 const Footer = () => {
   const content = useSiteContent("footer");
   const contact = useSiteContent("contact");
   const associated = useNetworkCompanies();
   const settings = useSiteSettings();
-  const [serviceLinks, setServiceLinks] = useState<string[]>([]);
-
   // Load logo + site name from settings (already in useSiteSettings)
   const logoPath = settings.site_logo || "";
   const siteName = settings.site_name || "Systems Solutions";
 
-  useEffect(() => {
-    fetch("/api/db/services?is_visible=1&_order=sort_order&_asc=true")
-      .then(r => r.json())
-      .then(({ data }) => {
-        if (data && data.length > 0) setServiceLinks(data.slice(0, 5).map((s: any) => s.title));
-      })
-      .catch(() => {});
-  }, []);
-
+  const { data: servicesData } = useDbQuery<{ title: string }[]>("services", { is_visible: true }, { order: "sort_order" });
+  const serviceLinks = (servicesData || []).slice(0, 5).map((s) => s.title);
   const socials = [
     { Icon: Facebook,   href: settings.social_facebook  || contact.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
     { Icon: Twitter,    href: settings.social_twitter   || contact.twitter   || "https://x.com/bsspl_india" },
@@ -112,36 +102,15 @@ const Footer = () => {
 
       {/* Main footer with AI 3D light-traveling background & reduced weight */}
       <div className="relative overflow-hidden" style={{ color: "#e2e8f0", backgroundColor: "#02040a" }}>
-        
-        {/* Background Base - Light traveling 3d effect */}
-        <div className="absolute inset-0 z-0 mix-blend-screen opacity-[0.08] pointer-events-none overflow-hidden"
-          style={{
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-            backgroundSize: "60px 60px"
-          }}
-        />
-        
-        {/* Animated 3D Light Effect Overlays */}
+
+        {/* Footer section background image */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-10">
+          <img src="/assets/hero/bg-dark.jpg" alt="" className="w-full h-full object-cover" />
+        </div>
+
+        {/* Static dark overlay */}
         <div className="absolute inset-0 z-0 pointer-events-none"
-             style={{
-               background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(ellipse at 100% 100%, rgba(99,102,241,0.1) 0%, transparent 60%)",
-             }}
-        />
-        {/* Glow pulsing effect */}
-        <div className="absolute inset-0 z-0 pointer-events-none animate-pulse opacity-20"
-             style={{
-               background: "radial-gradient(circle at 10% 40%, rgba(139,92,246,0.1) 0%, transparent 40%)",
-               animationDuration: "6s"
-             }}
-        />
-        {/* Scanline mesh to simulate 3d data structure - ultra subtle */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.015]"
-             style={{
-               backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-               backgroundSize: "60px 60px",
-               transform: "perspective(800px) rotateX(70deg) scale(2)",
-               transformOrigin: "bottom center"
-             }}
+          style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.10) 0%, transparent 70%)" }}
         />
 
         <div className="relative z-10 container-wide px-4 sm:px-6 lg:px-8 py-6">
@@ -150,8 +119,8 @@ const Footer = () => {
             {/* Brand */}
             <div className="col-span-2 sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
-                {(logoPath || logo) ? (
-                  <img src={logoPath || logo} alt={siteName}
+                {logoPath ? (
+                  <img src={logoPath} alt={siteName}
                     style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", flexShrink: 0 }}
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />

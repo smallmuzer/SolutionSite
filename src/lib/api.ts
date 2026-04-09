@@ -18,6 +18,27 @@ const BASE = "/api/db";
 type Row = Record<string, any>;
 type ApiResult<T> = { data: T | null; error: { message: string } | null };
 
+// ── Batch fetch: one HTTP call for multiple tables ───────────────────────────
+
+export async function dbBatch<T extends Record<string, unknown[]>>(
+  tables: { table: string; filter?: Record<string, unknown>; order?: string; asc?: boolean }[]
+): Promise<{ data: T | null; error: { message: string } | null }> {
+  try {
+    const p = new URLSearchParams();
+    p.set("tables", tables.map(t => t.table).join(","));
+    for (const { table, filter, order, asc } of tables) {
+      if (filter) p.set(`${table}_filter`, JSON.stringify(filter));
+      if (order) p.set(`${table}_order`, order);
+      if (asc !== undefined) p.set(`${table}_asc`, String(asc));
+    }
+    const res = await fetchWithCacheControl(`${BASE}/batch?${p}`);
+    const json = await res.json();
+    return json;
+  } catch (e: any) {
+    return { data: null, error: { message: e?.message ?? "Network error" } };
+  }
+}
+
 export function invalidateCache(table?: string) {
   // React Query handles cache invalidation via queryClient.invalidateQueries()
   // This function is kept for backward compatibility with non-React Query code

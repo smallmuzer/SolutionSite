@@ -67,7 +67,7 @@ const JobCard = ({ job, onApply, useImg, delay = 0, idx = 0 }: { job: CareerJob;
 
   return (
     <div
-      className="glass-card relative flex flex-col h-full group hover:shadow-xl transition-all duration-300 overflow-hidden hover-float animate-float border border-slate-50"
+      className="glass-card relative flex flex-col h-full group hover:shadow-xl transition-all duration-300 overflow-hidden hover-float animate-float border border-secondary/30"
       style={{ animationDelay: `${delay}s`, minHeight: useImg ? "280px" : "180px", height: isExpanded ? "auto" : "100%" }}
     >
       {useImg ? (

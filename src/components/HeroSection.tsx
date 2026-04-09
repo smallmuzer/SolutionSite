@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { useDbQuery } from "@/hooks/useDbQuery";
 
 function useCountUp(end: number, duration: number, start: boolean) {
   const [count, setCount] = useState(0);
@@ -112,12 +113,10 @@ const HeroSection = () => {
   }, []);
 
   const [heroStats, setHeroStats] = useState<any[]>([]);
+  const { data: heroStatsData } = useDbQuery<any[]>("hero_stats", { is_visible: true }, { order: "sort_order" });
   useEffect(() => {
-    import("@/lib/api").then(({ dbSelect }) => {
-      dbSelect<any[]>("hero_stats", { is_visible: true }, { order: "sort_order" })
-        .then(res => { if (res.data) setHeroStats(res.data); });
-    });
-  }, []);
+    if (heroStatsData) setHeroStats(heroStatsData);
+  }, [heroStatsData]);
 
   return (
     <section id="home" className="relative flex items-start overflow-hidden min-h-[100vh] h-[100vh] bg-[#020617]">

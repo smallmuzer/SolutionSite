@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
-import { useDbQuery } from "./useDbQuery";
-import { useSiteSettingsData } from "./useSiteContent";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useSiteSettingsData, SHARED_QUERY_OPTIONS } from "./useSiteContent";
 
 const FONT_MAP: Record<string, string> = {
   "Arial": "Arial, Helvetica, sans-serif",
@@ -115,28 +115,22 @@ function applySecurity(sec: Record<string, any>) {
  */
 export function useSiteSettings() {
   const settings = useSiteSettingsData();
-  const { data: securityData } = useDbQuery<any>("site_content", { section_key: "security" }, { single: true });
+  // Read security from the already-cached site_content (no extra API call)
+  const { data: allContent = {} } = useQuery(SHARED_QUERY_OPTIONS);
+  const securityContent = (allContent as any)["security"];
 
-  // Apply settings side-effects when data changes
   useEffect(() => {
-    if (Object.keys(settings).length > 0) {
-      applySettings(settings);
-    }
+    if (Object.keys(settings).length > 0) applySettings(settings);
   }, [settings]);
 
-  // Apply security side-effects when data changes
   useEffect(() => {
-    if (securityData?.content) {
-      applySecurity(securityData.content);
-    }
-  }, [securityData]);
+    if (securityContent) applySecurity(securityContent);
+  }, [securityContent]);
 
-  // Handle immediate cached theme setup
   useEffect(() => {
     const cached = localStorage.getItem("bss-theme");
     if (cached === "dark") document.documentElement.classList.add("dark");
     else if (cached === "light") document.documentElement.classList.remove("dark");
-    
     try {
       const stored = localStorage.getItem("bss-user-settings");
       if (stored) applySettings({});

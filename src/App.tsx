@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GlobalViewProvider } from "./components/ui-customizer-context";
 import { useContentSync } from "@/hooks/useSiteContent";
+import { seedQueryCache } from "@/lib/seedCache";
 
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -16,18 +17,20 @@ const ApplicationStatus = lazy(() => import("./pages/ApplicationStatus"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
+      retry: 0,
+      staleTime: 30 * 60 * 1000,
+      gcTime: 60 * 60 * 1000,
       refetchOnMount: false,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
-    mutations: {
-      retry: 0,
-    },
+    mutations: { retry: 0 },
   },
 });
+
+// Pre-populate cache with seed/fallback data synchronously before first render.
+// Components render instantly with this data; API responses replace it in background.
+seedQueryCache(queryClient);
 
 const RouteFallback = () => <div className="min-h-screen bg-background" />;
 

@@ -55,6 +55,11 @@ app.use(express.json({ limit: "20mb" }));
 
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {
+    // Strip conditional headers so server never returns 304 for API calls
+    delete req.headers["if-none-match"];
+    delete req.headers["if-modified-since"];
+    delete req.headers["if-match"];
+    delete req.headers["if-unmodified-since"];
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private, max-age=0");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
@@ -618,6 +623,37 @@ async function sendEmailNow({ to, subject, text, html, settings }) {
     return { ok: false, error: e?.message };
   }
 }
+
+// ── Batch endpoint: /api/db/batch?tables=t1,t2&t1_order=sort_order&... ──────
+app.get("/api/db/batch", (req, res) => {
+  try {
+    const tables = String(req.query.tables || "").split(",").map(t => t.trim()).filter(Boolean);
+    if (!tables.length) return res.status(400).json({ data: null, error: { message: "tables param required" } });
+    const result = {};
+    for (const table of tables) {
+      if (!SAFE_TABLES.has(table)) { result[table] = { data: [], error: "Invalid table" }; continue; }
+      const orderCol = String(req.query[`${table}_order`] || "");
+      const orderAsc = String(req.query[`${table}_asc`] || "true") !== "false";
+      const filterStr = req.query[`${table}_filter`];
+      const filters = [];
+      if (filterStr) {
+        try {
+          const parsed = JSON.parse(filterStr);
+          for (const [k, v] of Object.entries(parsed)) {
+            const val = v === true || v === "true" ? 1 : v === false || v === "false" ? 0 : v;
+            filters.push({ col: k, val });
+          }
+        } catch { }
+      }
+      const { sql, vals } = buildSelect(table, filters, orderCol, orderAsc);
+      const rows = db.prepare(sql).all(...vals).map(r => normaliseRow(table, r));
+      result[table] = { data: rows, error: null };
+    }
+    res.json({ data: result, error: null });
+  } catch (e) {
+    res.status(500).json({ data: null, error: { message: e.message } });
+  }
+});
 
 // ── REST API: /api/db/:table ──────────────────────────────────────────────────
 

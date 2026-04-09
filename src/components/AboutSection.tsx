@@ -65,7 +65,7 @@ const AboutSection = () => {
                       key={card.title}
                       className="glass-card relative rounded-xl overflow-hidden group cursor-default animate-float"
                       style={{ 
-                        height: "clamp(120px, 18vw, 140px)",
+                        height: "clamp(90px, 13vw, 110px)",
                         animationDelay: `${idx * 0.6}s`,
                         animationDuration: `${4 + idx * 0.5}s`,
                       }}

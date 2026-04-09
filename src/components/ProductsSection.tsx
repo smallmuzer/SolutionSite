@@ -65,7 +65,7 @@ const ProductCard = ({ product, onDemo, cardStyle }: { product: Product; onDemo:
   return (
     <div
       className="relative flex-shrink-0 bg-white dark:bg-[#11111f] rounded-2xl overflow-hidden group cursor-pointer border border-border/50 hover:border-blue-500/30 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-2"
-      style={{ width: 330 }}
+      style={{ width: 280 }}
     >
       {product.is_popular && (
         <div className={`absolute top-2 left-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[0.6875rem] font-black text-white shadow-lg ${
@@ -239,7 +239,7 @@ const ProductsSection = () => {
   const pausedRef = useRef<boolean>(false);
   const SPEED = 0.45;
   const GAP = 24;
-  const CARD_W = 330;
+  const CARD_W = 280;
 
   const { data: productsData } = useDbQuery<Product[]>("products", 
     { is_visible: true }, 
