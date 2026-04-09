@@ -105,12 +105,12 @@ const JobCard = ({ job, onApply, useImg, delay = 0, idx = 0 }: { job: CareerJob;
             <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
               <Icon size={18} className="text-secondary" />
             </div>
-            <div className="flex items-end gap-1.5 h-full pt-1">
-              <span className="text-[0.55rem] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-tighter bg-slate-50 dark:bg-slate-700 px-1.5 py-0.5 rounded">{job.location}</span>
-              <span className="text-[0.55rem] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-tighter bg-slate-50 dark:bg-slate-700 px-1.5 py-0.5 rounded">{job.job_type}</span>
-            </div>
           </div>
           <h3 className="font-heading font-extrabold text-slate-900 dark:text-white text-[0.9375rem] mb-1.5">{job.title}</h3>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
+            <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><MapPin size={10} className="text-secondary" /> {job.location}</span>
+            <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> {job.job_type}</span>
+          </div>
           <div className="relative mb-3 flex-1 overflow-visible">
             <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}>{job.description}</p>
             {isLongDescription && (

@@ -74,13 +74,45 @@ function computeGlobePositions(count: number): { cx: number; cy: number }[] {
       pos.push({ cx: 50 + R_OUTER * Math.cos(a), cy: 50 + R_OUTER * Math.sin(a) });
     }
   }
+
+  const CARD_W_PCT = (66 / 580) * 100;
+  const CARD_H_PCT = (54 / 580) * 100;
+  const EXTRA_GAP_PCT = 1.25;
+  const MIN_X = 18;
+  const MAX_X = 82;
+  const MIN_Y = 18;
+  const MAX_Y = 82;
+
+  for (let pass = 0; pass < 12; pass++) {
+    for (let i = 0; i < pos.length; i++) {
+      for (let j = i + 1; j < pos.length; j++) {
+        const dx = pos[j].cx - pos[i].cx;
+        const dy = pos[j].cy - pos[i].cy;
+        const overlapX = CARD_W_PCT + EXTRA_GAP_PCT - Math.abs(dx);
+        const overlapY = CARD_H_PCT + EXTRA_GAP_PCT - Math.abs(dy);
+
+        if (overlapX <= 0 || overlapY <= 0) continue;
+
+        const distance = Math.hypot(dx, dy) || 1;
+        const push = (Math.max(overlapX, overlapY) + 0.2) / 2;
+        const ux = dx / distance;
+        const uy = dy / distance;
+
+        pos[i].cx = Math.min(MAX_X, Math.max(MIN_X, pos[i].cx - ux * push));
+        pos[i].cy = Math.min(MAX_Y, Math.max(MIN_Y, pos[i].cy - uy * push));
+        pos[j].cx = Math.min(MAX_X, Math.max(MIN_X, pos[j].cx + ux * push));
+        pos[j].cy = Math.min(MAX_Y, Math.max(MIN_Y, pos[j].cy + uy * push));
+      }
+    }
+  }
+
   return pos;
 }
 
 const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   const bgRef = useRef<HTMLCanvasElement>(null), fgRef = useRef<HTMLCanvasElement>(null), containerRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), zoomRef = useRef(1), targetZoomRef = useRef(1), zoomRafRef = useRef<number>(0);
   const [zoom, setZoom] = useState(1);
-  const SIZE = 500, SLOT_COUNT = 14, SLOT_MS = 3_000;
+  const SIZE = 580, SLOT_COUNT = 14, SLOT_MS = 3_000;
 
   // Each slot independently cycles through all clients, staggered by slot index
   const positions = useMemo(() => computeGlobePositions(Math.min(clients.length, SLOT_COUNT)), [clients.length]);
@@ -167,7 +199,7 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   }, []);
 
   return (
-    <div style={{ width: SIZE, height: SIZE, maxWidth: "min(500px, 90vw)", position: "relative", overflow: "visible" }}>
+    <div style={{ width: SIZE, height: SIZE, maxWidth: "min(580px, 90vw)", position: "relative", overflow: "visible" }}>
       <div ref={containerRef} className="relative select-none group" style={{ width: "100%", height: "100%", position: "relative", zIndex: 1, transform: `scale(${zoom}) translateZ(0)`, transformOrigin: "center center", willChange: "transform" }}>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40" style={{ width: SIZE * 0.86, height: SIZE * 0.86 }}>
           <div style={{ display: "flex", width: "300%", height: "100%", animation: "globeMapScroll 60s linear infinite" }}>
@@ -186,9 +218,9 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
           if (!client || !pos) return null;
           return (
             <div key={slotIdx} className="absolute z-10 pointer-events-auto hover:z-30 cursor-default" style={{ left: `${pos.cx}%`, top: `${pos.cy}%`, transform: "translate(-50%,-50%)", transition: "opacity 0.5s ease" }}>
-              <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-300 dark:border-white/25 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] hover:scale-110 transition-transform duration-200 bg-white dark:bg-[hsl(222,47%,11%)]" style={{ width: 54, height: 44, padding: "3px 3px" }}>
-                <div className="w-8 h-5 flex items-center justify-center"><ClientLogoImage client={client} /></div>
-                <span className="text-[0.35rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
+              <div className="flex flex-col items-center justify-center gap-1 rounded-lg border border-gray-300 dark:border-white/30 shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(59,130,246,0.35)] hover:scale-110 transition-all duration-200 bg-white dark:bg-[hsl(222,47%,13%)]" style={{ width: 66, height: 54, padding: "4px 4px" }}>
+                <div className="w-10 h-6 flex items-center justify-center"><ClientLogoImage client={client} /></div>
+                <span className="text-[0.4rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
               </div>
             </div>
           );
@@ -198,7 +230,7 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   );
 };
 
-const COLS = 2, GAP = 20, CARD_W = 82, CARD_H = 68, VISIBLE_H = 500, SPEED_PX = 0.4;
+const COLS = 2, GAP = 10, CARD_W = 96, CARD_H = 80, VISIBLE_H = 520, SPEED_PX = 0.4;
 const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
 
 const ClientCard = ({ client }: { client: ClientLogo }) => (

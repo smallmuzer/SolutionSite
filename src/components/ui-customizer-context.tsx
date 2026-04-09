@@ -2,6 +2,17 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 const LOCAL_STORAGE_KEY = "bss-user-settings";
 
+function readStoredPrefs(): Partial<UIPrefs> {
+  try {
+    // Cookie takes priority over localStorage
+    const m = document.cookie.split(";").find(c => c.trim().startsWith(LOCAL_STORAGE_KEY + "="));
+    if (m) return JSON.parse(decodeURIComponent(m.trim().slice(LOCAL_STORAGE_KEY.length + 1)));
+    const s = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (s) return JSON.parse(s);
+  } catch { }
+  return {};
+}
+
 export interface UIPrefs {
   font_size: string;
   font_style: string;
@@ -12,7 +23,7 @@ export interface UIPrefs {
 }
 
 export const defaultPrefs: UIPrefs = {
-  font_size: "medium",
+  font_size: "small",
   font_style: "'Inter', sans-serif",
   theme: "light",
   accent_color: "#3b82f6",
@@ -28,21 +39,13 @@ export const useCardStyle = () => useContext(CardStyleCtx);
 
 export function GlobalViewProvider({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<"grid" | "list">(() => {
-    try {
-      const s = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return s ? (JSON.parse(s) as UIPrefs).global_view ?? "grid" : "grid";
-    } catch {
-      return "grid";
-    }
+    const p = readStoredPrefs();
+    return (p.global_view as "grid" | "list") ?? "grid";
   });
 
   const [cardStyle, setCardStyle] = useState<"icon" | "image">(() => {
-    try {
-      const s = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return s ? (JSON.parse(s) as UIPrefs).card_style ?? "icon" : "icon";
-    } catch {
-      return "icon";
-    }
+    const p = readStoredPrefs();
+    return (p.card_style as "icon" | "image") ?? "icon";
   });
 
   useEffect(() => {

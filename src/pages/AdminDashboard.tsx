@@ -110,12 +110,14 @@ const AppointmentsCalendar = ({
   applications = [],
   onAppointmentUpdated,
   onAppointmentCreated,
+  onAppointmentDeleted,
 }: {
   appointments: any[];
   submissions?: any[];
   applications?: any[];
   onAppointmentUpdated?: (updated: any) => void;
   onAppointmentCreated?: (created: any) => void;
+  onAppointmentDeleted?: (id: string) => void;
 }) => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
@@ -616,15 +618,30 @@ const AppointmentsCalendar = ({
             </div>
 
             {/* Footer actions */}
-            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border bg-muted/20">
-              <button type="button" onClick={closeModal}
-                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted transition-colors">
-                Close
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border bg-muted/20">
+              <button type="button"
+                onClick={async () => {
+                  if (!confirm("Delete this appointment?")) return;
+                  const url = new URL(`/api/db/appointments`, window.location.origin);
+                  url.searchParams.set("id", selectedAppt.id);
+                  await fetch(url.toString(), { method: "DELETE" });
+                  onAppointmentDeleted?.(selectedAppt.id);
+                  closeModal();
+                  toast.success("Appointment deleted.");
+                }}
+                className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-colors flex items-center gap-1.5">
+                <Trash2 size={13} /> Delete
               </button>
-              <button type="button" onClick={saveAppointmentNotes} disabled={!canSaveNotes || apptSaving}
-                className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
-                {apptSaving ? 'Saving…' : 'Save Note'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={closeModal}
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted transition-colors">
+                  Close
+                </button>
+                <button type="button" onClick={saveAppointmentNotes} disabled={!canSaveNotes || apptSaving}
+                  className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
+                  {apptSaving ? 'Saving…' : 'Save Note'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -955,14 +972,11 @@ const AdminDashboard = () => {
   const saveSettings = async () => {
     setSavingSettings(true);
 
-    // 1. ALWAYS save UX to DB so it acts as Global Default
+    // Save UX + all settings to DB as global defaults for all visitors
     const finalSettings = { ...siteSettings, ...uxDraft };
     setSiteSettings(finalSettings);
 
-    // 2. Always save Personal UX to LocalStorage (cookie-equivalent) for persistence
-    localStorage.setItem("bss-user-settings", JSON.stringify(uxDraft));
-
-    // 3. Cache the tour setting immediately so UICustomizer reads the right value
+    // Cache the tour setting immediately
     localStorage.setItem("bss-tour-enabled", String(finalSettings.show_tour !== false));
 
     await dbFetch("site_content", {
@@ -970,11 +984,12 @@ const AdminDashboard = () => {
       body: { section_key: "settings", content: finalSettings }
     });
 
-    // 4. Notify all components (UICustomizer, etc.) that settings changed
+    // Notify all components that DB settings changed
+    // applySettings will merge cookie on top, so user prefs are preserved
     window.dispatchEvent(new CustomEvent("ss:contentSaved"));
 
     setSavingSettings(false);
-    toast.success("Settings saved globally & preferences updated for your session!");
+    toast.success("Settings saved! User cookie preferences are preserved.");
   };
 
   // Sync uxDraft.theme when sidebar sun/moon toggle is used
@@ -1534,6 +1549,18 @@ const AdminDashboard = () => {
                                           <option key={s} value={s}>{s.replace("_", " ")}</option>
                                         ))}
                                       </select>
+                                      <button
+                                        onClick={() => {
+                                          if (!confirm("Delete this application?")) return;
+                                          dbFetch("job_applications", { method: "DELETE", query: { id: app.id } })
+                                            .then(() => setApplications(prev => prev.filter(a => a.id !== app.id)));
+                                          toast.success("Application deleted.");
+                                        }}
+                                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive"
+                                        title="Delete application"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
                                     </div>
                                   </div>
 
@@ -1978,7 +2005,7 @@ const AdminDashboard = () => {
                       <div className="flex justify-center gap-3 mt-8">
                         <button onClick={() => {
                           const defaults = {
-                            font_style: "'Inter', sans-serif", font_size: "medium", accent_color: "#3b82f6",
+                            font_style: "'Inter', sans-serif", font_size: "small", accent_color: "#3b82f6",
                             global_view: "grid", card_style: "icon", theme: "light"
                           };
                           setUxDraft(defaults);
@@ -2114,6 +2141,20 @@ const AdminDashboard = () => {
                                     Close
                                   </button>
                                 )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!confirm("Delete this chat session?")) return;
+                                    Promise.all([
+                                      dbFetch("chat_messages", { method: "DELETE", query: { id: session.sid } }),
+                                      dbFetch("chat_threads", { method: "DELETE", query: { message_id: session.sid } }),
+                                    ]).then(() => loadChatHistory());
+                                  }}
+                                  className="px-2 py-1 rounded-lg text-[0.625rem] font-bold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                                  title="Delete session"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
                                 <div className="w-8 h-8 rounded-full bg-background border border-border/50 shadow-sm flex items-center justify-center">
                                   <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
                                 </div>
@@ -2231,6 +2272,7 @@ const AdminDashboard = () => {
                         applications={applications}
                         onAppointmentUpdated={(updated) => setAppointments((prev) => prev.map((appt) => appt.id === updated.id ? updated : appt))}
                         onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))}
+                        onAppointmentDeleted={(id) => setAppointments((prev) => prev.filter((a) => a.id !== id))}
                       />
                     </div>
                   )}

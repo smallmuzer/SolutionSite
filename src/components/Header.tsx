@@ -210,16 +210,24 @@ const Header = () => {
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("ss:openCustomizer"))}
               title="User Experience Settings"
-              className={`p-2.5 rounded-lg bg-secondary/15 border border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground transition-all relative group ${!tourCompleted ? "animate-pulse shadow-[0_0_15px_rgba(var(--secondary),0.4)]" : ""}`}
+              className={`p-2.5 rounded-lg border transition-all relative group ${
+                scrolled
+                  ? "bg-secondary/15 border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                  : "bg-white/15 border-white/30 text-white hover:bg-white/25"
+              } ${!tourCompleted ? "animate-pulse shadow-[0_0_15px_rgba(var(--secondary),0.4)]" : ""}`}
             >
-              <Settings size={17} className={`group-hover:animate-[spin_3s_linear_infinite_reverse] drop-shadow-[0_0_8px_rgba(var(--secondary),0.6)] ${!tourCompleted ? "animate-[spin_8s_linear_infinite]" : ""}`} />
+              <Settings size={17} className={`group-hover:animate-[spin_3s_linear_infinite_reverse] ${!tourCompleted ? "animate-[spin_8s_linear_infinite]" : ""}`} />
               <span className={`absolute -inset-1 rounded-lg bg-secondary/20 blur transition-opacity ${!tourCompleted ? "opacity-100 animate-pulse" : "opacity-0 group-hover:opacity-100"}`} />
             </button>
             <a
               href="/admin/login"
               target="_blank" rel="noopener noreferrer"
               title="Admin Panel"
-              className="p-2.5 rounded-lg bg-secondary/15 border border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground transition-all"
+              className={`p-2.5 rounded-lg border transition-all ${
+                scrolled
+                  ? "bg-secondary/15 border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                  : "bg-white/15 border-white/30 text-white hover:bg-white/25"
+              }`}
             >
               <ShieldCheck size={17} />
             </a>

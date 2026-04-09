@@ -29,6 +29,8 @@ const FONT_SIZE_MAP: Record<string, string> = {
 };
 
 export function applySettings(dbSettings: Record<string, any>, live = false) {
+  // Priority: cookie/localStorage user prefs > DB settings
+  // When live=true (preview), use dbSettings directly without merging stored prefs
   let userPrefs: any = {};
   if (!live) {
     try {
@@ -36,6 +38,7 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
       if (stored) userPrefs = JSON.parse(stored);
     } catch { }
   }
+  // DB is the base, user cookie overrides on top
   const s = { ...dbSettings, ...userPrefs };
 
   const theme = s.theme || "light";
@@ -47,7 +50,7 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
   }
   localStorage.setItem("bss-theme", theme);
 
-  const sizeVal = FONT_SIZE_MAP[s.font_size || "medium"] || "16px";
+  const sizeVal = FONT_SIZE_MAP[s.font_size || "small"] || "14.5px";
   document.documentElement.style.setProperty("font-size", sizeVal, "important");
   document.documentElement.style.fontSize = sizeVal;
 
@@ -87,6 +90,7 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     document.documentElement.style.setProperty("--cinematic-asset", `url('${s.cinematic_asset}')`);
   }
 
+  // Dispatch with merged values so context always reflects cookie > DB priority
   window.dispatchEvent(new CustomEvent("ss:globalView", { detail: s.global_view || "grid" }));
   window.dispatchEvent(new CustomEvent("ss:cardStyle", { detail: s.card_style || "icon" }));
   window.dispatchEvent(new CustomEvent("ss:siteSettings", { detail: {

@@ -12,9 +12,9 @@ PowerShell 5.1+
 ## Local Test First ✅
 ```
 npm run fullstack
-# Backend: http://localhost:3001
+# Backend: http://localhost:4001
 # Frontend: http://localhost:4173
-curl http://localhost:3001/api/db/site_content?section_key=settings
+curl http://localhost:4001/api/db/site_content?section_key=settings
 ```
 
 ## Production Deploy (5 min)
@@ -52,7 +52,7 @@ Site: syssolution (port 80)
 ├── dist/           (static files)
 ├── server/         (Node API)
 ├── app.db         (SQLite - IIS_IUSRS write)
-└── web.config     (proxy /api → localhost:3001)
+└── web.config     (proxy /api → localhost:4001)
 ```
 
 ## Service Management
@@ -66,7 +66,7 @@ nssm edit BSS-API  (edit params)
 ## Troubleshooting
 **502 after deploy**:
 1. NSSM service running? `nssm status BSS-API`
-2. Backend healthy? `curl http://localhost:3001/api/db/site_content`
+2. Backend healthy? `curl http://localhost:4001/api/db/site_content`
 3. URL Rewrite module installed?
 4. app.db writable? `icacls app.db`
 
@@ -79,24 +79,24 @@ npm start
 
 **"Invalid table" error after deploy**:
 1. Check NSSM service is running: `nssm status BSS-API`
-2. Test backend directly: `curl http://localhost:3001/api/db/site_content`
+2. Test backend directly: `curl http://localhost:4001/api/db/site_content`
 3. Check server logs: Look for `server/server.log`
 4. Verify app.db exists in server/ folder
 5. Rebuild server: `cd server && npm run db:verify`
 
 **Data not loading (site_content, seo_settings, client_logos)**:
 1. NSSM service running? `nssm status BSS-API`
-2. Test API: `curl http://localhost:3001/api/db/site_content`
+2. Test API: `curl http://localhost:4001/api/db/site_content`
 3. If returns 404 or error, check Node service logs
 4. Rebuild DB: `cd server && npm run db:verify`
 5. Ensure app.db has data: check row counts
 
 **Test all endpoints after deploy**:
 ```
-curl http://localhost:3001/api/db/site_content        # Should return JSON array
-curl http://localhost:3001/api/db/seo_settings       # Should return JSON array
-curl http://localhost:3001/api/db/client_logos        # Should return JSON array
-curl http://localhost:3001/api/db/batch?tables=site_content  # Should return JSON object
+curl http://localhost:4001/api/db/site_content        # Should return JSON array
+curl http://localhost:4001/api/db/seo_settings       # Should return JSON array
+curl http://localhost:4001/api/db/client_logos        # Should return JSON array
+curl http://localhost:4001/api/db/batch?tables=site_content  # Should return JSON object
 ```
 
 ## Monitoring

@@ -21,6 +21,8 @@ const PORT = 4001;
 
 const CACHE_CONTROL_NO_CACHE = "no-cache, no-store, must-revalidate, private, max-age=0";
 const CACHE_CONTROL_PUBLIC = "public, max-age=0, must-revalidate, no-cache";
+ 
+ 
 
 function setNoCache(res) {
   res.setHeader("Cache-Control", CACHE_CONTROL_NO_CACHE);
@@ -51,7 +53,7 @@ const SAFE_TABLES = new Set([
 ]);
 
 app.use(cors({ origin: Array.from(TRUSTED_ORIGINS), credentials: true }));
-app.use(express.json({ limit: "20mb" }));
+app.use(express.json({ limit: "30mb" }));
 
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {
@@ -68,6 +70,7 @@ app.use((req, res, next) => {
   }
   next();
 });
+
 
 let secCache = { data: {}, lastFetch: 0 };
 function getSecuritySettings() {
@@ -1150,7 +1153,15 @@ app.get("/api/submissions/:id/replies", (req, res) => {
   const replies = db.prepare("SELECT * FROM submission_replies WHERE submission_id = ? ORDER BY datetime(created_at) ASC").all(id);
   res.json({ data: replies, error: null });
 });
-
+app.get('/api/services', (req, res) => {
+  db.all("SELECT * FROM services", (err, rows) => {
+    if (err) {
+      console.error("DB ERROR:", err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
 // Contact submission replies
 app.post("/api/submissions/:id/reply", async (req, res) => {
   const { id } = req.params;

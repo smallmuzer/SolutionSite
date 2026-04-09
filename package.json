@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n API,VITE -c cyan,green -k \"node server/index.js\" \"wait-on http://localhost:3001/api/db/services && vite --host\"",
+    "dev": "concurrently -n API,VITE -c cyan,green -k \"node server/index.js\" \"wait-on http://localhost:4001/api/db/services && vite --host\"",
     "server:start": "node server/index.js",
     "client": "vite --host",
-    "fullstack": "concurrently -n BUILD,API,PREVIEW -c yellow,cyan,green \"npm run build\" \"wait-on dist/index.html && npm run server:start\" \"wait-on http://localhost:3001 && vite preview\"",
+    "fullstack": "concurrently -n BUILD,API,PREVIEW -c yellow,cyan,green \"npm run build\" \"wait-on dist/index.html && npm run server:start\" \"wait-on http://localhost:4001 && vite preview\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

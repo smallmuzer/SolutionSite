@@ -45,27 +45,29 @@ const SecurityPanel = () => {
   }, []);
 
   const toggle = async (key: string) => {
-    const updated = settings.map((s) => {
-      if (s.key === key) {
-        const newVal = !s.enabled;
-        if (key === "right_click") {
-          if (newVal) document.addEventListener("contextmenu", preventContext);
-          else document.removeEventListener("contextmenu", preventContext);
-        }
-        return { ...s, enabled: newVal };
-      }
-      return s;
-    });
+    const updated = settings.map((s) => (s.key === key ? { ...s, enabled: !s.enabled } : s));
     setSettings(updated);
 
     const secObj: Record<string, boolean> = {};
     updated.forEach((s) => { secObj[s.key] = s.enabled; });
+
+    // Apply effects immediately client-side
+    const newVal = updated.find(s => s.key === key)!.enabled;
+    if (key === "right_click") {
+      if (newVal) document.addEventListener("contextmenu", preventContext);
+      else document.removeEventListener("contextmenu", preventContext);
+    }
+    if (key === "anti_scraping") {
+      document.body.style.userSelect = newVal ? "none" : "";
+      (document.body.style as any).webkitUserSelect = newVal ? "none" : "";
+    }
+
     await fetch("/api/db/site_content", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ section_key: "security", content: secObj })
     });
-    toast.success("Security setting updated.");
+    toast.success(`${updated.find(s => s.key === key)?.label} ${newVal ? "enabled" : "disabled"}.`);
   };
 
   const toggleGroup = (group: string) => {

@@ -3,14 +3,30 @@
 
 param(
     [string]$SiteName = "syssolution",
-    [string]$PhysicalPath = "C:\inetpub\wwwroot\syssolution",
-    [string]$BackendPort = "3001"
+    [string]$PhysicalPath = "C:\inetpub\websites\syssolution",
+    [string]$BackendPort = "4001"
 )
+
+# =====================================================
+# CONFIGURATION - Update these paths for your setup
+# =====================================================
+
+# Path to NSSM.exe (download from https://nssm.cc/download)
+$nssmPath = "C:\nssm\win64\nssm.exe"
+
+# Source paths - where your project files are located (local machine)
+$SourceProjectPath = "D:\Solutions\ss5\SolutionSite"
+
+# =====================================================
+# DO NOT EDIT BELOW THIS LINE
+# =====================================================
 
 Write-Host "=== BSS Full-Stack Deploy to IIS ===" -ForegroundColor Green
 Write-Host "Site: $SiteName" -ForegroundColor Cyan
 Write-Host "Path: $PhysicalPath" -ForegroundColor Cyan  
-Write-Host "Backend Port: $BackendPort`n" -ForegroundColor Cyan
+Write-Host "Backend Port: $BackendPort" -ForegroundColor Cyan
+Write-Host "Source: $SourceProjectPath" -ForegroundColor Cyan
+Write-Host "NSSM: $nssmPath`n" -ForegroundColor Cyan
 
 # 1. Stop site if exists
 Write-Host "1. Stopping IIS site..." -ForegroundColor Yellow
@@ -29,12 +45,15 @@ New-Item -ItemType Directory -Force -Path $PhysicalPath | Out-Null
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 New-Item -ItemType Directory -Force -Path $serverDir | Out-Null
 
-# 3. Copy files from local project (update paths!)
+# 3. Copy files from local project
 Write-Host "3. Copy project files..." -ForegroundColor Yellow
-# UPDATE these paths to your local project location
-Copy-Item "d:\Solutions\ss5\SolutionSite\dist\*" $dist -Recurse -Force
-Copy-Item "d:\Solutions\ss5\SolutionSite\server\*" $serverDir -Recurse -Force
-Copy-Item "d:\Solutions\ss5\SolutionSite\public\web.config" $PhysicalPath -Force
+Copy-Item "$SourceProjectPath\dist\*" $dist -Recurse -Force
+Copy-Item "$SourceProjectPath\server\*" $serverDir -Recurse -Force
+# Copy web.config from public folder if exists
+$webConfigSrc = Join-Path $SourceProjectPath "public\web.config"
+if (Test-Path $webConfigSrc) {
+    Copy-Item $webConfigSrc $PhysicalPath -Force
+}
 
 # 4. Backend npm install
 Write-Host "4. Backend dependencies..." -ForegroundColor Yellow
@@ -90,13 +109,12 @@ Set-ItemProperty "IIS:\AppPools\$appPoolName" -Name enable32BitAppOnWin64 -Value
 
 # 8. NSSM Backend Service
 Write-Host "8. NSSM Node Service (port $BackendPort)..." -ForegroundColor Yellow
-$nssmPath = "C:\nssm\win64\nssm.exe"  # UPDATE NSSM path
-&amp;$nssmPath install BSS-API $env:ProgramFiles\nodejs\node.exe
-&amp;$nssmPath set BSS-API AppDirectory $serverDir
-&amp;$nssmPath set BSS-API AppParameters index.js
-&amp;$nssmPath set BSS-API DisplayName "BSS API Server"
-&amp;$nssmPath set BSS-API Description "SQLite API Backend - Port $BackendPort"
-&amp;$nssmPath start BSS-API
+& $nssmPath install BSS-API $env:ProgramFiles\nodejs\node.exe
+& $nssmPath set BSS-API AppDirectory $serverDir
+& $nssmPath set BSS-API AppParameters index.js
+& $nssmPath set BSS-API DisplayName "BSS API Server"
+& $nssmPath set BSS-API Description "SQLite API Backend - Port $BackendPort"
+& $nssmPath start BSS-API
 
 # 9. Permissions
 Write-Host "9. Permissions..." -ForegroundColor Yellow

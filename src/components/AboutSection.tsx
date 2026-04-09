@@ -63,9 +63,9 @@ const AboutSection = () => {
                   return (
                     <div
                       key={card.title}
-                      className="glass-card relative rounded-xl overflow-hidden group cursor-default animate-float"
+                      className="glass-card relative rounded-xl overflow-hidden group cursor-default"
                       style={{ 
-                        height: "clamp(90px, 13vw, 110px)",
+                        height: "clamp(120px, 16vw, 145px)",
                         animationDelay: `${idx * 0.6}s`,
                         animationDuration: `${4 + idx * 0.5}s`,
                       }}
@@ -113,7 +113,7 @@ const AboutSection = () => {
                   const imgSrc = resolveImg(card.imgKey, card.fallback);
                   return (
                     <div key={card.title}
-                      className="glass-card flex items-center gap-4 p-4 group hover:glow-effect transition-all duration-300 cursor-default relative overflow-hidden animate-float"
+                      className="glass-card flex items-center gap-4 p-4 group hover:glow-effect transition-all duration-300 cursor-default relative overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-secondary/[0.03] to-transparent group-hover:from-secondary/[0.07] transition-all pointer-events-none rounded-xl" />
                       <div className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-border/40 flex items-center justify-center">
