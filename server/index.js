@@ -17,7 +17,7 @@ app.set("etag", false);
 app.disable("x-powered-by");
 app.disable("etag");
 const server = createServer(app);
-const PORT = 3001;
+const PORT = 4001;
 
 const CACHE_CONTROL_NO_CACHE = "no-cache, no-store, must-revalidate, private, max-age=0";
 const CACHE_CONTROL_PUBLIC = "public, max-age=0, must-revalidate, no-cache";
@@ -36,9 +36,9 @@ const TRUSTED_ORIGINS = new Set([
   "http://localhost:5174",
   "http://localhost:8080",
   "http://localhost:8081",
-  "http://localhost:3001",
+  "http://localhost:4001",
   "http://127.0.0.1:5173",
-  "http://127.0.0.1:3001",
+  "http://127.0.0.1:4001",
   "http://syssolution",
   "https://syssolution",
 ]);

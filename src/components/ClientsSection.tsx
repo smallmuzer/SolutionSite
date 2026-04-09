@@ -93,27 +93,26 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 
   useEffect(() => {
     if (clients.length === 0 || slotCount === 0) return;
-    // Stagger each slot by (slotIndex / slotCount) * SLOT_MS so they don't all flip at once
-    const timers = Array.from({ length: slotCount }, (_, slotIdx) => {
+
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const intervals: ReturnType<typeof setInterval>[] = [];
+    for (let slotIdx = 0; slotIdx < slotCount; slotIdx++) {
       const delay = Math.round((slotIdx / slotCount) * SLOT_MS);
       const t = setTimeout(() => {
-        const interval = setInterval(() => {
+        const id = setInterval(() => {
           setSlotIndices(prev => {
             const next = [...prev];
             next[slotIdx] = (next[slotIdx] + slotCount) % clients.length;
             return next;
           });
         }, SLOT_MS);
-        // store interval id on the timeout ref so we can clear it
-        (timers[slotIdx] as any)._interval = interval;
+        intervals.push(id);
       }, delay);
-      return t;
-    });
+      timeouts.push(t);
+    }
     return () => {
-      timers.forEach(t => {
-        clearTimeout(t);
-        if ((t as any)._interval) clearInterval((t as any)._interval);
-      });
+      timeouts.forEach(t => clearTimeout(t));
+      intervals.forEach(id => clearInterval(id));
     };
   }, [clients.length, slotCount]);
 

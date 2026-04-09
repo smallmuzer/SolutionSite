@@ -1,5 +1,5 @@
 // Test full auth flow
-const BASE = 'http://localhost:3001';
+const BASE = 'http://localhost:4001';
 
 // 1. Login
 const loginRes = await fetch(`${BASE}/api/auth/login`, {
