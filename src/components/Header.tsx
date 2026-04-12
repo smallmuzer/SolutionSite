@@ -151,15 +151,27 @@ const Header = () => {
             style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain" }}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
           />
-          <div className="flex items-center leading-none overflow-hidden">
+          <div className="flex items-center gap-1.5 leading-none overflow-hidden select-none whitespace-nowrap">
             <span
-              className="font-heading font-bold text-lg sm:text-xl leading-tight whitespace-nowrap"
+              className="font-heading font-bold text-lg sm:text-xl leading-tight"
               style={{
                 color: scrolled ? (isDark ? "#f1f5f9" : "#0f172a") : "#ffffff",
-                textShadow: scrolled ? "none" : "0 1px 6px rgba(0,0,0,0.5)",
+                textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)",
               }}
             >
-              {siteName}
+              {siteName.split(" ")[0]}
+            </span>
+            <span
+              className="font-heading font-bold text-lg sm:text-xl leading-tight"
+              style={{
+                background: "linear-gradient(90deg,#60a5fa,#818cf8)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                textShadow: "none",
+                filter: scrolled ? "none" : "drop-shadow(0 1px 2px rgba(0,0,0,0.5))"
+              }}
+            >
+              {siteName.split(" ").slice(1).join(" ") || "Solutions"}
             </span>
           </div>
         </a>

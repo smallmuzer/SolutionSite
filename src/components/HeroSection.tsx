@@ -182,10 +182,9 @@ const HeroSection = () => {
 
           <h1 className="text-[2.15rem] sm:text-[2.75rem] lg:text-[4rem] font-heading font-bold text-white leading-tight mb-4 drop-shadow-lg hero-fade-in" style={{ animationDelay: "0.2s" }}>
             {content.title?.includes("Maldives") ? (
-              <>
-                {content.title.split("Maldives")[0]}
-                <span className="gradient-text">Maldives</span>
-              </>
+              content.title.split(/(Maldives)/g).map((part, i) => 
+                part === "Maldives" ? <span key={i} className="gradient-text">Maldives</span> : part
+              )
             ) : (
               <span>{content.title || "Transforming Business Across Maldives"}</span>
             )}

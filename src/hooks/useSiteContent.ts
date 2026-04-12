@@ -77,9 +77,13 @@ async function fetchSiteContent() {
   const content: Record<string, Record<string, any>> = {};
   result.data.forEach(row => {
     if (row.section_key && row.content) {
+      let parsed = row.content;
+      if (typeof parsed === "string") {
+        try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+      }
       content[row.section_key] = {
         ...(DEFAULT_CONTENT[row.section_key] || {}),
-        ...(typeof row.content === "object" ? row.content : {}),
+        ...(typeof parsed === "object" ? parsed : {}),
       };
     }
   });
@@ -89,11 +93,11 @@ async function fetchSiteContent() {
 export const SHARED_QUERY_OPTIONS = {
   queryKey: queryKeys.siteContent.all,
   queryFn: fetchSiteContent,
-  staleTime: CONTENT_STALE_TIME,
+  staleTime: 5000, // Reduce staleTime for more reactive UI
   gcTime: CONTENT_GC_TIME,
-  refetchOnMount: false,
-  refetchOnWindowFocus: false,
-  refetchOnReconnect: false,
+  refetchOnMount: true,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
   retry: 0,
 } as const;
 
@@ -118,16 +122,20 @@ export function useInvalidateContent() {
 }
 
 export function useContentSync() {
+  const queryClient = useQueryClient();
   const invalidate = useInvalidateContent();
   useEffect(() => {
-    const onSaved = () => invalidate();
+    const onSaved = () => {
+      invalidate();
+      queryClient.invalidateQueries(); // Invalidate EVERYTHING to be sure
+    };
     window.addEventListener("ss:contentSaved", onSaved);
     window.addEventListener("ss:siteSettings", onSaved);
     return () => {
       window.removeEventListener("ss:contentSaved", onSaved);
       window.removeEventListener("ss:siteSettings", onSaved);
     };
-  }, [invalidate]);
+  }, [invalidate, queryClient]);
 }
 
 export function useNetworkCompanies(): { id: string; name: string; subtitle: string; desc: string; href: string; flag: string; accent: string; is_visible: boolean }[] {

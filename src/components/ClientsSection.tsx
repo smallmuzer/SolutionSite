@@ -52,17 +52,20 @@ const ClientLogoImage = ({ client }: { client: ClientLogo }) => (
   <img src={client.logo_url} alt={client.name} className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal" loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
 );
 
-function computeGlobePositions(count: number): { cx: number; cy: number }[] {
+function computeGlobePositions(count: number, isMobile: boolean = false): { cx: number; cy: number }[] {
   if (count === 0) return [];
   const pos: { cx: number; cy: number }[] = [];
   const R_INNER = 22, R_OUTER = 34;
+  
   if (count <= 7) {
-    const r = count <= 3 ? R_OUTER : 28;
+    // For mobile or small sets, use a perfect single ring
+    const r = isMobile ? 30 : (count <= 3 ? R_OUTER : 28);
     for (let i = 0; i < count; i++) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / count;
       pos.push({ cx: 50 + r * Math.cos(a), cy: 50 + r * Math.sin(a) });
     }
   } else {
+    // Nested rings for desktop/larger sets
     const inner = Math.max(3, Math.round(count * 0.36)), outer = count - inner;
     for (let i = 0; i < inner; i++) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / inner;
@@ -74,6 +77,9 @@ function computeGlobePositions(count: number): { cx: number; cy: number }[] {
       pos.push({ cx: 50 + R_OUTER * Math.cos(a), cy: 50 + R_OUTER * Math.sin(a) });
     }
   }
+
+  // Cards collision avoidance pass (skipped for mobile perfect circle to ensure exactness)
+  if (isMobile && count <= 5) return pos;
 
   const CARD_W_PCT = (66 / 580) * 100;
   const CARD_H_PCT = (54 / 580) * 100;
@@ -112,41 +118,70 @@ function computeGlobePositions(count: number): { cx: number; cy: number }[] {
 const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   const bgRef = useRef<HTMLCanvasElement>(null), fgRef = useRef<HTMLCanvasElement>(null), containerRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), zoomRef = useRef(1), targetZoomRef = useRef(1), zoomRafRef = useRef<number>(0);
   const [zoom, setZoom] = useState(1);
-  const SIZE = 580, SLOT_COUNT = 14, SLOT_MS = 3_000;
-
-  // Each slot independently cycles through all clients, staggered by slot index
-  const positions = useMemo(() => computeGlobePositions(Math.min(clients.length, SLOT_COUNT)), [clients.length]);
-  const slotCount = positions.length;
-
-  // slotIndices[i] = which client index is currently shown in slot i
-  const [slotIndices, setSlotIndices] = useState<number[]>(() =>
-    Array.from({ length: SLOT_COUNT }, (_, i) => i % Math.max(clients.length, 1))
-  );
+  const [isMobile, setIsMobile] = useState(false);
+  const SIZE = 580;
 
   useEffect(() => {
-    if (clients.length === 0 || slotCount === 0) return;
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    const intervals: ReturnType<typeof setInterval>[] = [];
-    for (let slotIdx = 0; slotIdx < slotCount; slotIdx++) {
-      const delay = Math.round((slotIdx / slotCount) * SLOT_MS);
-      const t = setTimeout(() => {
-        const id = setInterval(() => {
-          setSlotIndices(prev => {
-            const next = [...prev];
-            next[slotIdx] = (next[slotIdx] + slotCount) % clients.length;
-            return next;
-          });
-        }, SLOT_MS);
-        intervals.push(id);
-      }, delay);
-      timeouts.push(t);
+  const slotCount = isMobile ? 5 : 14;
+
+  // Each slot independently cycles through all clients, staggered by slot index
+  const positions = useMemo(() => computeGlobePositions(Math.min(clients.length, slotCount), isMobile), [clients.length, slotCount, isMobile]);
+
+  // slotIndices[i] = which client index is currently shown in slot i
+  const [slotIndices, setSlotIndices] = useState<number[]>([]);
+
+  useEffect(() => {
+    setSlotIndices(Array.from({ length: slotCount }, (_, i) => i % Math.max(clients.length, 1)));
+  }, [slotCount, clients.length]);
+
+  const slotMs = isMobile ? 2200 : 3000;
+
+  useEffect(() => {
+    if (clients.length === 0 || slotCount === 0 || slotIndices.length === 0) return;
+
+    if (isMobile) {
+      // Unified rotation for mobile "per slot concept" - all 5 change together correctly
+      const id = setInterval(() => {
+        setSlotIndices(prev => {
+          const next = [...prev];
+          for (let i = 0; i < slotCount; i++) {
+            next[i] = (next[i] + slotCount) % clients.length;
+          }
+          return next;
+        });
+      }, slotMs);
+      return () => clearInterval(id);
+    } else {
+      // Staggered rotation for desktop
+      const timeouts: ReturnType<typeof setTimeout>[] = [];
+      const intervals: ReturnType<typeof setInterval>[] = [];
+      for (let slotIdx = 0; slotIdx < slotCount; slotIdx++) {
+        const delay = Math.round((slotIdx / slotCount) * slotMs);
+        const t = setTimeout(() => {
+          const id = setInterval(() => {
+            setSlotIndices(prev => {
+              if (prev.length < slotCount) return prev;
+              const next = [...prev];
+              next[slotIdx] = (next[slotIdx] + slotCount) % clients.length;
+              return next;
+            });
+          }, slotMs);
+          intervals.push(id);
+        }, delay);
+        timeouts.push(t);
+      }
+      return () => {
+        timeouts.forEach(t => clearTimeout(t));
+        intervals.forEach(id => clearInterval(id));
+      };
     }
-    return () => {
-      timeouts.forEach(t => clearTimeout(t));
-      intervals.forEach(id => clearInterval(id));
-    };
-  }, [clients.length, slotCount]);
+  }, [clients.length, slotCount, isMobile, slotIndices.length, slotMs]);
 
   const handleWheel = useCallback((e: WheelEvent) => { e.preventDefault(); targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15))); }, []);
   const handleMouseLeave = useCallback(() => { targetZoomRef.current = 1; }, []);
@@ -199,28 +234,46 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   }, []);
 
   return (
-    <div style={{ width: SIZE, height: SIZE, maxWidth: "min(580px, 90vw)", position: "relative", overflow: "visible" }}>
-      <div ref={containerRef} className="relative select-none group" style={{ width: "100%", height: "100%", position: "relative", zIndex: 1, transform: `scale(${zoom}) translateZ(0)`, transformOrigin: "center center", willChange: "transform" }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40" style={{ width: SIZE * 0.86, height: SIZE * 0.86 }}>
+    <div className="mx-auto" style={{ 
+      width: isMobile ? "100%" : `${SIZE}px`, 
+      maxWidth: isMobile ? "min(420px, 88vw)" : "100%", 
+      aspectRatio: "1/1", 
+      position: "relative", 
+      overflow: "visible" 
+    }}>
+      <div ref={containerRef} className="relative select-none group" style={{ width: "100%", height: "100%", zIndex: 1, transform: `scale(${zoom}) translateZ(0)`, transformOrigin: "center center", willChange: "transform" }}>
+        
+        {/* Correct Round Map Container */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40" style={{ width: "86%", height: "86%" }}>
           <div style={{ display: "flex", width: "300%", height: "100%", animation: "globeMapScroll 60s linear infinite" }}>
-            {[0, 1, 2].map(k => <img key={k} src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="" style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }} />)}
+            {[0, 1, 2].map(k => (
+              <img 
+                key={k} 
+                src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
+                alt="" 
+                style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }}
+                onLoad={(e) => (e.currentTarget.parentElement!.parentElement!.style.opacity = isMobile ? "0.3" : "0.2")} 
+              />
+            ))}
           </div>
         </div>
-        <canvas ref={bgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full" />
-        <canvas ref={fgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full" />
-        <button onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })} className="absolute z-20 flex flex-col items-center justify-center" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: SIZE * 0.30 * 2, height: SIZE * 0.30 * 2, borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--secondary))", lineHeight: 1, opacity: 0.85 }}>JOIN</span>
-          <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: "0.06em", color: "hsl(var(--secondary))", textShadow: "0 0 12px hsl(var(--secondary)/0.6)", lineHeight: 1.1 }}>Here</span>
-          <span className="blink-hint" style={{ fontSize: 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
+
+        <canvas ref={bgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full object-contain" />
+        <canvas ref={fgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full object-contain" />
+        
+        <button onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })} className="absolute z-20 flex flex-col items-center justify-center transition-transform hover:scale-105" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "60%", borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}>
+          <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--secondary))", lineHeight: 1, opacity: 0.85 }}>JOIN</span>
+          <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, letterSpacing: "0.06em", color: "hsl(var(--secondary))", textShadow: "0 0 12px hsl(var(--secondary)/0.6)", lineHeight: 1.1 }}>Here</span>
+          <span className="blink-hint" style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
         </button>
         {positions.map((pos, slotIdx) => {
           const client = clients[slotIndices[slotIdx] ?? slotIdx % clients.length];
           if (!client || !pos) return null;
           return (
-            <div key={slotIdx} className="absolute z-10 pointer-events-auto hover:z-30 cursor-default" style={{ left: `${pos.cx}%`, top: `${pos.cy}%`, transform: "translate(-50%,-50%)", transition: "opacity 0.5s ease" }}>
-              <div className="flex flex-col items-center justify-center gap-1 rounded-lg border border-gray-300 dark:border-white/30 shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(59,130,246,0.35)] hover:scale-110 transition-all duration-200 bg-white dark:bg-[hsl(222,47%,13%)]" style={{ width: 66, height: 54, padding: "4px 4px" }}>
-                <div className="w-10 h-6 flex items-center justify-center"><ClientLogoImage client={client} /></div>
-                <span className="text-[0.4rem] text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5">{client.name}</span>
+            <div key={slotIdx} className="absolute z-10 pointer-events-auto hover:z-30 cursor-default" style={{ left: `${pos.cx}%`, top: `${pos.cy}%`, transform: "translate(-50%,-50%)", transition: "opacity 0.6s ease" }}>
+              <div className="flex flex-col items-center justify-center gap-1 rounded-lg border border-gray-300 dark:border-white/30 shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_24px_rgba(59,130,246,0.35)] hover:scale-110 transition-all duration-200 bg-white dark:bg-[hsl(222,47%,13%)]" style={{ width: isMobile ? 54 : 66, height: isMobile ? 44 : 54, padding: "4px 4px" }}>
+                <div className={`${isMobile ? "w-8 h-5" : "w-10 h-6"} flex items-center justify-center`}><ClientLogoImage client={client} /></div>
+                <span className={`${isMobile ? "text-[0.35rem]" : "text-[0.4rem]"} text-foreground text-center font-bold leading-tight line-clamp-1 w-full px-0.5`}>{client.name}</span>
               </div>
             </div>
           );

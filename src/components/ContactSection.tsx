@@ -281,14 +281,14 @@ const ContactSection = () => {
                 <button 
                   type="button"
                   onClick={() => openViber()}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#7360F2]/5 border border-[#7360F2]/10 hover:bg-[#7360F2]/10 transition-all group mt-2"
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group mt-2 shadow-sm"
                 >
-                  <div className="w-11 h-11 rounded-xl bg-[#7360F2] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
                     <ViberIcon size={22} />
                   </div>
                   <div className="text-left">
                     <div className="text-sm font-bold text-foreground">Chat on Viber</div>
-                    <div className="text-[0.6875rem] text-[#7360F2] font-semibold">Official Business Channel</div>
+                    <div className="text-[0.6875rem] text-[#f97316] dark:text-[#fb923c] font-bold tracking-tight">Official Business Channel</div>
                   </div>
                 </button>
               </div>
@@ -298,7 +298,7 @@ const ContactSection = () => {
                   <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
                   <div className="flex flex-wrap items-center gap-2">
                     {[
-                      { name: "Viber", icon: ViberIcon, onClick: () => openViber(), color: "#7360F2" },
+                      { name: "Viber", icon: ViberIcon, onClick: () => openViber(), color: "hsl(var(--secondary))" },
                       { name: "Facebook", icon: Facebook, href: settings.social_facebook  || content.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
                       { name: "Twitter",  icon: Twitter,  href: settings.social_twitter   || content.twitter   || "https://x.com/bsspl_india" },
                       { name: "Linkedin", icon: Linkedin, href: settings.social_linkedin  || content.linkedin  || "https://in.linkedin.com/company/brilliantsystemssolutions" },

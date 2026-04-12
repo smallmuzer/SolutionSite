@@ -414,7 +414,10 @@ const PageEditor = () => {
     });
     setSaving(null);
     if (error) toast.error(`Failed to save ${key} section.`);
-    else toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} section updated!`);
+    else {
+      toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} section updated!`);
+      window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+    }
   };
 
   const updateContent = (section: string, field: string, value: string) => {
@@ -429,6 +432,7 @@ const PageEditor = () => {
     await dbFetch("site_content", { method: "POST", body: { section_key: "our_network", content: { companies: network } } });
     setSaving(null);
     toast.success("Our Network saved!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const saveLocations = async () => {
@@ -436,6 +440,7 @@ const PageEditor = () => {
     await dbFetch("site_content", { method: "POST", body: { section_key: "global_presence", content: { locations } } });
     setSaving(null);
     toast.success("Global presence saved!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const addLocation = () => {
@@ -530,6 +535,7 @@ const PageEditor = () => {
     setHeroStats((prev) => prev.map((s) => s.id === editingHeroStat ? { ...s, ...tempHeroStat } : s));
     setEditingHeroStat(null);
     toast.success("Stat updated!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const saveService = async () => {
@@ -547,6 +553,7 @@ const PageEditor = () => {
     setServices((prev) => prev.map((s) => s.id === editingService ? { ...s, ...tempService } : s));
     setEditingService(null);
     toast.success("Service updated!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const saveClient = async () => {
@@ -559,6 +566,7 @@ const PageEditor = () => {
     setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...tempClient } : c));
     setEditingClient(null);
     toast.success("Client updated!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const saveTestimonial = async () => {
@@ -575,6 +583,7 @@ const PageEditor = () => {
     setTestimonials((prev) => prev.map((t) => t.id === editingTestimonial ? { ...t, ...tempTestimonial } : t));
     setEditingTestimonial(null);
     toast.success("Testimonial updated!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const saveCareer = async () => {
@@ -591,6 +600,7 @@ const PageEditor = () => {
     setCareers((prev) => prev.map((c) => c.id === editingCareer ? { ...c, ...tempCareer } : c));
     setEditingCareer(null);
     toast.success("Job updated!");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const saveLocationEdit = () => {
@@ -599,6 +609,7 @@ const PageEditor = () => {
     updated[editingLocation] = tempLocation as LocationData;
     setLocations(updated);
     setEditingLocation(null);
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const MapPicker = ({ lat, lng, onPick }: { lat: number, lng: number, onPick: (lat: number, lng: number) => void }) => {
@@ -1530,7 +1541,7 @@ const PageEditor = () => {
             </div>
           </div>
         );
-
+      
       case "contact":
         return (
           <div className="space-y-4 pt-2">
