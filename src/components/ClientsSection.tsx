@@ -183,23 +183,43 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
     }
   }, [clients.length, slotCount, isMobile, slotIndices.length, slotMs]);
 
-  const handleWheel = useCallback((e: WheelEvent) => { e.preventDefault(); targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15))); }, []);
-  const handleMouseLeave = useCallback(() => { targetZoomRef.current = 1; }, []);
+  const handleWheel = useCallback((e: WheelEvent) => { 
+    if (isMobile) return;
+    e.preventDefault(); 
+    targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15))); 
+  }, [isMobile]);
+  
+  const handleMouseLeave = useCallback(() => { 
+    if (isMobile) return;
+    targetZoomRef.current = 1; 
+  }, [isMobile]);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || isMobile) return;
     el.addEventListener("wheel", handleWheel, { passive: false });
     el.addEventListener("mouseleave", handleMouseLeave);
     return () => { el.removeEventListener("wheel", handleWheel); el.removeEventListener("mouseleave", handleMouseLeave); };
-  }, [handleWheel, handleMouseLeave]);
+  }, [handleWheel, handleMouseLeave, isMobile]);
 
   useEffect(() => {
+    if (isMobile) {
+      setZoom(1);
+      targetZoomRef.current = 1;
+      zoomRef.current = 1;
+      return;
+    }
     let running = true;
-    const step = () => { if (!running) return; const d = targetZoomRef.current - zoomRef.current; zoomRef.current += d * 0.2; if (Math.abs(d) > 0.001) setZoom(zoomRef.current); zoomRafRef.current = requestAnimationFrame(step); };
+    const step = () => { 
+      if (!running) return; 
+      const d = targetZoomRef.current - zoomRef.current; 
+      zoomRef.current += d * 0.2; 
+      if (Math.abs(d) > 0.001) setZoom(zoomRef.current); 
+      zoomRafRef.current = requestAnimationFrame(step); 
+    };
     step();
     return () => { running = false; cancelAnimationFrame(zoomRafRef.current); };
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     const bg = bgRef.current, fg = fgRef.current;
