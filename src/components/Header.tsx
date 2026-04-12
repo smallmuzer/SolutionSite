@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ExternalLink, Sun, Moon, ShieldCheck, Settings } from "lucide-react";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 const DEFAULT_NAV = [
   { label: "Home",         href: "#home" },
-  { label: "About",        href: "#about" },
-  { label: "Services",     href: "#services" },
-  { label: "Products",     href: "#products" },
-  { label: "Portfolio",    href: "#portfolio" },
-  { label: "Technologies", href: "#technologies" },
-  { label: "Careers",      href: "#careers" },
-  { label: "Contact",      href: "#contact" },
+  { label: "Modern",       href: "#products" },
+  { label: "Popular",      href: "#portfolio" },
+  { label: "Trending",     href: "#services" },
 ];
 
 interface NavItem { label: string; href: string; }
@@ -123,9 +120,9 @@ const Header = () => {
   };
 
   const navBtn = (active: boolean) =>
-    `px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${scrolled
+    `px-3 py-1.5 rounded-lg text-[14px] font-semibold transition-colors relative whitespace-nowrap ${scrolled
       ? active ? "text-secondary bg-secondary/10" : "text-foreground hover:text-secondary hover:bg-muted"
-      : active ? "text-secondary bg-white/20"    : "text-white font-semibold hover:text-white hover:bg-white/10"
+      : active ? "text-secondary bg-white/20"    : "text-white hover:text-white hover:bg-white/10"
     }`;
 
   const iconBtn = scrolled
@@ -145,33 +142,30 @@ const Header = () => {
           : { background: "transparent" }),
       }}
     >
-      <div className="container-wide flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16 lg:h-20">
+      <div className="w-full flex items-center justify-between px-4 sm:px-6 h-12 lg:h-14">
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-3 shrink-0 mr-4">
+        <a href="#home" className="flex items-center gap-2.5 shrink-0">
           <img
             src={resolvedLogo}
             alt={siteName}
             style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain" }}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
           />
-          <div className="flex flex-col justify-center leading-none">
+          <div className="flex items-center leading-none overflow-hidden">
             <span
-              className="font-heading font-bold text-lg sm:text-xl leading-tight"
+              className="font-heading font-bold text-lg sm:text-xl leading-tight whitespace-nowrap"
               style={{
                 color: scrolled ? (isDark ? "#f1f5f9" : "#0f172a") : "#ffffff",
-                textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)",
+                textShadow: scrolled ? "none" : "0 1px 6px rgba(0,0,0,0.5)",
               }}
             >
-              {siteName.split(" ")[0] || "Systems"}
-            </span>
-            <span className="font-heading font-bold text-base sm:text-lg leading-tight gradient-text mt-0.5">
-              {siteName.split(" ").slice(1).join(" ") || "Solutions"}
+              {siteName}
             </span>
           </div>
         </a>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden xl:flex items-center justify-center gap-1.5 flex-1 mx-4">
           {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
             <button key={item.href} onClick={() => scrollTo(item.href)} className={navBtn(activeSection === item.href)}>
               {item.label}
@@ -187,12 +181,13 @@ const Header = () => {
             </button>
           ))}
 
+
           <a
             href={demoLink}
             target="_blank" rel="noopener noreferrer"
-            className="ml-2 px-4 py-2.5 border border-secondary text-secondary rounded-lg font-semibold text-sm hover:bg-secondary hover:text-secondary-foreground transition-all inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="ml-1 px-2 py-1.5 border border-secondary text-secondary rounded-lg font-semibold text-xs hover:bg-secondary hover:text-secondary-foreground transition-all inline-flex items-center gap-1 whitespace-nowrap shrink-0"
           >
-            <ExternalLink size={14} /> Get Access
+            <ExternalLink size={12} /> Get Access
           </a>
 
           <button onClick={toggle} className={`ml-1 ${iconBtn}`} title={isDark ? "Switch to light" : "Switch to dark"}>
@@ -201,19 +196,19 @@ const Header = () => {
 
           <button
             onClick={() => scrollTo("#contact")}
-            className="ml-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity whitespace-nowrap shrink-0"
+            className="ml-1 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg font-semibold text-xs hover:opacity-90 transition-opacity whitespace-nowrap shrink-0"
           >
             Get Started
           </button>
 
-          <div className="flex items-center gap-1.5 ml-1">
+          <div className="flex items-center gap-1 ml-1">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("ss:openCustomizer"))}
               title="User Experience Settings"
-              className={`p-2.5 rounded-lg border transition-all relative group ${
+              className={`p-2 rounded-lg border transition-all relative group ${
                 scrolled
                   ? "bg-secondary/15 border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground"
-                  : "bg-white/15 border-white/30 text-white hover:bg-white/25"
+                  : "bg-black/60 border-white/40 text-white hover:bg-black/80 backdrop-blur-md shadow-lg"
               } ${!tourCompleted ? "animate-pulse shadow-[0_0_15px_rgba(var(--secondary),0.4)]" : ""}`}
             >
               <Settings size={17} className={`group-hover:animate-[spin_3s_linear_infinite_reverse] ${!tourCompleted ? "animate-[spin_8s_linear_infinite]" : ""}`} />
@@ -223,10 +218,10 @@ const Header = () => {
               href="/admin/login"
               target="_blank" rel="noopener noreferrer"
               title="Admin Panel"
-              className={`p-2.5 rounded-lg border transition-all ${
+              className={`p-2 rounded-lg border transition-all ${
                 scrolled
                   ? "bg-secondary/15 border-secondary/30 text-secondary hover:bg-secondary hover:text-secondary-foreground"
-                  : "bg-white/15 border-white/30 text-white hover:bg-white/25"
+                  : "bg-black/60 border-white/40 text-white hover:bg-black/80 backdrop-blur-md shadow-lg"
               }`}
             >
               <ShieldCheck size={17} />
@@ -235,46 +230,64 @@ const Header = () => {
         </nav>
 
         {/* Mobile controls */}
-        <div className="flex items-center gap-2 lg:hidden">
-          <button onClick={toggle} className={`p-2 rounded-lg ${scrolled ? "text-foreground" : "text-white"}`}>
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        <div className="flex items-center gap-1 xl:hidden">
+          <button onClick={toggle} className={`p-1.5 rounded-lg ${scrolled ? "text-foreground" : "text-white"}`}>
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button onClick={mobileOpen ? closeMobile : openMobile} className={`p-2 rounded-lg ${scrolled ? "text-foreground" : "text-white"}`}>
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          <button onClick={mobileOpen ? closeMobile : openMobile} className={`p-1.5 rounded-lg ${scrolled ? "text-foreground" : "text-white"}`}>
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - Compact Right Popup */}
       {mobileOpen && (
         <div
-          className="lg:hidden bg-card/95 backdrop-blur-xl border-b border-border overflow-hidden"
+          className="xl:hidden fixed top-14 right-4 w-64 bg-card/95 backdrop-blur-2xl border border-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] overflow-hidden"
           style={{
             opacity: mobileVisible ? 1 : 0,
-            maxHeight: mobileVisible ? 540 : 0,
-            transition: "opacity 0.25s ease, max-height 0.28s ease",
+            transform: mobileVisible ? "translateY(0) scale(1)" : "translateY(-10px) scale(0.95)",
+            transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            pointerEvents: mobileVisible ? "auto" : "none",
           }}
         >
-          <nav className="flex flex-col p-4 gap-1">
+          <div className="p-2 border-b border-border bg-muted/30 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Navigation</span>
+            <button onClick={closeMobile} className="p-1.5 hover:bg-muted rounded-full transition-colors text-muted-foreground">
+              <X size={14} />
+            </button>
+          </div>
+          
+          <nav className="flex flex-col p-2 gap-1 max-h-[70vh] overflow-y-auto custom-scrollbar">
             {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
               <button
                 key={item.href}
                 onClick={() => scrollTo(item.href)}
-                className={`text-left px-4 py-3 rounded-lg font-medium ${activeSection === item.href ? "text-secondary bg-secondary/10" : "text-foreground hover:bg-muted"}`}
+                className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-between group ${
+                  activeSection === item.href 
+                    ? "text-secondary bg-secondary/10" 
+                    : "text-foreground/80 hover:text-foreground hover:bg-muted"
+                }`}
               >
                 {item.label}
+                {activeSection === item.href && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
               </button>
             ))}
+            
+            <div className="h-px bg-border my-1 mx-2" />
+            
             <a href={demoLink} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-3 rounded-lg text-secondary hover:bg-muted font-medium">
-              <ExternalLink size={16} /> Get Access
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-secondary hover:bg-secondary/10 font-bold text-sm transition-all">
+              <ExternalLink size={14} /> Get Access
             </a>
+            
             <a href="/admin/login" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-3 rounded-lg text-secondary bg-secondary/10 hover:bg-secondary/20 font-medium">
-              <ShieldCheck size={16} /> Admin Panel
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-foreground/70 hover:text-foreground hover:bg-muted font-semibold text-sm transition-all">
+              <ShieldCheck size={14} /> Admin Panel
             </a>
+
             <button onClick={() => scrollTo("#contact")}
-              className="mt-2 px-5 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold">
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-lg font-bold text-xs shadow-sm mt-1 hover:opacity-90 transition-opacity">
               Get Started
             </button>
           </nav>

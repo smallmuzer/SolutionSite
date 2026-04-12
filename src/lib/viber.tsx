@@ -2,35 +2,46 @@ import React from "react";
 import { toast } from "sonner";
 
 export const openViber = (phoneNumbers: string = "9489477144", shareMessage: string = "Check this out") => {
-  const currentUrl = window.location.href;
-  const fullText = `${shareMessage}`;
+  const fullText = shareMessage;
   const encodedMessage = encodeURIComponent(fullText);
   const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  // 1. Copy to clipboard for reliability
-  navigator.clipboard.writeText(fullText).then(() => {
-    // 2. Try to open Viber
-    const numbersArray = phoneNumbers.split(',').map(num => num.trim().replace('+', '')).filter(num => num);
-
-    if (phoneNumbers && phoneNumbers.length >= 10) {
-      if (isMobile) {
-        window.location.href = `viber://forward?text=${encodedMessage}&contacts=${numbersArray.join(',')}`;
+  // Safe clipboard copy — works on HTTPS; silently skips on HTTP
+  const tryCopy = () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(fullText).catch(() => {});
       } else {
-        window.location.href = `viber://chat?number=${phoneNumbers.replace('+', '')}`;
-
-        setTimeout(() => {
-          toast.info("Message copied! Paste it in the Viber window that just opened.");
-        }, 800);
+        // Fallback for HTTP / non-secure contexts
+        const el = document.createElement("textarea");
+        el.value = fullText;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
       }
+    } catch { }
+  };
+
+  const numbersArray = phoneNumbers.split(",").map(n => n.trim().replace("+", "")).filter(Boolean);
+
+  if (phoneNumbers && phoneNumbers.length >= 10) {
+    if (isMobile) {
+      window.location.href = `viber://forward?text=${encodedMessage}&contacts=${numbersArray.join(",")}`;
     } else {
-      // Fallback share
-      window.location.href = `viber://forward?text=${encodedMessage}`;
-      toast.info("Viber should open now. If not, the message is in your clipboard!");
+      window.location.href = `viber://chat?number=${phoneNumbers.replace("+", "")}`;
+      tryCopy();
+      setTimeout(() => {
+        toast.info("Message copied! Paste it in the Viber window that just opened.");
+      }, 800);
     }
-  }).catch(() => {
-    // If clipboard fails, just try opening Viber
+  } else {
     window.location.href = `viber://forward?text=${encodedMessage}`;
-  });
+    tryCopy();
+    toast.info("Viber should open now.");
+  }
 };
 
 export const VIBER_COLOR = "#7360F2";

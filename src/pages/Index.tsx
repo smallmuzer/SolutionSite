@@ -83,11 +83,11 @@ const Index = () => {
       </Suspense>
 
       <Suspense fallback={<SkeletonSection />}>
-        <CareersSection />
+        <TechnologiesSection />
       </Suspense>
 
       <Suspense fallback={<SkeletonSection />}>
-        <TechnologiesSection />
+        <CareersSection />
       </Suspense>
 
       <Suspense fallback={<SkeletonSection />}>

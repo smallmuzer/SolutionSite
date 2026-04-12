@@ -6,9 +6,9 @@ import { useGlobalView } from "./ui-customizer-context";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const AVATAR_MAP: Record<string, string> = {
-  "Ahmed Rasheed":  "/assets/testimonials/ahmed.jpg",
+  "Ahmed Rasheed": "/assets/testimonials/ahmed.jpg",
   "Fatima Ibrahim": "/assets/testimonials/fatima.jpg",
-  "Fatima Zahir":   "/assets/testimonials/fatima.jpg",
+  "Fatima Zahir": "/assets/testimonials/fatima.jpg",
   "Dorji Tshering": "/assets/testimonials/dorji.jpg",
   "Dorji Wangchuk": "/assets/testimonials/dorji.jpg",
 };
@@ -50,15 +50,15 @@ const TestimonialsSection = () => {
   }, [rawTestimonials]);
 
   if (isDataLoading) return (
-     <section className="section-padding section-alt animate-pulse">
-        <div className="container-wide">
-          <div className="h-4 w-24 bg-muted mx-auto rounded mb-3" />
-          <div className="h-10 w-64 bg-muted mx-auto rounded mb-14" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1,2,3].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
-          </div>
+    <section className="section-padding section-alt animate-pulse">
+      <div className="container-wide">
+        <div className="h-4 w-24 bg-muted mx-auto rounded mb-3" />
+        <div className="h-10 w-64 bg-muted mx-auto rounded mb-14" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
         </div>
-     </section>
+      </div>
+    </section>
   );
 
   const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);
