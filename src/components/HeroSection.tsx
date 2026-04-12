@@ -19,11 +19,11 @@ function useCountUp(end: number, duration: number, start: boolean) {
   return count;
 }
 
-const StatItem = ({ count, label, color, suffix, inView }: { 
+const StatItem = ({ count, label, color, suffix, inView }: {
   count: string,
-  label: string, 
-  color: string, 
-  suffix: string, 
+  label: string,
+  color: string,
+  suffix: string,
   inView: boolean
 }) => {
   const numericVal = parseInt(count);
@@ -31,10 +31,10 @@ const StatItem = ({ count, label, color, suffix, inView }: {
   const animated = useCountUp(isNumeric ? numericVal : 0, 2000, inView && isNumeric);
   const isGradient = color === "gradient";
   const displayVal = isNumeric ? `${animated}${suffix}` : count;
-  
+
   return (
     <div className="flex flex-col transition-transform hover:scale-105 duration-300">
-      <div 
+      <div
         className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl"
         style={{ color: isGradient ? undefined : color }}
       >
@@ -132,7 +132,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-0">
         {/* Base Solid Overlay to prevent flicker/empty screen */}
         <div className="absolute inset-0 bg-[#020617]" />
-        
+
         {allSlides.map((src, i) => (
           <img
             key={src}
@@ -213,7 +213,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats — absolutely pinned to bottom, draggable if content overlaps */}
-        <div 
+        <div
           ref={statsRef}
           onPointerDown={onStatsPointerDown}
           onPointerMove={onStatsPointerMove}
@@ -221,21 +221,20 @@ const HeroSection = () => {
           className="absolute left-0 right-0 flex justify-center px-4 cursor-grab active:cursor-grabbing select-none"
           style={{ bottom: `calc(2.5rem + ${-statsPos.y}px)`, transform: `translateX(${statsPos.x}px)` }}
         >
-          <div className={`${
-            content.stats_layout === "compact"
+          <div className={`${content.stats_layout === "compact"
               ? "flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 lg:gap-x-16 gap-y-4"
               : "p-4 sm:p-6 px-6 sm:px-10 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-14 gap-y-4"
-          }`}>
-          {heroStats.map(stat => (
-            <StatItem 
-              key={stat.id}
-              count={stat.count}
-              label={stat.label}
-              color={stat.color}
-              suffix={stat.suffix || "+"}
-              inView={inView}
-            />
-          ))}
+            }`}>
+            {heroStats.map(stat => (
+              <StatItem
+                key={stat.id}
+                count={stat.count}
+                label={stat.label}
+                color={stat.color}
+                suffix={stat.suffix || "+"}
+                inView={inView}
+              />
+            ))}
           </div>
         </div>
       </div>

@@ -9,8 +9,8 @@ import { dbSelect } from "@/lib/api";
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl:       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
 const createCustomIcon = (isActive: boolean) =>
@@ -21,8 +21,8 @@ const createCustomIcon = (isActive: boolean) =>
       background:hsl(217,91%,60%); border:3px solid white; border-radius:50%;
       box-shadow:0 2px 8px rgba(0,0,0,0.3),0 0 20px rgba(59,130,246,0.4);
     "></div>`,
-    iconSize:   [isActive ? 20 : 14, isActive ? 20 : 14],
-    iconAnchor: [isActive ? 10 : 7,  isActive ? 10 : 7],
+    iconSize: [isActive ? 20 : 14, isActive ? 20 : 14],
+    iconAnchor: [isActive ? 10 : 7, isActive ? 10 : 7],
   });
 
 interface LocationData {
@@ -32,15 +32,15 @@ interface LocationData {
 
 // Default locations — always shown
 const DEFAULT_LOCATIONS: LocationData[] = [
-  { name: "Malé, Maldives",     lat: 4.1755,   lng: 73.5093,  clients: "HQ — 40+ clients",  description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
-  { name: "Thimphu, Bhutan",    lat: 27.4728,  lng: 89.6393,  clients: "RCSC Bhutan",        description: "Supporting the Royal Civil Service Commission with digital transformation.",           flag: "🇧🇹", landmark: "🏯 Tiger's Nest"     },
-  { name: "Tamilnadu, India",   lat: 9.9195,   lng: 78.1193,  clients: "Regional Support",   description: "Our hub for technology development and regional support in Southern India.",            flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
+  { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
+  { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
+  { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
 ];
 
 const CLIENT_LOCATION_MAP: Record<string, Omit<LocationData, "clients">> = {
-  "RCSC Bhutan":   { name: "Thimphu, Bhutan",    lat: 27.4728, lng: 89.6393,  description: "RCSC Bhutan digital transformation project.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
-  "Flyme":         { name: "Malé, Maldives",      lat: 4.1755,  lng: 73.5093,  description: "Flyme airline digital solutions.",            flag: "🇲🇻", landmark: "✈️ Velana Airport" },
-  "Medianet":      { name: "Malé, Maldives",      lat: 4.1755,  lng: 73.5093,  description: "Medianet telecom solutions.",                 flag: "🇲🇻", landmark: "📡 Telecom Hub" },
+  "RCSC Bhutan": { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, description: "RCSC Bhutan digital transformation project.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
+  "Flyme": { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, description: "Flyme airline digital solutions.", flag: "🇲🇻", landmark: "✈️ Velana Airport" },
+  "Medianet": { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, description: "Medianet telecom solutions.", flag: "🇲🇻", landmark: "📡 Telecom Hub" },
 };
 
 function InvalidateSize() {
@@ -57,10 +57,10 @@ function FlyToLocation({ lat, lng }: { lat: number; lng: number }) {
 
 const WorldMap = () => {
   const [activeLocation, setActiveLocation] = useState<LocationData | null>(null);
-  const [locations,      setLocations]      = useState<LocationData[]>(DEFAULT_LOCATIONS);
-  const [showMap,        setShowMap]        = useState(false);
-  const [mapMounted,     setMapMounted]     = useState(false);
-  const [detailVisible,  setDetailVisible]  = useState(false);
+  const [locations, setLocations] = useState<LocationData[]>(DEFAULT_LOCATIONS);
+  const [showMap, setShowMap] = useState(false);
+  const [mapMounted, setMapMounted] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
   const [header, setHeader] = useState({ badge: "Global Presence", title: "Our", highlight: "Reach", description: "Serving clients across Maldives, Bhutan, and beyond." });
   const detailTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -158,7 +158,7 @@ const WorldMap = () => {
                           {loc.name.split(",")[0]}
                         </span>
                       </div>
-                      <button 
+                      <button
                         className={`shrink-0 p-2 rounded-full transition-all duration-300 shadow-sm animate-glow ${isActive ? "bg-secondary text-white scale-110" : "bg-secondary/70 text-white hover:bg-secondary hover:scale-110"}`}
                         title="View on map"
                         onClick={(e) => { e.stopPropagation(); handleLocationClick(loc); }}

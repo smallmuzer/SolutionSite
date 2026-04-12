@@ -1,8 +1,48 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall } from "lucide-react";
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
 import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
+
+const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampClass: string; textClass: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      if (window.innerWidth >= 640) { setOverflows(false); return; }
+      setOverflows(el.scrollHeight > el.clientHeight + 2);
+    };
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    const t = setTimeout(check, 100);
+    window.addEventListener("resize", check);
+    return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
+  }, [text]);
+  return (
+    <div>
+      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>{text}</p>
+      {overflows && !expanded && (
+        <button
+          type="button"
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(true); }}
+          className="sm:hidden text-secondary text-[0.6875rem] font-bold mt-0.5 hover:underline block">
+          Read more
+        </button>
+      )}
+      {expanded && (
+        <button
+          type="button"
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(false); }}
+          className="sm:hidden text-secondary text-[0.6875rem] font-bold mt-0.5 hover:underline block">
+          Show less
+        </button>
+      )}
+    </div>
+  );
+};
 
 const Footer = () => {
   const content = useSiteContent("footer");
@@ -71,7 +111,11 @@ const Footer = () => {
                       <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
                         {co.subtitle}
                       </span>
-                      <p className="text-[0.8125rem] mt-1 leading-snug text-muted-foreground line-clamp-2">{co.desc}</p>
+                      <MobileReadMore
+                        text={co.desc}
+                        clampClass="line-clamp-2"
+                        textClass="text-[0.8125rem] mt-1 leading-snug text-muted-foreground"
+                      />
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-2xl"

@@ -4,21 +4,67 @@ import { useSiteContent } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import type { Tables } from "@/integrations/supabase/types";
 import { useGlobalView, useCardStyle } from "./ui-customizer-context";
+import { useState, useRef, useEffect } from "react";
+
+const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampClass: string; textClass: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      if (window.innerWidth >= 640) { setOverflows(false); return; }
+      // Must measure after clamp is applied — use a small delay for first paint
+      setOverflows(el.scrollHeight > el.clientHeight + 2);
+    };
+    // ResizeObserver catches layout changes reliably
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    // Also check after a short delay for initial render
+    const t = setTimeout(check, 100);
+    window.addEventListener("resize", check);
+    return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
+  }, [text]);
+
+  return (
+    <div>
+      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>{text}</p>
+      {overflows && !expanded && (
+        <button
+          type="button"
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(true); }}
+          className="sm:hidden text-secondary text-[0.6875rem] font-bold mt-0.5 hover:underline block">
+          Read more
+        </button>
+      )}
+      {expanded && (
+        <button
+          type="button"
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(false); }}
+          className="sm:hidden text-secondary text-[0.6875rem] font-bold mt-0.5 hover:underline block">
+          Show less
+        </button>
+      )}
+    </div>
+  );
+};
 
 type Service = Tables<"services">;
 
 const SERVICE_THEMES: Record<string, { img: string; accent: string }> = {
-  default:    { img: "/assets/services/software.png", accent: "from-blue-700/70 to-indigo-900/85" },
-  software:   { img: "/assets/services/software.png", accent: "from-violet-700/70 to-purple-900/85" },
-  web:        { img: "/assets/services/web.png",      accent: "from-cyan-700/70 to-blue-900/85" },
-  mobile:     { img: "/assets/services/mobile.png",   accent: "from-emerald-700/70 to-teal-900/85" },
-  erp:        { img: "/assets/services/erp.png",      accent: "from-orange-700/70 to-red-900/85" },
-  hr:         { img: "/assets/services/hr.png",       accent: "from-pink-700/70 to-rose-900/85" },
+  default: { img: "/assets/services/software.png", accent: "from-blue-700/70 to-indigo-900/85" },
+  software: { img: "/assets/services/software.png", accent: "from-violet-700/70 to-purple-900/85" },
+  web: { img: "/assets/services/web.png", accent: "from-cyan-700/70 to-blue-900/85" },
+  mobile: { img: "/assets/services/mobile.png", accent: "from-emerald-700/70 to-teal-900/85" },
+  erp: { img: "/assets/services/erp.png", accent: "from-orange-700/70 to-red-900/85" },
+  hr: { img: "/assets/services/hr.png", accent: "from-pink-700/70 to-rose-900/85" },
   consulting: { img: "/assets/services/consulting.png", accent: "from-amber-700/70 to-yellow-900/85" },
-  seo:        { img: "/assets/services/seo.png",      accent: "from-lime-700/70 to-green-900/85" },
-  marketing:  { img: "/assets/services/seo.png",      accent: "from-fuchsia-700/70 to-purple-900/85" },
-  design:     { img: "/assets/services/design.png",   accent: "from-sky-700/70 to-blue-900/85" },
-  cloud:      { img: "/assets/services/software.png", accent: "from-indigo-700/70 to-blue-900/85" },
+  seo: { img: "/assets/services/seo.png", accent: "from-lime-700/70 to-green-900/85" },
+  marketing: { img: "/assets/services/seo.png", accent: "from-fuchsia-700/70 to-purple-900/85" },
+  design: { img: "/assets/services/design.png", accent: "from-sky-700/70 to-blue-900/85" },
+  cloud: { img: "/assets/services/software.png", accent: "from-indigo-700/70 to-blue-900/85" },
 };
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -48,26 +94,26 @@ function isHtmlIcon(icon: string): boolean {
 function getIcon(service: Service): React.ElementType {
   if (service.icon && !isHtmlIcon(service.icon) && ICON_MAP[service.icon]) return ICON_MAP[service.icon];
   const t = service.title.toLowerCase();
-  if (t.includes("web"))        return Globe;
-  if (t.includes("mobile"))     return Smartphone;
-  if (t.includes("erp"))        return Database;
-  if (t.includes("hr"))         return Users;
+  if (t.includes("web")) return Globe;
+  if (t.includes("mobile")) return Smartphone;
+  if (t.includes("erp")) return Database;
+  if (t.includes("hr")) return Users;
   if (t.includes("consulting")) return Briefcase;
   if (t.includes("seo") || t.includes("marketing")) return Search;
-  if (t.includes("design"))     return PaletteIcon;
-  if (t.includes("cloud"))      return Cloud;
-  if (t.includes("security"))   return Shield;
+  if (t.includes("design")) return PaletteIcon;
+  if (t.includes("cloud")) return Cloud;
+  if (t.includes("security")) return Shield;
   return Monitor;
 }
 
 const ServicesSection = () => {
   const cardStyle = useCardStyle();
-  const view      = useGlobalView();
-  const content   = useSiteContent("services");
-  const scrollTo  = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
+  const view = useGlobalView();
+  const content = useSiteContent("services");
+  const scrollTo = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
-  const { data: services, isLoading } = useDbQuery<Service[]>("services", 
-    { is_visible: true }, 
+  const { data: services, isLoading } = useDbQuery<Service[]>("services",
+    { is_visible: true },
     { order: "sort_order" }
   );
 
@@ -80,7 +126,7 @@ const ServicesSection = () => {
           <div className="h-4 w-96 bg-muted/60 mx-auto rounded" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1,2,3,4,5,6].map(i => (
+          {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="h-40 bg-muted/40 rounded-xl" />
           ))}
         </div>
@@ -108,8 +154,8 @@ const ServicesSection = () => {
         {view === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {services.map((service, i) => {
-              const theme  = getTheme(service);
-              const Icon   = getIcon(service);
+              const theme = getTheme(service);
+              const Icon = getIcon(service);
               const useImg = cardStyle === "image";
               const htmlIcon = service.icon && isHtmlIcon(service.icon);
               return (
@@ -137,26 +183,30 @@ const ServicesSection = () => {
                           </div>
                         </div>
                         <div className="relative flex-1 w-full px-3 pt-2.5 pb-4 flex flex-col bg-card dark:bg-card/40 z-10 border-t border-border/50">
-                           <h3 className="font-heading font-extrabold text-[0.9375rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
+                          <h3 className="font-heading font-extrabold text-[0.9375rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
                             {service.title}
                           </h3>
-                          <p className="text-[0.75rem] text-muted-foreground leading-snug line-clamp-2">
-                            {service.description}
-                          </p>
+                          <MobileReadMore
+                            text={service.description}
+                            clampClass="line-clamp-2"
+                            textClass="text-[0.75rem] text-muted-foreground leading-snug"
+                          />
                         </div>
                       </>
                     ) : (
                       <div className="relative flex-1 w-full px-3 pt-2.5 pb-4 flex flex-col justify-end bg-card dark:bg-card/20">
-                         {htmlIcon
+                        {htmlIcon
                           ? <span className="text-secondary text-[1.4rem] mb-1.5" dangerouslySetInnerHTML={{ __html: service.icon! }} />
                           : <Icon size={20} className="text-secondary mb-1.5" />
-                          }
-                         <h3 className="font-heading font-extrabold text-[0.875rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
+                        }
+                        <h3 className="font-heading font-extrabold text-[0.875rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
                           {service.title}
                         </h3>
-                        <p className="text-[0.75rem] text-muted-foreground leading-snug line-clamp-2">
-                          {service.description}
-                        </p>
+                        <MobileReadMore
+                          text={service.description}
+                          clampClass="line-clamp-2"
+                          textClass="text-[0.75rem] text-muted-foreground leading-snug"
+                        />
                       </div>
                     )}
                   </div>
@@ -167,8 +217,8 @@ const ServicesSection = () => {
         ) : (
           <div className="flex flex-col gap-3 max-w-3xl mx-auto w-full">
             {services.map((service, i) => {
-              const theme  = getTheme(service);
-              const Icon   = getIcon(service);
+              const theme = getTheme(service);
+              const Icon = getIcon(service);
               const useImg = cardStyle === "image";
               const htmlIcon = service.icon && isHtmlIcon(service.icon);
               return (
