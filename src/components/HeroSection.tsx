@@ -72,24 +72,7 @@ const HeroSection = () => {
   const [bgIndex, setBgIndex] = useState(0);
   const scrollTo = (id: string) => document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
 
-  // Draggable stats panel
-  const [statsPos, setStatsPos] = useState({ x: 0, y: 0 });
-  const statsDragging = useRef(false);
-  const statsOrigin = useRef({ mx: 0, my: 0, px: 0, py: 0 });
-  const onStatsPointerDown = (e: React.PointerEvent) => {
-    statsDragging.current = true;
-    statsOrigin.current = { mx: e.clientX, my: e.clientY, px: statsPos.x, py: statsPos.y };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    e.preventDefault();
-  };
-  const onStatsPointerMove = (e: React.PointerEvent) => {
-    if (!statsDragging.current) return;
-    setStatsPos({
-      x: statsOrigin.current.px + e.clientX - statsOrigin.current.mx,
-      y: statsOrigin.current.py + e.clientY - statsOrigin.current.my,
-    });
-  };
-  const onStatsPointerUp = () => { statsDragging.current = false; };
+
 
   useEffect(() => {
     const check = () => setIsDark(document.documentElement.classList.contains("dark"));
@@ -211,14 +194,11 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Stats — absolutely pinned to bottom, draggable if content overlaps */}
+        {/* Stats — absolutely pinned to bottom */}
         <div
           ref={statsRef}
-          onPointerDown={onStatsPointerDown}
-          onPointerMove={onStatsPointerMove}
-          onPointerUp={onStatsPointerUp}
-          className="absolute left-0 right-0 flex justify-center px-4 cursor-grab active:cursor-grabbing select-none"
-          style={{ bottom: `calc(2.5rem + ${-statsPos.y}px)`, transform: `translateX(${statsPos.x}px)` }}
+          className="absolute left-0 right-0 flex justify-center px-4"
+          style={{ bottom: "2.5rem" }}
         >
           <div className={`${content.stats_layout === "compact"
               ? "flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 lg:gap-x-16 gap-y-4"

@@ -258,12 +258,12 @@ const ContactSection = () => {
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
             {content.title?.includes("Touch") ? <>Get In <span className="gradient-text">Touch</span></> : content.title}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">{content.subtitle}</p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">{content.subtitle}</p>
         </AnimatedSection>
 
         <div className="flex flex-col lg:flex-row gap-20 max-w-6xl mx-auto items-stretch">
-          <AnimatedSection className="w-full lg:w-1/2">
-            <div className="glass-card p-4 sm:p-6 h-full flex flex-col">
+          <AnimatedSection className="w-full lg:w-1/2 flex flex-col">
+            <div className="glass-card p-4 sm:p-6 flex-1 flex flex-col">
               <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">Office Information</h3>
               <div className="space-y-4 flex-1">
                 {contactItems.map((item) => (
@@ -278,27 +278,13 @@ const ContactSection = () => {
                   </div>
                 ))}
 
-                <button 
-                  type="button"
-                  onClick={() => openViber()}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group mt-2 shadow-sm"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                    <ViberIcon size={22} />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm font-bold text-foreground">Chat on Viber</div>
-                    <div className="text-[0.6875rem] text-[#f97316] dark:text-[#fb923c] font-bold tracking-tight">Official Business Channel</div>
-                  </div>
-                </button>
               </div>
               
-              <div className="mt-6 pt-5 border-t border-border/50">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     {[
-                      { name: "Viber", icon: ViberIcon, onClick: () => openViber(), color: "hsl(var(--secondary))" },
                       { name: "Facebook", icon: Facebook, href: settings.social_facebook  || content.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
                       { name: "Twitter",  icon: Twitter,  href: settings.social_twitter   || content.twitter   || "https://x.com/bsspl_india" },
                       { name: "Linkedin", icon: Linkedin, href: settings.social_linkedin  || content.linkedin  || "https://in.linkedin.com/company/brilliantsystemssolutions" },
@@ -308,26 +294,40 @@ const ContactSection = () => {
                       return (
                         <Fragment key={i}>
                           <a href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
-                            onClick={(e) => { if (s.onClick) { e.preventDefault(); s.onClick(); } }}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:text-white"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:text-white"
                             onMouseEnter={e => { if (s.color) { (e.currentTarget as HTMLElement).style.backgroundColor = s.color; } }}
                             onMouseLeave={e => { if (s.color) { (e.currentTarget as HTMLElement).style.backgroundColor = ""; } }}
                           >
-                            {Icon && <Icon size={14} />}
+                            {Icon && <Icon size={12} />}
                           </a>
                         </Fragment>
                       );
                     })}
                   </div>
                 </div>
-                <p className="text-muted-foreground text-[0.6875rem]">We respond within 24 hours on business days.</p>
+
+                <button 
+                  type="button"
+                  onClick={() => openViber()}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group shadow-sm"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-[#7360f2] flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
+                    <ViberIcon size={18} />
+                  </div>
+                  <div className="text-left flex-1">
+                    <div className="text-[0.8125rem] font-bold text-foreground leading-tight">Chat on Viber</div>
+                    <div className="text-[0.625rem] text-[#f97316] dark:text-[#fb923c] font-bold tracking-tight mt-0.5">Official Business Channel</div>
+                  </div>
+                </button>
+                
+                <p className="text-muted-foreground text-[0.625rem] text-center">We respond within 24 hours on business days.</p>
               </div>
             </div>
           </AnimatedSection>
 
-          <AnimatedSection delay={0.2} className="w-full lg:w-1/2">
+          <AnimatedSection delay={0.2} className="w-full lg:w-1/2 flex flex-col">
             {submitted ? (
-              <div className="glass-card p-12 text-center h-full flex flex-col items-center justify-center min-h-[500px]">
+              <div className="glass-card p-12 text-center flex-1 flex flex-col items-center justify-center min-h-[500px]">
                 <CheckCircle size={48} className="text-secondary mx-auto mb-4" />
                 <h3 className="font-heading font-bold text-[1.125rem] text-foreground mb-2">Thank You!</h3>
                 <p className="text-muted-foreground text-[0.875rem]">We've received your message and will get back to you within 24 hours.</p>
@@ -339,7 +339,7 @@ const ContactSection = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="glass-card p-4 sm:p-6 h-full flex flex-col">
+              <form onSubmit={handleSubmit} className="glass-card p-4 sm:p-6 flex-1 flex flex-col">
                 <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">Send a Message</h3>
                 <div className="space-y-3 flex-1">
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -398,7 +398,7 @@ const ContactSection = () => {
                 </div>
                 <button
                   type="submit" disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity glow-effect disabled:opacity-50 mt-5 text-[0.875rem]"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-transparent border border-secondary text-secondary font-semibold rounded-lg hover:bg-secondary/10 transition-colors disabled:opacity-50 mt-5 text-[0.875rem]"
                 >
                   <Send size={15} /> {loading ? "Sending..." : "Send Message"}
                 </button>

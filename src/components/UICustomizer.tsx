@@ -7,7 +7,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
 const COOKIE_KEY = "bss-user-settings";
-const TOUR_CACHE_KEY = "bss-tour-enabled";
 
 function getCookie(): UIPrefs | null {
   try {
@@ -44,22 +43,7 @@ const UICustomizer = () => {
   const queryClient = useQueryClient();
   const [resetting, setResetting] = useState(false);
 
-  // tri-state: null = still loading, true = tour ON, false = tour OFF
-  const [tourEnabled, setTourEnabled] = useState<boolean | null>(() => {
-    try {
-      const cached = localStorage.getItem(TOUR_CACHE_KEY);
-      if (cached !== null) return cached === "true";
-    } catch { }
-    return null;
-  });
 
-  useEffect(() => {
-    if (Object.keys(settings).length > 0) {
-      const enabled = settings.show_tour !== false;
-      setTourEnabled(enabled);
-      localStorage.setItem(TOUR_CACHE_KEY, String(enabled));
-    }
-  }, [settings]);
 
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState<UIPrefs>(() => {
@@ -356,17 +340,7 @@ const UICustomizer = () => {
       </div>
 
       <div style={S.footer}>
-        {tourEnabled === true && (
-          <button onClick={() => {
-            localStorage.removeItem("bss_tour_completed_v2");
-            window.dispatchEvent(new CustomEvent("bss:retakeTour"));
-            setOpen(false);
-          }}
-            style={{ flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 10, fontWeight: 500,
-              background: "transparent", border: `1.5px solid ${border}`, color: muted, cursor: "pointer" }}>
-            Tour
-          </button>
-        )}
+
         <button onClick={reset} disabled={resetting}
           style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 3,
             padding: "6px 0", borderRadius: 6, fontSize: 10, fontWeight: 500,

@@ -101,7 +101,7 @@ interface SiteSettings {
   gemini_api_key: string; openai_api_key: string; system_prompt: string;
   accent_color: string; global_view: string; card_style: string;
   bot_api_url: string; bot_api_token: string;
-  hr_email: string; show_tour: boolean;
+  hr_email: string;
 }
 
 const AppointmentsCalendar = ({
@@ -807,7 +807,6 @@ const AdminDashboard = () => {
     font_size: "medium", theme: "light", font_style: "'Inter', sans-serif",
     enable_animations: true, gemini_api_key: "", openai_api_key: "",
     system_prompt: "", accent_color: "#3b82f6", global_view: "grid", card_style: "glass",
-    show_tour: true
   });
 
   const [uxDraft, setUxDraft] = useState<any>({
@@ -976,8 +975,7 @@ const AdminDashboard = () => {
     const finalSettings = { ...siteSettings, ...uxDraft };
     setSiteSettings(finalSettings);
 
-    // Cache the tour setting immediately
-    localStorage.setItem("bss-tour-enabled", String(finalSettings.show_tour !== false));
+    localStorage.setItem("bss-ux-prefs", JSON.stringify(finalUx));
 
     await dbFetch("site_content", {
       method: "POST",
@@ -1985,20 +1983,7 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          {/* Tour Toggle */}
-                          <div>
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Guided Tour</label>
-                            <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
-                              <button onClick={() => setSiteSettings(p => ({ ...p, show_tour: true }))}
-                                className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${siteSettings.show_tour !== false ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                                On
-                              </button>
-                              <button onClick={() => setSiteSettings(p => ({ ...p, show_tour: false }))}
-                                className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${siteSettings.show_tour === false ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                                Off
-                              </button>
-                            </div>
-                          </div>
+
                         </div>
                       </div>
 

@@ -292,21 +292,17 @@ const ProductsSection = () => {
             {header.title || DEFAULT_HEADER.title}{" "}
             <span className="gradient-text">{header.highlight || DEFAULT_HEADER.highlight}</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
             {header.subtitle || DEFAULT_HEADER.subtitle}
           </p>
         </AnimatedSection>
 
-        <div className="flex items-center justify-end gap-2 mb-2">
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            {globalView === "grid" ? <><LayoutGrid size={13} /> Carousel View</> : <><List size={13} /> List View</>}
-          </span>
-        </div>
+
 
         {globalView === "grid" ? (
           <div
             className="relative overflow-hidden"
-            style={{ maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)" }}
+            style={{ maskImage: "linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%)" }}
             onMouseEnter={() => { pausedRef.current = true; }}
             onMouseLeave={() => { pausedRef.current = false; }}
           >

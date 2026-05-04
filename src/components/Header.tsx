@@ -68,7 +68,7 @@ const Header = () => {
   const settings = useSiteSettings();
   const careersContent = useSiteContent("careers");
   const { isDark, toggle } = useDarkMode();
-  const [tourCompleted, setTourCompleted] = useState(() => localStorage.getItem("bss_tour_completed_v2") === "true");
+
   const mobileTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const demoLink = settings.demo_url || "https://demo.hrmetrics.com.mv/";
@@ -100,14 +100,7 @@ const Header = () => {
     return () => observer.disconnect();
   }, [navItems]);
 
-  // Tour completion monitor
-  useEffect(() => {
-    const check = () => setTourCompleted(localStorage.getItem("bss_tour_completed_v2") === "true");
-    const interval = setInterval(check, 1000);
-    window.addEventListener("storage", check);
-    window.addEventListener("bss:tourCompleted", check);
-    return () => { clearInterval(interval); window.removeEventListener("storage", check); window.removeEventListener("bss:tourCompleted", check); };
-  }, []);
+
 
   const openMobile = () => {
     setMobileOpen(true);

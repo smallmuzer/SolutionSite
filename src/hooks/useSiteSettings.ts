@@ -100,9 +100,7 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     whatsapp_number: s.whatsapp_number || "",
     viber_number: s.viber_number || "",
     nav_items: s.nav_items || [],
-    show_tour: s.show_tour !== false,
   }}));
-  try { localStorage.setItem("bss-tour-enabled", String(s.show_tour !== false)); } catch {}
 }
 
 function applySecurity(sec: Record<string, any>) {

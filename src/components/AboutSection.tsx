@@ -85,10 +85,10 @@ const AboutSection = () => {
                   content.title || "Driving Digital Transformation"
                 )}
               </h2>
-              <p className="text-muted-foreground leading-relaxed mb-4 text-[0.9375rem]">
+              <p className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]">
                 {content.description || "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!"}
               </p>
-              <p className="text-muted-foreground leading-relaxed text-[0.9375rem]">
+              <p className="text-gray-500 leading-relaxed text-[0.9375rem]">
                 {content.vision || "Our journey began out of the passion for a unique position in the industry."}
               </p>
             </AnimatedSection>

@@ -21,7 +21,6 @@ const Footer             = lazy(() => import("@/components/Footer"));
 const WhatsAppButton     = lazy(() => import("@/components/WhatsAppButton"));
 const ScrollToTop        = lazy(() => import("@/components/ScrollToTop"));
 const CookieConsent      = lazy(() => import("@/components/CookieConsent"));
-const GuidedTour         = lazy(() => import("@/components/GuidedTour"));
 
 // Smooth Skeleton fallback to prevent layout shift (CLS)
 const SkeletonSection = () => (
@@ -102,7 +101,6 @@ const Index = () => {
         <WhatsAppButton />
         <ScrollToTop />
         <CookieConsent />
-        <GuidedTour />
       </Suspense>
 
       <UICustomizer />

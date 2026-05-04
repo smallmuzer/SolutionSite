@@ -148,7 +148,7 @@ const ServicesSection = () => {
               content.title || <><span className="gradient-text">Solutions</span> We Deliver</>
             )}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">{content.subtitle}</p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">{content.subtitle}</p>
         </AnimatedSection>
 
         {view === "grid" ? (
