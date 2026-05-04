@@ -279,16 +279,16 @@ const ProductsSection = () => {
   const tripled = [...products, ...products, ...products];
 
   return (
-    <section id="products" className="section-padding relative overflow-hidden bg-[#EAEDED] dark:bg-[#0d0d1a]">
+    <section id="products" className="section-padding relative overflow-hidden bg-background">
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center mb-12">
+        <AnimatedSection className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-3">
             <ShoppingCart size={18} className="text-secondary" />
             <span className="text-secondary font-bold text-sm uppercase tracking-widest">
               {header.badge || DEFAULT_HEADER.badge}
             </span>
           </div>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-4">
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2">
             {header.title || DEFAULT_HEADER.title}{" "}
             <span className="gradient-text">{header.highlight || DEFAULT_HEADER.highlight}</span>
           </h2>
@@ -297,7 +297,7 @@ const ProductsSection = () => {
           </p>
         </AnimatedSection>
 
-        <div className="flex items-center justify-end gap-2 mb-4">
+        <div className="flex items-center justify-end gap-2 mb-2">
           <span className="text-xs text-muted-foreground flex items-center gap-1">
             {globalView === "grid" ? <><LayoutGrid size={13} /> Carousel View</> : <><List size={13} /> List View</>}
           </span>

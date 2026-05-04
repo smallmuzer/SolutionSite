@@ -224,10 +224,12 @@ const Footer = () => {
               <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>Company</h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: "About Us",  href: "#about"     },
-                  { label: "Careers",   href: "#careers"   },
-                  { label: "Portfolio", href: "#portfolio" },
-                  { label: "Contact",   href: "#contact"   },
+                  { label: "Who We Are",   href: "#about"        },
+                  { label: "Our Products", href: "#products"     },
+                  { label: "Portfolio",    href: "#portfolio"    },
+                  { label: "Testimonials", href: "#testimonials" },
+                  { label: "Global Presence", href: "#global-reach" },
+                  { label: "Careers",      href: "#careers"      },
                 ].map(s => (
                   <li key={s.label}>
                     <a href={s.href} className="text-sm transition-colors duration-150" style={{ color: "#64748b" }}

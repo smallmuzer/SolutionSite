@@ -339,7 +339,7 @@ const ClientsSection = () => {
 
   const clients = dbClients && dbClients.length > 0 ? dbClients : (SEED_CLIENTS as ClientLogo[]);
   const header = {
-    badge: content.badge || "Our Clients",
+    badge: content.badge || "Portfolio (Our Clients)",
     title: content.title || "Trusted by",
     highlight: content.highlight || "Industry Leaders",
     description: content.description || "We're proud to have served over 300+ successful projects..."
@@ -348,13 +348,17 @@ const ClientsSection = () => {
   return (
     <section id="portfolio" className="section-padding" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div className="container-wide">
-        <AnimatedSection className="text-center mb-14 relative group/header">
-          <button onClick={() => setShowAll(!showAll)} className="absolute -top-4 -right-2 p-2.5 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 flex items-center gap-2" title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}>
-            {showAll ? <Play size={18} className="fill-secondary" /> : <LayoutGrid size={18} />}
-            <span className="text-[0.625rem] font-bold uppercase tracking-wider hidden sm:inline">{showAll ? "Play Animation" : "View All"}</span>
-          </button>
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">{header.badge}</span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">{header.title} <span className="gradient-text">{header.highlight}</span></h2>
+        <AnimatedSection className="text-center mb-8 relative group/header">
+          <div className="absolute right-0 top-0 sm:top-2">
+            <button onClick={() => setShowAll(!showAll)} className="p-2 sm:px-4 sm:py-2 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 flex items-center gap-2" title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}>
+              {showAll ? <Play size={16} className="fill-secondary" /> : <LayoutGrid size={16} />}
+              <span className="text-[0.75rem] font-bold uppercase tracking-wider hidden sm:inline">{showAll ? "Play Animation" : "View All"}</span>
+            </button>
+          </div>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Portfolio (Our Clients)</span>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 flex items-center justify-center flex-wrap gap-4">
+            <span>{header.title} <span className="gradient-text">{header.highlight}</span></span>
+          </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">{header.description}</p>
         </AnimatedSection>
         <AnimatedSection>

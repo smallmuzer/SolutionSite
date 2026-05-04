@@ -254,7 +254,7 @@ const ContactSection = () => {
     <section id="contact" className="py-10 section-alt relative overflow-hidden">
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest">Contact Us</span>
+          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest">Reach Us</span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
             {content.title?.includes("Touch") ? <>Get In <span className="gradient-text">Touch</span></> : content.title}
           </h2>

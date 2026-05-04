@@ -13,7 +13,7 @@ const AVATAR_MAP: Record<string, string> = {
   "Dorji Wangchuk": "/assets/testimonials/dorji.jpg",
 };
 
-const CARDS_PER_PAGE = 3;
+const CARDS_PER_PAGE = 4;
 
 const StarRating = ({ rating }: { rating: number }) => (
   <div className="flex gap-0.5 mb-3">
@@ -41,12 +41,22 @@ const TestimonialsSection = () => {
   };
 
   const testimonials = useMemo(() => {
-    if (!rawTestimonials) return [];
-    return rawTestimonials.map((t: any) => ({
+    const fromDb = rawTestimonials ? rawTestimonials.map((t: any) => ({
       id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
       message: t.message,
       avatar_url: AVATAR_MAP[t.name] || t.avatar_url || "/assets/testimonials/ahmed.jpg",
-    }));
+    })) : [];
+
+    const extraCard = {
+      id: "extra-static",
+      name: "Sarah Jenkins",
+      company: "InnovateTech",
+      rating: 5,
+      message: "The solutions provided were absolutely top-notch. Our system's performance and stability have significantly improved. Highly recommended!",
+      avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    };
+
+    return [...fromDb, extraCard];
   }, [rawTestimonials]);
 
   if (isDataLoading) return (
@@ -54,8 +64,8 @@ const TestimonialsSection = () => {
       <div className="container-wide">
         <div className="h-4 w-24 bg-muted mx-auto rounded mb-3" />
         <div className="h-10 w-64 bg-muted mx-auto rounded mb-14" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
         </div>
       </div>
     </section>
@@ -94,7 +104,7 @@ const TestimonialsSection = () => {
   );
 
   return (
-    <section className="section-padding section-alt">
+    <section id="testimonials" className="section-padding section-alt">
       <div className="container-wide">
         <AnimatedSection className="text-center mb-14">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest">{header.badge}</span>
@@ -104,7 +114,7 @@ const TestimonialsSection = () => {
         </AnimatedSection>
 
         {view === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch max-w-[90rem] mx-auto">
             {testimonials.map((t, i) => (
               <AnimatedSection key={t.id} delay={i * 0.08}>
                 <GridCard t={t} />

@@ -72,7 +72,7 @@ const AboutSection = () => {
           <div>
             <AnimatedSection>
               <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
-                About Us
+                Who We Are
               </span>
               <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6">
                 {content.title?.includes("Digital") ? (

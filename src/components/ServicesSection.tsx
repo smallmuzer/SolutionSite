@@ -140,7 +140,7 @@ const ServicesSection = () => {
     <section id="services" className="section-padding section-alt relative overflow-hidden">
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-8">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Our Services</span>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">What We Do</span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
             {content.title?.includes("&") ? (
               <>{content.title.split("&")[0]}&{" "}<span className="gradient-text">{content.title.split("& ")[1]}</span></>
