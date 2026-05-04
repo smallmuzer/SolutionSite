@@ -221,8 +221,8 @@ const ProductsManager = () => {
                             list[idx] = { text: isNeg ? badge.text.substring(1) : "!" + badge.text, color: isNeg ? "#22c55e" : "#ef4444" };
                             setTempBadges(list);
                           }}
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${badge.text.startsWith("!") ? "bg-red-500/10 border-red-500/30 text-red-500" : "bg-green-500/10 border-green-500/30 text-green-500"}`}>
-                          {badge.text.startsWith("!") ? <X size={12} /> : <Check size={12} />}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 font-bold text-[10px] ${badge.text.startsWith("!") ? "bg-red-500/10 border-red-500/30 text-red-500" : "bg-green-500/10 border-green-500/30 text-green-500"}`}>
+                          {badge.text.startsWith("!") ? "NO" : "YES"}
                         </button>
                         <input
                           value={badge.text.startsWith("!") ? badge.text.substring(1) : badge.text}
@@ -254,7 +254,7 @@ const ProductsManager = () => {
                     ))}
                   </div>
                   <p className="text-[0.5625rem] text-muted-foreground uppercase tracking-widest px-1">
-                    <span className="text-secondary font-black">Note:</span> Toggle left button to switch Tick / X.
+                    <span className="text-secondary font-black">Note:</span> Toggle left button to switch Positive / Negative state.
                   </p>
                 </div>
 
@@ -307,7 +307,7 @@ const ProductsManager = () => {
                         return label ? (
                           <span key={i} className="text-[0.5625rem] font-bold px-1.5 py-0.5 rounded-sm uppercase"
                             style={{ color, background: color + "18", border: `1px solid ${color}44` }}>
-                            {isNeg ? "✗" : "✓"} {label}
+                            {label}
                           </span>
                         ) : null;
                       })}

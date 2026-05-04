@@ -6,11 +6,11 @@ import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const PRODUCT_ICON_CONFIG: Record<string, { Icon: React.ElementType; bg: string }> = {
-  BSOL:        { Icon: Database,  bg: "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)" },
-  "HR-Metrics":{ Icon: Users,     bg: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)" },
-  GoBoat:      { Icon: Anchor,    bg: "linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)" },
-  PromisePro:  { Icon: Building2, bg: "linear-gradient(135deg, #f59e0b 0%, #b45309 100%)" },
-  Travel:      { Icon: Plane,     bg: "linear-gradient(135deg, #10b981 0%, #065f46 100%)" },
+  BSOL: { Icon: Database, bg: "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)" },
+  "HR-Metrics": { Icon: Users, bg: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)" },
+  GoBoat: { Icon: Anchor, bg: "linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)" },
+  PromisePro: { Icon: Building2, bg: "linear-gradient(135deg, #f59e0b 0%, #b45309 100%)" },
+  Travel: { Icon: Plane, bg: "linear-gradient(135deg, #10b981 0%, #065f46 100%)" },
 };
 
 function getProductIcon(name: string) {
@@ -68,11 +68,10 @@ const ProductCard = ({ product, onDemo, cardStyle }: { product: Product; onDemo:
       style={{ width: 280 }}
     >
       {product.is_popular && (
-        <div className={`absolute top-2 left-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[0.6875rem] font-black text-white shadow-lg ${
-          product.name === "HR-Metrics" 
-            ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse scale-105" 
-            : "bg-[#CC0C39]"
-        }`}>
+        <div className={`absolute top-2 left-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[0.6875rem] font-black text-white shadow-lg ${product.name === "HR-Metrics"
+          ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse scale-105"
+          : "bg-[#CC0C39]"
+          }`}>
           {product.name === "HR-Metrics" && <Star size={10} fill="currentColor" className="animate-spin-slow" />}
           {product.name === "HR-Metrics" ? "MOST POPULAR HR" : "Best Seller"}
         </div>
@@ -108,7 +107,7 @@ const ProductCard = ({ product, onDemo, cardStyle }: { product: Product; onDemo:
             {product.description}
           </p>
           {product.description.length > 80 && (
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
               className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2"
             >
@@ -116,7 +115,7 @@ const ProductCard = ({ product, onDemo, cardStyle }: { product: Product; onDemo:
             </button>
           )}
         </div>
-        
+
         <div className="flex flex-col gap-2 mt-1 border-t border-gray-100 dark:border-white/5 pt-3">
           {(product.extra_text ? product.extra_text.split(",") : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"]).map((feature, idx) => {
             const rawText = feature.trim();
@@ -125,28 +124,38 @@ const ProductCard = ({ product, onDemo, cardStyle }: { product: Product; onDemo:
             const cleanText = isNegative ? rawText.substring(1).trim() : rawText;
             const fColors = product.extra_color ? product.extra_color.split(",").map(c => c.trim()) : ["#16a34a"];
             const fColor = isNegative ? "#ef4444" : (fColors[idx % fColors.length] || "#16a34a");
-            
+
             return (
               <div key={idx} className="flex items-center gap-1.5 py-0.5 group/badge hover:scale-[1.02] transition-transform">
-                {isNegative ? (
-                  <XCircle size={13} style={{ color: fColor }} className="shrink-0" />
-                ) : (
-                  <CheckCircle2 size={13} style={{ color: fColor }} className="shrink-0" />
-                )}
                 <span style={{ color: fColor }} className="text-[0.6875rem] font-bold tracking-tight brightness-90 dark:brightness-125 uppercase">{cleanText}</span>
               </div>
             );
           })}
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDemo(); }}
-          className="mt-3 w-full py-2.5 rounded-xl text-[0.8125rem] font-bold text-white transition-all duration-300 hover:opacity-90 active:scale-95 shadow-md flex justify-center group-hover:bg-blue-600"
-          style={{ background: bg }}
-        >
-          <span className="flex items-center justify-center gap-2">
-            <PlayCircle size={15} /> Request Demo
-          </span>
-        </button>
+        <div className="flex items-center gap-2 mt-3 w-full">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (product.contact_url && product.contact_url.startsWith("http")) {
+                window.open(product.contact_url, "_blank");
+              } else {
+                onDemo();
+              }
+            }}
+            className="flex-1 py-2.5 rounded-xl text-[0.8125rem] font-bold text-secondary border border-secondary transition-all duration-300 hover:bg-secondary/10 flex justify-center"
+          >
+            More Info
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDemo(); }}
+            className="flex-1 py-2.5 rounded-xl text-[0.8125rem] font-bold text-white transition-all duration-300 hover:opacity-90 active:scale-95 shadow-md flex justify-center group-hover:bg-blue-600"
+            style={{ background: bg }}
+          >
+            <span className="flex items-center justify-center gap-1.5">
+              <PlayCircle size={15} /> Demo
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -176,11 +185,10 @@ const ProductListRow = ({ product, onDemo, cardStyle }: { product: Product; onDe
 
       <div className="flex-1 p-4 flex flex-col gap-2">
         {product.is_popular && (
-          <span className={`self-start text-[0.625rem] font-bold text-white px-2 py-0.5 rounded-sm ${
-            product.name === "HR-Metrics" 
-              ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse" 
-              : "bg-[#CC0C39]"
-          }`}>
+          <span className={`self-start text-[0.625rem] font-bold text-white px-2 py-0.5 rounded-sm ${product.name === "HR-Metrics"
+            ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse"
+            : "bg-[#CC0C39]"
+            }`}>
             {product.name === "HR-Metrics" ? "MOST POPULAR HR" : "Best Seller"}
           </span>
         )}
@@ -202,28 +210,38 @@ const ProductListRow = ({ product, onDemo, cardStyle }: { product: Product; onDe
               const cleanText = isNegative ? rawText.substring(1).trim() : rawText;
               const fColors = product.extra_color ? product.extra_color.split(",").map(c => c.trim()) : ["#16a34a"];
               const fColor = isNegative ? "#ef4444" : (fColors[idx % fColors.length] || "#16a34a");
-              
+
               return (
                 <div key={idx} className="flex items-center gap-2 py-0.5 w-full max-w-sm">
-                  {isNegative ? (
-                    <XCircle size={14} style={{ color: fColor }} className="shrink-0" />
-                  ) : (
-                    <CheckCircle2 size={14} style={{ color: fColor }} className="shrink-0" />
-                  )}
                   <span style={{ color: fColor }} className="text-[0.75rem] font-black tracking-widest uppercase brightness-90 dark:brightness-125">{cleanText}</span>
                 </div>
               );
             })}
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDemo(); }}
-            className="py-2.5 px-5 rounded-xl text-[0.8125rem] font-bold text-white transition-all duration-300 hover:opacity-90 active:scale-95 shadow-md flex items-center group-hover:bg-blue-600"
-            style={{ background: bg }}
-          >
-            <span className="flex items-center gap-2">
-              <PlayCircle size={15} /> Request Demo
-            </span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (product.contact_url && product.contact_url.startsWith("http")) {
+                  window.open(product.contact_url, "_blank");
+                } else {
+                  onDemo();
+                }
+              }}
+              className="py-2.5 px-4 rounded-xl text-[0.8125rem] font-bold text-secondary border border-secondary transition-all duration-300 hover:bg-secondary/10 flex items-center"
+            >
+              More Info
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDemo(); }}
+              className="py-2.5 px-4 rounded-xl text-[0.8125rem] font-bold text-white transition-all duration-300 hover:opacity-90 active:scale-95 shadow-md flex items-center group-hover:bg-blue-600"
+              style={{ background: bg }}
+            >
+              <span className="flex items-center gap-1.5">
+                <PlayCircle size={15} /> Demo
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -241,8 +259,8 @@ const ProductsSection = () => {
   const GAP = 24;
   const CARD_W = 280;
 
-  const { data: productsData } = useDbQuery<Product[]>("products", 
-    { is_visible: true }, 
+  const { data: productsData } = useDbQuery<Product[]>("products",
+    { is_visible: true },
     { order: "sort_order" }
   );
 
@@ -283,7 +301,6 @@ const ProductsSection = () => {
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-3">
-            <ShoppingCart size={18} className="text-secondary" />
             <span className="text-secondary font-bold text-sm uppercase tracking-widest">
               {header.badge || DEFAULT_HEADER.badge}
             </span>

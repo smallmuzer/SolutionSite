@@ -1,10 +1,11 @@
-import React, { useState, useRef, Fragment } from "react";
+import React, { useState, useRef, Fragment, useEffect } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { MapPin, Mail, Phone, Clock, Send, CheckCircle, Calendar, ChevronLeft, ChevronRight, X, Facebook, Twitter, Linkedin, Instagram, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { useSiteContent, useSiteSettings } from "@/hooks/useSiteContent";
 import { openViber, ViberIcon } from "@/lib/viber";
 import { useDbQuery } from "@/hooks/useDbQuery";
+import { COUNTRIES, detectCountry, validatePhone } from "@/lib/phone-utils";
 
 // ————————————————————————————————————————————————————————————————————————————————
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -149,6 +150,11 @@ const ContactSection = () => {
   };
 
   const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", service: "", message: "", date1: "", date2: "", website: "" });
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
+
+  useEffect(() => {
+    detectCountry().then(setSelectedCountry);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +167,10 @@ const ContactSection = () => {
       toast.error("Please enter a valid email address.");
       return;
     }
+    if (form.phone.trim() && !validatePhone(selectedCountry.dial, form.phone)) {
+      toast.error(`Please enter a valid phone number for ${selectedCountry.name}.`);
+      return;
+    }
     setLoading(true);
     try {
       const resp = await fetch("/api/db/contact_submissions", {
@@ -171,7 +181,7 @@ const ContactSection = () => {
           full_name: form.name.trim(),
           company_name: form.company.trim() || null,
           email: form.email.trim(),
-          phone: form.phone.trim() || null,
+          phone: form.phone.trim() ? `${selectedCountry.dial} ${form.phone.trim()}` : null,
           is_read: 0,
           status: "new",
           website: form.website || null,
@@ -240,11 +250,11 @@ const ContactSection = () => {
   const update = (f: string, v: string) => setForm((p) => ({ ...p, [f]: v }));
 
   const contactItems = [
-    { icon: MapPin, label: "Office Address",  value: content.address || "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives" },
-    { icon: Mail,   label: "Email",           value: content.email   || "info@solutions.com.mv" },
-    { icon: Phone,  label: "Phone",           value: content.phone   || "+960 301-1355" },
-    { icon: Hash,   label: "Landline",        value: content.landline || "+91-452 238 7388" },
-    { icon: Clock,  label: "Business Hours",  value: content.hours   || "Sun–Thu: 9AM–6PM\nSat: 9AM–1PM" },
+    { icon: MapPin, label: "Office Address",  value: content?.address || "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives" },
+    { icon: Mail,   label: "Email",           value: content?.email   || "info@solutions.com.mv" },
+    { icon: Phone,  label: "Phone",           value: content?.phone   || "+960 301-1355" },
+    { icon: Hash,   label: "Landline",        value: content?.landline || "+91-452 238 7388" },
+    { icon: Clock,  label: "Business Hours",  value: content?.hours   || "Sun–Thu: 9AM–6PM\nSat: 9AM–1PM" },
   ];
 
   const inputCls = "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.875rem] focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all";
@@ -285,20 +295,20 @@ const ContactSection = () => {
                   <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {[
-                      { name: "Facebook", icon: Facebook, href: settings.social_facebook  || content.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
-                      { name: "Twitter",  icon: Twitter,  href: settings.social_twitter   || content.twitter   || "https://x.com/bsspl_india" },
-                      { name: "Linkedin", icon: Linkedin, href: settings.social_linkedin  || content.linkedin  || "https://in.linkedin.com/company/brilliantsystemssolutions" },
-                      { name: "Instagram",icon: Instagram,href: settings.social_instagram || content.instagram || "https://www.instagram.com/brilliantsystemssolutions" },
+                      { name: "Facebook", icon: Facebook, href: settings?.social_facebook  || content?.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
+                      { name: "Twitter",  icon: Twitter,  href: settings?.social_twitter   || content?.twitter   || "https://x.com/bsspl_india" },
+                      { name: "Linkedin", icon: Linkedin, href: settings?.social_linkedin  || content?.linkedin  || "https://in.linkedin.com/company/brilliantsystemssolutions" },
+                      { name: "Instagram",icon: Instagram,href: settings?.social_instagram || content?.instagram || "https://www.instagram.com/brilliantsystemssolutions" },
                     ].map((s, i) => {
                       const Icon = s.icon as any;
                       return (
                         <Fragment key={i}>
                           <a href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
-                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:text-white"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:text-white"
                             onMouseEnter={e => { if (s.color) { (e.currentTarget as HTMLElement).style.backgroundColor = s.color; } }}
                             onMouseLeave={e => { if (s.color) { (e.currentTarget as HTMLElement).style.backgroundColor = ""; } }}
                           >
-                            {Icon && <Icon size={12} />}
+                            {Icon && <Icon size={16} />}
                           </a>
                         </Fragment>
                       );
@@ -309,10 +319,10 @@ const ContactSection = () => {
                 <button 
                   type="button"
                   onClick={() => openViber()}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group shadow-sm"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group shadow-sm"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-[#7360f2] flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
-                    <ViberIcon size={18} />
+                  <div className="w-12 h-12 rounded-xl bg-[#7360f2] flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
+                    <ViberIcon size={26} />
                   </div>
                   <div className="text-left flex-1">
                     <div className="text-[0.8125rem] font-bold text-foreground leading-tight">Chat on Viber</div>
@@ -362,8 +372,27 @@ const ContactSection = () => {
                     </div>
                     <div>
                       <label className={labelCls}>Phone</label>
-                      <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)}
-                        className={inputCls} placeholder="+960 XXX-XXXX" maxLength={20} />
+                      <div className="flex items-stretch">
+                        <div className="relative w-24 shrink-0">
+                          <select 
+                            value={selectedCountry.code} 
+                            onChange={(e) => {
+                              const country = COUNTRIES.find(c => c.code === e.target.value);
+                              if (country) setSelectedCountry(country);
+                            }}
+                            className={`${inputCls} appearance-none rounded-r-none border-r-0 bg-no-repeat pr-7 px-2 text-[0.75rem] h-full`}
+                          >
+                            {COUNTRIES.map(c => (
+                              <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
+                            ))}
+                          </select>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4"/></svg>
+                          </div>
+                        </div>
+                        <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)}
+                          className={`${inputCls} rounded-l-none flex-1`} placeholder="Number" maxLength={20} />
+                      </div>
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-1 gap-4">

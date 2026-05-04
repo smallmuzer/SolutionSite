@@ -100,7 +100,6 @@ const TechnologiesSection = () => {
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-12 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 mb-4 shadow-sm backdrop-blur-sm">
-            <Code2 size={14} className="text-secondary" />
             <span className="text-secondary font-semibold text-xs uppercase tracking-widest">{header.badge}</span>
           </div>
           <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight">
