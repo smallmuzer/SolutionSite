@@ -22,7 +22,7 @@ export const openViber = (phoneNumbers: string = "9489477144", shareMessage: str
         document.execCommand("copy");
         document.body.removeChild(el);
       }
-    } catch { }
+    } catch { /* ignore */ }
   };
 
   const numbersArray = phoneNumbers.split(",").map(n => n.trim().replace("+", "")).filter(Boolean);

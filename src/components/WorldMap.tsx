@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Users, Building2, Map, X } from "lucide-react";
 import { dbSelect } from "@/lib/api";
+import { EditableText, EditorToolbar } from "./admin/LiveEditorContext";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -120,14 +121,22 @@ const WorldMap = () => {
   const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => l.name === loc.name) === idx);
 
   return (
-    <section className="section-padding overflow-hidden" id="global-reach">
+    <section className="section-padding overflow-hidden relative group" id="global-reach">
+      <EditorToolbar section="global_reach" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-10">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">{header.badge}</span>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+            <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} />
+          </span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            {header.title} <span className="gradient-text">{header.highlight}</span>
+            <EditableText section="global_reach" field="title" value={header.title || "Our"} />{" "}
+            <span className="gradient-text">
+              <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} />
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">{header.description}</p>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
+            <EditableText section="global_reach" field="description" value={header.description || ""} />
+          </p>
         </AnimatedSection>
 
         <AnimatedSection>
@@ -166,9 +175,11 @@ const WorldMap = () => {
                         <MapPin size={16} />
                       </button>
                     </div>
-                    <div className="text-muted-foreground text-[0.8125rem] leading-relaxed line-clamp-2 mb-2 flex-1">{loc.clients}</div>
+                    <div className="text-muted-foreground text-[0.8125rem] leading-relaxed line-clamp-2 mb-2 flex-1">
+                      <EditableText section="global_reach_locations" field="clients" id={loc.name} value={loc.clients} />
+                    </div>
                     <div className="text-[0.6875rem] text-secondary/90 font-semibold flex items-center gap-1.5 mt-auto pt-2 border-t border-border/40">
-                      <Building2 size={12} /> {loc.landmark}
+                      <Building2 size={12} /> <EditableText section="global_reach_locations" field="landmark" id={loc.name} value={loc.landmark} />
                     </div>
                   </div>
                 );

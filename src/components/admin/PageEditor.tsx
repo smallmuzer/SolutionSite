@@ -444,19 +444,19 @@ const PageEditor = () => {
   };
 
   const addLocation = () => {
-    setLocations([...locations, { name: "New Location", lat: 0, lng: 0, clients: "", description: "", flag: "ðŸ³ï¸", landmark: "" }]);
+    setLocations([...locations, { name: "New Location", lat: 0, lng: 0, clients: "", description: "", flag: "ðŸ ³ï¸ ", landmark: "" }]);
     setEditingLocation(locations.length);
-    setTempLocation({ name: "New Location", lat: 0, lng: 0, clients: "", description: "", flag: "ðŸ³ï¸", landmark: "" });
+    setTempLocation({ name: "New Location", lat: 0, lng: 0, clients: "", description: "", flag: "ðŸ ³ï¸ ", landmark: "" });
   };
 
   const deleteLocation = (idx: number) => setLocations(locations.filter((_, i) => i !== idx));
 
-  const toggleVisibility = async (table: string, id: string, current: boolean, setter: Function) => {
+  const toggleVisibility = async (table: string, id: string, current: boolean, setter: (val: any) => void) => {
     await dbFetch(table, { method: "PATCH", query: { id }, body: { is_visible: !current } });
     setter((prev: any[]) => prev.map((item: any) => item.id === id ? { ...item, is_visible: !current } : item));
   };
 
-  const deleteItem = async (table: string, id: string, setter: Function) => {
+  const deleteItem = async (table: string, id: string, setter: (val: any) => void) => {
     await dbFetch(table, { method: "DELETE", query: { id } });
     setter((prev: any[]) => prev.filter((item: any) => item.id !== id));
     toast.success("Deleted!");

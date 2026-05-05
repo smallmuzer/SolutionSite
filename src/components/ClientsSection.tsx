@@ -4,6 +4,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Play, LayoutGrid } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
 const SEED_CLIENTS = [
   { id: "cl-0", name: "aaa Hotels & Resorts", logo_url: "/assets/clients/aaa-1.png", is_visible: true, sort_order: 0 },
@@ -56,16 +57,14 @@ function computeGlobePositions(count: number, isMobile: boolean = false): { cx: 
   if (count === 0) return [];
   const pos: { cx: number; cy: number }[] = [];
   const R_INNER = 22, R_OUTER = 34;
-  
+
   if (count <= 7) {
-    // For mobile or small sets, use a perfect single ring
     const r = isMobile ? 30 : (count <= 3 ? R_OUTER : 28);
     for (let i = 0; i < count; i++) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / count;
       pos.push({ cx: 50 + r * Math.cos(a), cy: 50 + r * Math.sin(a) });
     }
   } else {
-    // Nested rings for desktop/larger sets
     const inner = Math.max(3, Math.round(count * 0.36)), outer = count - inner;
     for (let i = 0; i < inner; i++) {
       const a = -Math.PI / 2 + (i * 2 * Math.PI) / inner;
@@ -78,7 +77,6 @@ function computeGlobePositions(count: number, isMobile: boolean = false): { cx: 
     }
   }
 
-  // Cards collision avoidance pass (skipped for mobile perfect circle to ensure exactness)
   if (isMobile && count <= 5) return pos;
 
   const CARD_W_PCT = (66 / 580) * 100;
@@ -115,7 +113,7 @@ function computeGlobePositions(count: number, isMobile: boolean = false): { cx: 
   return pos;
 }
 
-const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
+const StaticGlobe = ({ clients, getNavProps }: { clients: ClientLogo[]; getNavProps: any }) => {
   const bgRef = useRef<HTMLCanvasElement>(null), fgRef = useRef<HTMLCanvasElement>(null), containerRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), zoomRef = useRef(1), targetZoomRef = useRef(1), zoomRafRef = useRef<number>(0);
   const [zoom, setZoom] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
@@ -130,10 +128,8 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 
   const slotCount = isMobile ? 5 : 14;
 
-  // Each slot independently cycles through all clients, staggered by slot index
   const positions = useMemo(() => computeGlobePositions(Math.min(clients.length, slotCount), isMobile), [clients.length, slotCount, isMobile]);
 
-  // slotIndices[i] = which client index is currently shown in slot i
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
 
   useEffect(() => {
@@ -146,7 +142,6 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
     if (clients.length === 0 || slotCount === 0 || slotIndices.length === 0) return;
 
     if (isMobile) {
-      // Unified rotation for mobile "per slot concept" - all 5 change together correctly
       const id = setInterval(() => {
         setSlotIndices(prev => {
           const next = [...prev];
@@ -158,7 +153,6 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
       }, slotMs);
       return () => clearInterval(id);
     } else {
-      // Staggered rotation for desktop
       const timeouts: ReturnType<typeof setTimeout>[] = [];
       const intervals: ReturnType<typeof setInterval>[] = [];
       for (let slotIdx = 0; slotIdx < slotCount; slotIdx++) {
@@ -183,15 +177,15 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
     }
   }, [clients.length, slotCount, isMobile, slotIndices.length, slotMs]);
 
-  const handleWheel = useCallback((e: WheelEvent) => { 
+  const handleWheel = useCallback((e: WheelEvent) => {
     if (isMobile) return;
-    e.preventDefault(); 
-    targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15))); 
+    e.preventDefault();
+    targetZoomRef.current = Math.max(0.7, Math.min(1.8, targetZoomRef.current + (e.deltaY > 0 ? -0.15 : 0.15)));
   }, [isMobile]);
-  
-  const handleMouseLeave = useCallback(() => { 
+
+  const handleMouseLeave = useCallback(() => {
     if (isMobile) return;
-    targetZoomRef.current = 1; 
+    targetZoomRef.current = 1;
   }, [isMobile]);
 
   useEffect(() => {
@@ -210,12 +204,12 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
       return;
     }
     let running = true;
-    const step = () => { 
-      if (!running) return; 
-      const d = targetZoomRef.current - zoomRef.current; 
-      zoomRef.current += d * 0.2; 
-      if (Math.abs(d) > 0.001) setZoom(zoomRef.current); 
-      zoomRafRef.current = requestAnimationFrame(step); 
+    const step = () => {
+      if (!running) return;
+      const d = targetZoomRef.current - zoomRef.current;
+      zoomRef.current += d * 0.2;
+      if (Math.abs(d) > 0.001) setZoom(zoomRef.current);
+      zoomRafRef.current = requestAnimationFrame(step);
     };
     step();
     return () => { running = false; cancelAnimationFrame(zoomRafRef.current); };
@@ -254,25 +248,24 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
   }, []);
 
   return (
-    <div className="mx-auto" style={{ 
-      width: isMobile ? "100%" : `${SIZE}px`, 
-      maxWidth: isMobile ? "min(420px, 88vw)" : "100%", 
-      aspectRatio: "1/1", 
-      position: "relative", 
-      overflow: "visible" 
+    <div className="mx-auto" style={{
+      width: isMobile ? "100%" : `${SIZE}px`,
+      maxWidth: isMobile ? "min(420px, 88vw)" : "100%",
+      aspectRatio: "1/1",
+      position: "relative",
+      overflow: "visible"
     }}>
       <div ref={containerRef} className="relative select-none group" style={{ width: "100%", height: "100%", zIndex: 1, transform: `scale(${zoom}) translateZ(0)`, transformOrigin: "center center", willChange: "transform" }}>
-        
-        {/* Correct Round Map Container */}
+
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40" style={{ width: "86%", height: "86%" }}>
           <div style={{ display: "flex", width: "300%", height: "100%", animation: "globeMapScroll 60s linear infinite" }}>
             {[0, 1, 2].map(k => (
-              <img 
-                key={k} 
-                src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
-                alt="" 
+              <img
+                key={k}
+                src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg"
+                alt=""
                 style={{ width: "33.333%", height: "100%", objectFit: "cover", flexShrink: 0, filter: "invert(0.5) sepia(1) hue-rotate(180deg) saturate(3)" }}
-                onLoad={(e) => (e.currentTarget.parentElement!.parentElement!.style.opacity = isMobile ? "0.3" : "0.2")} 
+                onLoad={(e) => (e.currentTarget.parentElement!.parentElement!.style.opacity = isMobile ? "0.3" : "0.2")}
               />
             ))}
           </div>
@@ -280,8 +273,12 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 
         <canvas ref={bgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full object-contain" />
         <canvas ref={fgRef} width={SIZE} height={SIZE} className="absolute inset-0 w-full h-full object-contain" />
-        
-        <button onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })} className="absolute z-20 flex flex-col items-center justify-center transition-transform hover:scale-105" style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "60%", borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}>
+
+        <button
+          {...getNavProps(() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" }))}
+          className="absolute z-20 flex flex-col items-center justify-center transition-transform hover:scale-105"
+          style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "60%", borderRadius: "50%", background: "transparent", cursor: "pointer", border: "none", gap: 2 }}
+        >
           <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--secondary))", lineHeight: 1, opacity: 0.85 }}>JOIN</span>
           <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, letterSpacing: "0.06em", color: "hsl(var(--secondary))", textShadow: "0 0 12px hsl(var(--secondary)/0.6)", lineHeight: 1.1 }}>Here</span>
           <span className="blink-hint" style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
@@ -306,14 +303,21 @@ const StaticGlobe = ({ clients }: { clients: ClientLogo[] }) => {
 const COLS = 2, GAP = 10, CARD_W = 96, CARD_H = 80, VISIBLE_H = 520, SPEED_PX = 0.4;
 const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
 
-const ClientCard = ({ client }: { client: ClientLogo }) => (
-  <div className="flex flex-col items-center justify-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-110 hover:shadow-xl hover:z-10 group" style={{ width: CARD_W, height: CARD_H, padding: "6px 5px", gap: 4 }}>
+const ClientCard = ({ client, getNavProps }: { client: ClientLogo; getNavProps: any }) => (
+  <div
+    className="flex flex-col items-center justify-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-110 hover:shadow-xl hover:z-10 group/item relative"
+    style={{ width: CARD_W, height: CARD_H, padding: "6px 5px", gap: 4 }}
+    {...getNavProps(() => { })}
+  >
+    <EditorToolbar section="clients" id={client.id} isVisible={client.is_visible} imageField="logo_url" />
     <div style={{ width: CARD_W - 14, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><div style={{ maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }} className="transition-transform duration-300 group-hover:scale-110"><ClientLogoImage client={client} /></div></div>
-    <span style={{ fontSize: 9, lineHeight: 1.3, textAlign: "center", fontWeight: 700, color: "hsl(var(--foreground))", width: "100%", padding: "0 3px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>{client.name}</span>
+    <span style={{ fontSize: 9, lineHeight: 1.3, textAlign: "center", fontWeight: 700, color: "hsl(var(--foreground))", width: "100%", padding: "0 3px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
+      <EditableText section="clients" field="name" id={client.id} value={client.name} />
+    </span>
   </div>
 );
 
-const GridSlideshow = ({ clients, startOffset = 0, reverse = false }: { clients: ClientLogo[]; startOffset?: number; reverse?: boolean }) => {
+const GridSlideshow = ({ clients, getNavProps, startOffset = 0, reverse = false }: { clients: ClientLogo[]; getNavProps: any; startOffset?: number; reverse?: boolean }) => {
   const total = clients.length, stripRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), posRef = useRef<number>(0);
   const ordered = total === 0 ? [] : Array.from({ length: total }, (_, k) => clients[(startOffset + k) % total]), doubled = [...ordered, ...ordered, ...ordered];
   const stripH = Math.ceil(total / COLS) * (CARD_H + GAP);
@@ -327,17 +331,21 @@ const GridSlideshow = ({ clients, startOffset = 0, reverse = false }: { clients:
     <div style={{ width: GRID_W, height: VISIBLE_H, overflow: "hidden", position: "relative", flexShrink: 0 }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)" }} />
-      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>{doubled.map((client, k) => <ClientCard key={`${client.id}-${k}`} client={client} />)}</div>
+      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>{doubled.map((client, k) => <ClientCard key={`${client.id}-${k}`} client={client} getNavProps={getNavProps} />)}</div>
     </div>
   );
 };
 
 const ClientsSection = () => {
+  const editor = useLiveEditor();
+  const getNavProps = useLiveEditorNavigation();
+  const isEdit = editor?.isEditMode;
   const [showAll, setShowAll] = useState(false);
-  const { data: dbClients } = useDbQuery<ClientLogo[]>("client_logos", { is_visible: true }, { order: "sort_order" });
+  const { data: dbClients } = useDbQuery<ClientLogo[]>("client_logos", isEdit ? {} : { is_visible: true }, { order: "sort_order" });
   const content = useSiteContent("clients");
 
-  const clients = dbClients && dbClients.length > 0 ? dbClients : (SEED_CLIENTS as ClientLogo[]);
+  const clients = dbClients || [];
+  const effectiveShowAll = isEdit || showAll;
   const header = {
     badge: content.badge || "Portfolio (Our Clients)",
     title: content.title || "Trusted by",
@@ -346,23 +354,67 @@ const ClientsSection = () => {
   };
 
   return (
-    <section id="portfolio" className="section-padding" style={{ overflowX: "clip", overflowY: "visible" }}>
+    <section id="portfolio" className="section-padding relative group" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div className="container-wide">
-        <AnimatedSection className="text-center mb-8 relative group/header">
+        <AnimatedSection className="text-center mb-8 relative group">
+          <SectionHeaderToolbar section="clients" targetSection="client_logos" className="top-0 left-4" />
           <div className="absolute right-0 top-0 sm:top-2">
-            <button onClick={() => setShowAll(!showAll)} className="p-2 sm:px-4 sm:py-2 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 flex items-center gap-2" title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}>
+            <button onClick={() => setShowAll(!showAll)} className={`${isEdit ? "hidden" : "flex"} p-2 sm:px-4 sm:py-2 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 items-center gap-2`} title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}>
               {showAll ? <Play size={16} className="fill-secondary" /> : <LayoutGrid size={16} />}
               <span className="text-[0.75rem] font-bold uppercase tracking-wider hidden sm:inline">{showAll ? "Play Animation" : "View All"}</span>
             </button>
           </div>
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Portfolio (Our Clients)</span>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+            <EditableText section="clients" field="badge" value={header.badge || "Portfolio (Our Clients)"} colorField="badge_color" />
+          </span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 flex items-center justify-center flex-wrap gap-4">
-            <span>{header.title} <span className="gradient-text">{header.highlight}</span></span>
+            <span>
+              <EditableText section="clients" field="title" value={header.title || "Trusted by"} colorField="title_color" />{" "}
+              <span className="gradient-text">
+                <EditableText section="clients" field="highlight" value={header.highlight || "Industry Leaders"} colorField="highlight_color" />
+              </span>
+            </span>
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">{header.description}</p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
+            <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />
+          </p>
         </AnimatedSection>
         <AnimatedSection>
-          {showAll ? (<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">{clients.map((client) => (<div key={client.id} className="flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/card"><div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2"><div className="max-h-full max-w-full transition-transform duration-300 group-hover/card:scale-110"><ClientLogoImage client={client} /></div></div><span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full">{client.name}</span></div>))}</div>) : (<><div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={0} reverse={false} /></div><div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}><StaticGlobe clients={clients} /></div><div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}><GridSlideshow clients={clients} startOffset={Math.ceil(clients.length / 2)} reverse={true} /></div></div><div className="flex sm:hidden flex-col items-center gap-10"><StaticGlobe clients={clients} /><GridSlideshow clients={clients} startOffset={0} /></div></>)}
+          {effectiveShowAll ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {clients.map((client) => (
+                <div key={client.id} className={`flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/item relative ${!client.is_visible ? 'opacity-50 grayscale' : ''}`}>
+                  <EditorToolbar section="clients" id={client.id} isVisible={client.is_visible} imageField="logo_url" />
+                  <div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2 flex-shrink-0">
+                    <div className="max-h-full max-w-full transition-transform duration-300 group-hover/item:scale-110">
+                      <ClientLogoImage client={client} />
+                    </div>
+                  </div>
+                  <span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full mt-auto">
+                    <EditableText section="clients" field="name" id={client.id} value={client.name} colorField="name_color" />
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}>
+                <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
+                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} reverse={false} />
+                </div>
+                <div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}>
+                  <StaticGlobe clients={clients} getNavProps={getNavProps} />
+                </div>
+                <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
+                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={Math.ceil(clients.length / 2)} reverse={true} />
+                </div>
+              </div>
+              <div className="flex sm:hidden flex-col items-center gap-10">
+                <StaticGlobe clients={clients} getNavProps={getNavProps} />
+                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} />
+              </div>
+            </>
+          )}
           <p className="text-xs text-muted-foreground mt-8 text-center bg-muted/20 py-2 px-4 rounded-full w-fit mx-auto">{clients.length} clients across Maldives, Bhutan &amp; beyond</p>
         </AnimatedSection>
       </div>

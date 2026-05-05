@@ -9,7 +9,7 @@ function readStoredPrefs(): Partial<UIPrefs> {
     if (m) return JSON.parse(decodeURIComponent(m.trim().slice(LOCAL_STORAGE_KEY.length + 1)));
     const s = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (s) return JSON.parse(s);
-  } catch { }
+  } catch { /* ignore */ }
   return {};
 }
 

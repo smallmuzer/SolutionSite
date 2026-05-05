@@ -2,11 +2,12 @@ import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GlobalViewProvider } from "./components/ui-customizer-context";
 import { useContentSync } from "@/hooks/useSiteContent";
 import { seedQueryCache } from "@/lib/seedCache";
+import { queryClient } from "@/lib/queryClient";
 
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -14,27 +15,13 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ApplicationStatus = lazy(() => import("./pages/ApplicationStatus"));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 0,
-      staleTime: 30 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    },
-    mutations: { retry: 0 },
-  },
-});
-
 // Pre-populate cache with seed/fallback data synchronously before first render.
 // Components render instantly with this data; API responses replace it in background.
 seedQueryCache(queryClient);
 
 const RouteFallback = () => <div className="min-h-screen bg-background" />;
 
-// New wrapper to ensure useContentSync is called WITHIN the QueryClientProvider
+// Wrapper to ensure useContentSync is called WITHIN the QueryClientProvider
 const AppContent = () => {
   useContentSync();
   return (

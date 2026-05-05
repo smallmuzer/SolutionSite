@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "./query-keys";
 
 type AssetFile = {
@@ -36,11 +37,7 @@ async function fetchAssets(folder: string): Promise<AssetFile[]> {
 }
 
 function normaliseFolder(folder: string) {
-  const cleaned = String(folder || "uploads").trim() || "uploads";
-  if (cleaned === "technologies") return "Technology";
-  if (cleaned === "technology") return "Technology";
-  if (cleaned === "hero-gallery") return "hero";
-  return cleaned;
+  return "uploads";
 }
 
 export async function listProjectAssets(folder: string, _opts?: { force?: boolean }) {
@@ -61,8 +58,8 @@ export function useProjectAssets(folder: string, options?: { enabled?: boolean }
   });
 }
 
+
 export function invalidateProjectAssets(folder?: string) {
-  const queryClient = useQueryClient();
   
   if (!folder) {
     queryClient.invalidateQueries({ queryKey: ["assets"] });

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { dbInsert } from "@/lib/api";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
 type CareerJob = Tables<"career_jobs">;
 
@@ -50,39 +51,41 @@ function getJobMeta(job: CareerJob): { Icon: React.ElementType; bg: string; fg: 
   return { Icon: Briefcase, bg: "#1e3a5f", fg: "#93c5fd" };
 }
 
-const JobCard = ({ job, onApply, useImg, delay = 0, idx = 0 }: { job: CareerJob; onApply: () => void; useImg: boolean; delay?: number; idx?: number }) => {
+const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0 }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; delay?: number }) => {
   const { Icon, bg, fg } = getJobMeta(job);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getThemedImg = () => {
-    const t = job.title.toLowerCase();
-    if (t.includes("developer") || t.includes("engineer") || t.includes("tech") || t.includes("web")) return "/assets/careers/white_dev.png";
-    if (t.includes("designer") || t.includes("ux") || t.includes("ui") || t.includes("figma") || t.includes("creative")) return "/assets/careers/white_designer.png";
-    if (t.includes("business") || t.includes("sales") || t.includes("executive") || t.includes("manager") || t.includes("lead")) return "/assets/careers/white_business.png";
-    return idx % 2 === 0 ? "/assets/careers/white_careers_1.png" : "/assets/careers/white_careers_2.png";
+    return (job.image_url && job.image_url.trim()) ? job.image_url.trim() : "";
   };
 
   const imgSrc = getThemedImg();
-  const isLongDescription = job.description.length > 190;
+  const isLongDescription = (job.description || "").length > 190;
 
   return (
     <div
-      className="glass-card relative flex flex-col h-full group hover:shadow-xl transition-all duration-300 overflow-hidden hover-float animate-float border border-secondary/30"
+      className="glass-card relative flex flex-col h-full group/item hover:shadow-xl transition-all duration-300 overflow-hidden hover-float animate-float border border-secondary/30 hover:outline hover:outline-2 hover:outline-secondary/50"
       style={{ animationDelay: `${delay}s`, minHeight: useImg ? "280px" : "180px", height: isExpanded ? "auto" : "100%" }}
+      {...getNavProps(onApply)}
     >
+      <EditorToolbar section="career_jobs" id={job.id} isVisible={job.is_visible} />
       {useImg ? (
         <>
           <div className={`relative ${isExpanded ? "h-24" : "h-[30%]"} w-full overflow-hidden shrink-0 transition-all duration-500`}>
             <img src={imgSrc} alt={job.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/assets/careers/white_careers_1.png"; }} />
-            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover/item:scale-110"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/assets/uploads/white_dev_1775409804566.png"; }} />
+            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
             <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent" />
           </div>
           <div className="relative flex-1 w-full px-4 pt-3 pb-4 flex flex-col bg-white dark:bg-[#1e1e2e] z-10">
-            <h3 className="font-heading font-extrabold text-[0.9375rem] text-slate-900 dark:text-white mb-1 leading-tight tracking-tight">{job.title}</h3>
+            <h3 className="font-heading font-extrabold text-[0.9375rem] text-slate-900 dark:text-white mb-1 leading-tight tracking-tight">
+                <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
+            </h3>
             <div className="relative flex-1 mb-2">
-              <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-3"}`}>{job.description}</p>
+              <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-3"}`}>
+                <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
+              </p>
               {isLongDescription && (
                 <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.625rem] font-extrabold mt-0.5 hover:underline focus:outline-none flex items-center gap-1">
                   {isExpanded ? "Show Less" : "Read More..."}
@@ -106,13 +109,17 @@ const JobCard = ({ job, onApply, useImg, delay = 0, idx = 0 }: { job: CareerJob;
               <Icon size={18} className="text-secondary" />
             </div>
           </div>
-          <h3 className="font-heading font-extrabold text-slate-900 dark:text-white text-[0.9375rem] mb-1.5">{job.title}</h3>
+          <h3 className="font-heading font-extrabold text-slate-900 dark:text-white text-[0.9375rem] mb-1.5">
+            <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
+          </h3>
           <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
             <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><MapPin size={10} className="text-secondary" /> {job.location}</span>
             <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> {job.job_type}</span>
           </div>
           <div className="relative mb-3 flex-1 overflow-visible">
-            <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}>{job.description}</p>
+            <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}>
+              <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
+            </p>
             {isLongDescription && (
               <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.6rem] font-extrabold mt-1 hover:underline focus:outline-none">
                 {isExpanded ? "Show Less" : "Read More..."}
@@ -129,18 +136,19 @@ const JobCard = ({ job, onApply, useImg, delay = 0, idx = 0 }: { job: CareerJob;
   );
 };
 
-const JobRow = ({ job, onApply, useImg }: { job: CareerJob; onApply: () => void; useImg: boolean }) => {
+const JobRow = ({ job, onApply, useImg, getNavProps }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any }) => {
   const { Icon, bg, fg } = getJobMeta(job);
-  const fallbackImg = "/assets/careers/white_careers_1.png";
+  const fallbackImg = "";
   const imgSrc = (job.image_url && job.image_url.trim()) ? job.image_url.trim() : fallbackImg;
 
   return (
-    <div className="glass-card flex items-center gap-0 overflow-hidden hover:shadow-lg transition-all duration-300 group hover-float">
+    <div className="glass-card flex items-center gap-0 overflow-hidden hover:shadow-lg transition-all duration-300 group/item hover-float relative hover:outline hover:outline-2 hover:outline-secondary/50" {...getNavProps(onApply)}>
+      <EditorToolbar section="career_jobs" id={job.id} isVisible={job.is_visible} />
       <div className="relative shrink-0 flex items-center justify-center" style={{ width: 120, alignSelf: "stretch" }}>
         {useImg ? (
           <>
             <img src={imgSrc} alt={job.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImg; }} />
             <div className="absolute inset-0 bg-black/30" />
           </>
@@ -152,8 +160,12 @@ const JobRow = ({ job, onApply, useImg }: { job: CareerJob; onApply: () => void;
       </div>
       <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-white dark:bg-[#11111f]">
         <div className="flex-1 min-w-0">
-          <h3 className="font-heading font-extrabold text-foreground text-[1rem] mb-1">{job.title}</h3>
-          <p className="text-muted-foreground text-[0.8125rem] line-clamp-2">{job.description}</p>
+          <h3 className="font-heading font-extrabold text-foreground text-[1rem] mb-1">
+            <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
+          </h3>
+          <p className="text-muted-foreground text-[0.8125rem] line-clamp-2">
+            <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
+          </p>
           <div className="flex gap-5 mt-3">
             <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><MapPin size={13} className="text-secondary" /> {job.location}</span>
             <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><Clock size={13} className="text-secondary" /> {job.job_type}</span>
@@ -172,8 +184,10 @@ const CareersSection = () => {
   const view = useGlobalView();
   const cardStyle = useCardStyle();
   const useImg = cardStyle === "image";
+  const getNavProps = useLiveEditorNavigation();
 
-  const { data: jobs = [] } = useDbQuery<CareerJob[]>("career_jobs", { is_visible: true }, { order: "sort_order", asc: true });
+  const editor = useLiveEditor();
+  const { data: jobs = [] } = useDbQuery<CareerJob[]>("career_jobs", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order", asc: true });
   const content = useSiteContent("careers");
   
   const header = {
@@ -187,6 +201,12 @@ const CareersSection = () => {
   const [selectedJob, setSelectedJob] = useState<CareerJob | null>(null);
   const [applyForm, setApplyForm] = useState({ name: "", email: "", phone: "", cover: "", website: "" });
   const [submitting, setSubmitting] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(0);
+  const CARDS_PER_PAGE = 4;
+  const totalPages = Math.ceil(jobs.length / CARDS_PER_PAGE);
+  const goTo = (p: number) => setCurrentPage(((p % totalPages) + totalPages) % totalPages);
+  const pageJobs = jobs.slice(currentPage * CARDS_PER_PAGE, (currentPage + 1) * CARDS_PER_PAGE);
   
   const sectionVisible = content.section_visible !== false && content.section_visible !== "false";
 
@@ -243,31 +263,73 @@ const CareersSection = () => {
   };
 
   return (
-    <section id="careers" className="section-padding relative overflow-hidden">
+    <section id="careers" className="section-padding relative overflow-hidden group">
+      <SectionHeaderToolbar section="careers" targetSection="career_jobs" />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">{header.badge}</span>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+            <EditableText section="careers" field="badge" value={header.badge || "Careers"} />
+          </span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            {header.title} <span className="gradient-text">{header.highlight}</span>
+            <EditableText section="careers" field="title" value={header.title || "Join Our"} />{" "}
+            <span className="gradient-text">
+              <EditableText section="careers" field="highlight" value={header.highlight || "Team"} />
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]">{header.description}</p>
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]">
+            <EditableText section="careers" field="description" value={header.description || ""} />
+          </p>
         </AnimatedSection>
 
-        {view === "grid" ? (
-          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
-            {jobs.map((job, i) => (
-              <AnimatedSection key={job.id}>
-                <JobCard job={job} onApply={() => openApply(job)} useImg={useImg} delay={i * 0.2} idx={i} />
-              </AnimatedSection>
+        {editor?.isEditMode ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch max-w-[90rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
+            {jobs.map((job) => (
+              <JobCard key={job.id} job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} />
             ))}
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-3">
-            {jobs.map(job => (
-              <AnimatedSection key={job.id}>
-                <JobRow job={job} onApply={() => openApply(job)} useImg={useImg} />
-              </AnimatedSection>
-            ))}
+          <div className="max-w-[90rem] mx-auto px-4">
+            <div className={`flex flex-wrap justify-center gap-6 items-stretch transition-all duration-500 ${view === 'grid' ? '' : 'flex-col max-w-3xl mx-auto'}`}>
+              {(jobs.length > CARDS_PER_PAGE ? pageJobs : jobs).map((job, i) => (
+                <AnimatedSection 
+                  key={job.id} 
+                  delay={i * 0.08} 
+                  className={`h-full ${view === 'grid' ? 'w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)] max-w-sm' : 'w-full'}`}
+                >
+                  {view === "grid" ? (
+                    <JobCard job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} />
+                  ) : (
+                    <JobRow job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} />
+                  )}
+                </AnimatedSection>
+              ))}
+            </div>
+
+            {jobs.length > CARDS_PER_PAGE && (
+              <div className="flex items-center justify-center gap-6 mt-12">
+                <button
+                  onClick={() => goTo(currentPage - 1)}
+                  className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
+                >
+                  <Briefcase size={20} className="group-hover/nav:scale-110 transition-transform" />
+                </button>
+                <div className="flex gap-2.5">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goTo(i)}
+                      className={`h-1.5 rounded-full transition-all ${i === currentPage ? "w-8 bg-secondary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={() => goTo(currentPage + 1)}
+                  className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
+                >
+                  <Briefcase size={20} className="group-hover/nav:scale-110 transition-transform" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -281,31 +343,41 @@ const CareersSection = () => {
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Full Name *</label>
-                <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={applyForm.name} onChange={e => setApplyForm(f => ({ ...f, name: e.target.value }))} />
+                <label className="text-xs font-medium text-muted-foreground">
+                  <EditableText section="careers" field="label_name" value={content.label_name || "Full Name *"} />
+                </label>
+                <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={applyForm.name} onChange={e => setApplyForm(f => ({ ...f, name: e.target.value }))} placeholder={content.placeholder_name || "Your name"} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Email *</label>
-                <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={applyForm.email} onChange={e => setApplyForm(f => ({ ...f, email: e.target.value }))} />
+                <label className="text-xs font-medium text-muted-foreground">
+                  <EditableText section="careers" field="label_email" value={content.label_email || "Email *"} />
+                </label>
+                <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={applyForm.email} onChange={e => setApplyForm(f => ({ ...f, email: e.target.value }))} placeholder={content.placeholder_email || "you@email.com"} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Phone</label>
-                <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={applyForm.phone} onChange={e => setApplyForm(f => ({ ...f, phone: e.target.value }))} />
+                <label className="text-xs font-medium text-muted-foreground">
+                  <EditableText section="careers" field="label_phone" value={content.label_phone || "Phone"} />
+                </label>
+                <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={applyForm.phone} onChange={e => setApplyForm(f => ({ ...f, phone: e.target.value }))} placeholder={content.placeholder_phone || "Number"} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Position</label>
+                <label className="text-xs font-medium text-muted-foreground">
+                  <EditableText section="careers" field="label_position" value={content.label_position || "Position"} />
+                </label>
                 <input className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm" value={selectedJob?.title || ""} readOnly />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Cover Letter / Notes</label>
-              <textarea className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm resize-none" rows={3} value={applyForm.cover} onChange={e => setApplyForm(f => ({ ...f, cover: e.target.value }))} />
+              <label className="text-xs font-medium text-muted-foreground">
+                <EditableText section="careers" field="label_message" value={content.label_message || "Cover Letter / Notes"} />
+              </label>
+              <textarea className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm resize-none" rows={3} value={applyForm.cover} onChange={e => setApplyForm(f => ({ ...f, cover: e.target.value }))} placeholder={content.placeholder_message || "Tell us about yourself..."} />
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg border border-border text-sm">Cancel</button>
               <button onClick={submitApplication} disabled={submitting || !applyForm.name || !applyForm.email}
                 className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold disabled:opacity-50">
-                {submitting ? "Submitting..." : "Submit"}
+                {submitting ? "Submitting..." : <EditableText section="careers" field="cta_submit" value={content.cta_submit || "Submit"} />}
               </button>
             </div>
             <input type="text" name="website" value={applyForm.website} onChange={e => setApplyForm(f => ({ ...f, website: e.target.value }))}

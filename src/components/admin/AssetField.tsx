@@ -33,7 +33,7 @@ export default function AssetField({
   const loadFiles = async (force = false) => {
     setLoading(true);
     try {
-      const nextFiles = await listProjectAssets(folder, { force });
+      const nextFiles = await listProjectAssets("uploads", { force });
       setFiles(nextFiles);
     } catch (error: any) {
       toast.error(error?.message || "Failed to load project files.");
@@ -52,7 +52,7 @@ export default function AssetField({
     if (!file) return;
     setUploading(true);
     try {
-      const publicUrl = await uploadProjectAsset(folder, file);
+      const publicUrl = await uploadProjectAsset("uploads", file);
       onChange(publicUrl);
       setPickerOpen(true);
       await loadFiles(true);

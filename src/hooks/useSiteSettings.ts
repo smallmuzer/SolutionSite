@@ -36,7 +36,7 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     try {
       const stored = localStorage.getItem("bss-user-settings");
       if (stored) userPrefs = JSON.parse(stored);
-    } catch { }
+    } catch { /* ignore */ }
   }
   // DB is the base, user cookie overrides on top
   const s = { ...dbSettings, ...userPrefs };
@@ -67,7 +67,8 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
       const g = parseInt(hex.slice(3, 5), 16) / 255;
       const b = parseInt(hex.slice(5, 7), 16) / 255;
       const max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h = 0, sv = 0, l = (max + min) / 2;
+      let h = 0, sv = 0;
+      const l = (max + min) / 2;
       if (max !== min) {
         const d = max - min;
         sv = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -136,7 +137,7 @@ export function useSiteSettings() {
     try {
       const stored = localStorage.getItem("bss-user-settings");
       if (stored) applySettings({});
-    } catch { }
+    } catch { /* ignore */ }
   }, []);
 
   return settings;

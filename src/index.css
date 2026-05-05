@@ -213,34 +213,45 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--secondary) / 0.6);
   }
-
-  /* Tighter design global overrides */
-  .p-6, .px-6, .py-6 { padding: 1rem !important; padding-left: 1rem !important; padding-right: 1rem !important; padding-top: 1rem !important; padding-bottom: 1rem !important; }
-  .p-8, .px-8, .py-8 { padding: 1.25rem !important; padding-left: 1.25rem !important; padding-right: 1.25rem !important; padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
-  .p-10, .px-10, .py-10 { padding: 1.5rem !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
-  .p-12, .px-12, .py-12 { padding: 2rem !important; padding-left: 2rem !important; padding-right: 2rem !important; padding-top: 2rem !important; padding-bottom: 2rem !important; }
-  
-  .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
-  .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
-  .space-y-12 > :not([hidden]) ~ :not([hidden]) { margin-top: 2rem !important; }
-  
-  .mb-6 { margin-bottom: 1rem !important; }
-  .mb-8 { margin-bottom: 1.25rem !important; }
-  .mb-10 { margin-bottom: 1.5rem !important; }
-  .mb-12 { margin-bottom: 2rem !important; }
-  .mb-14 { margin-bottom: 2.5rem !important; }
-  
-  .mt-6 { margin-top: 1rem !important; }
-  .mt-8 { margin-top: 1.25rem !important; }
-  .mt-10 { margin-top: 1.5rem !important; }
-  .mt-12 { margin-top: 2rem !important; }
-  .mt-14 { margin-top: 2.5rem !important; }
-  
-  .gap-6 { gap: 1rem !important; }
-  .gap-8 { gap: 1.25rem !important; }
-  .gap-10 { gap: 1.5rem !important; }
-  .gap-12 { gap: 2rem !important; }
 }
+
+/* Tighter design global overrides */
+.p-6 { padding: 1rem !important; }
+.px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+
+.p-8 { padding: 1.25rem !important; }
+.px-8 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+.py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+
+.p-10 { padding: 1.5rem !important; }
+.px-10 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+.py-10 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+
+.p-12 { padding: 2rem !important; }
+.px-12 { padding-left: 2rem !important; padding-right: 2rem !important; }
+.py-12 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+
+.mb-6 { margin-bottom: 1rem !important; }
+.mb-8 { margin-bottom: 1.25rem !important; }
+.mb-10 { margin-bottom: 1.5rem !important; }
+.mb-12 { margin-bottom: 2rem !important; }
+.mb-14 { margin-bottom: 2.5rem !important; }
+
+.mt-6 { margin-top: 1rem !important; }
+.mt-8 { margin-top: 1.25rem !important; }
+.mt-10 { margin-top: 1.5rem !important; }
+.mt-12 { margin-top: 2rem !important; }
+.mt-14 { margin-top: 2.5rem !important; }
+
+.gap-6 { gap: 1rem !important; }
+.gap-8 { gap: 1.25rem !important; }
+.gap-10 { gap: 1.5rem !important; }
+.gap-12 { gap: 2rem !important; }
+
+
+
+
 
 /* ── Blink ── */
 @keyframes blink {
@@ -622,3 +633,37 @@ body.cinematic-mode .hero-parallax::after {
   animation: fiber-light-rotate 6s linear reverse infinite;
   transform-origin: center;
 }
+
+/* --- Live Visual Editor Helpers --- */
+#home, section[id] {
+  scroll-margin-top: 100px;
+}
+
+.live-editor-container [contenteditable] {
+  outline: none;
+  min-width: 1ch;
+  display: inline-block;
+}
+
+.live-editor-container [contenteditable]:hover {
+  outline: 2px solid rgba(115, 96, 242, 0.4);
+  background: rgba(115, 96, 242, 0.03);
+  border-radius: 4px;
+}
+
+.live-editor-container [contenteditable]:focus {
+  outline: 2px solid #7360f2;
+  background: rgba(115, 96, 242, 0.06);
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(115, 96, 242, 0.2);
+}
+
+.live-editor-container .section-block-editable {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.live-editor-container .section-block-editable:hover {
+  outline: 1px dashed rgba(115, 96, 242, 0.3);
+  outline-offset: 4px;
+}

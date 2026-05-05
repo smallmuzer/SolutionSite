@@ -6,6 +6,7 @@ import { useSiteContent, useSiteSettings } from "@/hooks/useSiteContent";
 import { openViber, ViberIcon } from "@/lib/viber";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { COUNTRIES, detectCountry, validatePhone } from "@/lib/phone-utils";
+import { EditableText, EditorToolbar, useLiveEditor } from "./admin/LiveEditorContext";
 
 // ————————————————————————————————————————————————————————————————————————————————
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -129,7 +130,8 @@ function DateTimePicker({ label, value, onChange, minDate }: {
 const ContactSection = () => {
   const content = useSiteContent("contact");
   const settings = useSiteSettings();
-  const { data: servicesData } = useDbQuery<{ title: string }[]>("services", { is_visible: true }, { order: "sort_order" });
+  const editor = useLiveEditor();
+  const { data: servicesData } = useDbQuery<{ title: string }[]>("services", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order" });
   const services = servicesData || [];
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]     = useState(false);
@@ -252,42 +254,98 @@ const ContactSection = () => {
   const contactItems = [
     { icon: MapPin, label: "Office Address",  value: content?.address || "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives" },
     { icon: Mail,   label: "Email",           value: content?.email   || "info@solutions.com.mv" },
-    { icon: Phone,  label: "Phone",           value: content?.phone   || "+960 301-1355" },
-    { icon: Hash,   label: "Landline",        value: content?.landline || "+91-452 238 7388" },
-    { icon: Clock,  label: "Business Hours",  value: content?.hours   || "Sun–Thu: 9AM–6PM\nSat: 9AM–1PM" },
   ];
-
   const inputCls = "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.875rem] focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all";
   const labelCls = "text-[0.75rem] font-medium text-foreground mb-1 block";
 
   return (
-    <section id="contact" className="py-10 section-alt relative overflow-hidden">
+    <section id="contact" className="py-10 section-alt relative overflow-hidden group/item">
+      <EditorToolbar section="contact" />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest">Reach Us</span>
+          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest">
+            <EditableText section="contact" field="badge" value="Reach Us" />
+          </span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            {content.title?.includes("Touch") ? <>Get In <span className="gradient-text">Touch</span></> : content.title}
+            <EditableText section="contact" field="title" value={content.title || "Get In Touch"} />
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">{content.subtitle}</p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
+            <EditableText section="contact" field="subtitle" value={content.subtitle || ""} />
+          </p>
         </AnimatedSection>
 
         <div className="flex flex-col lg:flex-row gap-20 max-w-6xl mx-auto items-stretch">
           <AnimatedSection className="w-full lg:w-1/2 flex flex-col">
             <div className="glass-card p-4 sm:p-6 flex-1 flex flex-col">
-              <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">Office Information</h3>
+              <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
+                <EditableText section="contact" field="label_office_info" value="Office Information" />
+              </h3>
               <div className="space-y-4 flex-1">
-                {contactItems.map((item) => (
-                  <div key={item.label} className="flex gap-4">
-                    <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
-                      <item.icon size={16} className="text-secondary" />
+                <div className="flex gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <MapPin size={16} className="text-secondary" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-semibold text-foreground text-[12.5px]">
+                      <EditableText section="contact" field="label_address" value="Office Address" />
                     </div>
-                    <div>
-                      <div className="font-heading font-semibold text-foreground text-[12.5px]">{item.label}</div>
-                      <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">{item.value}</div>
+                    <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
+                      <EditableText section="contact" field="address" value={content.address || "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives"} />
                     </div>
                   </div>
-                ))}
-
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <Mail size={16} className="text-secondary" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-semibold text-foreground text-[12.5px]">
+                      <EditableText section="contact" field="label_email" value="Email" />
+                    </div>
+                    <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
+                      <EditableText section="contact" field="email" value={content.email || "info@solutions.com.mv"} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <Phone size={16} className="text-secondary" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-semibold text-foreground text-[12.5px]">
+                      <EditableText section="contact" field="label_phone_side" value="Phone" />
+                    </div>
+                    <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
+                      <EditableText section="contact" field="phone" value={content.phone || "+960 301 1355"} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <Hash size={16} className="text-secondary" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-semibold text-foreground text-[12.5px]">
+                      <EditableText section="contact" field="label_landline" value="Landline" />
+                    </div>
+                    <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
+                      <EditableText section="contact" field="landline" value={content.landline || "+960 301 1355"} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <Clock size={16} className="text-secondary" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-semibold text-foreground text-[12.5px]">
+                      <EditableText section="contact" field="label_hours" value="Business Hours" />
+                    </div>
+                    <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
+                      <EditableText section="contact" field="hours" value={content.hours || "Sunday - Thursday: 09:00 - 17:00\nFriday - Saturday: Closed"} />
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-2.5">
@@ -354,24 +412,35 @@ const ContactSection = () => {
                 <div className="space-y-3 flex-1">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className={labelCls}>Full Name *</label>
+                      <label className={labelCls}>
+                        <EditableText section="contact" field="label_name" value={content.label_name || "Full Name *"} />
+                        {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_name" value={content.placeholder_name || "Your name"} />)</span>}
+                      </label>
                       <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)}
-                        className={inputCls} placeholder="Your name" maxLength={100} />
+                        className={inputCls} placeholder={content.placeholder_name || "Your name"} maxLength={100} />
                     </div>
                     <div>
-                      <label className={labelCls}>Company</label>
+                      <label className={labelCls}>
+                        <EditableText section="contact" field="label_company" value={content.label_company || "Company"} />
+                        {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_company" value={content.placeholder_company || "Your company"} />)</span>}
+                      </label>
                       <input type="text" value={form.company} onChange={(e) => update("company", e.target.value)}
-                        className={inputCls} placeholder="Your company" maxLength={100} />
+                        className={inputCls} placeholder={content.placeholder_company || "Your company"} maxLength={100} />
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className={labelCls}>Email *</label>
+                      <label className={labelCls}>
+                        <EditableText section="contact" field="label_email" value={content.label_email || "Email *"} />
+                        {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_email" value={content.placeholder_email || "you@email.com"} />)</span>}
+                      </label>
                       <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)}
-                        className={inputCls} placeholder="you@email.com" maxLength={255} />
+                        className={inputCls} placeholder={content.placeholder_email || "you@email.com"} maxLength={255} />
                     </div>
                     <div>
-                      <label className={labelCls}>Phone</label>
+                      <label className={labelCls}>
+                        <EditableText section="contact" field="label_phone" value={content.label_phone || "Phone"} />
+                      </label>
                       <div className="flex items-stretch">
                         <div className="relative w-24 shrink-0">
                           <select 
@@ -391,13 +460,15 @@ const ContactSection = () => {
                           </div>
                         </div>
                         <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)}
-                          className={`${inputCls} rounded-l-none flex-1`} placeholder="Number" maxLength={20} />
+                          className={`${inputCls} rounded-l-none flex-1`} placeholder={content.placeholder_phone || "Number"} maxLength={20} />
                       </div>
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-1 gap-4">
                     <div>
-                      <label className={labelCls}>Inquiry For *</label>
+                      <label className={labelCls}>
+                        <EditableText section="contact" field="label_inquiry" value={content.label_inquiry || "Inquiry For *"} />
+                      </label>
                       <div className="relative">
                         <select value={form.service} onChange={(e) => update("service", e.target.value)}
                           className={`${inputCls} appearance-none bg-no-repeat pr-10 hover:border-secondary transition-colors`}>
@@ -417,11 +488,14 @@ const ContactSection = () => {
                       onChange={(v) => update("date2", v)} />
                   </div>
                   <div className="flex-1 flex flex-col">
-                    <label className={labelCls}>Message *</label>
+                    <label className={labelCls}>
+                      <EditableText section="contact" field="label_message" value={content.label_message || "Message *"} />
+                      {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_message" value={content.placeholder_message || "Tell us about your project..."} />)</span>}
+                    </label>
                     <textarea
                       value={form.message} onChange={(e) => update("message", e.target.value)}
                       className={`${inputCls} resize-none flex-1`} style={{ minHeight: 80 }}
-                      placeholder="Tell us about your project..." maxLength={1000}
+                      placeholder={content.placeholder_message || "Tell us about your project..."} maxLength={1000}
                     />
                   </div>
                 </div>
@@ -429,7 +503,7 @@ const ContactSection = () => {
                   type="submit" disabled={loading}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-transparent border border-secondary text-secondary font-semibold rounded-lg hover:bg-secondary/10 transition-colors disabled:opacity-50 mt-5 text-[0.875rem]"
                 >
-                  <Send size={15} /> {loading ? "Sending..." : "Send Message"}
+                  <Send size={15} /> {loading ? "Sending..." : <EditableText section="contact" field="cta_text" value={content.cta_text || "Send Message"} />}
                 </button>
                 {/* Honeypot field — hidden from real users, catches bots */}
                 <input

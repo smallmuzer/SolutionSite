@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, ExternalLink, Sun, Moon, ShieldCheck, Settings } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { EditableText, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
 const DEFAULT_NAV = [
   { label: "Who We Are", href: "#about" },
@@ -25,7 +26,7 @@ function useDarkMode() {
         if (prefs.theme === "dark") return true;
         if (prefs.theme === "light") return false;
       }
-    } catch { }
+    } catch { /* ignore */ }
     const cached = localStorage.getItem("bss-theme");
     if (cached === "dark") return true;
     if (cached === "light") return false;
@@ -51,7 +52,7 @@ function useDarkMode() {
       const prefs = stored ? JSON.parse(stored) : {};
       prefs.theme = theme;
       localStorage.setItem("bss-user-settings", JSON.stringify(prefs));
-    } catch { }
+    } catch { /* ignore */ }
     window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
     setIsDark(next);
   };
@@ -68,6 +69,8 @@ const Header = () => {
   const settings = useSiteSettings();
   const careersContent = useSiteContent("careers");
   const { isDark, toggle } = useDarkMode();
+  const getNavProps = useLiveEditorNavigation();
+  const editor = useLiveEditor();
 
   const mobileTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -94,7 +97,7 @@ const Header = () => {
         ratios.forEach((ratio, id) => { if (ratio > maxRatio) { maxRatio = ratio; activeId = id; } });
         if (maxRatio > 0.1) setActiveSection(`#${activeId}`);
       },
-      { threshold: [0, 0.25, 0.5, 0.75, 1], rootMargin: "-80px 0px -20% 0px" }
+      { threshold: [0, 0.25, 0.5, 0.75, 1], rootMargin: "-70px 0px -20% 0px" }
     );
     ids.forEach((id) => { const el = document.getElementById(id); if (el) observer.observe(el); });
     return () => observer.disconnect();
@@ -113,7 +116,13 @@ const Header = () => {
   };
   const scrollTo = (href: string) => {
     closeMobile();
-    setTimeout(() => document.querySelector(href)?.scrollIntoView({ behavior: "smooth" }), 50);
+    setTimeout(() => {
+      const el = document.querySelector(href);
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 70;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const navBtn = (active: boolean) =>
@@ -128,14 +137,20 @@ const Header = () => {
   return (
     <header
       style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        transition: "box-shadow 0.3s ease, border-color 0.3s ease",
-        background: "hsl(var(--background))",
-        boxShadow: scrolled ? "0 1px 24px rgba(0,0,0,0.10)" : "none",
+        position: "fixed", 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        zIndex: 50,
+        transition: "all 0.3s ease",
+        background: scrolled ? "hsl(var(--background)/0.85)" : "hsl(var(--background))",
+        backdropFilter: scrolled ? "blur(12px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        boxShadow: scrolled ? "0 4px 20px -5px rgba(0,0,0,0.1)" : "none",
         borderBottom: scrolled ? "1px solid hsl(var(--border)/0.5)" : "1px solid transparent",
       }}
     >
-      <div className="w-full flex items-center justify-between px-4 sm:px-6 h-[58px] lg:h-[50px]">
+      <div className="w-full flex items-center justify-between px-4 sm:px-6 h-[60px] lg:h-[55px]">
         {/* Logo */}
         <a href="#home" className="flex items-center gap-2.5 shrink-0">
           <img
@@ -152,7 +167,7 @@ const Header = () => {
                 textShadow: "none",
               }}
             >
-              {siteName.split(" ")[0]}
+              <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0]} />
             </span>
             <span
               className="font-heading font-bold text-lg sm:text-xl leading-tight"
@@ -163,7 +178,7 @@ const Header = () => {
                 textShadow: "none",
               }}
             >
-              {siteName.split(" ").slice(1).join(" ") || "Solutions"}
+              <EditableText section="settings" field="site_name_part2" value={siteName.split(" ").slice(1).join(" ") || "Solutions"} />
             </span>
           </div>
         </a>
@@ -171,8 +186,8 @@ const Header = () => {
         {/* Desktop Nav */}
         <nav className="hidden xl:flex items-center justify-end gap-1.5 flex-1 mx-4">
           {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
-            <button key={item.href} onClick={() => scrollTo(item.href)} className={navBtn(activeSection === item.href)}>
-              {item.label}
+            <button key={item.href} {...getNavProps(() => scrollTo(item.href))} className={navBtn(activeSection === item.href)}>
+              <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} value={item.label} />
               <span
                 className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full"
                 style={{
@@ -190,11 +205,35 @@ const Header = () => {
           </button>
 
           <button
-            onClick={() => scrollTo("#contact")}
+            {...getNavProps(() => scrollTo("#contact"))}
             className="ml-1 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg font-semibold text-xs hover:opacity-90 transition-opacity whitespace-nowrap shrink-0"
           >
             Get Started
           </button>
+
+          {editor?.isEditMode && (
+            <div className="flex items-center gap-1.5 ml-2 border-l border-border/50 pl-2 animate-in slide-in-from-right-2 duration-500">
+               <button 
+                  onClick={editor.onOpenCustomizer}
+                  className="p-1.5 hover:bg-secondary/10 rounded-lg text-muted-foreground hover:text-secondary transition-all group relative"
+                  title="UI Style Settings"
+                >
+                  <Settings size={16} className="group-hover:rotate-90 transition-transform duration-700 ease-in-out" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-secondary rounded-full border-2 border-background animate-bounce" />
+                </button>
+
+                {Object.keys(editor.pendingChanges).length > 0 && (
+                  <button 
+                    onClick={editor.handleSaveAll}
+                    className="relative px-3 py-1.5 bg-secondary text-secondary-foreground rounded-full text-[10px] font-black uppercase tracking-wider hover:opacity-90 transition-all shadow-[0_0_20px_rgba(var(--secondary),0.5)] group overflow-hidden"
+                  >
+                    <span className="relative z-10">Save {Object.keys(editor.pendingChanges).length}</span>
+                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <div className="absolute inset-0 animate-pulse bg-secondary/50 blur-lg -z-10" />
+                  </button>
+                )}
+            </div>
+          )}
 
           <div className="flex items-center gap-1 ml-1">
             <a
@@ -241,16 +280,37 @@ const Header = () => {
             {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
               <button
                 key={item.href}
-                onClick={() => scrollTo(item.href)}
+                {...getNavProps(() => scrollTo(item.href))}
                 className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-between group ${activeSection === item.href
                     ? "text-secondary bg-secondary/10"
                     : "text-foreground/80 hover:text-foreground hover:bg-muted"
                   }`}
               >
-                {item.label}
+                <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} value={item.label} />
                 {activeSection === item.href && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
               </button>
             ))}
+
+            {editor?.isEditMode && (
+              <div className="mt-4 px-3 flex flex-col gap-2">
+                <div className="h-px bg-border w-full mb-2" />
+                <button 
+                  onClick={editor.onOpenCustomizer}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 rounded-xl text-sm font-bold text-foreground"
+                >
+                  <span>UI Customizer</span>
+                  <Settings size={18} />
+                </button>
+                {Object.keys(editor.pendingChanges).length > 0 && (
+                  <button 
+                    onClick={editor.handleSaveAll}
+                    className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl font-black uppercase tracking-widest shadow-lg shadow-secondary/20 animate-pulse"
+                  >
+                    Save {Object.keys(editor.pendingChanges).length} Changes
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="h-px bg-border my-1 mx-2" />
 
@@ -260,7 +320,7 @@ const Header = () => {
               <ShieldCheck size={14} /> Admin Panel
             </a>
 
-            <button onClick={() => scrollTo("#contact")}
+            <button {...getNavProps(() => scrollTo("#contact"))}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-lg font-bold text-xs shadow-sm mt-1 hover:opacity-90 transition-opacity">
               Get Started
             </button>

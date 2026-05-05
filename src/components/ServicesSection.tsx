@@ -5,8 +5,9 @@ import { useDbQuery } from "@/hooks/useDbQuery";
 import type { Tables } from "@/integrations/supabase/types";
 import { useGlobalView, useCardStyle } from "./ui-customizer-context";
 import { useState, useRef, useEffect } from "react";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
-const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampClass: string; textClass: string }) => {
+const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const ref = useRef<HTMLParagraphElement>(null);
@@ -16,13 +17,10 @@ const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampCl
     if (!el) return;
     const check = () => {
       if (window.innerWidth >= 640) { setOverflows(false); return; }
-      // Must measure after clamp is applied — use a small delay for first paint
       setOverflows(el.scrollHeight > el.clientHeight + 2);
     };
-    // ResizeObserver catches layout changes reliably
     const ro = new ResizeObserver(check);
     ro.observe(el);
-    // Also check after a short delay for initial render
     const t = setTimeout(check, 100);
     window.addEventListener("resize", check);
     return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
@@ -30,7 +28,11 @@ const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampCl
 
   return (
     <div>
-      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>{text}</p>
+      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+        {section && field ? (
+            <EditableText section={section} field={field} value={text} />
+        ) : text}
+      </p>
       {overflows && !expanded && (
         <button
           type="button"
@@ -54,17 +56,12 @@ const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampCl
 type Service = Tables<"services">;
 
 const SERVICE_THEMES: Record<string, { img: string; accent: string }> = {
-  default: { img: "/assets/services/software.png", accent: "from-blue-700/70 to-indigo-900/85" },
-  software: { img: "/assets/services/software.png", accent: "from-violet-700/70 to-purple-900/85" },
-  web: { img: "/assets/services/web.png", accent: "from-cyan-700/70 to-blue-900/85" },
-  mobile: { img: "/assets/services/mobile.png", accent: "from-emerald-700/70 to-teal-900/85" },
-  erp: { img: "/assets/services/erp.png", accent: "from-orange-700/70 to-red-900/85" },
-  hr: { img: "/assets/services/hr.png", accent: "from-pink-700/70 to-rose-900/85" },
-  consulting: { img: "/assets/services/consulting.png", accent: "from-amber-700/70 to-yellow-900/85" },
-  seo: { img: "/assets/services/seo.png", accent: "from-lime-700/70 to-green-900/85" },
-  marketing: { img: "/assets/services/seo.png", accent: "from-fuchsia-700/70 to-purple-900/85" },
-  design: { img: "/assets/services/design.png", accent: "from-sky-700/70 to-blue-900/85" },
-  cloud: { img: "/assets/services/software.png", accent: "from-indigo-700/70 to-blue-900/85" },
+  default: { img: "", accent: "from-blue-700/70 to-indigo-900/85" },
+  software: { img: "", accent: "from-violet-700/70 to-purple-900/85" },
+  mobile: { img: "", accent: "from-emerald-700/70 to-teal-900/85" },
+  cloud: { img: "", accent: "from-sky-700/70 to-blue-900/85" },
+  database: { img: "", accent: "from-amber-700/70 to-orange-900/85" },
+  security: { img: "", accent: "from-rose-700/70 to-red-900/85" },
 };
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -83,7 +80,7 @@ function getTheme(service: Service) {
   for (const key of Object.keys(SERVICE_THEMES)) {
     if (key !== "default" && t.includes(key)) { theme = SERVICE_THEMES[key]; break; }
   }
-  const img = (service.image_url && service.image_url.trim()) ? service.image_url.trim() : theme.img;
+  const img = (service.image_url && service.image_url.trim()) ? service.image_url.trim() : "";
   return { img, accent: theme.accent };
 }
 
@@ -109,11 +106,13 @@ function getIcon(service: Service): React.ElementType {
 const ServicesSection = () => {
   const cardStyle = useCardStyle();
   const view = useGlobalView();
+  const editor = useLiveEditor();
   const content = useSiteContent("services");
+  const getNavProps = useLiveEditorNavigation();
   const scrollTo = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
   const { data: services, isLoading } = useDbQuery<Service[]>("services",
-    { is_visible: true },
+    {}, // Load all for live editor unhiding
     { order: "sort_order" }
   );
 
@@ -137,23 +136,30 @@ const ServicesSection = () => {
   if (!services || services.length === 0) return null;
 
   return (
-    <section id="services" className="section-padding section-alt relative overflow-hidden">
+    <section id="services" className="section-padding section-alt relative overflow-hidden group/services">
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center mb-8">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">What We Do</span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            {content.title?.includes("&") ? (
-              <>{content.title.split("&")[0]}&{" "}<span className="gradient-text">{content.title.split("& ")[1]}</span></>
-            ) : (
-              content.title || <><span className="gradient-text">Solutions</span> We Deliver</>
-            )}
+        <AnimatedSection className="text-center mb-10 relative group">
+          <SectionHeaderToolbar section="services" />
+          <div className="inline-flex items-center gap-2 mb-3">
+            <span className="text-secondary font-bold text-sm uppercase tracking-widest">
+              <EditableText section="services" field="badge" value="What We Do" colorField="badge_color" />
+            </span>
+          </div>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2">
+            <EditableText section="services" field="title" value={content.title || "Solutions"} colorField="title_color" />{" "}
+            <span className="gradient-text">
+                <EditableText section="services" field="highlight" value={content.highlight || "We Deliver"} colorField="highlight_color" />
+            </span>
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">{content.subtitle}</p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
+            <EditableText section="services" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
+          </p>
         </AnimatedSection>
+
 
         {view === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {services.map((service, i) => {
+            {services.filter(s => s.is_visible || editor?.isEditMode).map((service, i) => {
               const theme = getTheme(service);
               const Icon = getIcon(service);
               const useImg = cardStyle === "image";
@@ -161,10 +167,11 @@ const ServicesSection = () => {
               return (
                 <AnimatedSection key={service.id} delay={i * 0.05}>
                   <div
-                    className="glass-card flex flex-col relative rounded-xl overflow-hidden group cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300"
+                    className={`glass-card flex flex-col relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${!service.is_visible ? "opacity-50 grayscale" : ""}`}
                     style={{ minHeight: useImg ? "190px" : "120px" }}
-                    onClick={scrollTo}
+                    {...getNavProps(scrollTo)}
                   >
+                    <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
                     {useImg ? (
                       <>
                         <div className="relative h-[110px] w-full overflow-hidden shrink-0">
@@ -173,7 +180,7 @@ const ServicesSection = () => {
                             alt={service.title}
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             loading="lazy"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/assets/services/software.png"; }}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/assets/uploads/softwaredevelopemnt_1775027454431.jpg"; }}
                           />
                           <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent`} />
                           <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
@@ -184,9 +191,12 @@ const ServicesSection = () => {
                         </div>
                         <div className="relative flex-1 w-full px-3 pt-2.5 pb-4 flex flex-col bg-card dark:bg-card/40 z-10 border-t border-border/50">
                           <h3 className="font-heading font-extrabold text-[0.9375rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
-                            {service.title}
+                            <EditableText section="services" field="title" id={service.id} value={service.title} />
                           </h3>
                           <MobileReadMore
+                            section="services"
+                            field="description"
+                            id={service.id}
                             text={service.description}
                             clampClass="line-clamp-2"
                             textClass="text-[0.75rem] text-muted-foreground leading-snug"
@@ -200,9 +210,12 @@ const ServicesSection = () => {
                           : <Icon size={20} className="text-secondary mb-1.5" />
                         }
                         <h3 className="font-heading font-extrabold text-[0.875rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
-                          {service.title}
+                          <EditableText section="services" field="title" id={service.id} value={service.title} />
                         </h3>
                         <MobileReadMore
+                          section="services"
+                          field="description"
+                          id={service.id}
                           text={service.description}
                           clampClass="line-clamp-2"
                           textClass="text-[0.75rem] text-muted-foreground leading-snug"
@@ -223,10 +236,11 @@ const ServicesSection = () => {
               const htmlIcon = service.icon && isHtmlIcon(service.icon);
               return (
                 <AnimatedSection key={service.id} delay={i * 0.03}>
-                  <div
-                    className="glass-card flex items-center gap-4 p-4 group hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden"
-                    onClick={scrollTo}
-                  >
+                    <div
+                      className="glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden"
+                      {...getNavProps(scrollTo)}
+                    >
+                      <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
                     <div className="absolute inset-0 bg-gradient-to-r from-secondary/[0.03] to-transparent group-hover:from-secondary/[0.07] transition-all pointer-events-none rounded-xl" />
                     <div className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-border/40 flex items-center justify-center">
                       {useImg ? (
@@ -236,7 +250,7 @@ const ServicesSection = () => {
                             alt={service.title}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             loading="lazy"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/assets/services/software.png"; }}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/assets/uploads/softwaredevelopemnt_1775027454431.jpg"; }}
                           />
                           <div className={`absolute inset-0 bg-gradient-to-br ${theme.accent} opacity-70`} />
                         </>
@@ -250,8 +264,12 @@ const ServicesSection = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0 relative z-10">
-                      <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug">{service.title}</h3>
-                      <p className="text-muted-foreground text-[0.8125rem] mt-0.5 line-clamp-1">{service.description}</p>
+                      <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug">
+                        <EditableText section="services" field="title" id={service.id} value={service.title} />
+                      </h3>
+                      <p className="text-muted-foreground text-[0.8125rem] mt-0.5 line-clamp-1">
+                        <EditableText section="services" field="description" id={service.id} value={service.description} />
+                      </p>
                     </div>
                     <ArrowRight size={16} className="text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all shrink-0 relative z-10" />
                   </div>

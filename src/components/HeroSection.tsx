@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
+import { EditableText, EditorToolbar, useLiveEditor } from "./admin/LiveEditorContext";
 
 function useCountUp(end: number, duration: number, start: boolean) {
   const [count, setCount] = useState(0);
@@ -19,41 +20,38 @@ function useCountUp(end: number, duration: number, start: boolean) {
   return count;
 }
 
-const StatItem = ({ count, label, color, suffix, inView }: {
+const StatItem = ({ count, label, color, suffix, isVisible, inView, id }: {
   count: string,
   label: string,
   color: string,
   suffix: string,
-  inView: boolean
+  isVisible: boolean,
+  inView: boolean,
+  id?: string
 }) => {
   const numericVal = parseInt(count);
   const isNumeric = !isNaN(numericVal) && String(numericVal) === count.trim();
   const animated = useCountUp(isNumeric ? numericVal : 0, 2000, inView && isNumeric);
   const isGradient = color === "gradient";
-  const displayVal = isNumeric ? `${animated}${suffix}` : count;
 
   return (
-    <div className="flex flex-col transition-transform hover:scale-105 duration-300">
-      <div
-        className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl"
-        style={{ color: isGradient ? undefined : color }}
-      >
-        <span className={isGradient ? "gradient-text" : ""}>{displayVal}</span>
+    <div className="flex flex-col transition-transform hover:scale-110 duration-300 relative group/item px-2">
+      <EditorToolbar section="hero_stats" id={id} isVisible={isVisible} colorField="count_color" className="-top-8 right-1/2 translate-x-1/2" />
+      <div className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl">
+        <span className={isGradient ? "gradient-text" : ""}>
+          <EditableText section="hero_stats" field="count" id={id} value={count} colorField="count_color" hideColorPicker />
+          {suffix && <EditableText section="hero_stats" field="suffix" id={id} value={suffix} colorField="count_color" hideColorPicker />}
+        </span>
       </div>
       <div className="text-white/50 text-[0.625rem] sm:text-xs tracking-wider uppercase font-bold mt-0.5 whitespace-nowrap">
-        {label}
+        <EditableText section="hero_stats" field="label" id={id} value={label} />
       </div>
     </div>
   );
 };
 
-const HERO_SLIDES = [
-  "/assets/hero/hero_3d_glassy1.png",
-  "/assets/hero/bg.jpg",
-  "/assets/hero/bg-dark.jpg",
-];
-
 const HeroSection = () => {
+  const editor = useLiveEditor();
   const content = useSiteContent("hero");
   const rawImages = (content as any)?.images || (content as any)?.hero_images || "";
   const dbSlides = typeof rawImages === "string"
@@ -66,13 +64,17 @@ const HeroSection = () => {
       imgs = imgs.filter(u => u !== heroImg.trim());
       imgs.unshift(heroImg.trim());
     }
-    return imgs.length > 0 ? imgs : HERO_SLIDES;
+    return imgs;
   })();
   const [isDark, setIsDark] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
-  const scrollTo = (id: string) => document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-
-
+  const scrollTo = (id: string) => {
+    const el = document.querySelector(id);
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 70;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     const check = () => setIsDark(document.documentElement.classList.contains("dark"));
@@ -83,17 +85,16 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
-    if (allSlides.length <= 1) return;
+    if (allSlides.length <= 1 || editor?.isEditMode) return;
     const t = setInterval(() => setBgIndex(i => (i + 1) % allSlides.length), 4000);
     return () => clearInterval(t);
-  }, [allSlides.length]);
+  }, [allSlides.length, editor?.isEditMode]);
 
   const statsRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = statsRef.current;
     if (!el) return;
-    // Fallback: always show stats after 1s even if IntersectionObserver doesn't fire
     const fallback = setTimeout(() => setInView(true), 1000);
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); clearTimeout(fallback); } },
@@ -104,18 +105,16 @@ const HeroSection = () => {
   }, []);
 
   const [heroStats, setHeroStats] = useState<any[]>([]);
-  const { data: heroStatsData } = useDbQuery<any[]>("hero_stats", { is_visible: true }, { order: "sort_order" });
+  const { data: heroStatsData } = useDbQuery<any[]>("hero_stats", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order" });
+
   useEffect(() => {
     if (heroStatsData) setHeroStats(heroStatsData);
   }, [heroStatsData]);
 
   return (
-    <section id="home" className="relative flex items-start overflow-hidden min-h-[100vh] h-[100vh] bg-[#020617]">
-      {/* Background images — CSS-only parallax, no JS animation loop */}
+    <section id="home" className="relative flex flex-col min-h-screen overflow-hidden bg-[#020617] group">
       <div className="absolute inset-0 z-0">
-        {/* Base Solid Overlay to prevent flicker/empty screen */}
         <div className="absolute inset-0 bg-[#020617]" />
-
         {allSlides.map((src, i) => (
           <img
             key={src}
@@ -125,17 +124,13 @@ const HeroSection = () => {
             className="absolute inset-0 w-full h-full object-cover hero-parallax"
             style={{
               opacity: i === bgIndex ? 1 : 0,
-              transition: "opacity 0.8s ease-in-out",
+              transform: i === bgIndex ? "scale(1.15)" : "scale(1)",
+              transition: "opacity 2s ease-in-out, transform 10s linear",
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
-              transform: "translateZ(0)",
-              imageRendering: "auto",
             }}
-            onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.filter = "none"; }}
           />
         ))}
-
-        {/* Cinematic Overlays */}
         <div
           className="absolute inset-0"
           style={{
@@ -147,7 +142,6 @@ const HeroSection = () => {
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.2) 100%)" }} />
       </div>
 
-      {/* Grid pattern */}
       <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(hsl(217 91% 60% / 0.4) 1px, transparent 1px), linear-gradient(90deg, hsl(217 91% 60% / 0.4) 1px, transparent 1px)`,
@@ -155,62 +149,61 @@ const HeroSection = () => {
         }}
       />
 
-      <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 pt-[12dvh] sm:pt-[15dvh] pb-12 flex flex-col h-full">
-        <div className="max-w-4xl flex-1">
+      <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-32 sm:pt-40 pb-20">
+        <div className="flex-1 flex flex-col justify-center max-w-4xl">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-6 hero-fade-in" style={{ animationDelay: "0.1s" }}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-6 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-            <span className="text-white/90 text-sm font-medium">Maldives' Leading IT Solutions Partner</span>
+            <span className="text-white/90 text-sm font-medium">
+              <EditableText section="hero" field="badge" value="Maldives' Leading IT Solutions Partner" />
+            </span>
           </div>
 
-          <h1 className="text-[2.15rem] sm:text-[2.75rem] lg:text-[4rem] font-heading font-bold text-white leading-tight mb-4 drop-shadow-lg hero-fade-in" style={{ animationDelay: "0.2s" }}>
-            {content.title?.includes("Maldives") ? (
-              content.title.split(/(Maldives)/g).map((part, i) => 
-                part === "Maldives" ? <span key={i} className="gradient-text">Maldives</span> : part
-              )
-            ) : (
-              <span>{content.title || "Transforming Business Across Maldives"}</span>
-            )}
+          <h1 className="text-[2.5rem] sm:text-[3.25rem] lg:text-[4.5rem] font-heading font-bold text-white leading-[1.1] mb-6 drop-shadow-2xl hero-fade-in" style={{ animationDelay: "0.2s" }}>
+            <EditableText section="hero" field="title" value={content.title || "Transforming Business Across Maldives"} />
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-6 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s" }}>
-            {content.subtitle || "Enterprise software, ERP, and digital transformation solutions for the hospitality, finance, and government sectors."}
+          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s" }}>
+            <EditableText section="hero" field="subtitle" value={content.subtitle || "Enterprise software, ERP, and digital transformation solutions for the hospitality, finance, and government sectors."} />
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 hero-fade-in" style={{ animationDelay: "0.5s" }}>
+          <div className="flex flex-col sm:flex-row gap-4 hero-fade-in group/item relative" style={{ animationDelay: "0.5s" }}>
+            <EditorToolbar section="hero" linkField="cta_url" className="-top-10 left-0" />
             <button
-              onClick={() => scrollTo("#contact")}
-              className="group inline-flex items-center justify-center gap-2 px-7 py-3 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:opacity-90 transition-opacity glow-effect shadow-lg"
+              onClick={() => scrollTo(content.cta_url || "#contact")}
+              className="group inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-secondary text-secondary-foreground font-semibold text-sm rounded-xl hover:opacity-90 transition-all glow-effect shadow-lg hover:scale-105 active:scale-95"
             >
-              {content.cta_text || "Get Started"}
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              <EditableText section="hero" field="cta_text" value={content.cta_text || "Get Started"} />
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
-            <button
-              onClick={() => scrollTo("#services")}
-              className="inline-flex items-center justify-center px-7 py-3 border border-white/30 text-white font-semibold text-sm rounded-xl hover:bg-white/10 transition-colors backdrop-blur-sm"
-            >
-              Our Services
-            </button>
+
+            <div className="group/item relative">
+              <EditorToolbar section="hero" linkField="services_url" className="-top-10 left-0" />
+              <button
+                onClick={() => scrollTo(content.services_url || "#services")}
+                className="inline-flex items-center justify-center px-8 py-3.5 border border-white/30 text-white font-semibold text-sm rounded-xl hover:bg-white/10 transition-all backdrop-blur-sm w-full sm:w-auto hover:scale-105 active:scale-95"
+              >
+                <EditableText section="hero" field="services_text" value={content.services_text || "Our Services"} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Stats — absolutely pinned to bottom */}
-        <div
-          ref={statsRef}
-          className="absolute left-0 right-0 flex justify-center px-4"
-          style={{ bottom: "2.5rem" }}
-        >
+        {/* Stats */}
+        <div ref={statsRef} className="mt-16 sm:mt-24 lg:mt-32 hero-fade-in" style={{ animationDelay: "0.7s" }}>
           <div className={`${content.stats_layout === "compact"
-              ? "flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 lg:gap-x-16 gap-y-4"
-              : "p-4 sm:p-6 px-6 sm:px-10 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-14 gap-y-4"
+            ? "flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-16 lg:gap-x-24 gap-y-6"
+            : "p-6 sm:p-8 px-8 sm:px-12 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-20 gap-y-6 shadow-2xl"
             }`}>
             {heroStats.map(stat => (
               <StatItem
                 key={stat.id}
+                id={stat.id}
                 count={stat.count}
                 label={stat.label}
                 color={stat.color}
                 suffix={stat.suffix || "+"}
+                isVisible={stat.is_visible}
                 inView={inView}
               />
             ))}
@@ -219,24 +212,32 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-bounce hidden sm:block">
         <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
           <div className="w-1.5 h-1.5 bg-secondary rounded-full" />
         </div>
       </div>
 
-      {/* Slide dots — only shown when multiple images */}
+      {/* Slide dots */}
       {allSlides.length > 1 && (
-        <div className="absolute bottom-8 right-8 flex gap-1.5">
+        <div className="absolute bottom-8 right-8 flex gap-2">
           {allSlides.map((_, i) => (
             <button
               key={i}
               onClick={() => setBgIndex(i)}
-              className={`rounded-full transition-all duration-300 ${i === bgIndex ? "w-5 h-1.5 bg-secondary" : "w-1.5 h-1.5 bg-white/30"}`}
+              className={`rounded-full transition-all duration-300 ${i === bgIndex ? "w-6 h-1.5 bg-secondary" : "w-1.5 h-1.5 bg-white/30 hover:bg-white/50"}`}
             />
           ))}
         </div>
       )}
+
+      <EditorToolbar 
+        section="hero" 
+        multiImageField="hero_images" 
+        group="" 
+        canHide={false}
+        className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10" 
+      />
     </section>
   );
 };

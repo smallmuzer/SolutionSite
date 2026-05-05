@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useState, useEffect, useRef, useCallback, type PointerEvent as ReactPointerEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "@/lib/api";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import SEOManager from "@/components/admin/SEOManager";
 import SecurityPanel from "@/components/admin/SecurityPanel";
 import PageEditor from "@/components/admin/PageEditor";
+import LiveEditor from "@/components/admin/LiveEditor";
 import { useUndoAction } from "@/hooks/useUndoAction";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { applySettings } from "@/hooks/useSiteSettings";
@@ -57,7 +58,7 @@ function useDarkMode() {
       const prefs = stored ? JSON.parse(stored) : {};
       prefs.theme = theme;
       localStorage.setItem("bss-user-settings", JSON.stringify(prefs));
-    } catch { }
+    } catch { /* ignore */ }
     window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
     setIsDark(next);
     // Keep uxDraft in sync so Settings page Visual Theme buttons reflect the change
@@ -790,7 +791,7 @@ const AdminDashboard = () => {
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_name: "Systems Solutions",
-    site_logo: "/assets/logo.png",
+    site_logo: "/assets/uploads/Logo.png",
     whatsapp_number: "9603011355",
     viber_number: "9489477144",
     contact_email: "info@solutions.com.mv",
@@ -803,7 +804,7 @@ const AdminDashboard = () => {
     social_facebook: "https://www.facebook.com/brilliantsystemssolutions/",
     social_instagram: "https://www.instagram.com/brilliantsystemssolutions",
     landline: "+91-452 238 7388", enable_cinematic: false,
-    cinematic_asset: "/assets/hero/cinematic.png",
+    cinematic_asset: "/assets/uploads/modern_hero_glass_1775323942548.webp",
     font_size: "medium", theme: "light", font_style: "'Inter', sans-serif",
     enable_animations: true, gemini_api_key: "", openai_api_key: "",
     system_prompt: "", accent_color: "#3b82f6", global_view: "grid", card_style: "glass",
@@ -814,9 +815,7 @@ const AdminDashboard = () => {
     global_view: "grid", card_style: "icon", theme: "light"
   });
 
-
-
-  const dbFetch = async (table: string, options: { method?: string; body?: any; query?: Record<string, string> } = {}) => {
+  const dbFetch = useCallback(async (table: string, options: { method?: string; body?: any; query?: Record<string, string> } = {}) => {
     try {
       const url = new URL(`/api/db/${table}`, window.location.origin);
       if (options.query) {
@@ -836,7 +835,73 @@ const AdminDashboard = () => {
     } catch (e: any) {
       return { data: null, error: { message: e.message } };
     }
-  };
+  }, []);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const { data: subData } = await dbFetch("contact_submissions", { query: { _order: "created_at", _asc: "false" } });
+    if (subData) setSubmissions(subData);
+    setLoading(false);
+  }, [dbFetch]);
+
+  const loadSettings = useCallback(async () => {
+    const { data } = await dbFetch("site_content", { query: { section_key: "settings", _single: "1" } });
+    if (data?.content) {
+      const c = data.content as any;
+      setSiteSettings((prev) => ({ ...prev, ...c }));
+
+      // 1. Get User Overrides from LocalStorage first
+      let localPrefs: any = {};
+      try {
+        const stored = localStorage.getItem("bss-user-settings");
+        if (stored) localPrefs = JSON.parse(stored);
+      } catch { /* ignore */ }
+
+      // 2. Sync UX draft prioritizing Local Overrides > DB Settings
+      setUxDraft({
+        font_style: localPrefs.font_style || c.font_style || "'Inter', sans-serif",
+        font_size: localPrefs.font_size || c.font_size || "medium",
+        accent_color: localPrefs.accent_color || c.accent_color || "#3b82f6",
+        global_view: localPrefs.global_view || c.global_view || "grid",
+        card_style: localPrefs.card_style || c.card_style || "icon",
+        theme: localPrefs.theme || c.theme || (document.documentElement.classList.contains("dark") ? "dark" : "light"),
+      });
+    }
+  }, [dbFetch]);
+
+  const loadChatHistory = useCallback(async () => {
+    setChatLoading(true);
+    try {
+      const resp = await fetch("/api/chat/history?limit=80");
+      const json = await resp.json();
+      if (!json.error && json.data) setChatHistory(json.data);
+    } catch { /* ignore */ }
+    setChatLoading(false);
+  }, []);
+
+  const loadApplications = useCallback(async () => {
+    setAppsLoading(true);
+    const { data } = await dbFetch("job_applications", { query: { _order: "created_at", _asc: "false" } });
+    if (data) setApplications(data);
+    setAppsLoading(false);
+  }, [dbFetch]);
+
+  const loadAppointments = useCallback(async () => {
+    setApptsLoading(true);
+    try {
+      const { data } = await dbFetch("appointments", { query: { _order: "appointment_date", _asc: "true" } });
+      if (data) setAppointments(data);
+    } catch { /* ignore */ }
+    setApptsLoading(false);
+  }, [dbFetch]);
+
+  const loadIntegrationStatus = useCallback(async () => {
+    try {
+      const resp = await fetch("/api/health/integrations");
+      const json = await resp.json();
+      if (json?.data) setIntegrationStatus(json.data);
+    } catch { /* ignore */ }
+  }, []);
 
   const applyUX = (prefs: any) => {
     applySettings(prefs);
@@ -844,7 +909,7 @@ const AdminDashboard = () => {
 
   const esRef = useRef<EventSource | null>(null);
 
-  const startSSE = () => {
+  const startSSE = useCallback(() => {
     if (esRef.current) return; // already connected
     const es = new EventSource("/api/events");
     esRef.current = es;
@@ -876,7 +941,7 @@ const AdminDashboard = () => {
         return [...prev, data].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
       });
     });
-  };
+  }, []);
 
   useEffect(() => {
     const cleanup = () => {
@@ -919,9 +984,7 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("ss:switchToTab", handler);
   }, []);
 
-  useEffect(() => { checkAuth(); }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const { data: { session } } = await auth.getSession();
     if (!session) { navigate("/admin/login", { replace: true }); return; }
     const rolesRes = await fetch(`/api/db/users?id=${session.user.id}&userrole=admin&_single=1`).then(r => r.json());
@@ -934,39 +997,9 @@ const AdminDashboard = () => {
     loadApplications();
     loadAppointments();
     loadIntegrationStatus();
-  };
+  }, [navigate, startSSE, loadData, loadSettings, loadChatHistory, loadApplications, loadAppointments, loadIntegrationStatus]);
 
-  const loadData = async () => {
-    setLoading(true);
-    const { data: subData } = await dbFetch("contact_submissions", { query: { _order: "created_at", _asc: "false" } });
-    if (subData) setSubmissions(subData);
-    setLoading(false);
-  };
-
-  const loadSettings = async () => {
-    const { data } = await dbFetch("site_content", { query: { section_key: "settings", _single: "1" } });
-    if (data?.content) {
-      const c = data.content as any;
-      setSiteSettings((prev) => ({ ...prev, ...c }));
-
-      // 1. Get User Overrides from LocalStorage first
-      let localPrefs: any = {};
-      try {
-        const stored = localStorage.getItem("bss-user-settings");
-        if (stored) localPrefs = JSON.parse(stored);
-      } catch { }
-
-      // 2. Sync UX draft prioritizing Local Overrides > DB Settings
-      setUxDraft({
-        font_style: localPrefs.font_style || c.font_style || "'Inter', sans-serif",
-        font_size: localPrefs.font_size || c.font_size || "medium",
-        accent_color: localPrefs.accent_color || c.accent_color || "#3b82f6",
-        global_view: localPrefs.global_view || c.global_view || "grid",
-        card_style: localPrefs.card_style || c.card_style || "icon",
-        theme: localPrefs.theme || c.theme || (document.documentElement.classList.contains("dark") ? "dark" : "light"),
-      });
-    }
-  };
+  useEffect(() => { checkAuth(); }, [checkAuth]);
 
   const saveSettings = async () => {
     setSavingSettings(true);
@@ -975,7 +1008,7 @@ const AdminDashboard = () => {
     const finalSettings = { ...siteSettings, ...uxDraft };
     setSiteSettings(finalSettings);
 
-    localStorage.setItem("bss-ux-prefs", JSON.stringify(finalUx));
+    localStorage.setItem("bss-ux-prefs", JSON.stringify(uxDraft));
 
     await dbFetch("site_content", {
       method: "POST",
@@ -1007,40 +1040,6 @@ const AdminDashboard = () => {
       applySettings(uxDraft, true);
     }
   }, [uxDraft, tab]);
-
-  const loadChatHistory = async () => {
-    setChatLoading(true);
-    try {
-      const resp = await fetch("/api/chat/history?limit=80");
-      const json = await resp.json();
-      if (!json.error && json.data) setChatHistory(json.data);
-    } catch { }
-    setChatLoading(false);
-  };
-
-  const loadApplications = async () => {
-    setAppsLoading(true);
-    const { data } = await dbFetch("job_applications", { query: { _order: "created_at", _asc: "false" } });
-    if (data) setApplications(data);
-    setAppsLoading(false);
-  };
-
-  const loadAppointments = async () => {
-    setApptsLoading(true);
-    try {
-      const { data } = await dbFetch("appointments", { query: { _order: "appointment_date", _asc: "true" } });
-      if (data) setAppointments(data);
-    } catch { }
-    setApptsLoading(false);
-  };
-
-  const loadIntegrationStatus = async () => {
-    try {
-      const resp = await fetch("/api/health/integrations");
-      const json = await resp.json();
-      if (json?.data) setIntegrationStatus(json.data);
-    } catch { }
-  };
 
 
 
@@ -1075,7 +1074,7 @@ const AdminDashboard = () => {
       const resp = await fetch(`/api/submissions/${id}/replies`);
       const json = await resp.json();
       if (json.data) setSubReplies(p => ({ ...p, [id]: json.data }));
-    } catch { }
+    } catch { /* ignore */ }
   };
 
   const loadAppReplies = async (id: string) => {
@@ -1083,7 +1082,7 @@ const AdminDashboard = () => {
       const resp = await fetch(`/api/applications/${id}/replies`);
       const json = await resp.json();
       if (json.data) setAppReplies((p: any) => ({ ...(p || {}), [id]: json.data }));
-    } catch { }
+    } catch { /* ignore */ }
   };
 
   const toggleCardCollapse = (id: string, type: "sub" | "app") => {
@@ -1248,7 +1247,7 @@ const AdminDashboard = () => {
       <aside className={`fixed inset-y-0 left-0 z-50 bg-card border-r border-border flex flex-col shrink-0 transition-all duration-300 lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "lg:w-16" : "lg:w-64"} w-64`}>
         <div className={`border-b border-border flex items-center ${collapsed ? "lg:justify-center lg:p-3 p-5" : "justify-between p-5"}`}>
-          {!collapsed && <h2 className="font-heading font-bold text-foreground text-lg">Admin Panel</h2>}
+          {!collapsed && <h2 className="font-heading font-black text-foreground text-lg tracking-tight">Admin Panel</h2>}
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 rounded-lg text-muted-foreground hover:bg-muted"><X size={20} /></button>
           <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:flex p-1.5 rounded-lg text-muted-foreground hover:bg-muted">
             {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
@@ -1300,7 +1299,7 @@ const AdminDashboard = () => {
               {tab === "dashboard" && (
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <h1 className="font-heading font-bold text-2xl text-foreground">Dashboard</h1>
+                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Dashboard</h1>
                     <button onClick={loadData} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted">
                       <RefreshCw size={14} /> Refresh
                     </button>
@@ -1353,7 +1352,7 @@ const AdminDashboard = () => {
               {tab === "inbox" && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h1 className="font-heading font-bold text-2xl text-foreground">Inbox</h1>
+                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Inbox</h1>
                     <button onClick={() => { loadData(); loadApplications(); }} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted">
                       <RefreshCw size={13} /> Refresh
                     </button>
@@ -1639,10 +1638,10 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {tab === "website" && <PageEditor key="page-editor" />}
+              {tab === "website" && <LiveEditor key="live-editor" />}
               {tab === "sitehealth" && (
                 <div>
-                  <h1 className="font-heading font-bold text-2xl text-foreground mb-4">Site Health</h1>
+                  <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-4">Site Health</h1>
                   <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
                     <div className="flex gap-1 bg-muted/40 rounded-xl p-1 shrink-0">
                       <button onClick={() => setSiteHealthSubTab("seo")}
@@ -1664,7 +1663,7 @@ const AdminDashboard = () => {
                 <div className="w-full">
                   <div className="w-full space-y-6">
                     <div className="space-y-2">
-                      <h1 className="font-heading font-bold text-2xl text-foreground mb-1">Site Settings</h1>
+                      <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-1">Site Settings</h1>
                       <p className="text-muted-foreground text-sm">These settings affect the live website for all visitors in real-time.</p>
                     </div>
                     <div className="glass-card w-full p-6 lg:p-8">
@@ -1898,7 +1897,7 @@ const AdminDashboard = () => {
                                     const prefs = stored ? JSON.parse(stored) : {};
                                     prefs.theme = theme;
                                     localStorage.setItem("bss-user-settings", JSON.stringify(prefs));
-                                  } catch { }
+                                  } catch { /* ignore */ }
                                   window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
                                 }}
                                   className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${uxDraft.theme === t ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
@@ -2015,7 +2014,7 @@ const AdminDashboard = () => {
                 <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
                   <div className="flex flex-wrap items-center justify-between mb-4 gap-4">
                     <div>
-                      <h1 className="font-heading font-bold text-2xl text-foreground">Live Chat Sessions</h1>
+                      <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Live Chat Sessions</h1>
                       <p className="text-xs text-muted-foreground mt-0.5">Real-time status of all digital conversations</p>
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -2244,7 +2243,7 @@ const AdminDashboard = () => {
               {tab === "appointments" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h1 className="font-heading font-bold text-2xl text-foreground">Appointments Calendar</h1>
+                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Appointments Calendar</h1>
                     <button onClick={loadAppointments} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted">
                       <RefreshCw size={14} /> Refresh
                     </button>

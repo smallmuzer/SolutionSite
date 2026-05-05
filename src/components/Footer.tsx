@@ -3,6 +3,7 @@ import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall 
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
 import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
+import { EditableText, EditorToolbar } from "./admin/LiveEditorContext";
 
 const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampClass: string; textClass: string }) => {
   const [expanded, setExpanded] = useState(false);
@@ -66,13 +67,18 @@ const Footer = () => {
   return (
     <footer>
       {/* Associated Companies */}
-      <div className="border-b border-border/50">
+      <div className="border-b border-border/50 relative">
+        <EditorToolbar section="network" canAdd />
         <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center mb-10">
-            <span className="text-secondary font-semibold text-sm uppercase tracking-widest">Our Network</span>
-            <h3 className="font-heading font-bold text-2xl mt-2 text-foreground">Associated Companies</h3>
+            <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+              <EditableText section="footer" field="network_badge" value="Our Network" />
+            </span>
+            <h3 className="font-heading font-bold text-2xl mt-2 text-foreground">
+              <EditableText section="footer" field="network_title" value="Associated Companies" />
+            </h3>
             <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground">
-              Part of a growing family of technology companies across South Asia.
+              <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." />
             </p>
           </div>
 
@@ -83,11 +89,12 @@ const Footer = () => {
                   href={co.href}
                   target={co.href !== "#" ? "_blank" : undefined}
                   rel="noopener noreferrer"
-                  className="group relative rounded-xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40"
+                  className="group relative rounded-xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40 group/item"
                   style={{ background: "hsl(var(--card)/0.85)" }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = co.accent + "66")}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = "")}
                 >
+                  <EditorToolbar section="network_companies" id={co.id} imageField="logo_url" />
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
                     style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
                   <div className="flex items-center gap-3 relative z-10">
@@ -105,11 +112,13 @@ const Footer = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground line-clamp-1">{co.name}</h4>
+                        <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground line-clamp-1">
+                          <EditableText section="network_companies" field="name" id={co.id} value={co.name} />
+                        </h4>
                         {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground" />}
                       </div>
                       <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
-                        {co.subtitle}
+                        <EditableText section="network_companies" field="subtitle" id={co.id} value={co.subtitle} />
                       </span>
                       <MobileReadMore
                         text={co.desc}
@@ -118,7 +127,7 @@ const Footer = () => {
                       />
                     </div>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-b-2xl"
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity rounded-b-2xl"
                     style={{ background: `linear-gradient(90deg, transparent, ${co.accent}80, transparent)` }} />
                 </a>
 
@@ -149,15 +158,15 @@ const Footer = () => {
 
         {/* Footer section background image */}
         <div className="absolute inset-0 z-0 pointer-events-none opacity-10">
-          <img src="/assets/hero/bg-dark.jpg" alt="" className="w-full h-full object-cover" />
+          <img src="" alt="" className="w-full h-full object-cover" />
         </div>
 
         {/* Static dark overlay */}
         <div className="absolute inset-0 z-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.10) 0%, transparent 70%)" }}
         />
-
         <div className="relative z-10 container-wide px-4 sm:px-6 lg:px-8 py-6">
+          <EditorToolbar section="footer" />
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
 
             {/* Brand */}
@@ -175,16 +184,16 @@ const Footer = () => {
                 )}
                 <div className="flex flex-col leading-none">
                   <span className="font-heading font-bold text-[0.9375rem] leading-tight" style={{ color: "#f1f5f9" }}>
-                    {siteName.split(" ")[0] || "Systems"}
+                    <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0] || "Systems"} />
                   </span>
                   <span className="font-heading font-bold text-[0.9375rem] leading-tight"
                     style={{ background: "linear-gradient(90deg,#60a5fa,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                    {siteName.split(" ").slice(1).join(" ") || "Solutions"}
+                    <EditableText section="settings" field="site_name_part2" value={siteName.split(" ").slice(1).join(" ") || "Solutions"} />
                   </span>
                 </div>
               </div>
               <p className="text-sm leading-relaxed mb-5" style={{ color: "#64748b" }}>
-                {content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."}
+                <EditableText section="footer" field="tagline" value={content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."} />
               </p>
               <div className="flex gap-2.5">
                 {socials.map((s, i) => {
@@ -206,7 +215,9 @@ const Footer = () => {
 
             {/* Services */}
             <div>
-              <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>Services</h4>
+              <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
+                <EditableText section="footer" field="label_services" value="Services" />
+              </h4>
               <ul className="space-y-2.5">
                 {serviceLinks.map(s => (
                   <li key={s}>
@@ -221,7 +232,9 @@ const Footer = () => {
 
             {/* Company */}
             <div>
-              <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>Company</h4>
+              <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
+                <EditableText section="footer" field="label_company" value="Company" />
+              </h4>
               <ul className="space-y-2.5">
                 {[
                   { label: "Who We Are",   href: "#about"        },
@@ -262,7 +275,7 @@ const Footer = () => {
           <div className="mt-10 pt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs"
             style={{ borderTop: "1px solid rgba(255,255,255,0.07)", color: "#475569" }}>
             <span>
-              {content.copyright || `© ${new Date().getFullYear()} Systems Solutions Pvt Ltd. All rights reserved.`}
+              <EditableText section="footer" field="copyright" value={content.copyright || `© ${new Date().getFullYear()} Systems Solutions Pvt Ltd. All rights reserved.`} />
             </span>
             <span style={{ color: "rgba(255,255,255,0.15)" }} className="hidden sm:inline">•</span>
             <div className="flex items-center gap-1.5">

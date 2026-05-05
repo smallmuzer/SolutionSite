@@ -151,7 +151,7 @@ export const auth = {
       const res = await fetch("/api/auth/session", { headers: { Authorization: `Bearer ${s.access_token}` } });
       const json = await res.json();
       if (json.data?.session) return { data: { session: s }, error: null };
-    } catch { }
+    } catch { /* ignore */ }
     setSession(null);
     return { data: { session: null }, error: null };
   },

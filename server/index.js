@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { mkdirSync, existsSync, appendFileSync, readdirSync } from "fs";
+import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync } from "fs";
 import { db, uuid, DB_PATH } from "./db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -159,26 +159,13 @@ const PUBLIC_ASSETS = join(__dirname, "../public/assets");
 const UPLOADS_DIR = join(PUBLIC_ASSETS, "uploads");
 if (!existsSync(UPLOADS_DIR)) mkdirSync(UPLOADS_DIR, { recursive: true });
 
-const ALLOWED_FOLDERS = ["products", "services", "testimonials", "about", "careers", "hero", "uploads", "clients", "Technology"];
-const FOLDER_ALIASES = {
-  "hero-gallery": "hero",
-  technologies: "Technology",
-  technology: "Technology",
-};
+const ALLOWED_FOLDERS = ["uploads"];
 const ALLOWED_IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]);
-
-function normaliseAssetFolder(folder) {
-  const safeFolder = String(folder || "").replace(/[^a-zA-Z0-9_-]/g, "");
-  const mapped = FOLDER_ALIASES[safeFolder] || safeFolder;
-  return ALLOWED_FOLDERS.includes(mapped) ? mapped : "uploads";
-}
 
 function resolveAssetTarget(requestedPath = "") {
   const rawPath = String(requestedPath || "").replace(/\\/g, "/").trim();
-  const [rawFolder = "uploads", ...rest] = rawPath.split("/").filter(Boolean);
-  const folder = normaliseAssetFolder(rawFolder);
-  const fallbackName = "upload.jpg";
-  const requestedName = basename(rest.length ? rest.join("/") : fallbackName);
+  const parts = rawPath.split("/").filter(Boolean);
+  const requestedName = basename(parts.length ? parts.join("/") : "upload.jpg");
   const rawExt = extname(requestedName).toLowerCase();
   const extension = ALLOWED_IMAGE_EXTS.has(rawExt) ? rawExt : ".jpg";
   const safeBase = basename(requestedName, rawExt || extname(requestedName))
@@ -186,8 +173,8 @@ function resolveAssetTarget(requestedPath = "") {
     .replace(/^_+|_+$/g, "")
     .slice(0, 80) || "file";
   const filename = `${safeBase}${extension}`;
-  const dir = join(PUBLIC_ASSETS, folder);
-  return { folder, dir, filename };
+  const dir = UPLOADS_DIR;
+  return { folder: "uploads", dir, filename };
 }
 
 const storage = multer.diskStorage({
@@ -218,17 +205,17 @@ const upload = multer({
 
 app.get("/api/assets", (req, res) => {
   try {
-    const folder = normaliseAssetFolder(req.query.folder || "uploads");
+    const folder = "uploads";
     const dir = join(PUBLIC_ASSETS, folder);
     if (!existsSync(dir)) {
-      return res.json({ data: { folder, files: [] }, error: null });
+      mkdirSync(dir, { recursive: true });
     }
 
     const files = readdirSync(dir, { withFileTypes: true })
       .filter((entry) => entry.isFile())
       .map((entry) => ({
         name: entry.name,
-        publicUrl: `/assets/${folder}/${entry.name}`.replace(/\/+/g, "/"),
+        publicUrl: `/assets/uploads/${entry.name}`.replace(/\/+/g, "/"),
       }))
       .filter((entry) => ALLOWED_IMAGE_EXTS.has(extname(entry.name).toLowerCase()))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -236,6 +223,26 @@ app.get("/api/assets", (req, res) => {
     res.json({ data: { folder, files }, error: null });
   } catch (e) {
     res.status(500).json({ data: null, error: { message: e.message } });
+  }
+});
+
+app.delete("/api/assets", (req, res) => {
+  try {
+    const { filename } = req.query;
+    if (!filename) return res.status(400).json({ error: "filename required" });
+    
+    // Safety check: only allow deleting from uploads folder
+    const safeName = basename(String(filename));
+    const filePath = join(UPLOADS_DIR, safeName);
+    
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
+      res.json({ data: { success: true }, error: null });
+    } else {
+      res.status(404).json({ error: "File not found" });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
@@ -1154,13 +1161,13 @@ app.get("/api/submissions/:id/replies", (req, res) => {
   res.json({ data: replies, error: null });
 });
 app.get('/api/services', (req, res) => {
-  db.all("SELECT * FROM services", (err, rows) => {
-    if (err) {
-      console.error("DB ERROR:", err);
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    const rows = db.prepare("SELECT * FROM services").all();
     res.json(rows);
-  });
+  } catch (err) {
+    console.error("DB ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 // Contact submission replies
 app.post("/api/submissions/:id/reply", async (req, res) => {

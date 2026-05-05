@@ -71,7 +71,7 @@ const UICustomizer = () => {
     setDraft(merged);
     // Apply merged so website reflects cookie > DB immediately
     applySettings(settings);
-  }, [JSON.stringify(settings)]);
+  }, [settings]);
 
   useEffect(() => {
     const handleOpen = () => {
