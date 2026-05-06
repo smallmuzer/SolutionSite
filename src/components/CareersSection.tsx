@@ -109,12 +109,12 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
               )}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 mt-auto">
-              <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><MapPin size={10} className="text-secondary" /> {job.location}</span>
-              <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> {job.job_type}</span>
+              <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><MapPin size={10} className="text-secondary" /> <EditableText section="career_jobs" field="location" id={job.id} value={job.location} /></span>
+              <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> <EditableText section="career_jobs" field="job_type" id={job.id} value={job.job_type} /></span>
             </div>
             <button onClick={(e) => { e.stopPropagation(); onApply(); }}
               className="px-4 py-2 bg-secondary text-white rounded-lg font-extrabold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 shrink-0">
-              Apply Now
+              <EditableText section="careers" field="apply_now_text" value={useSiteContent("careers").apply_now_text || "Apply Now"} />
             </button>
           </div>
         </>
@@ -129,8 +129,8 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
             <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
           </h3>
           <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
-            <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><MapPin size={10} className="text-secondary" /> {job.location}</span>
-            <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> {job.job_type}</span>
+            <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><MapPin size={10} className="text-secondary" /> <EditableText section="career_jobs" field="location" id={job.id} value={job.location} /></span>
+            <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> <EditableText section="career_jobs" field="job_type" id={job.id} value={job.job_type} /></span>
           </div>
           <div className="relative mb-3 flex-1 overflow-visible">
             <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}>
@@ -144,7 +144,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
           </div>
           <button onClick={(e) => { e.stopPropagation(); onApply(); }}
             className="px-4 py-2 bg-secondary text-white rounded-lg font-extrabold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 mt-auto">
-            Apply Now
+            <EditableText section="careers" field="apply_now_text" value={useSiteContent("careers").apply_now_text || "Apply Now"} />
           </button>
         </div>
       )}
@@ -201,13 +201,13 @@ const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragSt
             <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
           </p>
           <div className="flex gap-5 mt-3">
-            <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><MapPin size={13} className="text-secondary" /> {job.location}</span>
-            <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><Clock size={13} className="text-secondary" /> {job.job_type}</span>
+            <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><MapPin size={13} className="text-secondary" /> <EditableText section="career_jobs" field="location" id={job.id} value={job.location} /></span>
+            <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><Clock size={13} className="text-secondary" /> <EditableText section="career_jobs" field="job_type" id={job.id} value={job.job_type} /></span>
           </div>
         </div>
         <button onClick={() => onApply()}
           className="flex items-center gap-2 px-6 py-2.5 bg-secondary text-white rounded-xl font-bold text-[0.875rem] hover:opacity-90 transition-opacity shrink-0 shadow-md">
-          <Briefcase size={15} /> Apply Now
+          <Briefcase size={15} /> <EditableText section="careers" field="apply_now_text" value={useSiteContent("careers").apply_now_text || "Apply Now"} />
         </button>
       </div>
     </div>

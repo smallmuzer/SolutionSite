@@ -1,9 +1,30 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall, Plus } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall, Plus, EyeOff } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { toast } from "sonner";
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
 import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
-import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+
+const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?: number; className?: string }) => {
+  if (!name) return <LucideIcons.Globe size={size} className={className} />;
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase().startsWith("<svg")) {
+    return (
+      <div 
+        className={`flex items-center justify-center ${className || ""}`}
+        style={{ width: size, height: size }}
+        dangerouslySetInnerHTML={{ __html: trimmed }}
+      />
+    );
+  }
+  if (trimmed.toLowerCase() === "viber") {
+    return <ViberIcon size={size} className={className} />;
+  }
+  const Icon = (LucideIcons as any)[trimmed] || LucideIcons.HelpCircle;
+  return <Icon size={size} className={className} />;
+};
 
 const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
   const [expanded, setExpanded] = useState(false);
@@ -50,125 +71,212 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { t
 };
 
 const Footer = () => {
+  const editor = useLiveEditor();
+  const getNavProps = useLiveEditorNavigation();
   const content = useSiteContent("footer");
   const contact = useSiteContent("contact");
-  const associated = useNetworkCompanies();
+  const associatedContent = useSiteContent("our_network");
+
+  const isNetworkVisibleDraft = editor?.pendingChanges["our_network:is_visible"] ?? associatedContent.is_visible;
+  const isNetworkVisible = isNetworkVisibleDraft !== false;
+
+  const rawCompanies = associatedContent.companies || [
+    { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", logo_url: "/assets/clients/oblu.png", accent: "#3b82f6", is_visible: true },
+    { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", logo_url: "/assets/clients/villa.png", accent: "#10b981", is_visible: true },
+  ];
+
+  const associated = editor?.isEditMode 
+    ? rawCompanies 
+    : rawCompanies.filter((c: any) => {
+        const isCoVisibleDraft = editor?.pendingChanges[`our_network:${c.id}:is_visible`] ?? c.is_visible;
+        return isCoVisibleDraft !== false;
+      });
+
   const settings = useSiteSettings();
   // Load logo + site name from settings (already in useSiteSettings)
   const logoPath = settings.site_logo || "";
   const siteName = settings.site_name || "Systems Solutions";
 
   const { data: servicesData } = useDbQuery<{ id: string; title: string; href?: string }[]>("services", { is_visible: true }, { order: "sort_order" });
-  const editor = useLiveEditor();
-  const getNavProps = useLiveEditorNavigation();
   
-  const hiddenLinks = (content.hidden_links || "").split(",").filter(Boolean);
+  const hiddenLinksDraft = editor?.pendingChanges["footer:hidden_links"] ?? content.hidden_links;
+  const hiddenLinks = (hiddenLinksDraft || "").split(",").filter(Boolean);
   const toggleLinkVisibility = (id: string) => {
     const next = hiddenLinks.includes(id) 
       ? hiddenLinks.filter(l => l !== id) 
       : [...hiddenLinks, id];
     editor?.onUpdate("footer", "hidden_links", next.join(","));
   };
-  const socials = [
-    { Icon: Facebook,   href: settings.social_facebook  || contact.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
-    { Icon: Twitter,    href: settings.social_twitter   || contact.twitter   || "https://x.com/bsspl_india" },
-    { Icon: Linkedin,   href: settings.social_linkedin  || contact.linkedin  || "https://in.linkedin.com/company/brilliantsystemssolutions" },
-    { Icon: Instagram,  href: settings.social_instagram || contact.instagram || "https://www.instagram.com/brilliantsystemssolutions" },
-    { Icon: ViberIcon,  onClick: () => openViber(), color: VIBER_COLOR },
-  ];
+  const footerBgImage = editor?.pendingChanges["footer:bg_image_url"] ?? content.bg_image_url ?? "";
+  // Support dynamic social links list
+  const socialCount = parseInt(settings.social_count || "4", 10);
+  const socialList = [];
+  for (let i = 1; i <= socialCount; i++) {
+    const iconKey = `social_icon_${i}`;
+    const hrefKey = `social_href_${i}`;
+    const visibleKey = `social_visible_${i}`;
+    
+    const icon = editor?.pendingChanges[`settings:${iconKey}`] ?? settings[iconKey] ?? (
+      i === 1 ? "Facebook" :
+      i === 2 ? "Twitter" :
+      i === 3 ? "Linkedin" :
+      i === 4 ? "Instagram" : "Globe"
+    );
+    
+    const href = editor?.pendingChanges[`settings:${hrefKey}`] ?? settings[hrefKey] ?? (
+      i === 1 ? (settings.social_facebook || contact.facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+      i === 2 ? (settings.social_twitter || contact.twitter || "https://x.com/bsspl_india") :
+      i === 3 ? (settings.social_linkedin || contact.linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+      i === 4 ? (settings.social_instagram || contact.instagram || "https://www.instagram.com/brilliantsystemssolutions") : "#"
+    );
+    
+    const isVisible = (editor?.pendingChanges[`settings:${visibleKey}`] ?? settings[visibleKey]) !== false;
+    
+    socialList.push({ index: i, icon, href, isVisible });
+  }
 
   return (
     <footer>
       {/* Associated Companies */}
-      <div className="border-b border-border/50 relative">
-        <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center mb-10">
-            <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
-              <EditableText section="footer" field="network_badge" value="Our Network" />
-            </span>
-            <h3 className="font-heading font-bold text-2xl mt-2 text-foreground">
-              <EditableText section="footer" field="network_title" value="Associated Companies" />
-            </h3>
-            <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground">
-              <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." />
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch gap-0 w-full max-w-4xl mx-auto">
-            {associated.map((co, idx) => (
-              <React.Fragment key={co.id || co.name}>
-                <a
-                  href={co.href}
-                  target={co.href !== "#" ? "_blank" : undefined}
-                  rel="noopener noreferrer"
-                  className="group relative rounded-xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40"
-                >
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
-                    style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 bg-muted/50 overflow-hidden">
-                      {(co as any).logo_url ? (
-                        <img
-                          src={(co as any).logo_url}
-                          alt={co.name}
-                          className="w-full h-full object-contain"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                        />
-                      ) : (
-                        <span className="text-2xl">{co.flag || "🏢"}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground line-clamp-1">
-                          <EditableText section="network_companies" field="name" id={co.id} value={co.name} />
-                        </h4>
-                        {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground" />}
-                      </div>
-                      <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
-                        <EditableText section="network_companies" field="subtitle" id={co.id} value={co.subtitle} />
-                      </span>
-                      <MobileReadMore
-                        section="network_companies" field="desc" id={co.id}
-                        text={co.desc}
-                        clampClass="line-clamp-2"
-                        textClass="text-[0.8125rem] mt-1 leading-snug text-muted-foreground"
-                      />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity rounded-b-2xl"
-                    style={{ background: `linear-gradient(90deg, transparent, ${co.accent}80, transparent)` }} />
-                </a>
-
-                {/* Handshake connector — use Unicode directly, not encoded */}
-                {idx === 0 && associated.length > 1 && (
-                  <div className="flex items-center justify-center shrink-0 z-10" style={{ width: 48, margin: "0 -1px" }}>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-px h-6 bg-border/50 sm:hidden" />
-                      <div className="hidden sm:flex items-center gap-0">
-                        <div className="w-3 h-px bg-border/60" />
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted border border-border/50" title="Partnership">
-                          <span style={{ fontSize: 16 }}>🤝</span>
-                        </div>
-                        <div className="w-3 h-px bg-border/60" />
-                      </div>
-                      <span className="hidden sm:block text-[0.5rem] font-bold uppercase tracking-widest text-muted-foreground">Partners</span>
-                    </div>
-                  </div>
+      {(isNetworkVisible || editor?.isEditMode) && (
+        <div className={`border-b border-border/50 relative group/sect ${!isNetworkVisible ? 'opacity-50 border-dashed border-2' : ''}`}>
+          <SectionHeaderToolbar section="our_network" targetSection="our_network" isVisible={isNetworkVisible} className="top-4 left-4" />
+          <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
+            <div className="text-center mb-10">
+              <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+                <EditableText section="footer" field="network_badge" value="Our Network" />
+              </span>
+              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground flex items-center justify-center gap-2">
+                <EditableText section="footer" field="network_title" value="Associated Companies" />
+                {!isNetworkVisible && editor?.isEditMode && (
+                  <span className="text-amber-500" title="Section Hidden"><EyeOff size={18} /></span>
                 )}
-              </React.Fragment>
-            ))}
+              </h3>
+              <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground">
+                <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." />
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch gap-0 w-full max-w-4xl mx-auto">
+              {associated.map((co, idx) => {
+                const isCoVisibleDraft = editor?.pendingChanges[`our_network:${co.id}:is_visible`] ?? co.is_visible;
+                const isVisible = isCoVisibleDraft !== false;
+
+                return (
+                  <React.Fragment key={co.id || co.name}>
+                    <a
+                      href={co.href}
+                      target={co.href !== "#" ? "_blank" : undefined}
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        if (editor?.isEditMode) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onDoubleClick={() => {
+                        if (editor?.isEditMode && co.href && co.href !== "#") {
+                          window.open(co.href, "_blank");
+                        }
+                      }}
+                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
+                    >
+                      <EditorToolbar
+                        section="our_network"
+                        id={co.id}
+                        isVisible={isVisible}
+                        imageField="logo_url"
+                        linkField="href"
+                        className="-top-4 right-2 scale-75"
+                        group="item"
+                        canClone={false}
+                      />
+                      {!isVisible && editor?.isEditMode && (
+                        <div className="absolute top-2 left-2 bg-amber-500/90 text-white rounded-full p-1 shadow-md flex items-center gap-1.5 z-20 text-[8px] font-bold px-2 pointer-events-none uppercase tracking-widest border border-amber-400/20">
+                          <EyeOff size={10} />
+                          <span>Hidden</span>
+                        </div>
+                      )}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
+                      style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
+                    <div className="flex items-center gap-3 relative z-10">
+                      <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 bg-muted/50 overflow-hidden">
+                        {(co as any).logo_url ? (
+                          <img
+                            src={(co as any).logo_url}
+                            alt={co.name}
+                            className="w-full h-full object-contain"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                          />
+                        ) : (
+                          <span className="text-2xl">{co.flag || "🏢"}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground line-clamp-1">
+                            <EditableText section="our_network" field="name" id={co.id} value={co.name} />
+                          </h4>
+                          {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground" />}
+                        </div>
+                        <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
+                          <EditableText section="our_network" field="subtitle" id={co.id} value={co.subtitle} />
+                        </span>
+                        <MobileReadMore
+                          section="our_network" field="desc" id={co.id}
+                          text={co.desc}
+                          clampClass="line-clamp-2"
+                          textClass="text-[0.8125rem] mt-1 leading-snug text-muted-foreground"
+                        />
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity rounded-b-2xl"
+                      style={{ background: `linear-gradient(90deg, transparent, ${co.accent}80, transparent)` }} />
+                  </a>
+
+                  {/* Handshake connector — use Unicode directly, not encoded */}
+                  {idx < associated.length - 1 && (
+                    <div className="flex items-center justify-center shrink-0 z-10" style={{ width: 48, margin: "0 -1px" }}>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-px h-6 bg-border/50 sm:hidden" />
+                        <div className="hidden sm:flex items-center gap-0">
+                          <div className="w-3 h-px bg-border/60" />
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted border border-border/50" title="Partnership">
+                            <span style={{ fontSize: 16 }}>🤝</span>
+                          </div>
+                          <div className="w-3 h-px bg-border/60" />
+                        </div>
+                        <span className="hidden sm:block text-[0.5rem] font-bold uppercase tracking-widest text-muted-foreground">Partners</span>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main footer with AI 3D light-traveling background & reduced weight */}
-      <div className="relative overflow-hidden" style={{ color: "#e2e8f0", backgroundColor: "#02040a" }}>
+      <div className="relative overflow-hidden group/footer" style={{ color: "#e2e8f0", backgroundColor: "#02040a" }}>
+        {editor?.isEditMode && (
+          <EditorToolbar
+            section="footer"
+            imageField="bg_image_url"
+            className="top-4 right-4 z-50"
+            canHide={false}
+            canDelete={false}
+            canClone={false}
+            group=""
+          />
+        )}
 
         {/* Footer section background image */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-10">
-          <img src="" alt="" className="w-full h-full object-cover" />
-        </div>
+        {footerBgImage && (
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-15">
+            <img src={footerBgImage} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
 
         {/* Static dark overlay */}
         <div className="absolute inset-0 z-0 pointer-events-none"
@@ -203,19 +311,32 @@ const Footer = () => {
               <div className="text-sm leading-relaxed mb-5 relative" style={{ color: "#64748b" }}>
                 <EditableText section="footer" field="tagline" value={content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."} />
               </div>
-              <div className="flex gap-2.5 relative">
-                {socials.map((s, i) => {
-                  const Icon = s.Icon as any;
+              <div className="flex flex-wrap items-center gap-2.5 relative">
+                {socialList.map((s) => {
+                  if (!editor?.isEditMode && !s.isVisible) return null;
+                  
                   return (
-                    <a key={i} href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
-                      onClick={(e) => { if (s.onClick) { e.preventDefault(); s.onClick(); } }}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                      style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = s.color || "#3b82f6"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "#94a3b8"; }}
-                    >
-                      <Icon size={15} />
-                    </a>
+                    <div key={s.index} className={`relative group/soc ${!s.isVisible ? 'opacity-40' : ''}`}>
+                      <div className="flex items-center gap-1">
+                        {!s.isVisible && editor?.isEditMode && (
+                          <span className="text-amber-500 shrink-0 absolute -top-1 -left-1 bg-black/80 rounded-full p-0.5" title="Hidden (Managed in Settings page)"><EyeOff size={10} /></span>
+                        )}
+                        <a href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
+                          className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                          style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8" }}
+                          onMouseEnter={e => { 
+                            (e.currentTarget as HTMLElement).style.background = "#2563eb"; 
+                            (e.currentTarget as HTMLElement).style.color = "#fff"; 
+                          }}
+                          onMouseLeave={e => { 
+                            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; 
+                            (e.currentTarget as HTMLElement).style.color = "#94a3b8"; 
+                          }}
+                        >
+                          <DynamicSocialIcon name={s.icon} size={15} />
+                        </a>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -245,10 +366,15 @@ const Footer = () => {
                           onToggle={() => toggleLinkVisibility(s.id)}
                         />
                       )}
-                      <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
-                        onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
-                        onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
-                      >{s.title}</a>
+                      <div className="flex items-center gap-1.5">
+                        {!isLinkVisible && editor?.isEditMode && (
+                          <span className="text-amber-500 shrink-0" title="Link Hidden"><EyeOff size={11} /></span>
+                        )}
+                        <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
+                          onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
+                          onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
+                        >{s.title}</a>
+                      </div>
                     </li>
                   );
                 })}
@@ -287,10 +413,15 @@ const Footer = () => {
                           onToggle={() => toggleLinkVisibility(s.label)}
                         />
                       )}
-                      <a href={s.href} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
-                        onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
-                        onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
-                      >{s.label}</a>
+                      <div className="flex items-center gap-1.5">
+                        {!isLinkVisible && editor?.isEditMode && (
+                          <span className="text-amber-500 shrink-0" title="Link Hidden"><EyeOff size={11} /></span>
+                        )}
+                        <a href={s.href} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
+                          onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
+                          onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
+                        >{s.label}</a>
+                      </div>
                     </li>
                   );
                 })}

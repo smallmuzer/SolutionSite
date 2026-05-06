@@ -69,18 +69,70 @@ const LiveEditor = () => {
     try {
         // Group changes by section and id to minimize requests
         const grouped: Record<string, any> = {};
+        const networkChanges: Record<string, Record<string, any>> = {}; // id -> { field: value }
+        let networkVisibilityChange: boolean | undefined = undefined;
+
         for (const [key, value] of entries) {
             const parts = key.split(':');
-            if (parts.length === 3) { // section:id:field
-                const [s, id, f] = parts;
-                const gKey = `${s}:${id}`;
-                if (!grouped[gKey]) grouped[gKey] = { section: s, id, data: {} };
-                grouped[gKey].data[f] = value;
-            } else { // section:field
-                const [s, f] = parts;
-                if (!grouped[s]) grouped[s] = { section: s, data: {} };
-                grouped[s].data[f] = value;
+            if (parts[0] === "our_network") {
+                if (parts.length === 3) {
+                    const [_, id, f] = parts;
+                    if (!networkChanges[id]) networkChanges[id] = {};
+                    networkChanges[id][f] = value;
+                } else if (parts.length === 2 && parts[1] === "is_visible") {
+                    networkVisibilityChange = value;
+                }
+            } else {
+                if (parts.length === 3) { // section:id:field
+                    const [s, id, f] = parts;
+                    const gKey = `${s}:${id}`;
+                    if (!grouped[gKey]) grouped[gKey] = { section: s, id, data: {} };
+                    grouped[gKey].data[f] = value;
+                } else { // section:field
+                    const [s, f] = parts;
+                    if (!grouped[s]) grouped[s] = { section: s, data: {} };
+                    grouped[s].data[f] = value;
+                }
             }
+        }
+
+        // Process our_network changes specially
+        if (Object.keys(networkChanges).length > 0 || networkVisibilityChange !== undefined) {
+            const getResp = await fetch("/api/db/site_content");
+            const getData = await getResp.json();
+            const row = getData.data?.find((r: any) => r.section_key === "our_network");
+            let companies = [];
+            let is_visible = true;
+            if (row) {
+                let parsed = row.content;
+                if (typeof parsed === "string") {
+                    try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+                }
+                companies = Array.isArray(parsed.companies) ? parsed.companies : [];
+                is_visible = parsed.is_visible !== false;
+            }
+            
+            // Apply updates
+            companies = companies.map((c: any) => {
+                const changes = networkChanges[c.id];
+                if (changes) {
+                    return { ...c, ...changes };
+                }
+                return c;
+            });
+
+            if (networkVisibilityChange !== undefined) {
+                is_visible = networkVisibilityChange;
+            }
+
+            // Save back
+            const resp = await fetch("/api/db/site_content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ section_key: "our_network", content: { companies, is_visible } })
+            });
+            const json = await resp.json();
+            if (json.error) throw new Error(json.error.message);
         }
 
         for (const g of Object.values(grouped)) {
@@ -112,28 +164,47 @@ const LiveEditor = () => {
     }
   };
 
-  const handleHide = async (section: string, id: string | undefined, currentVisibility: boolean) => {
-    try {
-        const nextVisibility = !currentVisibility;
-        const endpoint = id ? `/api/db/${section}?id=${id}` : `/api/db/site_content`;
-        const method = id ? "PATCH" : "POST";
-        const body = id ? { is_visible: nextVisibility } : { section_key: section, is_visible: nextVisibility };
-        
-        const resp = await fetch(endpoint, {
-            method: method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-        toast.success(`${section} ${nextVisibility ? 'shown' : 'hidden'}`);
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-    } catch (err: any) {
-        toast.error(`Failed to update visibility: ${err.message}`);
-    }
+  const handleHide = (section: string, id: string | undefined, currentVisibility: boolean) => {
+    const nextVisibility = !currentVisibility;
+    handleUpdate(section, "is_visible", nextVisibility, id);
+    toast.success("Visibility change queued. Click 'Save All Changes' to apply.");
   };
 
   const handleDelete = async (section: string, id: string) => {
+    if (section === "our_network") {
+      if (!confirm("Are you sure you want to delete this company?")) return;
+      try {
+        const getResp = await fetch("/api/db/site_content");
+        const getData = await getResp.json();
+        const row = getData.data?.find((r: any) => r.section_key === "our_network");
+        let companies = [];
+        let is_visible = true;
+        if (row) {
+          let parsed = row.content;
+          if (typeof parsed === "string") {
+            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+          }
+          companies = Array.isArray(parsed.companies) ? parsed.companies : [];
+          is_visible = parsed.is_visible !== false;
+        }
+
+        companies = companies.filter((c: any) => c.id !== id);
+
+        const resp = await fetch("/api/db/site_content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_key: "our_network", content: { companies, is_visible } })
+        });
+        const json = await resp.json();
+        if (json.error) throw new Error(json.error.message);
+
+        toast.success("Company removed from network");
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+      } catch (err: any) {
+        toast.error(`Failed to delete: ${err.message}`);
+      }
+      return;
+    }
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
         // Fetch the item first to see if it has associated images
@@ -186,6 +257,50 @@ const LiveEditor = () => {
   };
 
   const handleAdd = async (section: string) => {
+    if (section === "our_network") {
+      try {
+        const getResp = await fetch("/api/db/site_content");
+        const getData = await getResp.json();
+        const row = getData.data?.find((r: any) => r.section_key === "our_network");
+        let companies = [];
+        let is_visible = true;
+        if (row) {
+          let parsed = row.content;
+          if (typeof parsed === "string") {
+            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+          }
+          companies = Array.isArray(parsed.companies) ? parsed.companies : [];
+          is_visible = parsed.is_visible !== false;
+        }
+
+        const newCompany = {
+          id: Date.now().toString(),
+          name: "New Partner Company",
+          subtitle: "Technology Affiliate",
+          desc: "Brief description of the partner company, services, and strategic alignment.",
+          href: "https://",
+          logo_url: "/assets/clients/oblu.png",
+          accent: "#3b82f6",
+          is_visible: true,
+          flag: "🏢"
+        };
+        companies.push(newCompany);
+
+        const resp = await fetch("/api/db/site_content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_key: "our_network", content: { companies, is_visible } })
+        });
+        const json = await resp.json();
+        if (json.error) throw new Error(json.error.message);
+
+        toast.success("Added new company to network!");
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+      } catch (err: any) {
+        toast.error(`Failed to add company: ${err.message}`);
+      }
+      return;
+    }
     try {
         const defaults: any = { is_visible: true, sort_order: 0 };
         if (section === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
@@ -374,13 +489,32 @@ const PickerModal = ({ config, onClose, onSelect }: {
   useEffect(() => {
     // For single pick, try to load current value into manual field
     if (!config.multi) {
-      const url = config.id 
+      let url = config.id 
         ? `/api/db/${config.section}?id=${config.id}&_single=1`
         : `/api/db/site_content?section=${config.section}&_single=1`;
+      
+      if (config.section === "our_network") {
+        url = `/api/db/site_content?section_key=our_network&_single=1`;
+      }
       
       fetch(url)
         .then(r => r.json())
         .then(json => {
+          if (config.section === "our_network") {
+            let companies = [];
+            if (json.data && json.data.content) {
+              let contentObj = json.data.content;
+              if (typeof contentObj === "string") {
+                try { contentObj = JSON.parse(contentObj); } catch {}
+              }
+              companies = Array.isArray(contentObj.companies) ? contentObj.companies : [];
+            }
+            const co = companies.find((c: any) => c.id === config.id);
+            if (co && co[config.field]) {
+              setManualValue(co[config.field]);
+            }
+            return;
+          }
           if (json.data && json.data[config.field]) {
             setManualValue(json.data[config.field]);
           }
@@ -391,13 +525,37 @@ const PickerModal = ({ config, onClose, onSelect }: {
 
   useEffect(() => {
     if (config.multi) {
-      const url = config.id 
+      let url = config.id 
         ? `/api/db/${config.section}?id=${config.id}&_single=1`
         : `/api/db/site_content?section=${config.section}&_single=1`;
+
+      if (config.section === "our_network") {
+        url = `/api/db/site_content?section_key=our_network&_single=1`;
+      }
 
       fetch(url)
         .then(r => r.json())
         .then(json => {
+          if (config.section === "our_network") {
+            let companies = [];
+            if (json.data && json.data.content) {
+              let contentObj = json.data.content;
+              if (typeof contentObj === "string") {
+                try { contentObj = JSON.parse(contentObj); } catch {}
+              }
+              companies = Array.isArray(contentObj.companies) ? contentObj.companies : [];
+            }
+            const co = companies.find((c: any) => c.id === config.id);
+            if (co && co[config.field]) {
+              const val = co[config.field];
+              const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
+              setCurrentAssets(assets);
+              setSelected(assets);
+              setManualValue(val);
+              if (assets.length === 0) setViewMode("pick");
+            }
+            return;
+          }
           if (json.data && json.data[config.field]) {
             const val = json.data[config.field];
             const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
@@ -785,7 +943,7 @@ const ImageGrid = ({ section, onSelect, search, multi, selected, onToggle }: {
   );
 };
 
-const ALL_ICONS = ["Database", "Users", "Anchor", "Building2", "Plane", "Star", "Target", "Award", "Globe", "Cloud", "Cpu", "Code", "Server", "Shield", "Zap", "Layout", "Smartphone", "Search", "Mail", "Phone", "MapPin", "ChevronRight", "ArrowRight", "Play", "Pause", "Check", "X", "Info", "AlertCircle"];
+const ALL_ICONS = ["Database", "Users", "Anchor", "Building2", "Plane", "Star", "Target", "Award", "Globe", "Cloud", "Cpu", "Code", "Server", "Shield", "Zap", "Layout", "Smartphone", "Search", "Mail", "Phone", "MapPin", "ChevronRight", "ArrowRight", "Play", "Pause", "Check", "X", "Info", "AlertCircle", "Facebook", "Twitter", "Linkedin", "Instagram", "Github", "Youtube", "Viber"];
 
 const LinkPicker = ({ onSelect, search }: { onSelect: (v: string) => void; search: string }) => {
   const PRESETS = [

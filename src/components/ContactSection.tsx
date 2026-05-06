@@ -1,5 +1,6 @@
 import React, { useState, useRef, Fragment, useEffect } from "react";
 import AnimatedSection from "./AnimatedSection";
+import * as LucideIcons from "lucide-react";
 import { MapPin, Mail, Phone, Clock, Send, CheckCircle, Calendar, ChevronLeft, ChevronRight, X, Facebook, Twitter, Linkedin, Instagram, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { useSiteContent, useSiteSettings } from "@/hooks/useSiteContent";
@@ -9,6 +10,25 @@ import { COUNTRIES, detectCountry, validatePhone } from "@/lib/phone-utils";
 import { EditableText, EditorToolbar, useLiveEditor } from "./admin/LiveEditorContext";
 
 // ————————————————————————————————————————————————————————————————————————————————
+const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?: number; className?: string }) => {
+  if (!name) return <LucideIcons.Globe size={size} className={className} />;
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase().startsWith("<svg")) {
+    return (
+      <div 
+        className={`flex items-center justify-center ${className || ""}`}
+        style={{ width: size, height: size }}
+        dangerouslySetInnerHTML={{ __html: trimmed }}
+      />
+    );
+  }
+  if (trimmed.toLowerCase() === "viber") {
+    return <ViberIcon size={size} className={className} />;
+  }
+  const Icon = (LucideIcons as any)[trimmed] || LucideIcons.HelpCircle;
+  return <Icon size={size} className={className} />;
+};
+
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAYS   = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
@@ -352,25 +372,43 @@ const ContactSection = () => {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {[
-                      { name: "Facebook", icon: Facebook, href: settings?.social_facebook  || content?.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
-                      { name: "Twitter",  icon: Twitter,  href: settings?.social_twitter   || content?.twitter   || "https://x.com/bsspl_india" },
-                      { name: "Linkedin", icon: Linkedin, href: settings?.social_linkedin  || content?.linkedin  || "https://in.linkedin.com/company/brilliantsystemssolutions" },
-                      { name: "Instagram",icon: Instagram,href: settings?.social_instagram || content?.instagram || "https://www.instagram.com/brilliantsystemssolutions" },
-                    ].map((s, i) => {
-                      const Icon = s.icon as any;
-                      return (
-                        <Fragment key={i}>
-                          <a href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:text-white"
-                            onMouseEnter={e => { if (s.color) { (e.currentTarget as HTMLElement).style.backgroundColor = s.color; } }}
-                            onMouseLeave={e => { if (s.color) { (e.currentTarget as HTMLElement).style.backgroundColor = ""; } }}
-                          >
-                            {Icon && <Icon size={16} />}
-                          </a>
-                        </Fragment>
-                      );
-                    })}
+                    {(() => {
+                      const socialCount = parseInt(settings?.social_count || "4", 10);
+                      const socialList = [];
+                      for (let i = 1; i <= socialCount; i++) {
+                        const iconKey = `social_icon_${i}`;
+                        const hrefKey = `social_href_${i}`;
+                        const visibleKey = `social_visible_${i}`;
+                        
+                        const icon = settings[iconKey] ?? (
+                          i === 1 ? "Facebook" :
+                          i === 2 ? "Twitter" :
+                          i === 3 ? "Linkedin" :
+                          i === 4 ? "Instagram" : "Globe"
+                        );
+                        
+                        const href = settings[hrefKey] ?? (
+                          i === 1 ? (settings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+                          i === 2 ? (settings.social_twitter || "https://x.com/bsspl_india") :
+                          i === 3 ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                          i === 4 ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : "#"
+                        );
+                        
+                        const isVisible = settings[visibleKey] !== "false" && settings[visibleKey] !== false;
+                        
+                        if (isVisible) {
+                          socialList.push({ index: i, icon, href });
+                        }
+                      }
+                      
+                      return socialList.map((s) => (
+                        <a key={s.index} href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
+                          className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:bg-secondary hover:text-white"
+                        >
+                          <DynamicSocialIcon name={s.icon} size={15} />
+                        </a>
+                      ));
+                    })()}
                   </div>
                 </div>
 

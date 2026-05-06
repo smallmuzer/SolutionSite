@@ -95,10 +95,10 @@ export const EditableText: React.FC<{
   const [localValue, setLocalValue] = useState(value);
 
   const draftKey = id ? `${section}:${id}:${field}` : `${section}:${field}`;
-  const displayValue = editor?.pendingChanges[draftKey] ?? value;
+  const displayValue = editor?.pendingChanges?.[draftKey] ?? value;
 
   const colorDraftKey = id ? `${section}:${id}:${colorField}` : `${section}:${colorField}`;
-  const pendingColor = colorField ? editor?.pendingChanges[colorDraftKey] : undefined;
+  const pendingColor = colorField ? editor?.pendingChanges?.[colorDraftKey] : undefined;
 
   if (!editor?.isEditMode) {
     return <Tag className={className} style={pendingColor ? { color: pendingColor } : undefined}>{displayValue}</Tag>;
@@ -187,9 +187,13 @@ export const EditorToolbar: React.FC<{
   group?: string;
   onMove?: (direction: "up" | "down" | "left" | "right") => void;
   onToggle?: () => void;
-}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle }) => {
+  onDelete?: () => void;
+}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle, onDelete }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
+
+  const isSmall = className.includes("scale-75") || className.includes("scale-[0.75]") || className.includes("scale-50");
+  const btnPadding = isSmall ? "p-1" : "p-1.5";
 
   const hoverClasses = !group 
     ? "opacity-100 scale-100" 
@@ -198,15 +202,15 @@ export const EditorToolbar: React.FC<{
       : `group-hover/${group}:opacity-100 group-hover/${group}:scale-100`;
 
   return (
-    <div className={`absolute z-[100] flex items-center gap-1 ${group ? "opacity-0" : "opacity-100"} ${hoverClasses} transition-all duration-300 bg-card/95 backdrop-blur-md border border-border/50 p-1.5 rounded-xl shadow-2xl scale-90 origin-top-right ${className || "top-2 right-2"}`}>
+    <div className={`absolute z-[100] flex items-center gap-1 ${group ? "opacity-0" : "opacity-100"} ${hoverClasses} transition-all duration-300 bg-card/95 backdrop-blur-md border border-border/50 ${isSmall ? "p-1 rounded-lg" : "p-1.5 rounded-xl"} shadow-2xl scale-90 origin-top-right ${className || "top-2 right-2"}`}>
       {imageField && (
-        <button onClick={() => editor.onPickImage(section, imageField, id)} className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary transition-colors" title="Pick Image">
+        <button onClick={() => editor.onPickImage(section, imageField, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Image">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
       )}
 
       {multiImageField && (
-        <button onClick={() => editor.onPickMultiImage(section, multiImageField, id)} className="p-1.5 hover:bg-secondary/20 rounded-lg text-secondary transition-all active:scale-90" title="Pick Multiple Images">
+        <button onClick={() => editor.onPickMultiImage(section, multiImageField, id)} className={`${btnPadding} hover:bg-secondary/20 rounded-lg text-secondary transition-all active:scale-90`} title="Pick Multiple Images">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="6" width="14" height="14" rx="2" ry="2"/>
             <path d="M10 2h10a2 2 0 0 1 2 2v10" opacity="0.6"/>
@@ -216,31 +220,31 @@ export const EditorToolbar: React.FC<{
       )}
       
       {iconField && (
-        <button onClick={() => editor.onPickIcon(section, iconField, id)} className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary transition-colors" title="Pick Icon">
+        <button onClick={() => editor.onPickIcon(section, iconField, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
         </button>
       )}
 
       {linkField && (
-        <button onClick={() => editor.onPickLink(section, linkField, id)} className="p-1.5 hover:bg-blue-500/10 rounded-lg text-blue-500 transition-colors" title="Pick Target/Link">
+        <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); editor.onPickLink(section, linkField, id); }} className={`${btnPadding} hover:bg-blue-500/10 rounded-lg text-blue-500 transition-colors`} title="URL Picker">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </button>
       )}
 
       {linkField2 && (
-        <button onClick={() => editor.onPickLink(section, linkField2, id)} className="p-1.5 hover:bg-blue-500/10 rounded-lg text-blue-500 transition-colors" title="Pick Target/Link 2">
+        <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); editor.onPickLink(section, linkField2, id); }} className={`${btnPadding} hover:bg-blue-500/10 rounded-lg text-blue-500 transition-colors`} title="URL Picker 2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         </button>
       )}
 
       {colorField && (
-        <button onClick={() => editor.onPickColor(section, colorField, id)} className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary transition-colors" title="Pick Color">
+        <button onClick={() => editor.onPickColor(section, colorField, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Color">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </button>
       )}
 
       {colorField2 && (
-        <button onClick={() => editor.onPickColor(section, colorField2, id)} className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary transition-colors" title="Pick Color 2">
+        <button onClick={() => editor.onPickColor(section, colorField2, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Color 2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </button>
       )}
@@ -252,7 +256,7 @@ export const EditorToolbar: React.FC<{
             if (onToggle) onToggle(); 
             else editor.onHide(section, id, isVisible); 
           }} 
-          className={`p-1.5 rounded-lg transition-colors ${isVisible ? "hover:bg-amber-500/10 text-amber-500" : "bg-amber-500 text-white"}`} 
+          className={`${btnPadding} rounded-lg transition-colors ${isVisible ? "hover:bg-amber-500/10 text-amber-500" : "bg-amber-500 text-white"}`} 
           title={isVisible ? "Hide Item" : "Show Item"}
         >
           {isVisible ? (
@@ -264,13 +268,22 @@ export const EditorToolbar: React.FC<{
       )}
       
       {canClone && id && (
-        <button onClick={() => editor.onClone(section, id)} className="p-1.5 hover:bg-blue-500/10 rounded-lg text-blue-500 transition-colors" title="Clone Item">
+        <button onClick={() => editor.onClone(section, id)} className={`${btnPadding} hover:bg-blue-500/10 rounded-lg text-blue-500 transition-colors`} title="Clone Item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
       )}
       
-      {canDelete && id && (
-        <button onClick={() => editor.onDelete(section, id)} className="p-1.5 hover:bg-destructive/10 rounded-lg text-destructive transition-colors" title="Delete Item">
+      {canDelete && (id || onDelete) && (
+        <button 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            e.preventDefault(); 
+            if (onDelete) onDelete();
+            else editor.onDelete(section, id); 
+          }} 
+          className={`${btnPadding} hover:bg-destructive/10 rounded-lg text-destructive transition-colors`} 
+          title="Delete Item"
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>
       )}

@@ -212,12 +212,14 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-bounce hidden sm:block">
-        <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
-          <div className="w-1.5 h-1.5 bg-secondary rounded-full" />
+      {/* Scroll indicator - hidden in edit mode to avoid overlapping with stats editor widgets */}
+      {!editor?.isEditMode && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-bounce hidden sm:block">
+          <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
+            <div className="w-1.5 h-1.5 bg-secondary rounded-full" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Slide dots */}
       {allSlides.length > 1 && (
