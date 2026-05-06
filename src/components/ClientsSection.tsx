@@ -569,12 +569,16 @@ const ClientsSection = () => {
     if (!isEdit) return;
     const idx = clientsState.findIndex(c => c.id === id);
     if (idx === -1) return;
-    // All 4 directions move by ±1 in the flat sorted list.
-    // "up" and "left" both go back one slot; "down" and "right" go forward one.
-    // This matches what the user sees: the 2-col grid flows top-left → top-right → next-row-left → ...
-    const step = (direction === "up" || direction === "left") ? -1 : 1;
+    
+    let step = 0;
+    if (direction === "left") step = -1;
+    else if (direction === "right") step = 1;
+    else if (direction === "up") step = -6;
+    else if (direction === "down") step = 6;
+
     const targetIdx = Math.max(0, Math.min(clientsState.length - 1, idx + step));
     if (targetIdx === idx) return;
+    
     const newItems = [...clientsState];
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);

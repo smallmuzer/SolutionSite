@@ -207,13 +207,14 @@ const LiveEditor = () => {
     }
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
+        const dbSection = section === "clients" ? "client_logos" : section;
         // Fetch the item first to see if it has associated images
-        const getResp = await fetch(`/api/db/${section}?id=${id}&_single=1`);
+        const getResp = await fetch(`/api/db/${dbSection}?id=${id}&_single=1`);
         const getData = await getResp.json();
         const item = getData.data;
 
         // Delete from DB
-        const resp = await fetch(`/api/db/${section}?id=${id}`, {
+        const resp = await fetch(`/api/db/${dbSection}?id=${id}`, {
             method: "DELETE"
         });
         const json = await resp.json();
