@@ -283,14 +283,14 @@ const ContactSection = () => {
       <EditorToolbar section="contact" canHide={false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest">
-            <EditableText section="contact" field="badge" value="Reach Us" />
+          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
+            <EditableText section="contact" field="badge" value="Reach Us" colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            <EditableText section="contact" field="title" value={content.title || "Get In Touch"} />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: content.title_color || undefined }}>
+            <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
-            <EditableText section="contact" field="subtitle" value={content.subtitle || ""} />
+          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: content.subtitle_color || undefined }}>
+            <EditableText section="contact" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
           </p>
         </AnimatedSection>
 
@@ -373,7 +373,7 @@ const ContactSection = () => {
                   <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {(() => {
-                      const socialCount = parseInt(settings?.social_count || "4", 10);
+                      const socialCount = parseInt(settings?.social_count || "5", 10);
                       const socialList = [];
                       for (let i = 1; i <= socialCount; i++) {
                         const iconKey = `social_icon_${i}`;
@@ -384,14 +384,16 @@ const ContactSection = () => {
                           i === 1 ? "Facebook" :
                           i === 2 ? "Twitter" :
                           i === 3 ? "Linkedin" :
-                          i === 4 ? "Instagram" : "Globe"
+                          i === 4 ? "Instagram" :
+                          i === 5 ? "Viber" : "Globe"
                         );
                         
                         const href = settings[hrefKey] ?? (
                           i === 1 ? (settings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
                           i === 2 ? (settings.social_twitter || "https://x.com/bsspl_india") :
                           i === 3 ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                          i === 4 ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : "#"
+                          i === 4 ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                          i === 5 ? "viber://chat?number=" : "#"
                         );
                         
                         const isVisible = settings[visibleKey] !== "false" && settings[visibleKey] !== false;
@@ -400,21 +402,26 @@ const ContactSection = () => {
                           socialList.push({ index: i, icon, href });
                         }
                       }
-                      
-                      return socialList.map((s) => (
-                        <a key={s.index} href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
-                          className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-secondary/10 text-secondary hover:bg-secondary hover:text-white"
-                        >
-                          <DynamicSocialIcon name={s.icon} size={15} />
-                        </a>
-                      ));
+                      return socialList.map((s) => {
+                        const isViber = s.icon?.trim().toLowerCase() === "viber";
+                        const viberNumber = settings.viber_number || "9489477144";
+                        const dynamicHref = isViber ? `viber://chat?number=${viberNumber.replace("+", "")}` : (s.href || "#");
+                        return (
+                          <a key={s.index} href={dynamicHref} target={isViber ? undefined : (s.href ? "_blank" : undefined)} rel="noopener noreferrer"
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${isViber ? 'bg-[#7360f2]/10 text-[#7360f2] hover:bg-[#7360f2] hover:text-white' : 'bg-secondary/10 text-secondary hover:bg-secondary hover:text-white'}`}
+                            onClick={isViber ? (e) => { e.preventDefault(); openViber(viberNumber); } : undefined}
+                          >
+                            <DynamicSocialIcon name={s.icon} size={15} />
+                          </a>
+                        );
+                      });
                     })()}
                   </div>
                 </div>
 
                 <button 
                   type="button"
-                  onClick={() => openViber()}
+                  onClick={() => openViber(settings.viber_number || "9489477144")}
                   className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group shadow-sm"
                 >
                   <div className="w-12 h-12 rounded-xl bg-[#7360f2] flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
@@ -425,7 +432,6 @@ const ContactSection = () => {
                     <div className="text-[0.625rem] text-[#f97316] dark:text-[#fb923c] font-bold tracking-tight mt-0.5">Official Business Channel</div>
                   </div>
                 </button>
-                
                 <p className="text-muted-foreground text-[0.625rem] text-center">We respond within 24 hours on business days.</p>
               </div>
             </div>

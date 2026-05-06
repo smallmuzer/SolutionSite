@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, ExternalLink, Sun, Moon, ShieldCheck, Settings } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-import { EditableText, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
 const DEFAULT_NAV = [
   { label: "Who We Are", href: "#about" },
@@ -137,36 +137,48 @@ const Header = () => {
     >
       <div className="w-full flex items-center justify-between px-4 sm:px-6 h-[60px] lg:h-[55px]">
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-2.5 shrink-0">
-          <img
-            src={resolvedLogo}
-            alt={siteName}
-            style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain" }}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
-          />
-          <div className="flex items-center gap-1.5 leading-none overflow-hidden select-none whitespace-nowrap">
-            <span
-              className="font-heading font-bold text-lg sm:text-xl leading-tight"
-              style={{
-                color: isDark ? "#f1f5f9" : "#0f172a",
-                textShadow: "none",
-              }}
-            >
-              <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0]} />
-            </span>
-            <span
-              className="font-heading font-bold text-lg sm:text-xl leading-tight"
-              style={{
-                background: "linear-gradient(90deg,#60a5fa,#818cf8)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                textShadow: "none",
-              }}
-            >
-              <EditableText section="settings" field="site_name_part2" value={siteName.split(" ").slice(1).join(" ") || "Solutions"} />
-            </span>
-          </div>
-        </a>
+        <div className="relative group/logo flex items-center shrink-0">
+          {editor?.isEditMode && (
+            <EditorToolbar
+              section="settings"
+              imageField="site_logo"
+              className="absolute -bottom-2.5 -left-1.5 z-[60] scale-[0.70]"
+              canHide={false}
+              canDelete={false}
+              canClone={false}
+            />
+          )}
+          <a href="#home" className="flex items-center gap-2.5 shrink-0">
+            <img
+              src={resolvedLogo}
+              alt={siteName}
+              style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain" }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
+            />
+            <div className="flex items-center gap-1.5 leading-none overflow-hidden select-none whitespace-nowrap">
+              <span
+                className="font-heading font-bold text-lg sm:text-xl leading-tight"
+                style={{
+                  color: isDark ? "#f1f5f9" : "#0f172a",
+                  textShadow: "none",
+                }}
+              >
+                <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0]} />
+              </span>
+              <span
+                className="font-heading font-bold text-lg sm:text-xl leading-tight"
+                style={{
+                  background: "linear-gradient(90deg,#60a5fa,#818cf8)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  textShadow: "none",
+                }}
+              >
+                <EditableText section="settings" field="site_name_part2" value={siteName.split(" ").slice(1).join(" ") || "Solutions"} />
+              </span>
+            </div>
+          </a>
+        </div>
 
         {/* Desktop Nav */}
         <nav className="hidden xl:flex items-center justify-end gap-1.5 flex-1 mx-4">

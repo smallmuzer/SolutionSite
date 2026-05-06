@@ -109,7 +109,7 @@ const Footer = () => {
   };
   const footerBgImage = editor?.pendingChanges["footer:bg_image_url"] ?? content.bg_image_url ?? "";
   // Support dynamic social links list
-  const socialCount = parseInt(settings.social_count || "4", 10);
+  const socialCount = parseInt(settings.social_count || "5", 10);
   const socialList = [];
   for (let i = 1; i <= socialCount; i++) {
     const iconKey = `social_icon_${i}`;
@@ -120,14 +120,16 @@ const Footer = () => {
       i === 1 ? "Facebook" :
       i === 2 ? "Twitter" :
       i === 3 ? "Linkedin" :
-      i === 4 ? "Instagram" : "Globe"
+      i === 4 ? "Instagram" :
+      i === 5 ? "Viber" : "Globe"
     );
     
     const href = editor?.pendingChanges[`settings:${hrefKey}`] ?? settings[hrefKey] ?? (
       i === 1 ? (settings.social_facebook || contact.facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
       i === 2 ? (settings.social_twitter || contact.twitter || "https://x.com/bsspl_india") :
       i === 3 ? (settings.social_linkedin || contact.linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-      i === 4 ? (settings.social_instagram || contact.instagram || "https://www.instagram.com/brilliantsystemssolutions") : "#"
+      i === 4 ? (settings.social_instagram || contact.instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+      i === 5 ? "viber://chat?number=" : "#"
     );
     
     const isVisible = (editor?.pendingChanges[`settings:${visibleKey}`] ?? settings[visibleKey]) !== false;
@@ -143,17 +145,17 @@ const Footer = () => {
           <SectionHeaderToolbar section="our_network" targetSection="our_network" isVisible={isNetworkVisible} className="top-4 left-4" />
           <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
             <div className="text-center mb-10">
-              <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
-                <EditableText section="footer" field="network_badge" value="Our Network" />
+              <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.network_badge_color || undefined }}>
+                <EditableText section="footer" field="network_badge" value="Our Network" colorField="network_badge_color" />
               </span>
-              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground flex items-center justify-center gap-2">
-                <EditableText section="footer" field="network_title" value="Associated Companies" />
+              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground flex items-center justify-center gap-2" style={{ color: content.network_title_color || undefined }}>
+                <EditableText section="footer" field="network_title" value="Associated Companies" colorField="network_title_color" />
                 {!isNetworkVisible && editor?.isEditMode && (
                   <span className="text-amber-500" title="Section Hidden"><EyeOff size={18} /></span>
                 )}
               </h3>
-              <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground">
-                <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." />
+              <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground" style={{ color: content.network_subtitle_color || undefined }}>
+                <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." colorField="network_subtitle_color" />
               </p>
             </div>
 
@@ -314,6 +316,8 @@ const Footer = () => {
               <div className="flex flex-wrap items-center gap-2.5 relative">
                 {socialList.map((s) => {
                   if (!editor?.isEditMode && !s.isVisible) return null;
+                  const isViber = s.icon?.trim().toLowerCase() === "viber";
+                  const viberPurple = "#7360f2";
                   
                   return (
                     <div key={s.index} className={`relative group/soc ${!s.isVisible ? 'opacity-40' : ''}`}>
@@ -321,17 +325,20 @@ const Footer = () => {
                         {!s.isVisible && editor?.isEditMode && (
                           <span className="text-amber-500 shrink-0 absolute -top-1 -left-1 bg-black/80 rounded-full p-0.5" title="Hidden (Managed in Settings page)"><EyeOff size={10} /></span>
                         )}
-                        <a href={s.href || "#"} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
+                        <a href={isViber ? `viber://chat?number=${(settings.viber_number || "9489477144").replace("+", "")}` : (s.href || "#")} 
+                          target={isViber ? undefined : (s.href ? "_blank" : undefined)} 
+                          rel="noopener noreferrer"
                           className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                          style={{ background: "rgba(255,255,255,0.07)", color: "#94a3b8" }}
+                          style={{ background: "rgba(255,255,255,0.07)", color: isViber ? viberPurple : "#94a3b8" }}
                           onMouseEnter={e => { 
-                            (e.currentTarget as HTMLElement).style.background = "#2563eb"; 
+                            (e.currentTarget as HTMLElement).style.background = isViber ? viberPurple : "#2563eb"; 
                             (e.currentTarget as HTMLElement).style.color = "#fff"; 
                           }}
                           onMouseLeave={e => { 
                             (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; 
-                            (e.currentTarget as HTMLElement).style.color = "#94a3b8"; 
+                            (e.currentTarget as HTMLElement).style.color = isViber ? viberPurple : "#94a3b8"; 
                           }}
+                          onClick={isViber ? (e) => { e.preventDefault(); openViber(settings.viber_number || "9489477144"); } : undefined}
                         >
                           <DynamicSocialIcon name={s.icon} size={15} />
                         </a>

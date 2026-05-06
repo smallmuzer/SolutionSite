@@ -1828,29 +1828,8 @@ const AdminDashboard = () => {
                         <div className="col-span-full mt-4 pt-8 border-t border-border/50">
                           <h3 className="text-[0.6875rem] font-bold text-secondary uppercase tracking-widest border-b border-border/50 pb-1 mb-6">Resources & Social Links</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Branding */}
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-[0.625rem] font-medium text-muted-foreground mb-1 block uppercase tracking-wider">Site Logo Path</label>
-                                <div className="flex gap-2">
-                                  <input value={siteSettings.site_logo || ""} onChange={(e) => setSiteSettings(p => ({ ...p, site_logo: e.target.value }))} className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-xs outline-none focus:ring-1 focus:ring-secondary/30" placeholder="/assets/logo.png" />
-                                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center p-1 border border-border shrink-0">
-                                    <img src={siteSettings.site_logo || "/logo.png"} alt="Logo" className="max-w-full max-h-full object-contain" />
-                                  </div>
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-[0.625rem] font-medium text-muted-foreground mb-1 block uppercase tracking-wider">Demo / Portal URL</label>
-                                <input value={(siteSettings as any).demo_url || ""} onChange={(e) => setSiteSettings(p => ({ ...p, demo_url: e.target.value }))} className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-xs outline-none focus:ring-1 focus:ring-secondary/30" placeholder="https://demo.bss.com" />
-                              </div>
-                              <div>
-                                <label className="text-[0.625rem] font-medium text-muted-foreground mb-1 block uppercase tracking-wider">Landline / Office Phone</label>
-                                <input value={(siteSettings as any).landline || ""} onChange={(e) => setSiteSettings(p => ({ ...p, landline: e.target.value }))} className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-xs outline-none" placeholder="+960 xxx xxxx" />
-                              </div>
-                            </div>
-
                             {/* Manage Social Links Section */}
-                            <div className="space-y-4 col-span-full md:col-span-1 lg:col-span-2 bg-muted/20 p-5 rounded-2xl border border-border/50">
+                            <div className="space-y-4 col-span-full bg-muted/20 p-5 rounded-2xl border border-border/50">
                               <div className="flex items-center justify-between border-b border-border/50 pb-2 mb-4">
                                 <div>
                                   <span className="text-[0.6875rem] font-bold text-foreground uppercase tracking-wider block">Manage Social Links</span>
@@ -1859,7 +1838,7 @@ const AdminDashboard = () => {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const nextCount = parseInt(siteSettings.social_count || "4", 10) + 1;
+                                    const nextCount = parseInt(siteSettings.social_count || "5", 10) + 1;
                                     setSiteSettings(p => ({
                                       ...p,
                                       social_count: nextCount.toString(),
@@ -1876,7 +1855,7 @@ const AdminDashboard = () => {
                               </div>
                               
                               <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                                {Array.from({ length: parseInt(siteSettings.social_count || "4", 10) }).map((_, idx) => {
+                                {Array.from({ length: parseInt(siteSettings.social_count || "5", 10) }).map((_, idx) => {
                                   const i = idx + 1;
                                   const iconKey = `social_icon_${i}`;
                                   const hrefKey = `social_href_${i}`;
@@ -1886,14 +1865,16 @@ const AdminDashboard = () => {
                                     i === 1 ? "Facebook" :
                                     i === 2 ? "Twitter" :
                                     i === 3 ? "Linkedin" :
-                                    i === 4 ? "Instagram" : "Globe"
+                                    i === 4 ? "Instagram" :
+                                    i === 5 ? "Viber" : "Globe"
                                   );
                                   
                                   const href = siteSettings[hrefKey] || (
                                     i === 1 ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
                                     i === 2 ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
                                     i === 3 ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                    i === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : ""
+                                    i === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                    i === 5 ? "viber://chat?number=" : ""
                                   );
                                   
                                   const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
@@ -1901,7 +1882,7 @@ const AdminDashboard = () => {
                                   return (
                                     <div key={i} className="flex flex-col sm:flex-row sm:items-end gap-3 bg-background p-4 rounded-xl border border-border/45 shadow-sm relative group/item">
                                       {/* Icon Live Preview */}
-                                      <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner shrink-0 sm:mb-[2px]" title="Live Icon Preview">
+                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-inner shrink-0 sm:mb-[2px] ${icon.trim().toLowerCase() === "viber" ? "bg-[#7360f2]/10 text-[#7360f2] border-[#7360f2]/20" : "bg-secondary/10 text-secondary border-secondary/20"}`} title="Live Icon Preview">
                                         <DynamicSocialIcon name={icon} size={18} />
                                       </div>
 
@@ -2077,7 +2058,7 @@ const AdminDashboard = () => {
                                           type="button"
                                           onClick={() => {
                                             if (!confirm("Are you sure you want to delete this social link row?")) return;
-                                            const count = parseInt(siteSettings.social_count || "4", 10);
+                                            const count = parseInt(siteSettings.social_count || "5", 10);
                                             const nextSettings = { ...siteSettings };
                                             
                                             // 1. Pre-resolve all current values so shifting doesn't run into fallback re-assignment problems
@@ -2088,13 +2069,13 @@ const AdminDashboard = () => {
                                                   idxPlus === 1 ? "Facebook" :
                                                   idxPlus === 2 ? "Twitter" :
                                                   idxPlus === 3 ? "Linkedin" :
-                                                  idxPlus === 4 ? "Instagram" : "Globe"
+                                                  idxPlus === 4 ? "Instagram" : idxPlus === 5 ? "Viber" : "Globe"
                                                 ),
                                                 href: siteSettings[`social_href_${idxPlus}`] || (
                                                   idxPlus === 1 ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
                                                   idxPlus === 2 ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
                                                   idxPlus === 3 ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                                  idxPlus === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : ""
+                                                  idxPlus === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : idxPlus === 5 ? "viber://chat?number=" : ""
                                                 ),
                                                 visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false
                                               };

@@ -155,17 +155,17 @@ const HeroSection = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-10 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-            <span className="text-white/90 text-sm font-medium">
-              <EditableText section="hero" field="badge" value="Maldives' Leading IT Solutions Partner" />
+            <span className="text-white/90 text-sm font-medium" style={{ color: content.badge_color || undefined }}>
+              <EditableText section="hero" field="badge" value="Maldives' Leading IT Solutions Partner" colorField="badge_color" />
             </span>
           </div>
 
-          <h1 className="text-[2.5rem] sm:text-[3.25rem] lg:text-[4.5rem] font-heading font-bold text-white leading-[1.1] mb-6 drop-shadow-2xl hero-fade-in" style={{ animationDelay: "0.2s" }}>
-            <EditableText section="hero" field="title" value={content.title || "Transforming Business Across Maldives"} />
+          <h1 className="text-[2.5rem] sm:text-[3.25rem] lg:text-[4.5rem] font-heading font-bold text-white leading-[1.1] mb-6 drop-shadow-2xl hero-fade-in" style={{ animationDelay: "0.2s", color: content.title_color || undefined }}>
+            <EditableText section="hero" field="title" value={content.title || "Transforming Business Across Maldives"} colorField="title_color" />
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s" }}>
-            <EditableText section="hero" field="subtitle" value={content.subtitle || "Enterprise software, ERP, and digital transformation solutions for the hospitality, finance, and government sectors."} />
+          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s", color: content.subtitle_color || undefined }}>
+            <EditableText section="hero" field="subtitle" value={content.subtitle || "Enterprise software, ERP, and digital transformation solutions for the hospitality, finance, and government sectors."} colorField="subtitle_color" />
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 hero-fade-in group/item relative" style={{ animationDelay: "0.5s" }}>

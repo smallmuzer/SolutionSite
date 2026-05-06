@@ -189,13 +189,13 @@ const TestimonialsSection = () => {
       <SectionHeaderToolbar section="testimonials" isVisible={headerContent.is_visible !== false} />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-14">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
-            <EditableText section="testimonials" field="badge" value={header.badge || "Testimonials"} />
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: headerContent.badge_color || undefined }}>
+            <EditableText section="testimonials" field="badge" value={header.badge || "Testimonials"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            <EditableText section="testimonials" field="title" value={header.title || "What Our"} />{" "}
-            <span className="gradient-text">
-              <EditableText section="testimonials" field="highlight" value={header.highlight || "Clients Say"} />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: headerContent.title_color || undefined }}>
+            <EditableText section="testimonials" field="title" value={header.title || "What Our"} colorField="title_color" />{" "}
+            <span className="gradient-text" style={{ color: headerContent.highlight_color || undefined, background: headerContent.highlight_color ? "none" : undefined, WebkitTextFillColor: headerContent.highlight_color ? "initial" : undefined }}>
+              <EditableText section="testimonials" field="highlight" value={header.highlight || "Clients Say"} colorField="highlight_color" />
             </span>
           </h2>
         </AnimatedSection>

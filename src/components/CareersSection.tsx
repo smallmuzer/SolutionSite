@@ -367,17 +367,17 @@ const CareersSection = () => {
       <SectionHeaderToolbar section="careers" targetSection="career_jobs" isVisible={content.is_visible !== false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
-            <EditableText section="careers" field="badge" value={header.badge || "Careers"} />
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
+            <EditableText section="careers" field="badge" value={header.badge || "Careers"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            <EditableText section="careers" field="title" value={header.title || "Join Our"} />{" "}
-            <span className="gradient-text">
-              <EditableText section="careers" field="highlight" value={header.highlight || "Team"} />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: content.title_color || undefined }}>
+            <EditableText section="careers" field="title" value={header.title || "Join Our"} colorField="title_color" />{" "}
+            <span className="gradient-text" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
+              <EditableText section="careers" field="highlight" value={header.highlight || "Team"} colorField="highlight_color" />
             </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]">
-            <EditableText section="careers" field="description" value={header.description || ""} />
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
+            <EditableText section="careers" field="description" value={header.description || ""} colorField="description_color" />
           </p>
         </AnimatedSection>
 

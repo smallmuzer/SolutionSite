@@ -125,17 +125,17 @@ const WorldMap = () => {
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-10">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
-            <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} />
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: (header as any).badge_color || undefined }}>
+            <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4">
-            <EditableText section="global_reach" field="title" value={header.title || "Our"} />{" "}
-            <span className="gradient-text">
-              <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: (header as any).title_color || undefined }}>
+            <EditableText section="global_reach" field="title" value={header.title || "Our"} colorField="title_color" />{" "}
+            <span className="gradient-text" style={{ color: (header as any).highlight_color || undefined, background: (header as any).highlight_color ? "none" : undefined, WebkitTextFillColor: (header as any).highlight_color ? "initial" : undefined }}>
+              <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} colorField="highlight_color" />
             </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
-            <EditableText section="global_reach" field="description" value={header.description || ""} />
+          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: (header as any).description_color || undefined }}>
+            <EditableText section="global_reach" field="description" value={header.description || ""} colorField="description_color" />
           </p>
         </AnimatedSection>
 

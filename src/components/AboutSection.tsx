@@ -162,16 +162,16 @@ const AboutSection = () => {
           {/* Left: text — live from DB */}
           <div>
             <AnimatedSection>
-              <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+              <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
                 <EditableText section="about" field="badge" value="Who We Are" colorField="badge_color" />
               </span>
-              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6">
+              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6" style={{ color: content.title_color || undefined }}>
                 <EditableText section="about" field="title" value={content.title || "Driving Digital Transformation"} colorField="title_color" />
               </h2>
-              <p className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]">
+              <p className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
                 <EditableText section="about" field="description" value={content.description || "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!"} colorField="description_color" />
               </p>
-              <p className="text-gray-500 leading-relaxed text-[0.9375rem]">
+              <p className="text-gray-500 leading-relaxed text-[0.9375rem]" style={{ color: content.vision_color || undefined }}>
                 <EditableText section="about" field="vision" value={content.vision || "Our journey began out of the passion for a unique position in the industry."} colorField="vision_color" />
               </p>
             </AnimatedSection>
