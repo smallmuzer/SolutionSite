@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
-import { EditableText, EditorToolbar, useLiveEditor } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor } from "./admin/LiveEditorContext";
 
 function useCountUp(end: number, duration: number, start: boolean) {
   const [count, setCount] = useState(0);
@@ -112,7 +112,8 @@ const HeroSection = () => {
   }, [heroStatsData]);
 
   return (
-    <section id="home" className="relative flex flex-col min-h-screen overflow-hidden bg-[#020617] group">
+    <section id="home" className="relative flex flex-col min-h-screen overflow-hidden bg-[#020617] group/hero">
+      <SectionHeaderToolbar section="hero" className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10" />
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[#020617]" />
         {allSlides.map((src, i) => (
@@ -234,9 +235,8 @@ const HeroSection = () => {
       <EditorToolbar 
         section="hero" 
         multiImageField="hero_images" 
-        group="" 
         canHide={false}
-        className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10" 
+        className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10 !opacity-100 !scale-100" 
       />
     </section>
   );

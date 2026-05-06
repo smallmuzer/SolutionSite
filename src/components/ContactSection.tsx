@@ -260,7 +260,7 @@ const ContactSection = () => {
 
   return (
     <section id="contact" className="py-10 section-alt relative overflow-hidden group/item">
-      <EditorToolbar section="contact" />
+      <EditorToolbar section="contact" canHide={false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
           <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest">
@@ -473,7 +473,7 @@ const ContactSection = () => {
                         <select value={form.service} onChange={(e) => update("service", e.target.value)}
                           className={`${inputCls} appearance-none bg-no-repeat pr-10 hover:border-secondary transition-colors`}>
                           <option value="">Select a service</option>
-                          {services.map(s => <option key={s.title} value={s.title}>{s.title}</option>)}
+                          {services.map(s => <option key={(s as any).id || s.title} value={s.title}>{s.title}</option>)}
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4"/></svg>

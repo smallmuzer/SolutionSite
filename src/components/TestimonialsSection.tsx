@@ -7,6 +7,7 @@ import { useSiteContent } from "@/hooks/useSiteContent";
 import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor } from "./admin/LiveEditorContext";
 
 const AVATAR_MAP: Record<string, string> = {};
+const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=random&color=fff&name=";
 
 const CARDS_PER_PAGE = 4;
 
@@ -62,10 +63,10 @@ const TestimonialsSection = () => {
   const pageCards = testimonials.slice(currentPage * CARDS_PER_PAGE, (currentPage + 1) * CARDS_PER_PAGE);
 
   const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div className="glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative">
+    <div className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
       <EditorToolbar section="testimonials" id={t.id} isVisible={t.is_visible} imageField="avatar_url" />
       <div className="w-20 h-20 rounded-full border-4 border-secondary/25 shadow-xl overflow-hidden bg-muted mb-4 shrink-0">
-        <img src={t.avatar_url} alt={t.name} className="w-full h-full object-cover" />
+        <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
       </div>
       <div className="font-heading font-bold text-foreground text-[0.9375rem] mb-0.5">
         <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
@@ -81,11 +82,11 @@ const TestimonialsSection = () => {
   );
 
   const ListCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div className="glass-card p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative">
+    <div className={`glass-card p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
       <EditorToolbar section="testimonials" id={t.id} isVisible={t.is_visible} />
       <div className="flex flex-col items-center shrink-0 sm:w-28">
         <div className="w-[72px] h-[72px] rounded-full border-4 border-secondary/20 shadow-xl overflow-hidden bg-muted">
-          <img src={t.avatar_url} alt={t.name} className="w-full h-full object-cover" />
+          <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
         </div>
         <div className="font-heading font-semibold text-foreground text-[0.875rem] text-center mt-2">
           <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
@@ -105,7 +106,7 @@ const TestimonialsSection = () => {
 
   return (
     <section id="testimonials" className="section-padding section-alt relative group">
-      <SectionHeaderToolbar section="testimonials" />
+      <SectionHeaderToolbar section="testimonials" isVisible={headerContent.is_visible !== false} />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-14">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest">

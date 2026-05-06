@@ -192,6 +192,7 @@ const LiveEditor = () => {
         else if (section === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
         else if (section === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
         else if (section === "client_logos") { defaults.name = "New Client"; defaults.logo_url = ""; }
+        else if (section === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
         else { defaults.title = "New Item"; defaults.name = "New Item"; }
 
         const resp = await fetch(`/api/db/${section}`, {

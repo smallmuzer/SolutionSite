@@ -15,43 +15,94 @@ const SEED_CLIENTS = [
   { id: "cl-5", name: "Co Load", logo_url: "/assets/clients/Co-load-2.png", is_visible: true, sort_order: 5 },
   { id: "cl-6", name: "COLOURS OF OBLU", logo_url: "/assets/clients/Colors-of-OBLU-768x390.png", is_visible: true, sort_order: 6 },
   { id: "cl-7", name: "DAMAS", logo_url: "/assets/clients/DAMAS-768x397.jpg", is_visible: true, sort_order: 7 },
-  { id: "cl-8", name: "Election Commission of Maldives", logo_url: "/assets/clients/ECM.png", is_visible: true, sort_order: 8 },
+  { id: "cl-8", name: "Election Commission", logo_url: "/assets/clients/ECM.png", is_visible: true, sort_order: 8 },
   { id: "cl-9", name: "ELL Mobiles", logo_url: "/assets/clients/ELL-Mobiles-768x768.png", is_visible: true, sort_order: 9 },
   { id: "cl-10", name: "Ensis Fisheries", logo_url: "/assets/clients/Ensis-2.png", is_visible: true, sort_order: 10 },
   { id: "cl-11", name: "Fuel Supplies Maldives", logo_url: "/assets/clients/FSM-1.png", is_visible: true, sort_order: 11 },
   { id: "cl-12", name: "Fushifaru", logo_url: "/assets/clients/Fushifaru-1.png", is_visible: true, sort_order: 12 },
   { id: "cl-13", name: "Gage Maldives", logo_url: "/assets/clients/gage-logo-1.png", is_visible: true, sort_order: 13 },
   { id: "cl-14", name: "Happy Market", logo_url: "/assets/clients/Happy-Market.png", is_visible: true, sort_order: 14 },
-  { id: "cl-15", name: "HDFC", logo_url: "/assets/clients/HDFC.png", is_visible: true, sort_order: 15 },
+  { id: "cl-15", name: "HDFC Bank", logo_url: "/assets/clients/HDFC.png", is_visible: true, sort_order: 15 },
   { id: "cl-16", name: "Horizon Fisheries", logo_url: "/assets/clients/Horizon-fisheries-1.png", is_visible: true, sort_order: 16 },
   { id: "cl-17", name: "ILAA Maldives", logo_url: "/assets/clients/Ilaa-Maldives-1-768x593.jpg", is_visible: true, sort_order: 17 },
   { id: "cl-18", name: "Island Beverages", logo_url: "/assets/clients/Island-Beverages.png", is_visible: true, sort_order: 18 },
-  { id: "cl-19", name: "Island Breeze Maldives", logo_url: "/assets/clients/Island-Breeze-Maldives.png", is_visible: true, sort_order: 19 },
-  { id: "cl-20", name: "Medianet", logo_url: "/assets/clients/Medianet_Maldives.jpg", is_visible: true, sort_order: 20 },
+  { id: "cl-19", name: "Island Breeze", logo_url: "/assets/clients/Island-Breeze-Maldives.png", is_visible: true, sort_order: 19 },
+  { id: "cl-20", name: "Medianet", logo_url: "/assets/clients/Medianet.png", is_visible: true, sort_order: 20 },
   { id: "cl-21", name: "Medtech Maldives", logo_url: "/assets/clients/Medtech-Maldives.jpg", is_visible: true, sort_order: 21 },
   { id: "cl-22", name: "Mifco", logo_url: "/assets/clients/Mifco-2-768x309.png", is_visible: true, sort_order: 22 },
   { id: "cl-23", name: "Muni Enterprises", logo_url: "/assets/clients/Muni-1.png", is_visible: true, sort_order: 23 },
   { id: "cl-24", name: "OBLU Helengeli", logo_url: "/assets/clients/OBLU-Helengeli.png", is_visible: true, sort_order: 24 },
   { id: "cl-25", name: "Oblu Select", logo_url: "/assets/clients/Oblu-Select.png", is_visible: true, sort_order: 25 },
   { id: "cl-26", name: "OZEN Life Maadhoo", logo_url: "/assets/clients/OZEN-Life-Maadhoo-500x500.png", is_visible: true, sort_order: 26 },
-  { id: "cl-27", name: "OZEN Reserve Bolifushi", logo_url: "/assets/clients/OZEN-Reserve-Bolifushi.png", is_visible: true, sort_order: 27 },
+  { id: "cl-27", name: "OZEN Reserve", logo_url: "/assets/clients/OZEN-Reserve-Bolifushi.png", is_visible: true, sort_order: 27 },
   { id: "cl-28", name: "Plaza Enterprises", logo_url: "/assets/clients/Plaza.png", is_visible: true, sort_order: 28 },
-  { id: "cl-29", name: "RCSC, Bhutan", logo_url: "/assets/clients/RCSC.jpg", is_visible: true, sort_order: 29 },
+  { id: "cl-29", name: "RCSC Bhutan", logo_url: "/assets/clients/RCSC-Bhutan.png", is_visible: true, sort_order: 29 },
   { id: "cl-30", name: "SIMDI Group", logo_url: "/assets/clients/SIMDI-Group.png", is_visible: true, sort_order: 30 },
   { id: "cl-31", name: "TEP Construction", logo_url: "/assets/clients/TEP-Constuction.png", is_visible: true, sort_order: 31 },
   { id: "cl-32", name: "The Hawks", logo_url: "/assets/clients/The-Hawks.png", is_visible: true, sort_order: 32 },
-  { id: "cl-33", name: "United Food Suppliers", logo_url: "/assets/clients/United-Food-Suppliers.png", is_visible: true, sort_order: 33 },
+  { id: "cl-33", name: "United Food", logo_url: "/assets/clients/United-Food-Suppliers.png", is_visible: true, sort_order: 33 },
   { id: "cl-34", name: "VARU by Atmosphere", logo_url: "/assets/clients/VARU-by-Atmosphere.jpg", is_visible: true, sort_order: 34 },
   { id: "cl-35", name: "Voyages Maldives", logo_url: "/assets/clients/voyage-Maldives.png", is_visible: true, sort_order: 35 },
   { id: "cl-36", name: "You & Me Maldives", logo_url: "/assets/clients/You-Me-Maldives-768x660.png", is_visible: true, sort_order: 36 },
-  { id: "cl-37", name: "Villa Shipping and Trading Company", logo_url: "/assets/clients/Villagrouplogo-1.png", is_visible: true, sort_order: 37 }
+  { id: "cl-37", name: "Villa Group", logo_url: "/assets/clients/Villagrouplogo-1.png", is_visible: true, sort_order: 37 },
+  { id: "cl-38", name: "Fun Island", logo_url: "/assets/clients/Fun-Island.png", is_visible: true, sort_order: 38 },
+  { id: "cl-39", name: "Maldives Stock Exchange", logo_url: "/assets/clients/Maldives-Stock-Exchange-300x67.jpg", is_visible: true, sort_order: 39 },
 ];
 
 type ClientLogo = Tables<"client_logos">;
 
-const ClientLogoImage = ({ client }: { client: ClientLogo }) => (
-  <img src={client.logo_url} alt={client.name} className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal" loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-);
+const ClientLogoImage = ({ client }: { client: ClientLogo }) => {
+  const clientName = client?.name || "";
+  
+  const seedClient = useMemo(() => {
+    return SEED_CLIENTS.find(s => 
+      s.id === client?.id || 
+      s.name === clientName || 
+      (s.name && clientName && s.name.includes(clientName)) || 
+      (clientName && s.name && clientName.includes(s.name))
+    );
+  }, [client?.id, clientName]);
+
+  const primarySrc = client?.logo_url || seedClient?.logo_url || "";
+  const [imgSrc, setImgSrc] = useState<string>(primarySrc);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(primarySrc);
+    setHasError(false);
+  }, [primarySrc]);
+
+  if (hasError || !imgSrc) {
+    const initials = clientName
+      .split(/[\s\-_]+/)
+      .filter(Boolean)
+      .map(n => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-secondary/10 text-secondary font-extrabold text-[0.65rem] sm:text-[0.75rem] rounded-md tracking-wider select-none">
+        {initials || "•"}
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={imgSrc} 
+      alt={clientName} 
+      className="w-full h-full min-w-0 min-h-0 object-contain" 
+      onError={() => {
+        if (seedClient?.logo_url && imgSrc !== seedClient.logo_url) {
+          setImgSrc(seedClient.logo_url);
+        } else {
+          setHasError(true);
+        }
+      }}
+    />
+  );
+};
 
 function computeGlobePositions(count: number, isMobile: boolean = false): { cx: number; cy: number }[] {
   if (count === 0) return [];
@@ -344,7 +395,7 @@ const ClientsSection = () => {
   const { data: dbClients } = useDbQuery<ClientLogo[]>("client_logos", isEdit ? {} : { is_visible: true }, { order: "sort_order" });
   const content = useSiteContent("clients");
 
-  const clients = dbClients || [];
+  const clients = (dbClients && dbClients.length > 0) ? dbClients : (SEED_CLIENTS as ClientLogo[]);
   const effectiveShowAll = isEdit || showAll;
   const header = {
     badge: content.badge || "Portfolio (Our Clients)",

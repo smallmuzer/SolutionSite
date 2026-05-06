@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall, Plus } from "lucide-react";
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
 import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
-import { EditableText, EditorToolbar } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
-const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampClass: string; textClass: string }) => {
+const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const ref = useRef<HTMLParagraphElement>(null);
@@ -24,7 +24,11 @@ const MobileReadMore = ({ text, clampClass, textClass }: { text: string; clampCl
   }, [text]);
   return (
     <div>
-      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>{text}</p>
+      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+        {section && field ? (
+          <EditableText section={section} field={field} id={id} value={text} />
+        ) : text}
+      </p>
       {overflows && !expanded && (
         <button
           type="button"
@@ -54,8 +58,17 @@ const Footer = () => {
   const logoPath = settings.site_logo || "";
   const siteName = settings.site_name || "Systems Solutions";
 
-  const { data: servicesData } = useDbQuery<{ title: string }[]>("services", { is_visible: true }, { order: "sort_order" });
-  const serviceLinks = (servicesData || []).slice(0, 5).map((s) => s.title);
+  const { data: servicesData } = useDbQuery<{ id: string; title: string; href?: string }[]>("services", { is_visible: true }, { order: "sort_order" });
+  const editor = useLiveEditor();
+  const getNavProps = useLiveEditorNavigation();
+  
+  const hiddenLinks = (content.hidden_links || "").split(",").filter(Boolean);
+  const toggleLinkVisibility = (id: string) => {
+    const next = hiddenLinks.includes(id) 
+      ? hiddenLinks.filter(l => l !== id) 
+      : [...hiddenLinks, id];
+    editor?.onUpdate("footer", "hidden_links", next.join(","));
+  };
   const socials = [
     { Icon: Facebook,   href: settings.social_facebook  || contact.facebook  || "https://www.facebook.com/brilliantsystemssolutions/" },
     { Icon: Twitter,    href: settings.social_twitter   || contact.twitter   || "https://x.com/bsspl_india" },
@@ -68,7 +81,6 @@ const Footer = () => {
     <footer>
       {/* Associated Companies */}
       <div className="border-b border-border/50 relative">
-        <EditorToolbar section="network" canAdd />
         <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center mb-10">
             <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
@@ -89,12 +101,8 @@ const Footer = () => {
                   href={co.href}
                   target={co.href !== "#" ? "_blank" : undefined}
                   rel="noopener noreferrer"
-                  className="group relative rounded-xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40 group/item"
-                  style={{ background: "hsl(var(--card)/0.85)" }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = co.accent + "66")}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = "")}
+                  className="group relative rounded-xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40"
                 >
-                  <EditorToolbar section="network_companies" id={co.id} imageField="logo_url" />
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
                     style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
                   <div className="flex items-center gap-3 relative z-10">
@@ -121,6 +129,7 @@ const Footer = () => {
                         <EditableText section="network_companies" field="subtitle" id={co.id} value={co.subtitle} />
                       </span>
                       <MobileReadMore
+                        section="network_companies" field="desc" id={co.id}
                         text={co.desc}
                         clampClass="line-clamp-2"
                         textClass="text-[0.8125rem] mt-1 leading-snug text-muted-foreground"
@@ -166,7 +175,6 @@ const Footer = () => {
           style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.10) 0%, transparent 70%)" }}
         />
         <div className="relative z-10 container-wide px-4 sm:px-6 lg:px-8 py-6">
-          <EditorToolbar section="footer" />
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
 
             {/* Brand */}
@@ -192,10 +200,10 @@ const Footer = () => {
                   </span>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed mb-5" style={{ color: "#64748b" }}>
+              <div className="text-sm leading-relaxed mb-5 relative" style={{ color: "#64748b" }}>
                 <EditableText section="footer" field="tagline" value={content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."} />
-              </p>
-              <div className="flex gap-2.5">
+              </div>
+              <div className="flex gap-2.5 relative">
                 {socials.map((s, i) => {
                   const Icon = s.Icon as any;
                   return (
@@ -214,43 +222,78 @@ const Footer = () => {
             </div>
 
             {/* Services */}
-            <div>
-              <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
+            <div {...getNavProps(() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" }))}>
+              <h4 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2 group/h" style={{ color: "#f1f5f9" }}>
                 <EditableText section="footer" field="label_services" value="Services" />
               </h4>
               <ul className="space-y-2.5">
-                {serviceLinks.map(s => (
-                  <li key={s}>
-                    <a href="#services" className="text-sm transition-colors duration-150" style={{ color: "#64748b" }}
-                      onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
-                      onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
-                    >{s}</a>
-                  </li>
-                ))}
+                {(editor?.isEditMode ? (servicesData || []) : (servicesData || []).slice(0, 6)).map(s => {
+                  const isLinkVisible = !hiddenLinks.includes(s.id);
+                  if (!editor?.isEditMode && !isLinkVisible) return null;
+                  
+                  return (
+                    <li key={s.id} className={`relative flex flex-col group/item ${!isLinkVisible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
+                      {editor?.isEditMode && (
+                        <EditorToolbar 
+                          section="services" 
+                          id={s.id} 
+                          isVisible={isLinkVisible} 
+                          className="top-0 -left-6 scale-75"
+                          group="item"
+                          canDelete={false}
+                          canClone={false}
+                          onToggle={() => toggleLinkVisibility(s.id)}
+                        />
+                      )}
+                      <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
+                        onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
+                        onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
+                      >{s.title}</a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
             {/* Company */}
-            <div>
+            <div {...getNavProps(() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" }))}>
               <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
                 <EditableText section="footer" field="label_company" value="Company" />
               </h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: "Who We Are",   href: "#about"        },
+                { label: "Who We Are",   href: "#about"        },
+                  { label: "Our Services", href: "#services"     },
+                  { label: "Technologies", href: "#technologies" },
                   { label: "Our Products", href: "#products"     },
                   { label: "Portfolio",    href: "#portfolio"    },
                   { label: "Testimonials", href: "#testimonials" },
-                  { label: "Global Presence", href: "#global-reach" },
                   { label: "Careers",      href: "#careers"      },
-                ].map(s => (
-                  <li key={s.label}>
-                    <a href={s.href} className="text-sm transition-colors duration-150" style={{ color: "#64748b" }}
-                      onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
-                      onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
-                    >{s.label}</a>
-                  </li>
-                ))}
+                  { label: "Contact Us",   href: "#contact"      },
+                ].map((s, i) => {
+                  const isLinkVisible = !hiddenLinks.includes(s.label);
+                  if (!editor?.isEditMode && !isLinkVisible) return null;
+
+                  return (
+                    <li key={s.label} className={`relative flex flex-col group/item ${!isLinkVisible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
+                      {editor?.isEditMode && (
+                        <EditorToolbar 
+                          section="footer" 
+                          isVisible={isLinkVisible} 
+                          className="top-0 -left-6 scale-75"
+                          group="item"
+                          canDelete={false}
+                          canClone={false}
+                          onToggle={() => toggleLinkVisibility(s.label)}
+                        />
+                      )}
+                      <a href={s.href} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
+                        onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
+                        onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
+                      >{s.label}</a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -272,11 +315,11 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="mt-10 pt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.07)", color: "#475569" }}>
-            <span>
-              <EditableText section="footer" field="copyright" value={content.copyright || `© ${new Date().getFullYear()} Systems Solutions Pvt Ltd. All rights reserved.`} />
-            </span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-xs relative"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.07)", color: "#475569", paddingTop: "1.5rem" }}>
+              <span>
+                <EditableText section="footer" field="copyright" value={content.copyright || `© ${new Date().getFullYear()} Systems Solutions Pvt Ltd. All rights reserved.`} />
+              </span>
             <span style={{ color: "rgba(255,255,255,0.15)" }} className="hidden sm:inline">•</span>
             <div className="flex items-center gap-1.5">
               <Globe size={12} />

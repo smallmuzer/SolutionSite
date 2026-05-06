@@ -37,15 +37,17 @@ export const detectCountry = async (): Promise<Country> => {
     if (tz.includes("New_York") || tz.includes("Los_Angeles") || tz.includes("Chicago")) return getCountryByCode("US");
     if (tz.includes("Singapore")) return getCountryByCode("SG");
 
-    // Fallback to IP detection
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-    if (data.country_code) {
-      const found = COUNTRIES.find(c => c.code === data.country_code);
-      if (found) return found;
+    // Fallback to IP detection (optional, ignore errors if blocked/rate-limited)
+    const res = await fetch("https://api.country.is").catch(() => null);
+    if (res && res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.country) {
+        const found = COUNTRIES.find(c => c.code === data.country);
+        if (found) return found;
+      }
     }
   } catch (e) {
-    console.error("Country detection failed", e);
+    // Silent fail - use default
   }
   return COUNTRIES[0]; // Default to Maldives
 };

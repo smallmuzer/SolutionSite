@@ -74,7 +74,8 @@ const AboutSection = () => {
   };
 
   return (
-    <section id="about" className="section-padding relative overflow-hidden">
+    <section id="about" className="section-padding relative overflow-hidden group">
+      <SectionHeaderToolbar section="about" />
       <div className="container-wide relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left: text — live from DB */}

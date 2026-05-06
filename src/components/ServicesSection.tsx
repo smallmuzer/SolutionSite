@@ -229,7 +229,7 @@ const ServicesSection = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-3 max-w-3xl mx-auto w-full">
-            {services.map((service, i) => {
+            {services.filter(s => s.is_visible || editor?.isEditMode).map((service, i) => {
               const theme = getTheme(service);
               const Icon = getIcon(service);
               const useImg = cardStyle === "image";

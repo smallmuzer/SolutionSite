@@ -142,7 +142,7 @@ const JobRow = ({ job, onApply, useImg, getNavProps }: { job: CareerJob; onApply
   const imgSrc = (job.image_url && job.image_url.trim()) ? job.image_url.trim() : fallbackImg;
 
   return (
-    <div className="glass-card flex items-center gap-0 overflow-hidden hover:shadow-lg transition-all duration-300 group/item hover-float relative hover:outline hover:outline-2 hover:outline-secondary/50" {...getNavProps(onApply)}>
+    <div className={`glass-card flex items-center gap-0 overflow-hidden hover:shadow-lg transition-all duration-300 group/item hover-float relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!job.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`} {...getNavProps(onApply)}>
       <EditorToolbar section="career_jobs" id={job.id} isVisible={job.is_visible} />
       <div className="relative shrink-0 flex items-center justify-center" style={{ width: 120, alignSelf: "stretch" }}>
         {useImg ? (
@@ -264,7 +264,7 @@ const CareersSection = () => {
 
   return (
     <section id="careers" className="section-padding relative overflow-hidden group">
-      <SectionHeaderToolbar section="careers" targetSection="career_jobs" />
+      <SectionHeaderToolbar section="careers" targetSection="career_jobs" isVisible={content.is_visible !== false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest">

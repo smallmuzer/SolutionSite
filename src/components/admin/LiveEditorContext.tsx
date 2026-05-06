@@ -14,8 +14,8 @@ interface LiveEditorContextType {
   onPickImage: (section: string, field: string, id?: string) => void;
   onPickMultiImage: (section: string, field: string, id?: string) => void;
   onPickIcon: (section: string, field: string, id?: string) => void;
-  onPickLink: (section: string, field: string, id?: string) => void;
   onPickColor: (section: string, field: string, id?: string) => void;
+  onMove: (section: string, id: string, direction: "up" | "down") => void;
   onOpenCustomizer: () => void;
   handleSaveAll: () => void;
   handleDiscard: () => void;
@@ -67,6 +67,7 @@ export const LiveEditorProvider: React.FC<{
       onPickIcon,
       onPickLink,
       onPickColor,
+      onMove: (section, id, direction) => onUpdate(section, "reorder", direction, id),
       onOpenCustomizer,
       handleSaveAll,
       handleDiscard,
@@ -174,6 +175,7 @@ export const EditorToolbar: React.FC<{
   canDelete?: boolean;
   canClone?: boolean;
   canAdd?: boolean;
+  canMove?: boolean;
   imageField?: string;
   multiImageField?: string;
   iconField?: string;
@@ -183,7 +185,9 @@ export const EditorToolbar: React.FC<{
   colorField2?: string;
   className?: string;
   group?: string;
-}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item" }) => {
+  onMove?: (direction: "up" | "down") => void;
+  onToggle?: () => void;
+}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
@@ -202,8 +206,12 @@ export const EditorToolbar: React.FC<{
       )}
 
       {multiImageField && (
-        <button onClick={() => editor.onPickMultiImage(section, multiImageField, id)} className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary transition-colors" title="Pick Multiple Images">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 12l5 5L22 7"/><path d="M2 12l5 5L12 12"/><path d="M7 2L2 7l5 5"/></svg>
+        <button onClick={() => editor.onPickMultiImage(section, multiImageField, id)} className="p-1.5 hover:bg-secondary/20 rounded-lg text-secondary transition-all active:scale-90" title="Pick Multiple Images">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="6" width="14" height="14" rx="2" ry="2"/>
+            <path d="M10 2h10a2 2 0 0 1 2 2v10" opacity="0.6"/>
+            <path d="M6 10h6M6 14h6" strokeWidth="2" opacity="0.4"/>
+          </svg>
         </button>
       )}
       
@@ -238,7 +246,15 @@ export const EditorToolbar: React.FC<{
       )}
 
       {canHide && (
-        <button onClick={() => editor.onHide(section, id, isVisible)} className={`p-1.5 rounded-lg transition-colors ${isVisible ? "hover:bg-amber-500/10 text-amber-500" : "bg-amber-500 text-white"}`} title={isVisible ? "Hide Item" : "Show Item"}>
+        <button 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            if (onToggle) onToggle(); 
+            else editor.onHide(section, id, isVisible); 
+          }} 
+          className={`p-1.5 rounded-lg transition-colors ${isVisible ? "hover:bg-amber-500/10 text-amber-500" : "bg-amber-500 text-white"}`} 
+          title={isVisible ? "Hide Item" : "Show Item"}
+        >
           {isVisible ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           ) : (
@@ -259,6 +275,39 @@ export const EditorToolbar: React.FC<{
         </button>
       )}
       
+      {canMove && id && (
+        <div className="flex items-center gap-0.5 bg-background/50 rounded-lg p-0.5 border border-border/50">
+          <button 
+            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("up"); else editor.onMove(section, id, "up"); }} 
+            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors" 
+            title="Move Up"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("down"); else editor.onMove(section, id, "down"); }} 
+            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors" 
+            title="Move Down"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("up"); else editor.onMove(section, id, "up"); }} 
+            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors" 
+            title="Move Left"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("down"); else editor.onMove(section, id, "down"); }} 
+            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors" 
+            title="Move Right"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      )}
+
       {canAdd && (
         <button onClick={() => editor.onAdd(section)} className="p-1.5 bg-secondary/10 hover:bg-secondary/20 rounded-lg text-secondary transition-all shadow-sm scale-110" title="Add New Item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -268,18 +317,40 @@ export const EditorToolbar: React.FC<{
   );
 };
 
-export const SectionHeaderToolbar: React.FC<{ section: string; targetSection?: string; className?: string }> = ({ section, targetSection, className = "top-0 right-0" }) => {
+export const SectionHeaderToolbar: React.FC<{ 
+  section: string; 
+  targetSection?: string; 
+  isVisible?: boolean;
+  className?: string;
+  onToggle?: () => void;
+}> = ({ section, targetSection, isVisible = true, className = "top-0 right-0", onToggle }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
   return (
-    <div className={`absolute z-[100] transition-all ${className}`}>
+    <div className={`absolute z-[100] transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2 ${className}`}>
       <button 
-        onClick={() => editor.onAdd(targetSection || section)}
+        onClick={(e) => { e.stopPropagation(); editor.onAdd(targetSection || section); }}
         className="p-2 bg-secondary text-secondary-foreground rounded-full shadow-xl border border-secondary/20 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 px-4"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span className="text-[0.625rem] font-bold uppercase tracking-widest">Add New {section}</span>
+        <span className="text-[0.625rem] font-bold uppercase tracking-widest">Add {section}</span>
+      </button>
+      
+      <button 
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          if (onToggle) onToggle();
+          else editor.onHide(section, undefined, isVisible); 
+        }}
+        className={`p-2 rounded-full shadow-xl border border-border/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center ${isVisible ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'}`}
+        title={isVisible ? "Hide Section" : "Show Section"}
+      >
+        {isVisible ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        )}
       </button>
     </div>
   );
