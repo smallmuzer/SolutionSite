@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
@@ -29,7 +29,71 @@ const TestimonialsSection = () => {
 
   const headerContent = useSiteContent("testimonials");
   const editor = useLiveEditor();
-  const { data: rawTestimonials, isLoading: isDataLoading } = useDbQuery<any[]>("testimonials", editor?.isEditMode ? {} : { is_visible: true }, { order: "created_at", asc: false });
+  const { data: rawTestimonials, isLoading: isDataLoading } = useDbQuery<any[]>("testimonials", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order", asc: true });
+
+  const [testimonialsState, setTestimonialsState] = useState<any[]>([]);
+  useEffect(() => { if (rawTestimonials) setTestimonialsState(rawTestimonials); }, [rawTestimonials]);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!editor?.isEditMode) return;
+    setDraggedId(id);
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!editor?.isEditMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+
+    const sourceIdx = testimonialsState.findIndex(t => t.id === draggedId);
+    const targetIdx = testimonialsState.findIndex(t => t.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const newItems = [...testimonialsState];
+    const [moved] = newItems.splice(sourceIdx, 1);
+    newItems.splice(targetIdx, 0, moved);
+
+    newItems.forEach((item, idx) => {
+      if (item.sort_order !== idx) {
+        editor.onUpdate("testimonials", "sort_order", idx, item.id);
+      }
+    });
+    setDraggedId(null);
+  };
+
+  const handleMove = async (id: string, direction: "up" | "down" | "left" | "right") => {
+    if (!editor?.isEditMode || !testimonialsState) return;
+    const idx = testimonialsState.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    
+    let step = 0;
+    if (direction === "left") step = -1;
+    else if (direction === "right") step = 1;
+    else if (direction === "up") step = -4; // Based on grid-cols-4 layout
+    else if (direction === "down") step = 4;
+
+    const targetIdx = Math.max(0, Math.min(testimonialsState.length - 1, idx + step));
+    if (targetIdx === idx) return;
+
+    const newItems = [...testimonialsState];
+    const [moved] = newItems.splice(idx, 1);
+    newItems.splice(targetIdx, 0, moved);
+    setTestimonialsState(newItems);
+
+    newItems.forEach((item, i) => {
+      if (item.sort_order !== i) {
+        editor.onUpdate("testimonials", "sort_order", i, item.id);
+      }
+    });
+  };
 
   const header = {
     badge: headerContent.badge || "Testimonials",
@@ -38,13 +102,13 @@ const TestimonialsSection = () => {
   };
 
   const testimonials = useMemo(() => {
-    return rawTestimonials ? rawTestimonials.map((t: any) => ({
+    return testimonialsState ? testimonialsState.map((t: any) => ({
       id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
       message: t.message,
       avatar_url: t.avatar_url || "",
       is_visible: t.is_visible,
     })) : [];
-  }, [rawTestimonials]);
+  }, [testimonialsState]);
 
   if (isDataLoading) return (
     <section className="section-padding section-alt animate-pulse">
@@ -63,8 +127,24 @@ const TestimonialsSection = () => {
   const pageCards = testimonials.slice(currentPage * CARDS_PER_PAGE, (currentPage + 1) * CARDS_PER_PAGE);
 
   const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
+    <div 
+      className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
+      draggable={editor?.isEditMode}
+      onDragStart={(e) => handleDragStart(e, t.id)}
+      onDragOver={handleDragOver}
+      onDrop={(e) => handleDrop(e, t.id)}
+    >
       <EditorToolbar section="testimonials" id={t.id} isVisible={t.is_visible} imageField="avatar_url" />
+      {editor?.isEditMode && (
+        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+          <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      )}
       <div className="w-20 h-20 rounded-full border-4 border-secondary/25 shadow-xl overflow-hidden bg-muted mb-4 shrink-0">
         <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
       </div>

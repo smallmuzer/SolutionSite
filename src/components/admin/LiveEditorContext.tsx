@@ -185,7 +185,7 @@ export const EditorToolbar: React.FC<{
   colorField2?: string;
   className?: string;
   group?: string;
-  onMove?: (direction: "up" | "down") => void;
+  onMove?: (direction: "up" | "down" | "left" | "right") => void;
   onToggle?: () => void;
 }> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle }) => {
   const editor = useLiveEditor();
@@ -292,14 +292,14 @@ export const EditorToolbar: React.FC<{
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("up"); else editor.onMove(section, id, "up"); }} 
+            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("left"); else editor.onMove(section, id, "left"); }} 
             className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors" 
             title="Move Left"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("down"); else editor.onMove(section, id, "down"); }} 
+            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("right"); else editor.onMove(section, id, "right"); }} 
             className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors" 
             title="Move Right"
           >
@@ -328,7 +328,7 @@ export const SectionHeaderToolbar: React.FC<{
   if (!editor?.isEditMode) return null;
 
   return (
-    <div className={`absolute z-[100] transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2 ${className}`}>
+    <div className={`absolute z-[100] flex items-center gap-2 ${className}`}>
       <button 
         onClick={(e) => { e.stopPropagation(); editor.onAdd(targetSection || section); }}
         className="p-2 bg-secondary text-secondary-foreground rounded-full shadow-xl border border-secondary/20 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 px-4"

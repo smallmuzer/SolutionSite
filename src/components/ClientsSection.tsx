@@ -354,21 +354,140 @@ const StaticGlobe = ({ clients, getNavProps }: { clients: ClientLogo[]; getNavPr
 const COLS = 2, GAP = 10, CARD_W = 96, CARD_H = 80, VISIBLE_H = 520, SPEED_PX = 0.4;
 const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
 
-const ClientCard = ({ client, getNavProps }: { client: ClientLogo; getNavProps: any }) => (
-  <div
-    className="flex flex-col items-center justify-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-110 hover:shadow-xl hover:z-10 group/item relative"
-    style={{ width: CARD_W, height: CARD_H, padding: "6px 5px", gap: 4 }}
-    {...getNavProps(() => { })}
-  >
-    <EditorToolbar section="clients" id={client.id} isVisible={client.is_visible} imageField="logo_url" />
-    <div style={{ width: CARD_W - 14, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><div style={{ maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }} className="transition-transform duration-300 group-hover:scale-110"><ClientLogoImage client={client} /></div></div>
-    <span style={{ fontSize: 9, lineHeight: 1.3, textAlign: "center", fontWeight: 700, color: "hsl(var(--foreground))", width: "100%", padding: "0 3px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
-      <EditableText section="clients" field="name" id={client.id} value={client.name} />
-    </span>
-  </div>
-);
+const IMG_MAX_H = 44; // px — image area max height; leaves room for name
 
-const GridSlideshow = ({ clients, getNavProps, startOffset = 0, reverse = false }: { clients: ClientLogo[]; getNavProps: any; startOffset?: number; reverse?: boolean }) => {
+const ClientCard = ({
+  client, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop, flexible = false
+}: {
+  client: ClientLogo;
+  getNavProps: any;
+  onMove?: (dir: "up" | "down" | "left" | "right") => void;
+  draggedId?: string | null;
+  onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, id: string) => void;
+  flexible?: boolean; // true = fill grid cell, false = fixed 96x80 for slideshow
+}) => {
+  const editor = useLiveEditor();
+  return (
+    <div
+      className={`flex flex-col items-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-10 group/item relative ${
+        !client.is_visible ? 'opacity-50 grayscale' : ''
+      } ${draggedId === client.id ? 'opacity-20 scale-95' : ''}`}
+      style={flexible
+        ? { width: '100%', minHeight: 100, overflow: 'visible', paddingTop: editor?.isEditMode ? 18 : 6 }
+        : { width: CARD_W, height: CARD_H, overflow: 'visible' }
+      }
+      {...getNavProps(() => {})}
+      draggable={!!editor?.isEditMode}
+      onDragStart={onDragStart ? (e) => onDragStart(e, client.id) : undefined}
+      onDragOver={onDragOver}
+      onDrop={onDrop ? (e) => onDrop(e, client.id) : undefined}
+    >
+      {/* Action toolbar — top edge centered, shows on hover only (grid mode only) */}
+      {flexible && (
+        <EditorToolbar
+          section="clients"
+          id={client.id}
+          isVisible={client.is_visible}
+          imageField="logo_url"
+          className="-top-3 left-1/2 -translate-x-1/2"
+          group="item"
+        />
+      )}
+
+      {/* Logo image — constrained max height so name always shows */}
+      <div style={{
+        width: '100%',
+        height: flexible ? 56 : IMG_MAX_H,
+        maxHeight: flexible ? 56 : IMG_MAX_H,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: flexible ? '4px 8px 2px 8px' : '6px 6px 2px 6px',
+        flexShrink: 0,
+        overflow: 'hidden',
+      }}>
+        <div className="max-h-full max-w-full w-full h-full flex items-center justify-center transition-transform duration-300 group-hover/item:scale-110">
+          <ClientLogoImage client={client} />
+        </div>
+      </div>
+
+      {/* Company name — always at bottom, zero extra margin */}
+      <span style={{
+        fontSize: flexible ? 10 : 9,
+        lineHeight: 1.2,
+        textAlign: 'center',
+        fontWeight: 700,
+        color: 'hsl(var(--foreground))',
+        width: '100%',
+        padding: flexible ? '2px 6px 6px 6px' : '0 4px 4px 4px',
+        overflow: 'hidden',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        flexShrink: 0,
+        marginTop: 'auto',
+      }}>
+        <EditableText section="clients" field="name" id={client.id} value={client.name} />
+      </span>
+
+      {/* 4-directional move buttons — centered in card (grid mode only) */}
+      {editor?.isEditMode && onMove && flexible && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none" style={{ borderRadius: 'inherit' }}>
+          <div className="flex flex-col items-center gap-0.5 pointer-events-auto">
+            <button
+              onClick={(e) => { e.stopPropagation(); onMove('up'); }}
+              className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
+              title="Move Up"
+            >
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={(e) => { e.stopPropagation(); onMove('left'); }}
+                className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
+                title="Move Left"
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <div className="w-2 h-2 rounded-full bg-secondary/40" />
+              <button
+                onClick={(e) => { e.stopPropagation(); onMove('right'); }}
+                className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
+                title="Move Right"
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMove('down'); }}
+              className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
+              title="Move Down"
+            >
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const GridSlideshow = ({
+  clients, getNavProps, startOffset = 0, reverse = false,
+  onMove, draggedId, onDragStart, onDragOver, onDrop
+}: {
+  clients: ClientLogo[];
+  getNavProps: any;
+  startOffset?: number;
+  reverse?: boolean;
+  onMove?: (id: string, dir: "up" | "down" | "left" | "right") => void;
+  draggedId?: string | null;
+  onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, id: string) => void;
+}) => {
   const total = clients.length, stripRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), posRef = useRef<number>(0);
   const ordered = total === 0 ? [] : Array.from({ length: total }, (_, k) => clients[(startOffset + k) % total]), doubled = [...ordered, ...ordered, ...ordered];
   const stripH = Math.ceil(total / COLS) * (CARD_H + GAP);
@@ -382,7 +501,20 @@ const GridSlideshow = ({ clients, getNavProps, startOffset = 0, reverse = false 
     <div style={{ width: GRID_W, height: VISIBLE_H, overflow: "hidden", position: "relative", flexShrink: 0 }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)" }} />
-      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>{doubled.map((client, k) => <ClientCard key={`${client.id}-${k}`} client={client} getNavProps={getNavProps} />)}</div>
+      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>
+        {doubled.map((client, k) => (
+          <ClientCard
+            key={`${client.id}-${k}`}
+            client={client}
+            getNavProps={getNavProps}
+            onMove={onMove ? (dir) => onMove(client.id, dir) : undefined}
+            draggedId={draggedId}
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -392,11 +524,66 @@ const ClientsSection = () => {
   const getNavProps = useLiveEditorNavigation();
   const isEdit = editor?.isEditMode;
   const [showAll, setShowAll] = useState(false);
+
+  // Default to grid view in admin edit mode
+  useEffect(() => { if (isEdit) setShowAll(true); }, [isEdit]);
   const { data: dbClients } = useDbQuery<ClientLogo[]>("client_logos", isEdit ? {} : { is_visible: true }, { order: "sort_order" });
   const content = useSiteContent("clients");
 
-  const clients = (dbClients && dbClients.length > 0) ? dbClients : (SEED_CLIENTS as ClientLogo[]);
-  const effectiveShowAll = isEdit || showAll;
+  const rawClients = (dbClients && dbClients.length > 0) ? dbClients : (SEED_CLIENTS as ClientLogo[]);
+
+  // Local sorted state for move/drag
+  const [clientsState, setClientsState] = useState<ClientLogo[]>([]);
+  useEffect(() => { setClientsState(rawClients); }, [dbClients]);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!isEdit) return;
+    setDraggedId(id);
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isEdit) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!isEdit || !draggedId || draggedId === targetId) return;
+    const sourceIdx = clientsState.findIndex(c => c.id === draggedId);
+    const targetIdx = clientsState.findIndex(c => c.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+    const newItems = [...clientsState];
+    const [moved] = newItems.splice(sourceIdx, 1);
+    newItems.splice(targetIdx, 0, moved);
+    setClientsState(newItems);
+    newItems.forEach((item, idx) => { editor?.onUpdate("client_logos", "sort_order", idx, item.id); });
+    setDraggedId(null);
+  };
+
+  const handleMove = (id: string, direction: "up" | "down" | "left" | "right") => {
+    if (!isEdit) return;
+    const idx = clientsState.findIndex(c => c.id === id);
+    if (idx === -1) return;
+    // All 4 directions move by ±1 in the flat sorted list.
+    // "up" and "left" both go back one slot; "down" and "right" go forward one.
+    // This matches what the user sees: the 2-col grid flows top-left → top-right → next-row-left → ...
+    const step = (direction === "up" || direction === "left") ? -1 : 1;
+    const targetIdx = Math.max(0, Math.min(clientsState.length - 1, idx + step));
+    if (targetIdx === idx) return;
+    const newItems = [...clientsState];
+    const [moved] = newItems.splice(idx, 1);
+    newItems.splice(targetIdx, 0, moved);
+    setClientsState(newItems);
+    newItems.forEach((item, i) => { editor?.onUpdate("client_logos", "sort_order", i, item.id); });
+  };
+
+  const clients = isEdit ? clientsState : rawClients;
+  const effectiveShowAll = showAll;
   const header = {
     badge: content.badge || "Portfolio (Our Clients)",
     title: content.title || "Trusted by",
@@ -410,9 +597,15 @@ const ClientsSection = () => {
         <AnimatedSection className="text-center mb-8 relative group">
           <SectionHeaderToolbar section="clients" targetSection="client_logos" className="top-0 left-4" />
           <div className="absolute right-0 top-0 sm:top-2">
-            <button onClick={() => setShowAll(!showAll)} className={`${isEdit ? "hidden" : "flex"} p-2 sm:px-4 sm:py-2 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 items-center gap-2`} title={showAll ? "Switch to Animated View" : "Show All Clients (Grid)"}>
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="flex p-2 sm:px-4 sm:py-2 rounded-full bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 transition-all duration-300 animate-glow shadow-lg shadow-secondary/20 z-20 items-center gap-2"
+              title={showAll || isEdit ? "Switch to Grid View" : "Show All Clients (Grid)"}
+            >
               {showAll ? <Play size={16} className="fill-secondary" /> : <LayoutGrid size={16} />}
-              <span className="text-[0.75rem] font-bold uppercase tracking-wider hidden sm:inline">{showAll ? "Play Animation" : "View All"}</span>
+              <span className="text-[0.75rem] font-bold uppercase tracking-wider hidden sm:inline">
+                {showAll ? "Play Animation" : "View All"}
+              </span>
             </button>
           </div>
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
@@ -432,37 +625,37 @@ const ClientsSection = () => {
         </AnimatedSection>
         <AnimatedSection>
           {effectiveShowAll ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ paddingTop: isEdit ? 16 : 0 }}>
               {clients.map((client) => (
-                <div key={client.id} className={`flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-secondary/50 hover:bg-secondary/5 transition-all duration-300 group/item relative ${!client.is_visible ? 'opacity-50 grayscale' : ''}`}>
-                  <EditorToolbar section="clients" id={client.id} isVisible={client.is_visible} imageField="logo_url" />
-                  <div className="w-16 h-10 sm:w-20 sm:h-12 flex items-center justify-center mb-2 flex-shrink-0">
-                    <div className="max-h-full max-w-full transition-transform duration-300 group-hover/item:scale-110">
-                      <ClientLogoImage client={client} />
-                    </div>
-                  </div>
-                  <span className="text-[0.625rem] sm:text-[0.6875rem] text-foreground text-center font-bold leading-tight line-clamp-2 w-full mt-auto">
-                    <EditableText section="clients" field="name" id={client.id} value={client.name} colorField="name_color" />
-                  </span>
-                </div>
+                <ClientCard
+                  key={client.id}
+                  client={client}
+                  getNavProps={getNavProps}
+                  flexible={true}
+                  onMove={isEdit ? (dir) => handleMove(client.id, dir) : undefined}
+                  draggedId={draggedId}
+                  onDragStart={isEdit ? handleDragStart : undefined}
+                  onDragOver={isEdit ? handleDragOver : undefined}
+                  onDrop={isEdit ? handleDrop : undefined}
+                />
               ))}
             </div>
           ) : (
             <>
               <div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}>
                 <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} reverse={false} />
+                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} reverse={false} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
                 </div>
                 <div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}>
                   <StaticGlobe clients={clients} getNavProps={getNavProps} />
                 </div>
                 <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={Math.ceil(clients.length / 2)} reverse={true} />
+                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={Math.ceil(clients.length / 2)} reverse={true} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
                 </div>
               </div>
               <div className="flex sm:hidden flex-col items-center gap-10">
                 <StaticGlobe clients={clients} getNavProps={getNavProps} />
-                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} />
+                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
               </div>
             </>
           )}

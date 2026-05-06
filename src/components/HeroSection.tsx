@@ -153,7 +153,7 @@ const HeroSection = () => {
       <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-32 sm:pt-40 pb-20">
         <div className="flex-1 flex flex-col justify-center max-w-4xl">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-6 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-10 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
             <span className="text-white/90 text-sm font-medium">
               <EditableText section="hero" field="badge" value="Maldives' Leading IT Solutions Partner" />
@@ -191,7 +191,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats */}
-        <div ref={statsRef} className="mt-16 sm:mt-24 lg:mt-32 hero-fade-in" style={{ animationDelay: "0.7s" }}>
+        <div ref={statsRef} className="mt-12 sm:mt-24 lg:mt-32 hero-fade-in" style={{ animationDelay: "0.7s" }}>
           <div className={`${content.stats_layout === "compact"
             ? "flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-16 lg:gap-x-24 gap-y-6"
             : "p-6 sm:p-8 px-8 sm:px-12 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-20 gap-y-6 shadow-2xl"
@@ -232,11 +232,11 @@ const HeroSection = () => {
         </div>
       )}
 
-      <EditorToolbar 
-        section="hero" 
-        multiImageField="hero_images" 
+      <EditorToolbar
+        section="hero"
+        multiImageField="hero_images"
         canHide={false}
-        className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10 !opacity-100 !scale-100" 
+        className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10 !opacity-100 !scale-100"
       />
     </section>
   );

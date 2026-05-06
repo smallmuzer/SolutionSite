@@ -40,18 +40,21 @@ const FALLBACK_PRODUCTS: Product[] = [];
 
 const DEFAULT_HEADER: SectionHeader = {};
 
-const ProductCard = ({ product, onDemo, cardStyle, getNavProps }: { product: Product; onDemo: () => void; cardStyle: "icon" | "image"; getNavProps: any }) => {
+const ProductCard = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { product: Product; onDemo: () => void; cardStyle: "icon" | "image"; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const editor = useLiveEditor();
-  const [imgError, setImgError] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
   const badgeColor = product.extra_color || "#007600";
 
   return (
     <div
-      className="relative flex-shrink-0 bg-white dark:bg-[#11111f] rounded-2xl overflow-hidden group/item cursor-pointer border border-border/50 hover:border-blue-500/30 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-2 hover:outline hover:outline-2 hover:outline-secondary/50"
+      className={`relative flex-shrink-0 bg-white dark:bg-[#11111f] rounded-2xl overflow-hidden group/item cursor-pointer border border-border/50 hover:border-blue-500/30 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-2 hover:outline hover:outline-2 hover:outline-secondary/50 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
       style={{ width: 280 }}
       {...getNavProps(() => {})}
+      draggable={editor?.isEditMode}
+      onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
+      onDragOver={onDragOver}
+      onDrop={onDrop ? (e) => onDrop(e, product.id) : undefined}
     >
       <EditorToolbar 
         section="products" 
@@ -59,9 +62,19 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps }: { product: Pro
         isVisible={product.is_visible} 
         imageField="image_url" 
       />
+      {editor?.isEditMode && onMove && (
+        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+          <button onClick={(e) => { e.stopPropagation(); onMove("left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove("right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      )}
       {product.is_popular && (
         <div className={`absolute top-2 left-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[0.6875rem] font-black text-white shadow-lg ${product.name === "HR-Metrics"
-          ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse scale-105"
+          ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse"
           : "bg-[#CC0C39]"
           }`}>
           {product.name === "HR-Metrics" && <Star size={10} fill="currentColor" className="animate-spin-slow" />}
@@ -72,9 +85,8 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps }: { product: Pro
       {cardStyle === "image" ? (
         <div className="relative bg-[#f7f8f8] dark:bg-[#0f0f1a] overflow-hidden" style={{ height: 180 }}>
           <img
-            src={imgError ? "/assets/uploads/bsol_1774778245083.jpg" : product.image_url}
+            src={product.image_url}
             alt={product.name}
-            onError={() => setImgError(true)}
             className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-105"
             loading="lazy"
           />
@@ -239,15 +251,18 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps }: { product: Pro
   );
 };
 
-const ProductCardList = ({ product, onDemo, cardStyle, getNavProps }: { product: Product; onDemo: () => void; cardStyle: "icon" | "image"; getNavProps: any }) => {
+const ProductCardList = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { product: Product; onDemo: () => void; cardStyle: "icon" | "image"; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const editor = useLiveEditor();
-  const [imgError, setImgError] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
 
   return (
     <div 
-      className="flex flex-col sm:flex-row gap-5 bg-white dark:bg-[#11111f] rounded-2xl border border-border/50 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 group/item relative hover:outline hover:outline-2 hover:outline-secondary/50"
+      className={`flex flex-col sm:flex-row gap-5 bg-white dark:bg-[#11111f] rounded-2xl border border-border/50 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 group/item relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
       {...getNavProps(() => {})}
+      draggable={editor?.isEditMode}
+      onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
+      onDragOver={onDragOver}
+      onDrop={onDrop ? (e) => onDrop(e, product.id) : undefined}
     >
       <EditorToolbar 
         section="products" 
@@ -255,12 +270,21 @@ const ProductCardList = ({ product, onDemo, cardStyle, getNavProps }: { product:
         isVisible={product.is_visible} 
         imageField="image_url" 
       />
+      {editor?.isEditMode && onMove && (
+        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+          <button onClick={(e) => { e.stopPropagation(); onMove("up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove("down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      )}
       {cardStyle === "image" ? (
         <div className="relative sm:w-48 shrink-0 bg-[#f7f8f8] dark:bg-[#0f0f1a] overflow-hidden" style={{ minHeight: 140 }}>
           <img
-            src={imgError ? "/assets/uploads/bsol_1774778245083.jpg" : product.image_url}
+            src={product.image_url}
             alt={product.name}
-            onError={() => setImgError(true)}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
@@ -416,14 +440,78 @@ const ProductsSection = () => {
   const CARD_W = 280;
 
   const editor = useLiveEditor();
-  const { data: productsData } = useDbQuery<Product[]>("products",
+  const { data: dbProducts } = useDbQuery<Product[]>("products",
     editor?.isEditMode ? {} : { is_visible: true },
     { order: "sort_order" }
   );
+  
+  const [productsState, setProductsState] = useState<Product[]>([]);
+  useEffect(() => { if (dbProducts) setProductsState(dbProducts); }, [dbProducts]);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!editor?.isEditMode) return;
+    setDraggedId(id);
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!editor?.isEditMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+
+    const sourceIdx = productsState.findIndex(t => t.id === draggedId);
+    const targetIdx = productsState.findIndex(t => t.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const newItems = [...productsState];
+    const [moved] = newItems.splice(sourceIdx, 1);
+    newItems.splice(targetIdx, 0, moved);
+
+    newItems.forEach((item, idx) => {
+      if (item.sort_order !== idx) {
+        editor.onUpdate("products", "sort_order", idx, item.id);
+      }
+    });
+    setDraggedId(null);
+  };
+
+  const handleMove = async (id: string, direction: "up" | "down" | "left" | "right") => {
+    if (!editor?.isEditMode || !productsState) return;
+    const idx = productsState.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    
+    let step = 0;
+    if (direction === "left") step = -1;
+    else if (direction === "right") step = 1;
+    else if (direction === "up") step = -1;
+    else if (direction === "down") step = 1;
+
+    const targetIdx = Math.max(0, Math.min(productsState.length - 1, idx + step));
+    if (targetIdx === idx) return;
+
+    const newItems = [...productsState];
+    const [moved] = newItems.splice(idx, 1);
+    newItems.splice(targetIdx, 0, moved);
+    setProductsState(newItems);
+
+    newItems.forEach((item, i) => {
+      if (item.sort_order !== i) {
+        editor.onUpdate("products", "sort_order", i, item.id);
+      }
+    });
+  };
 
   const content = useSiteContent("our_products");
 
-  const products = productsData && productsData.length > 0 ? productsData : FALLBACK_PRODUCTS;
+  const products = productsState.length > 0 ? productsState : FALLBACK_PRODUCTS;
   const header = {
     ...DEFAULT_HEADER,
     ...(content.header || {})
@@ -449,7 +537,7 @@ const ProductsSection = () => {
 
   const scrollToContact = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
-  if (!productsData && !products.length) return null;
+  if (!dbProducts && !products.length) return null;
 
   const tripled = [...products, ...products, ...products];
 
@@ -486,7 +574,7 @@ const ProductsSection = () => {
           >
             <div ref={trackRef} className="flex" style={{ gap: GAP, willChange: "transform", paddingBottom: 12, paddingTop: 4, transform: editor?.isEditMode ? 'none' : undefined }}>
               {(editor?.isEditMode ? products : tripled).map((product, i) => (
-                <ProductCard key={`${product.id}-${i}`} product={product} onDemo={scrollToContact} cardStyle={cardStyle} getNavProps={getNavProps} />
+                <ProductCard key={`${product.id}-${i}`} product={product} onDemo={scrollToContact} cardStyle={cardStyle} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(product.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
               ))}
             </div>
           </div>
@@ -494,7 +582,7 @@ const ProductsSection = () => {
           <div className="flex flex-col gap-4 max-w-3xl mx-auto">
             {products.map((product) => (
               <AnimatedSection key={product.id}>
-                <ProductCardList product={product} onDemo={scrollToContact} cardStyle={cardStyle} getNavProps={getNavProps} />
+                <ProductCardList product={product} onDemo={scrollToContact} cardStyle={cardStyle} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(product.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
               </AnimatedSection>
             ))}
           </div>

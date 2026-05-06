@@ -14,7 +14,7 @@ import PageEditor from "@/components/admin/PageEditor";
 import LiveEditor from "@/components/admin/LiveEditor";
 import { useUndoAction } from "@/hooks/useUndoAction";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { applySettings } from "@/hooks/useSiteSettings";
+import { applySettings, saveThemePref, saveUserSettings, getUserSettings } from "@/hooks/useSiteSettings";
 
 const formatDate = (value: string | Date): string => {
   const d = new Date(value);
@@ -32,16 +32,8 @@ const formatDate = (value: string | Date): string => {
 
 function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem("bss-theme");
-    if (stored === "dark") return true;
-    if (stored === "light") return false;
     return document.documentElement.classList.contains("dark");
   });
-  useEffect(() => {
-    const stored = localStorage.getItem("bss-theme");
-    if (stored === "dark") document.documentElement.classList.add("dark");
-    else if (stored === "light") document.documentElement.classList.remove("dark");
-  }, []);
   useEffect(() => {
     const obs = new MutationObserver(() => setIsDark(document.documentElement.classList.contains("dark")));
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -52,13 +44,7 @@ function useDarkMode() {
     const theme = next ? "dark" : "light";
     if (next) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
-    localStorage.setItem("bss-theme", theme);
-    try {
-      const stored = localStorage.getItem("bss-user-settings");
-      const prefs = stored ? JSON.parse(stored) : {};
-      prefs.theme = theme;
-      localStorage.setItem("bss-user-settings", JSON.stringify(prefs));
-    } catch { /* ignore */ }
+    saveThemePref(theme);
     window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
     setIsDark(next);
     // Keep uxDraft in sync so Settings page Visual Theme buttons reflect the change
@@ -853,8 +839,8 @@ const AdminDashboard = () => {
       // 1. Get User Overrides from LocalStorage first
       let localPrefs: any = {};
       try {
-        const stored = localStorage.getItem("bss-user-settings");
-        if (stored) localPrefs = JSON.parse(stored);
+        const stored = getUserSettings();
+        if (stored) localPrefs = stored;
       } catch { /* ignore */ }
 
       // 2. Sync UX draft prioritizing Local Overrides > DB Settings
@@ -1008,7 +994,7 @@ const AdminDashboard = () => {
     const finalSettings = { ...siteSettings, ...uxDraft };
     setSiteSettings(finalSettings);
 
-    localStorage.setItem("bss-ux-prefs", JSON.stringify(uxDraft));
+    saveUserSettings(uxDraft);
 
     await dbFetch("site_content", {
       method: "POST",
@@ -1891,12 +1877,11 @@ const AdminDashboard = () => {
                                   // Apply DOM + persist immediately
                                   if (theme === "dark") document.documentElement.classList.add("dark");
                                   else document.documentElement.classList.remove("dark");
-                                  localStorage.setItem("bss-theme", theme);
+                                  saveThemePref(theme);
                                   try {
-                                    const stored = localStorage.getItem("bss-user-settings");
-                                    const prefs = stored ? JSON.parse(stored) : {};
-                                    prefs.theme = theme;
-                                    localStorage.setItem("bss-user-settings", JSON.stringify(prefs));
+                                    const prefs = getUserSettings() || {};
+                                    prefs.theme = theme as any;
+                                    saveUserSettings(prefs);
                                   } catch { /* ignore */ }
                                   window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
                                 }}

@@ -315,6 +315,7 @@ const LiveEditor = () => {
           }} 
         />
       )}
+      <UICustomizer />
     </LiveEditorProvider>
   );
 };

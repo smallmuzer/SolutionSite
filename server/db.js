@@ -217,6 +217,17 @@ try {
   // Drop user_roles table if it exists
   db.exec("DROP TABLE IF EXISTS user_roles;");
 
+  const testCols = db.prepare("PRAGMA table_info(testimonials)").all().map(c => c.name);
+  if (!testCols.includes("sort_order")) {
+    db.exec("ALTER TABLE testimonials ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;");
+    // Initialize sort_order based on created_at
+    const tests = db.prepare("SELECT id FROM testimonials ORDER BY created_at ASC").all();
+    const updateStmt = db.prepare("UPDATE testimonials SET sort_order = ? WHERE id = ?");
+    db.transaction(() => {
+      tests.forEach((t, i) => updateStmt.run(i, t.id));
+    })();
+  }
+
   // Add extra_text / extra_color to products if missing
   const prodCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
   if (!prodCols.includes("extra_text")) db.exec("ALTER TABLE products ADD COLUMN extra_text TEXT;");

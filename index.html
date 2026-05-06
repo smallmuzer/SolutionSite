@@ -9,19 +9,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;700&family=Poppins:wght@400;500;700&family=Roboto:wght@400;500;700&family=Nunito:wght@400;700&family=Raleway:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&family=Source+Code+Pro:wght@400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" /></noscript>
-    <!-- Always start in light mode, clear any stale dark preference -->
+    <!-- GDPR-compliant synchronous theme initialization to prevent theme flash/reset on page load -->
     <script>
-      document.documentElement.classList.remove('dark');
-      try {
-        var c = document.cookie.match(/(^| )ss_ui_prefs=([^;]+)/);
-        if (c) {
-          var p = JSON.parse(decodeURIComponent(c[2]));
-          if (p && p.darkMode === true) {
-            p.darkMode = false;
-            document.cookie = 'ss_ui_prefs=' + encodeURIComponent(JSON.stringify(p)) + ';path=/;SameSite=Lax';
+      (function() {
+        try {
+          var isDark = false;
+          var match = document.cookie.match(/(^| )bss-theme=([^;]+)/);
+          if (match) {
+            isDark = (decodeURIComponent(match[2].trim()) === 'dark');
+          } else {
+            var sess = sessionStorage.getItem('bss-theme');
+            if (sess) {
+              isDark = (sess === 'dark');
+            }
           }
-        }
-      } catch(e) {}
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
     </script>
     <!-- TODO: Set the document title to the name of your application -->
     <title>Systems Solutions | Leading IT Solutions Company in Maldives</title>

@@ -28,17 +28,70 @@ const FONT_SIZE_MAP: Record<string, string> = {
   "x-small": "13px", "small": "14.5px", "medium": "16px", "large": "18px", "x-large": "20px",
 };
 
-export function applySettings(dbSettings: Record<string, any>, live = false) {
-  // Priority: cookie/localStorage user prefs > DB settings
-  // When live=true (preview), use dbSettings directly without merging stored prefs
-  let userPrefs: any = {};
-  if (!live) {
+function hasCookieConsent(): boolean {
+  try {
+    const consent = localStorage.getItem("ss_cookie_consent");
+    if (consent) {
+      return true;
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
+export function saveThemePref(theme: string) {
+  if (hasCookieConsent()) {
+    const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `bss-theme=${theme}; expires=${exp}; path=/; SameSite=Lax`;
+  } else {
+    document.cookie = `bss-theme=${theme}; path=/; SameSite=Lax`;
     try {
-      const stored = localStorage.getItem("bss-user-settings");
-      if (stored) userPrefs = JSON.parse(stored);
+      sessionStorage.setItem("bss-theme", theme);
     } catch { /* ignore */ }
   }
-  // DB is the base, user cookie overrides on top
+}
+
+export function getThemePref(): string | null {
+  try {
+    const m = document.cookie.split(";").find(c => c.trim().startsWith("bss-theme="));
+    if (m) return decodeURIComponent(m.trim().slice("bss-theme=".length + 1));
+    const sess = sessionStorage.getItem("bss-theme");
+    if (sess) return sess;
+  } catch { /* ignore */ }
+  return null;
+}
+
+export function saveUserSettings(prefs: Record<string, any>) {
+  const serialized = JSON.stringify(prefs);
+  if (hasCookieConsent()) {
+    const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `bss-user-settings=${encodeURIComponent(serialized)}; expires=${exp}; path=/; SameSite=Lax`;
+  } else {
+    document.cookie = `bss-user-settings=${encodeURIComponent(serialized)}; path=/; SameSite=Lax`;
+    try {
+      sessionStorage.setItem("bss-user-settings", serialized);
+    } catch { /* ignore */ }
+  }
+}
+
+export function getUserSettings(): Record<string, any> | null {
+  try {
+    const m = document.cookie.split(";").find(c => c.trim().startsWith("bss-user-settings="));
+    if (m) return JSON.parse(decodeURIComponent(m.trim().slice("bss-user-settings=".length + 1)));
+    const sess = sessionStorage.getItem("bss-user-settings");
+    if (sess) return JSON.parse(sess);
+  } catch { /* ignore */ }
+  return null;
+}
+
+export function applySettings(dbSettings: Record<string, any>, live = false) {
+  let userPrefs: any = {};
+  if (!live) {
+    userPrefs = getUserSettings() || {};
+    const storedTheme = getThemePref();
+    if (storedTheme) {
+      userPrefs.theme = storedTheme;
+    }
+  }
   const s = { ...dbSettings, ...userPrefs };
 
   const theme = s.theme || "light";
@@ -48,7 +101,6 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   }
-  localStorage.setItem("bss-theme", theme);
 
   const sizeVal = FONT_SIZE_MAP[s.font_size || "small"] || "14.5px";
   document.documentElement.style.setProperty("font-size", sizeVal, "important");
@@ -91,7 +143,7 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     document.documentElement.style.setProperty("--cinematic-asset", `url('${s.cinematic_asset}')`);
   }
 
-  // Dispatch with merged values so context always reflects cookie > DB priority
+  // Dispatch with DB values so context always reflects DB settings
   window.dispatchEvent(new CustomEvent("ss:globalView", { detail: s.global_view || "grid" }));
   window.dispatchEvent(new CustomEvent("ss:cardStyle", { detail: s.card_style || "icon" }));
   window.dispatchEvent(new CustomEvent("ss:siteSettings", { detail: {
@@ -130,14 +182,17 @@ export function useSiteSettings() {
     if (securityContent) applySecurity(securityContent);
   }, [securityContent]);
 
+  // Immediately apply any locally stored/session customized settings to prevent layout flashes on initial mount
   useEffect(() => {
-    const cached = localStorage.getItem("bss-theme");
-    if (cached === "dark") document.documentElement.classList.add("dark");
-    else if (cached === "light") document.documentElement.classList.remove("dark");
-    try {
-      const stored = localStorage.getItem("bss-user-settings");
-      if (stored) applySettings({});
-    } catch { /* ignore */ }
+    const storedTheme = getThemePref();
+    if (storedTheme) {
+      if (storedTheme === "dark") document.documentElement.classList.add("dark");
+      else if (storedTheme === "light") document.documentElement.classList.remove("dark");
+    }
+    const storedPrefs = getUserSettings();
+    if (storedPrefs) {
+      applySettings(storedPrefs);
+    }
   }, []);
 
   return settings;

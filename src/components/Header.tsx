@@ -17,19 +17,10 @@ const DEFAULT_NAV = [
 
 interface NavItem { label: string; href: string; }
 
+import { saveThemePref } from "@/hooks/useSiteSettings";
+
 function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
-    try {
-      const stored = localStorage.getItem("bss-user-settings");
-      if (stored) {
-        const prefs = JSON.parse(stored);
-        if (prefs.theme === "dark") return true;
-        if (prefs.theme === "light") return false;
-      }
-    } catch { /* ignore */ }
-    const cached = localStorage.getItem("bss-theme");
-    if (cached === "dark") return true;
-    if (cached === "light") return false;
     return document.documentElement.classList.contains("dark");
   });
 
@@ -46,13 +37,7 @@ function useDarkMode() {
     const theme = next ? "dark" : "light";
     if (next) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
-    localStorage.setItem("bss-theme", theme);
-    try {
-      const stored = localStorage.getItem("bss-user-settings");
-      const prefs = stored ? JSON.parse(stored) : {};
-      prefs.theme = theme;
-      localStorage.setItem("bss-user-settings", JSON.stringify(prefs));
-    } catch { /* ignore */ }
+    saveThemePref(theme);
     window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
     setIsDark(next);
   };

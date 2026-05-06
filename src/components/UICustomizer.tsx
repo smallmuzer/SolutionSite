@@ -1,32 +1,42 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Sun, Moon, Save, GripHorizontal, LayoutGrid, List, Image, Layers, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { applySettings, useSiteSettings } from "@/hooks/useSiteSettings";
+import { 
+  applySettings, 
+  useSiteSettings,
+  getUserSettings,
+  getThemePref,
+  saveUserSettings,
+  saveThemePref
+} from "@/hooks/useSiteSettings";
 import { UIPrefs, defaultPrefs } from "./ui-customizer-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
-const COOKIE_KEY = "bss-user-settings";
-
 function getCookie(): UIPrefs | null {
-  try {
-    const m = document.cookie.split(";").find(c => c.trim().startsWith(COOKIE_KEY + "="));
-    if (!m) return null;
-    return JSON.parse(decodeURIComponent(m.trim().slice(COOKIE_KEY.length + 1)));
-  } catch { return null; }
+  const settings = getUserSettings();
+  if (!settings) return null;
+  const theme = getThemePref();
+  if (theme) {
+    settings.theme = theme;
+  }
+  return settings as UIPrefs;
 }
 
 function setCookie(prefs: UIPrefs) {
-  const val = encodeURIComponent(JSON.stringify(prefs));
-  const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${COOKIE_KEY}=${val}; expires=${exp}; path=/; SameSite=Lax`;
-  // keep localStorage in sync for applySettings
-  localStorage.setItem(COOKIE_KEY, JSON.stringify(prefs));
+  if (prefs.theme) {
+    saveThemePref(prefs.theme);
+  }
+  saveUserSettings(prefs);
 }
 
 function deleteCookie() {
-  document.cookie = `${COOKIE_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  localStorage.removeItem(COOKIE_KEY);
+  document.cookie = "bss-theme=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
+  document.cookie = "bss-user-settings=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
+  try {
+    sessionStorage.removeItem("bss-theme");
+    sessionStorage.removeItem("bss-user-settings");
+  } catch { /* ignore */ }
 }
 
 const fonts = [

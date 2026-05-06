@@ -1,16 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
-
-const LOCAL_STORAGE_KEY = "bss-user-settings";
+import { getUserSettings, getThemePref } from "@/hooks/useSiteSettings";
 
 function readStoredPrefs(): Partial<UIPrefs> {
-  try {
-    // Cookie takes priority over localStorage
-    const m = document.cookie.split(";").find(c => c.trim().startsWith(LOCAL_STORAGE_KEY + "="));
-    if (m) return JSON.parse(decodeURIComponent(m.trim().slice(LOCAL_STORAGE_KEY.length + 1)));
-    const s = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (s) return JSON.parse(s);
-  } catch { /* ignore */ }
-  return {};
+  const p = getUserSettings() || {};
+  const theme = getThemePref();
+  if (theme) {
+    p.theme = theme as any;
+  }
+  return p;
 }
 
 export interface UIPrefs {

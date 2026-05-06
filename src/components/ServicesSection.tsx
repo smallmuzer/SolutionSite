@@ -111,10 +111,74 @@ const ServicesSection = () => {
   const getNavProps = useLiveEditorNavigation();
   const scrollTo = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
-  const { data: services, isLoading } = useDbQuery<Service[]>("services",
+  const { data: dbServices, isLoading } = useDbQuery<Service[]>("services",
     {}, // Load all for live editor unhiding
     { order: "sort_order" }
   );
+
+  const [services, setServices] = useState<Service[]>([]);
+  useEffect(() => { if (dbServices) setServices(dbServices); }, [dbServices]);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!editor?.isEditMode) return;
+    setDraggedId(id);
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!editor?.isEditMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+
+    const sourceIdx = services.findIndex(t => t.id === draggedId);
+    const targetIdx = services.findIndex(t => t.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const newItems = [...services];
+    const [moved] = newItems.splice(sourceIdx, 1);
+    newItems.splice(targetIdx, 0, moved);
+
+    newItems.forEach((item, idx) => {
+      if (item.sort_order !== idx) {
+        editor.onUpdate("services", "sort_order", idx, item.id);
+      }
+    });
+    setDraggedId(null);
+  };
+
+  const handleMove = async (id: string, direction: "up" | "down" | "left" | "right") => {
+    if (!editor?.isEditMode || !services) return;
+    const idx = services.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    
+    let step = 0;
+    if (direction === "left") step = -1;
+    else if (direction === "right") step = 1;
+    else if (direction === "up") step = view === "grid" ? -3 : -1;
+    else if (direction === "down") step = view === "grid" ? 3 : 1;
+
+    const targetIdx = Math.max(0, Math.min(services.length - 1, idx + step));
+    if (targetIdx === idx) return;
+
+    const newItems = [...services];
+    const [moved] = newItems.splice(idx, 1);
+    newItems.splice(targetIdx, 0, moved);
+    setServices(newItems);
+
+    newItems.forEach((item, i) => {
+      if (item.sort_order !== i) {
+        editor.onUpdate("services", "sort_order", i, item.id);
+      }
+    });
+  };
 
   if (isLoading) return (
     <section id="services" className="section-padding section-alt relative overflow-hidden">
@@ -167,11 +231,26 @@ const ServicesSection = () => {
               return (
                 <AnimatedSection key={service.id} delay={i * 0.05}>
                   <div
-                    className={`glass-card flex flex-col relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${!service.is_visible ? "opacity-50 grayscale" : ""}`}
+                    className={`glass-card flex flex-col relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${!service.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === service.id ? "opacity-20 scale-95" : ""}`}
                     style={{ minHeight: useImg ? "190px" : "120px" }}
                     {...getNavProps(scrollTo)}
+                    draggable={editor?.isEditMode}
+                    onDragStart={(e) => handleDragStart(e, service.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, service.id)}
                   >
                     <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
+                    
+                    {editor?.isEditMode && (
+                      <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+                        <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    )}
                     {useImg ? (
                       <>
                         <div className="relative h-[110px] w-full overflow-hidden shrink-0">
@@ -237,10 +316,24 @@ const ServicesSection = () => {
               return (
                 <AnimatedSection key={service.id} delay={i * 0.03}>
                     <div
-                      className="glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden"
+                      className={`glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden ${!service.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === service.id ? "opacity-20 scale-95" : ""}`}
                       {...getNavProps(scrollTo)}
+                      draggable={editor?.isEditMode}
+                      onDragStart={(e) => handleDragStart(e, service.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, service.id)}
                     >
                       <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
+                      {editor?.isEditMode && (
+                        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+                          <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                        </div>
+                      )}
                     <div className="absolute inset-0 bg-gradient-to-r from-secondary/[0.03] to-transparent group-hover:from-secondary/[0.07] transition-all pointer-events-none rounded-xl" />
                     <div className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-border/40 flex items-center justify-center">
                       {useImg ? (

@@ -51,9 +51,10 @@ function getJobMeta(job: CareerJob): { Icon: React.ElementType; bg: string; fg: 
   return { Icon: Briefcase, bg: "#1e3a5f", fg: "#93c5fd" };
 }
 
-const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0 }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; delay?: number }) => {
+const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, draggedId, onDragStart, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; delay?: number; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const { Icon, bg, fg } = getJobMeta(job);
   const [isExpanded, setIsExpanded] = useState(false);
+  const editor = useLiveEditor();
 
   const getThemedImg = () => {
     return (job.image_url && job.image_url.trim()) ? job.image_url.trim() : "";
@@ -64,10 +65,25 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0 }: { job: Career
 
   return (
     <div
-      className="glass-card relative flex flex-col h-full group/item hover:shadow-xl transition-all duration-300 overflow-hidden hover-float animate-float border border-secondary/30 hover:outline hover:outline-2 hover:outline-secondary/50"
+      className={`glass-card relative flex flex-col h-full group/item hover:shadow-xl transition-all duration-300 overflow-hidden hover-float animate-float border border-secondary/30 hover:outline hover:outline-2 hover:outline-secondary/50 ${!job.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === job.id ? "opacity-20 scale-95" : ""}`}
       style={{ animationDelay: `${delay}s`, minHeight: useImg ? "280px" : "180px", height: isExpanded ? "auto" : "100%" }}
       {...getNavProps(onApply)}
+      draggable={editor?.isEditMode}
+      onDragStart={onDragStart ? (e) => onDragStart(e, job.id) : undefined}
+      onDragOver={onDragOver}
+      onDrop={onDrop ? (e) => onDrop(e, job.id) : undefined}
     >
+      <EditorToolbar section="career_jobs" id={job.id} isVisible={job.is_visible} />
+      {editor?.isEditMode && onMove && (
+        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+          <button onClick={(e) => { e.stopPropagation(); onMove("left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove("right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      )}
       <EditorToolbar section="career_jobs" id={job.id} isVisible={job.is_visible} />
       {useImg ? (
         <>
@@ -136,14 +152,32 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0 }: { job: Career
   );
 };
 
-const JobRow = ({ job, onApply, useImg, getNavProps }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any }) => {
+const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const { Icon, bg, fg } = getJobMeta(job);
+  const editor = useLiveEditor();
   const fallbackImg = "";
   const imgSrc = (job.image_url && job.image_url.trim()) ? job.image_url.trim() : fallbackImg;
 
   return (
-    <div className={`glass-card flex items-center gap-0 overflow-hidden hover:shadow-lg transition-all duration-300 group/item hover-float relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!job.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`} {...getNavProps(onApply)}>
+    <div 
+      className={`glass-card flex items-center gap-0 overflow-hidden hover:shadow-lg transition-all duration-300 group/item hover-float relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!job.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === job.id ? "opacity-20 scale-95" : ""}`} 
+      {...getNavProps(onApply)}
+      draggable={editor?.isEditMode}
+      onDragStart={onDragStart ? (e) => onDragStart(e, job.id) : undefined}
+      onDragOver={onDragOver}
+      onDrop={onDrop ? (e) => onDrop(e, job.id) : undefined}
+    >
       <EditorToolbar section="career_jobs" id={job.id} isVisible={job.is_visible} />
+      {editor?.isEditMode && onMove && (
+        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+          <button onClick={(e) => { e.stopPropagation(); onMove("up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove("down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      )}
       <div className="relative shrink-0 flex items-center justify-center" style={{ width: 120, alignSelf: "stretch" }}>
         {useImg ? (
           <>
@@ -187,8 +221,74 @@ const CareersSection = () => {
   const getNavProps = useLiveEditorNavigation();
 
   const editor = useLiveEditor();
-  const { data: jobs = [] } = useDbQuery<CareerJob[]>("career_jobs", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order", asc: true });
+  const { data: dbJobs = [] } = useDbQuery<CareerJob[]>("career_jobs", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order", asc: true });
+  
+  const [jobsState, setJobsState] = useState<CareerJob[]>([]);
+  useEffect(() => { if (dbJobs) setJobsState(dbJobs); }, [dbJobs]);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!editor?.isEditMode) return;
+    setDraggedId(id);
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!editor?.isEditMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+
+    const sourceIdx = jobsState.findIndex(t => t.id === draggedId);
+    const targetIdx = jobsState.findIndex(t => t.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const newItems = [...jobsState];
+    const [moved] = newItems.splice(sourceIdx, 1);
+    newItems.splice(targetIdx, 0, moved);
+
+    newItems.forEach((item, idx) => {
+      if (item.sort_order !== idx) {
+        editor.onUpdate("career_jobs", "sort_order", idx, item.id);
+      }
+    });
+    setDraggedId(null);
+  };
+
+  const handleMove = async (id: string, direction: "up" | "down" | "left" | "right") => {
+    if (!editor?.isEditMode || !jobsState) return;
+    const idx = jobsState.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    
+    let step = 0;
+    if (direction === "left") step = -1;
+    else if (direction === "right") step = 1;
+    else if (direction === "up") step = view === "grid" ? -4 : -1;
+    else if (direction === "down") step = view === "grid" ? 4 : 1;
+
+    const targetIdx = Math.max(0, Math.min(jobsState.length - 1, idx + step));
+    if (targetIdx === idx) return;
+
+    const newItems = [...jobsState];
+    const [moved] = newItems.splice(idx, 1);
+    newItems.splice(targetIdx, 0, moved);
+    setJobsState(newItems);
+
+    newItems.forEach((item, i) => {
+      if (item.sort_order !== i) {
+        editor.onUpdate("career_jobs", "sort_order", i, item.id);
+      }
+    });
+  };
+
   const content = useSiteContent("careers");
+  const jobs = jobsState;
   
   const header = {
     badge: content.badge || "Careers",
@@ -284,7 +384,7 @@ const CareersSection = () => {
         {editor?.isEditMode ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch max-w-[90rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
             {jobs.map((job) => (
-              <JobCard key={job.id} job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} />
+              <JobCard key={job.id} job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
             ))}
           </div>
         ) : (
@@ -297,9 +397,9 @@ const CareersSection = () => {
                   className={`h-full ${view === 'grid' ? 'w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)] max-w-sm' : 'w-full'}`}
                 >
                   {view === "grid" ? (
-                    <JobCard job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} />
+                    <JobCard job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
                   ) : (
-                    <JobRow job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} />
+                    <JobRow job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
                   )}
                 </AnimatedSection>
               ))}
