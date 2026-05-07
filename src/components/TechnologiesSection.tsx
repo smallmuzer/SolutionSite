@@ -144,7 +144,7 @@ const TechnologiesSection = () => {
 
   return (
     <section id="technologies" className="section-padding section-alt relative overflow-hidden group">
-      <SectionHeaderToolbar section="technologies" isVisible={header.is_visible !== false} />
+      <SectionHeaderToolbar section="technologies" isVisible={header.is_visible !== false} className="-top-5 right-0" />
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
@@ -191,7 +191,7 @@ const TechnologiesSection = () => {
                     />
                     
                     {editor?.isEditMode && (
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1.5 pointer-events-none">
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1.5 pointer-events-none">
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "up"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Up (Prev Row)">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
                         </button>
@@ -208,7 +208,7 @@ const TechnologiesSection = () => {
                     )}
 
                     <div className="absolute -inset-0.5 rounded-xl blur opacity-0 group-hover/item:opacity-40 transition duration-500" style={{ backgroundColor: nameColor }} />
-                    <div className="relative h-full glass-card flex flex-col p-4 gap-2.5 group-hover/item:-translate-y-1 shadow-sm group-hover/item:shadow-md border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden hover:outline hover:outline-2 hover:outline-secondary/50">
+                    <div className={`relative h-full glass-card flex flex-col p-4 ${editor?.isEditMode ? "pb-11" : ""} gap-2.5 group-hover/item:-translate-y-1 shadow-sm group-hover/item:shadow-md border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden hover:outline hover:outline-2 hover:outline-secondary/50`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3">
                           <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm transform group-hover/item:scale-110 transition-transform duration-300 ease-out"
@@ -257,7 +257,7 @@ const TechnologiesSection = () => {
                     />
                     
                     {editor?.isEditMode && (
-                      <div className="absolute bottom-2 right-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+                      <div className="absolute bottom-4 sm:bottom-5 right-2 sm:right-4 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
                         </button>
@@ -273,7 +273,7 @@ const TechnologiesSection = () => {
                       </div>
                     )}
                     <div className="absolute -inset-[1px] rounded-xl blur-sm opacity-0 group-hover/item:opacity-30 transition duration-500" style={{ backgroundColor: nameColor }} />
-                    <div className="relative glass-card flex flex-col xs:flex-row xs:items-center gap-4 xs:gap-5 px-5 py-4 border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-sm shadow-sm group-hover/item:shadow-md">
+                    <div className={`relative glass-card flex flex-col xs:flex-row xs:items-center gap-4 xs:gap-5 px-5 py-4 ${editor?.isEditMode ? "pb-11 sm:pb-4 sm:pr-32" : ""} border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-sm shadow-sm group-hover/item:shadow-md`}>
                       <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center p-2.5 shadow-inner transform group-hover/item:rotate-3 transition-transform duration-300"
                         style={{ background: `linear-gradient(to bottom right, ${nameColor}20, ${nameColor}05)`, border: `1px solid ${nameColor}25` }}>
                         {logoSrc ? <LogoImg src={logoSrc} name={tech.name} size={28} /> : <CatIcon size={24} className="text-secondary" />}
