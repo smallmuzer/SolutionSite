@@ -181,6 +181,7 @@ export const EditorToolbar: React.FC<{
   canClone?: boolean;
   canAdd?: boolean;
   canMove?: boolean;
+  moveDirections?: ("up" | "down" | "left" | "right")[];
   imageField?: string;
   multiImageField?: string;
   iconField?: string;
@@ -193,7 +194,7 @@ export const EditorToolbar: React.FC<{
   onMove?: (direction: "up" | "down" | "left" | "right") => void;
   onToggle?: () => void;
   onDelete?: () => void;
-}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle, onDelete }) => {
+}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle, onDelete }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
@@ -295,34 +296,42 @@ export const EditorToolbar: React.FC<{
 
       {canMove && id && (
         <div className="flex items-center gap-0.5 bg-background/50 rounded-lg p-0.5 border border-border/50">
-          <button
-            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("up"); else editor.onMove(section, id, "up"); }}
-            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
-            title="Move Up"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("down"); else editor.onMove(section, id, "down"); }}
-            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
-            title="Move Down"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("left"); else editor.onMove(section, id, "left"); }}
-            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
-            title="Move Left"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); if (onMove) onMove("right"); else editor.onMove(section, id, "right"); }}
-            className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
-            title="Move Right"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-          </button>
+          {moveDirections.includes("up") && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (onMove) onMove("up"); else editor.onMove(section, id, "up"); }}
+              className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
+              title="Move Up"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+            </button>
+          )}
+          {moveDirections.includes("down") && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (onMove) onMove("down"); else editor.onMove(section, id, "down"); }}
+              className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
+              title="Move Down"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+            </button>
+          )}
+          {moveDirections.includes("left") && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (onMove) onMove("left"); else editor.onMove(section, id, "left"); }}
+              className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
+              title="Move Left"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+          )}
+          {moveDirections.includes("right") && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (onMove) onMove("right"); else editor.onMove(section, id, "right"); }}
+              className="p-0.5 hover:bg-secondary/10 rounded text-secondary transition-colors"
+              title="Move Right"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+          )}
         </div>
       )}
 
@@ -354,7 +363,7 @@ export const SectionHeaderToolbar: React.FC<{
         className="py-1.5 px-3 bg-secondary text-secondary-foreground rounded-lg shadow-xl border border-secondary/20 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-        <span>Add {section === 'our_network' ? 'Network' : section === 'our_products' ? 'Product' : section === 'client_logos' ? 'Client' : section === 'career_jobs' ? 'Job' : section.charAt(0).toUpperCase() + section.slice(1)}</span>
+        <span>Add {section === 'our_network' ? 'Network' : section === 'our_products' ? 'Product' : section === 'client_logos' ? 'Client' : section === 'career_jobs' ? 'Job' : section === 'global_presence' ? 'Location' : section.charAt(0).toUpperCase() + section.slice(1)}</span>
       </button>
 
       <button

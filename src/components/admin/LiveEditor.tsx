@@ -71,6 +71,7 @@ const LiveEditor = () => {
         const grouped: Record<string, any> = {};
         const networkChanges: Record<string, Record<string, any>> = {}; // id -> { field: value }
         let networkVisibilityChange: boolean | undefined = undefined;
+        const presenceChanges: Record<string, Record<string, any>> = {}; // locationName -> { field: value }
 
         for (const [key, value] of entries) {
             const parts = key.split(':');
@@ -81,6 +82,12 @@ const LiveEditor = () => {
                     networkChanges[id][f] = value;
                 } else if (parts.length === 2 && parts[1] === "is_visible") {
                     networkVisibilityChange = value;
+                }
+            } else if (parts[0] === "global_presence") {
+                if (parts.length === 3) {
+                    const [_, id, f] = parts;
+                    if (!presenceChanges[id]) presenceChanges[id] = {};
+                    presenceChanges[id][f] = value;
                 }
             } else {
                 if (parts.length === 3) { // section:id:field
@@ -135,6 +142,49 @@ const LiveEditor = () => {
             if (json.error) throw new Error(json.error.message);
         }
 
+        // Process global_presence changes specially
+        if (Object.keys(presenceChanges).length > 0) {
+            const getResp = await fetch("/api/db/site_content");
+            const getData = await getResp.json();
+            const row = getData.data?.find((r: any) => r.section_key === "global_presence");
+            let locations = [];
+            if (row) {
+                let parsed = row.content;
+                if (typeof parsed === "string") {
+                    try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+                }
+                locations = Array.isArray(parsed.locations) ? parsed.locations : [];
+            }
+            if (locations.length === 0) {
+                locations = [
+                    { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
+                    { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
+                    { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
+                ];
+            }
+            
+            // Apply updates
+            locations = locations.map((loc: any) => {
+                const changes = presenceChanges[loc.name];
+                if (changes) {
+                    const nextLoc = { ...loc, ...changes };
+                    if (nextLoc.lat !== undefined) nextLoc.lat = parseFloat(nextLoc.lat) || 0;
+                    if (nextLoc.lng !== undefined) nextLoc.lng = parseFloat(nextLoc.lng) || 0;
+                    return nextLoc;
+                }
+                return loc;
+            });
+
+            // Save back
+            const resp = await fetch("/api/db/site_content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ section_key: "global_presence", content: { locations } })
+            });
+            const json = await resp.json();
+            if (json.error) throw new Error(json.error.message);
+        }
+
         for (const g of Object.values(grouped)) {
             let endpoint = g.id ? `/api/db/${g.section}?id=${g.id}` : `/api/db/site_content`;
             let method = g.id ? "PATCH" : "POST";
@@ -171,6 +221,45 @@ const LiveEditor = () => {
   };
 
   const handleDelete = async (section: string, id: string) => {
+    if (section === "global_presence") {
+      if (!confirm("Are you sure you want to delete this location?")) return;
+      try {
+        const getResp = await fetch("/api/db/site_content");
+        const getData = await getResp.json();
+        const row = getData.data?.find((r: any) => r.section_key === "global_presence");
+        let locations = [];
+        if (row) {
+          let parsed = row.content;
+          if (typeof parsed === "string") {
+            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+          }
+          locations = Array.isArray(parsed.locations) ? parsed.locations : [];
+        }
+        if (locations.length === 0) {
+          locations = [
+            { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
+            { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
+            { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
+          ];
+        }
+
+        locations = locations.filter((l: any) => l.name !== id);
+
+        const resp = await fetch("/api/db/site_content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_key: "global_presence", content: { locations } })
+        });
+        const json = await resp.json();
+        if (json.error) throw new Error(json.error.message);
+
+        toast.success("Location deleted successfully");
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+      } catch (err: any) {
+        toast.error(`Failed to delete location: ${err.message}`);
+      }
+      return;
+    }
     if (section === "our_network") {
       if (!confirm("Are you sure you want to delete this company?")) return;
       try {
@@ -258,6 +347,54 @@ const LiveEditor = () => {
   };
 
   const handleAdd = async (section: string) => {
+    if (section === "global_presence") {
+      try {
+        const getResp = await fetch("/api/db/site_content");
+        const getData = await getResp.json();
+        const row = getData.data?.find((r: any) => r.section_key === "global_presence");
+        let locations = [];
+        if (row) {
+          let parsed = row.content;
+          if (typeof parsed === "string") {
+            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+          }
+          locations = Array.isArray(parsed.locations) ? parsed.locations : [];
+        }
+        if (locations.length === 0) {
+          locations = [
+            { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
+            { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
+            { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
+          ];
+        }
+
+        const newLoc = {
+          name: `New Location ${locations.length + 1}, Country`,
+          lat: 4.1755,
+          lng: 73.5093,
+          clients: "New Clients details",
+          description: "New location active operations and technical details.",
+          flag: "📍",
+          landmark: "New Landmark",
+          is_visible: true
+        };
+        locations.push(newLoc);
+
+        const resp = await fetch("/api/db/site_content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_key: "global_presence", content: { locations } })
+        });
+        const json = await resp.json();
+        if (json.error) throw new Error(json.error.message);
+
+        toast.success("Added new location successfully!");
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+      } catch (err: any) {
+        toast.error(`Failed to add location: ${err.message}`);
+      }
+      return;
+    }
     if (section === "our_network") {
       try {
         const getResp = await fetch("/api/db/site_content");
@@ -326,6 +463,52 @@ const LiveEditor = () => {
   };
 
   const handleClone = async (section: string, id: string) => {
+    if (section === "global_presence") {
+      try {
+        const getResp = await fetch("/api/db/site_content");
+        const getData = await getResp.json();
+        const row = getData.data?.find((r: any) => r.section_key === "global_presence");
+        let locations = [];
+        if (row) {
+          let parsed = row.content;
+          if (typeof parsed === "string") {
+            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+          }
+          locations = Array.isArray(parsed.locations) ? parsed.locations : [];
+        }
+        if (locations.length === 0) {
+          locations = [
+            { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
+            { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
+            { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
+          ];
+        }
+
+        const itemToClone = locations.find((l: any) => l.name === id);
+        if (!itemToClone) throw new Error("Location not found");
+
+        const clonedName = `${itemToClone.name.split(',')[0]} (Clone), ${itemToClone.name.split(',')[1] || ''}`;
+        const cloned = {
+          ...itemToClone,
+          name: clonedName,
+        };
+        locations.push(cloned);
+
+        const resp = await fetch("/api/db/site_content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_key: "global_presence", content: { locations } })
+        });
+        const json = await resp.json();
+        if (json.error) throw new Error(json.error.message);
+
+        toast.success("Cloned location successfully!");
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+      } catch (err: any) {
+        toast.error(`Failed to clone location: ${err.message}`);
+      }
+      return;
+    }
     try {
         const getResp = await fetch(`/api/db/${section}?id=${id}&_single=1`);
         const getData = await getResp.json();
@@ -591,16 +774,18 @@ const PickerModal = ({ config, onClose, onSelect }: {
         </div>
         
         <div className="p-4 border-b border-border bg-muted/20 space-y-3">
-          <div className="flex gap-2">
-            <input 
-              autoFocus
-              type="text" 
-              placeholder={`Search ${config.type}s...`}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="flex-1 bg-background border border-border rounded-xl px-4 py-2 outline-none focus:border-secondary transition-all text-sm"
-            />
-          </div>
+          {config.type !== "image" && (
+            <div className="flex gap-2">
+              <input 
+                autoFocus
+                type="text" 
+                placeholder={`Search ${config.type}s...`}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-2 outline-none focus:border-secondary transition-all text-sm"
+              />
+            </div>
+          )}
           
           <div className="space-y-1.5">
             <p className="text-[0.625rem] font-bold text-muted-foreground uppercase tracking-widest px-1">Manual {config.type === "icon" ? "SVG Code" : config.type === "color" ? "HEX Color" : "Asset Path"}</p>
@@ -796,53 +981,20 @@ const PickerModal = ({ config, onClose, onSelect }: {
 };
 
 
-const ImageGrid = ({ section, onSelect, search, multi, selected, onToggle }: { 
+const ImageGrid = ({ section, onSelect, search, multi, selected }: { 
   section: string; 
   onSelect: (v: string) => void; 
   search: string;
   multi?: boolean;
   selected?: string[];
-  onToggle?: (v: string) => void;
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [files, setFiles] = useState<{ name: string; publicUrl: string }[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [folder, setFolder] = useState("uploads");
-  
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/assets?folder=${folder}`);
-      const json = await res.json();
-      setFiles(json.data?.files || []);
-    } catch (e) {
-      toast.error("Failed to load images");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(selected && selected.length > 0 ? selected[0] : null);
+  const folder = "uploads";
 
   useEffect(() => {
-    load();
-  }, [folder]);
-
-
-  const handleDeleteImage = async (e: React.MouseEvent, filename: string) => {
-    e.stopPropagation();
-    if (!confirm(`Delete ${filename} forever?`)) return;
-    
-    try {
-      const res = await fetch(`/api/assets?filename=${filename}`, {
-        method: "DELETE"
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      toast.success("Image deleted");
-      await load();
-    } catch (err: any) {
-      toast.error(`Delete failed: ${err.message}`);
-    }
-  };
+    setUploadedUrl(selected && selected.length > 0 ? selected[0] : null);
+  }, [selected]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -861,8 +1013,8 @@ const ImageGrid = ({ section, onSelect, search, multi, selected, onToggle }: {
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       
-      toast.success("Image uploaded");
-      await load(); // Refresh list
+      toast.success("Image uploaded successfully");
+      setUploadedUrl(json.data.publicUrl);
       onSelect(json.data.publicUrl); // Auto select uploaded image
     } catch (err: any) {
       toast.error(`Upload failed: ${err.message}`);
@@ -871,73 +1023,63 @@ const ImageGrid = ({ section, onSelect, search, multi, selected, onToggle }: {
     }
   };
 
-  const filtered = files.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-xl border border-border">
-        <LucideIcons.Folder size={16} className="text-muted-foreground ml-2" />
-        <input 
-          type="text" 
-          value={folder}
-          onChange={e => setFolder(e.target.value)}
-          placeholder="Folder path (e.g. uploads/clients)"
-          className="bg-transparent border-none outline-none text-xs font-bold flex-1"
-        />
-        <button onClick={() => load()} className="p-1.5 hover:bg-muted rounded-lg" title="Refresh">
-          <LucideIcons.RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-        </button>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label className="group relative aspect-video flex flex-col items-center justify-center border-2 border-dashed border-border/60 rounded-xl hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all min-h-[120px]">
+        <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
+        {uploading ? (
+          <LoadingSpinner size={24} />
+        ) : (
+          <>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground group-hover:text-secondary transition-colors">Upload New Image</span>
+          </>
+        )}
+      </label>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <label className="group relative aspect-video flex flex-col items-center justify-center border-2 border-dashed border-border/60 rounded-xl hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all">
-          <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
-          {uploading ? (
-            <LoadingSpinner size={20} />
-          ) : (
-            <>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-secondary transition-colors">Upload New</span>
-            </>
-          )}
-        </label>
-
-        {loading ? (
-          Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="aspect-video bg-muted/50 animate-pulse rounded-xl" />
-          ))
-        ) : filtered.map(f => {
-          const isSelected = selected?.includes(f.publicUrl);
-          return (
+      {uploadedUrl ? (
+        <div 
+          onClick={() => onSelect(uploadedUrl)}
+          className="group relative aspect-video bg-muted rounded-xl overflow-hidden border border-secondary ring-2 ring-secondary/50 ring-inset cursor-pointer min-h-[120px]"
+        >
+          <img src={uploadedUrl} alt="Uploaded Image" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+          
+          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-black uppercase rounded-sm shadow-sm backdrop-blur-sm">
+            Selected
+          </div>
+          
+          <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
             <button 
-              key={f.publicUrl}
-              onClick={() => onSelect(f.publicUrl)}
-              className={`group relative aspect-video bg-muted rounded-xl overflow-hidden border transition-all ${isSelected ? "border-secondary ring-2 ring-secondary/50 ring-inset" : "border-border/50 hover:border-secondary"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(uploadedUrl, "_blank");
+              }}
+              className="p-1.5 bg-blue-500 text-white rounded-lg hover:scale-110 transition-transform" 
+              title="View Full Image"
             >
-              <img src={f.publicUrl} alt={f.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-              
-
-
-              {isSelected && (
-                <div className="absolute top-2 right-2 z-10 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-200">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-              )}
-              <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
-                <span className="text-[0.625rem] text-white font-bold uppercase tracking-widest bg-secondary/80 px-2 py-1 rounded">
-                  {isSelected ? "Selected" : "Select"}
-                </span>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/60 backdrop-blur-sm">
-                <p className="text-[0.625rem] text-white truncate font-medium">{f.name}</p>
-              </div>
+              <LucideIcons.Eye size={14} />
             </button>
-          );
-        })}
-      </div>
-      {!loading && !filtered.length && !search && (
-        <div className="text-center py-10 text-muted-foreground border-2 border-dashed border-border/40 rounded-xl">
-          No images in uploads folder yet.
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setUploadedUrl(null);
+                onSelect("");
+              }}
+              className="p-1.5 bg-destructive text-white rounded-lg hover:scale-110 transition-transform" 
+              title="Clear Image Selection"
+            >
+              <LucideIcons.Trash2 size={14} />
+            </button>
+          </div>
+          
+          <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-black/60 backdrop-blur-sm truncate">
+            <p className="text-[0.625rem] text-white font-medium truncate font-mono">{uploadedUrl}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/40 rounded-xl bg-muted/5 min-h-[120px]">
+          <LucideIcons.Image size={24} className="text-muted-foreground/40 mb-1" />
+          <span className="text-[0.6875rem] font-bold text-muted-foreground/60 uppercase tracking-wider">No Image Selected</span>
         </div>
       )}
     </div>

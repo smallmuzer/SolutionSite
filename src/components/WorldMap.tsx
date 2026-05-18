@@ -5,7 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Users, Building2, Map, X } from "lucide-react";
 import { dbSelect } from "@/lib/api";
-import { EditableText, EditorToolbar } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -57,6 +57,8 @@ function FlyToLocation({ lat, lng }: { lat: number; lng: number }) {
 }
 
 const WorldMap = () => {
+  const editor = useLiveEditor();
+  const getNavProps = useLiveEditorNavigation();
   const [activeLocation, setActiveLocation] = useState<LocationData | null>(null);
   const [locations, setLocations] = useState<LocationData[]>(DEFAULT_LOCATIONS);
   const [showMap, setShowMap] = useState(false);
@@ -64,6 +66,25 @@ const WorldMap = () => {
   const [detailVisible, setDetailVisible] = useState(false);
   const [header, setHeader] = useState({ badge: "Global Presence", title: "Our", highlight: "Reach", description: "Serving clients across Maldives, Bhutan, and beyond." });
   const detailTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleMove = (name: string, direction: "up" | "down" | "left" | "right") => {
+    const idx = locations.findIndex(l => l.name === name);
+    if (idx === -1) return;
+
+    let step = 0;
+    if (direction === "left" || direction === "up") step = -1;
+    else if (direction === "right" || direction === "down") step = 1;
+
+    const targetIdx = Math.max(0, Math.min(locations.length - 1, idx + step));
+    if (targetIdx === idx) return;
+
+    const newLocs = [...locations];
+    const [moved] = newLocs.splice(idx, 1);
+    newLocs.splice(targetIdx, 0, moved);
+    
+    setLocations(newLocs);
+    editor?.onUpdate("global_presence", "locations", newLocs);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -121,18 +142,19 @@ const WorldMap = () => {
   const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => l.name === loc.name) === idx);
 
   return (
-    <section className="section-padding overflow-hidden relative group" id="global-reach">
+        <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-10">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: (header as any).badge_color || undefined }}>
             <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: (header as any).title_color || undefined }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: (header as any).title_color || undefined }}>
             <EditableText section="global_reach" field="title" value={header.title || "Our"} colorField="title_color" />{" "}
             <span className="gradient-text" style={{ color: (header as any).highlight_color || undefined, background: (header as any).highlight_color ? "none" : undefined, WebkitTextFillColor: (header as any).highlight_color ? "initial" : undefined }}>
               <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} colorField="highlight_color" />
             </span>
+            <SectionHeaderToolbar section="global_presence" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: (header as any).description_color || undefined }}>
             <EditableText section="global_reach" field="description" value={header.description || ""} colorField="description_color" />
@@ -141,14 +163,14 @@ const WorldMap = () => {
 
         <AnimatedSection>
           <div className="max-w-5xl mx-auto">
-            <div className="flex flex-wrap justify-center gap-5 lg:gap-6">
-              {uniqueLocations.slice(0, 3).map((loc) => {
+            <div className="flex flex-wrap justify-center gap-8 lg:gap-10">
+              {uniqueLocations.map((loc) => {
                 const isActive = activeLocation?.name === loc.name;
                 return (
                   <div
                     key={loc.name}
-                    onClick={() => handleLocationClick(loc)}
-                    className="group p-4 rounded-xl text-left cursor-pointer border relative overflow-hidden transition-all duration-300 hover:shadow-xl w-full sm:w-[calc(50%-1rem)] lg:w-[28%] max-w-sm flex flex-col"
+                    {...getNavProps(() => handleLocationClick(loc))}
+                    className="group group/item p-4 rounded-xl text-left cursor-pointer border relative overflow-hidden transition-all duration-300 hover:shadow-xl w-full sm:w-[calc(50%-1rem)] lg:w-[28%] max-w-sm flex flex-col"
                     style={{
                       border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
                       background: isActive
@@ -160,17 +182,15 @@ const WorldMap = () => {
                       minHeight: 100,
                     }}
                   >
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute top-2 right-2 scale-90" onMove={(dir) => handleMove(loc.name, dir)} />
                       <div className="flex items-center gap-2.5">
-                        <span className="text-3xl drop-shadow-sm">{loc.flag}</span>
-                        <span className="font-heading font-bold text-foreground text-[1rem] leading-tight flex-1">
-                          {loc.name.split(",")[0]}
-                        </span>
+                        <span className="text-3xl drop-shadow-sm"><EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} /></span>
+                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={loc.name} value={loc.name.split(",")[0]} /></h3>
                       </div>
                       <button
                         className={`shrink-0 p-2 rounded-full transition-all duration-300 shadow-sm animate-glow ${isActive ? "bg-secondary text-white scale-110" : "bg-secondary/70 text-white hover:bg-secondary hover:scale-110"}`}
                         title="View on map"
-                        onClick={(e) => { e.stopPropagation(); handleLocationClick(loc); }}
+                        {...getNavProps(() => handleLocationClick(loc))}
                       >
                         <MapPin size={16} />
                       </button>
@@ -181,48 +201,29 @@ const WorldMap = () => {
                     <div className="text-[0.6875rem] text-secondary/90 font-semibold flex items-center gap-1.5 mt-auto pt-2 border-t border-border/40">
                       <Building2 size={12} /> <EditableText section="global_reach_locations" field="landmark" id={loc.name} value={loc.landmark} />
                     </div>
+
+                    {/* Admin-only: lat/lng coordinate editor */}
+                    {editor?.isEditMode && (
+                      <div className="mt-3 pt-2 border-t border-dashed border-secondary/20 text-[0.65rem] font-mono text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-secondary/70 font-bold shrink-0">Lat:</span>
+                          <EditableText section="global_presence" field="lat" id={loc.name} value={String(loc.lat)} />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-secondary/70 font-bold shrink-0">Lng:</span>
+                          <EditableText section="global_presence" field="lng" id={loc.name} value={String(loc.lng)} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Active location detail — Moved above the map */}
-            {activeLocation && (
-              <div
-                className="mt-6 mb-6 rounded-xl p-4 border border-border/40 overflow-hidden"
-                style={{
-                  background: "linear-gradient(135deg, hsl(var(--card)/0.85), hsl(var(--card)/0.55))",
-                  backdropFilter: "blur(20px)",
-                  opacity: detailVisible ? 1 : 0,
-                  transform: detailVisible ? "translateY(0)" : "translateY(10px)",
-                  transition: "opacity 0.25s ease, transform 0.25s ease",
-                }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl">{activeLocation.flag}</div>
-                  <div className="flex-1">
-                    <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2">
-                      <MapPin size={14} className="text-secondary" />
-                      {activeLocation.name}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-4 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Users size={12} /> {activeLocation.clients}</span>
-                      <span className="flex items-center gap-1"><Building2 size={12} /> Active Operations</span>
-                      <span className="text-secondary/70">{activeLocation.landmark}</span>
-                    </div>
-                    <p className="text-muted-foreground text-[0.8125rem] mt-2 leading-relaxed">{activeLocation.description}</p>
-                  </div>
-                  <button onClick={clearDetail} className="text-muted-foreground hover:text-foreground shrink-0">
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Map */}
+            {/* Map — with increased gap from cards */}
             {mapMounted && (
               <div
-                className="rounded-xl overflow-hidden border border-border shadow-lg relative"
+                className="rounded-xl overflow-hidden border border-border shadow-lg relative mt-8"
                 style={{
                   maxHeight: showMap ? 260 : 0,
                   opacity: showMap ? 1 : 0,
@@ -263,11 +264,23 @@ const WorldMap = () => {
                       key={loc.name}
                       position={[loc.lat, loc.lng]}
                       icon={createCustomIcon(activeLocation?.name === loc.name)}
-                      eventHandlers={{ click: () => handleLocationClick(loc) }}
+                      draggable={editor?.isEditMode}
+                      eventHandlers={{
+                        click: () => handleLocationClick(loc),
+                        dragend: (e) => {
+                          const { lat, lng } = e.target.getLatLng();
+                          setLocations((prev) =>
+                            prev.map((l) => (l.name === loc.name ? { ...l, lat, lng } : l))
+                          );
+                          if (activeLocation?.name === loc.name) {
+                            setActiveLocation((prev) => prev && { ...prev, lat, lng });
+                          }
+                        },
+                      }}
                     >
                       <Popup>
-                        <div className="text-sm font-semibold">{loc.flag} {loc.name}</div>
-                        <div className="text-xs opacity-70">{loc.clients}</div>
+                        <span className="text-3xl drop-shadow-sm"><EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} /></span>
+                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={loc.name} value={loc.name.split(",")[0]} /></h3>
                       </Popup>
                     </Marker>
                   ))}
