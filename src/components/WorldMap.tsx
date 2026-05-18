@@ -184,7 +184,23 @@ const WorldMap = () => {
                   >
                     <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute top-2 right-2 scale-90" onMove={(dir) => handleMove(loc.name, dir)} />
                       <div className="flex items-center gap-2.5">
-                        <span className="text-3xl drop-shadow-sm"><EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} /></span>
+                        <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
+                          {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
+                            <img 
+                              src={loc.flag} 
+                              alt="flag" 
+                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity" 
+                              onDoubleClick={(e) => {
+                                if (editor?.isEditMode) {
+                                  e.stopPropagation();
+                                  editor.onPickImage("global_presence", "flag", loc.name);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} />
+                          )}
+                        </span>
                         <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={loc.name} value={loc.name.split(",")[0]} /></h3>
                       </div>
                       <button
@@ -279,7 +295,23 @@ const WorldMap = () => {
                       }}
                     >
                       <Popup>
-                        <span className="text-3xl drop-shadow-sm"><EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} /></span>
+                        <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
+                          {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
+                            <img 
+                              src={loc.flag} 
+                              alt="flag" 
+                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity" 
+                              onDoubleClick={(e) => {
+                                if (editor?.isEditMode) {
+                                  e.stopPropagation();
+                                  editor.onPickImage("global_presence", "flag", loc.name);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} />
+                          )}
+                        </span>
                         <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={loc.name} value={loc.name.split(",")[0]} /></h3>
                       </Popup>
                     </Marker>

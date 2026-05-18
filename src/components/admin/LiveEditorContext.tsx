@@ -183,6 +183,7 @@ export const EditorToolbar: React.FC<{
   canMove?: boolean;
   moveDirections?: ("up" | "down" | "left" | "right")[];
   imageField?: string;
+  imageField2?: string;
   multiImageField?: string;
   iconField?: string;
   linkField?: string;
@@ -194,7 +195,7 @@ export const EditorToolbar: React.FC<{
   onMove?: (direction: "up" | "down" | "left" | "right") => void;
   onToggle?: () => void;
   onDelete?: () => void;
-}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle, onDelete }) => {
+}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, imageField2, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", onMove, onToggle, onDelete }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
@@ -212,6 +213,12 @@ export const EditorToolbar: React.FC<{
       {imageField && (
         <button onClick={() => editor.onPickImage(section, imageField, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Image">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+        </button>
+      )}
+
+      {imageField2 && (
+        <button onClick={() => editor.onPickImage(section, imageField2, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Secondary Image">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
         </button>
       )}
 

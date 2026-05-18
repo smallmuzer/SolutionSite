@@ -110,7 +110,7 @@ export default function AssetField({
             <p className="text-xs text-muted-foreground">Loading files from `/public/assets/{folder}`...</p>
           ) : files.length ? (
             <select
-              value={files.some((file) => file.publicUrl === value) ? value : ""}
+              value={value}
               onChange={(e) => e.target.value && onChange(e.target.value)}
               className={inputClassName}
             >
@@ -120,6 +120,9 @@ export default function AssetField({
                   {file.name}
                 </option>
               ))}
+              {value && !files.some((file) => file.publicUrl === value) && (
+                <option value={value}>Current Image</option>
+              )}
             </select>
           ) : (
             <p className="text-xs text-muted-foreground">No files found in `/public/assets/{folder}` yet.</p>

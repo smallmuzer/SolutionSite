@@ -189,6 +189,7 @@ const Footer = () => {
                         id={co.id}
                         isVisible={isVisible}
                         imageField="logo_url"
+                        imageField2="flag"
                         linkField="href"
                         className="-top-4 right-2 scale-75"
                         group="item"
@@ -203,16 +204,32 @@ const Footer = () => {
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
                       style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
                     <div className="flex items-center gap-3 relative z-10">
-                      <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 bg-muted/50 overflow-hidden">
-                        {(co as any).logo_url ? (
-                          <img
-                            src={(co as any).logo_url}
-                            alt={co.name}
-                            className="w-full h-full object-contain"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                          />
-                        ) : (
-                          <span className="text-2xl">{co.flag || "🏢"}</span>
+                      <div className="relative shrink-0">
+                        <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden border border-border/50 shadow-inner">
+                          {(co as any).logo_url ? (
+                            <img
+                              src={(co as any).logo_url}
+                              alt={co.name}
+                              className="w-full h-full object-contain p-1"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                            />
+                          ) : (
+                            co.flag && (co.flag.startsWith("/") || co.flag.startsWith("http") || co.flag.includes(".")) ? (
+                              <img src={co.flag} alt="flag" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-2xl">{co.flag || "🏢"}</span>
+                            )
+                          )}
+                        </div>
+                        {/* Overlay country flag badge if both are present! */}
+                        {(co as any).logo_url && co.flag && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-4 rounded shadow-sm border border-background overflow-hidden flex items-center justify-center bg-card">
+                            {co.flag.startsWith("/") || co.flag.startsWith("http") || co.flag.includes(".") ? (
+                              <img src={co.flag} alt="country flag" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[10px]">{co.flag}</span>
+                            )}
+                          </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

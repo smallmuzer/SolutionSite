@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
-import { LiveEditorProvider } from "./LiveEditorContext";
+import { LiveEditorProvider, useLiveEditor } from "./LiveEditorContext";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import UICustomizer from "@/components/UICustomizer";
@@ -186,7 +186,8 @@ const LiveEditor = () => {
         }
 
         for (const g of Object.values(grouped)) {
-            let endpoint = g.id ? `/api/db/${g.section}?id=${g.id}` : `/api/db/site_content`;
+            const dbSec = g.section === "clients" ? "client_logos" : g.section;
+            let endpoint = g.id ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
             let method = g.id ? "PATCH" : "POST";
             let body = g.id ? g.data : { section_key: g.section, content: g.data };
 
@@ -347,6 +348,10 @@ const LiveEditor = () => {
   };
 
   const handleAdd = async (section: string) => {
+    if (section === "hero") {
+      handlePickMultiImage("hero", "hero_images");
+      return;
+    }
     if (section === "global_presence") {
       try {
         const getResp = await fetch("/api/db/site_content");
@@ -624,6 +629,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
   onClose: () => void; 
   onSelect: (val: string | string[]) => void;
 }) => {
+  const editor = useLiveEditor();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [currentAssets, setCurrentAssets] = useState<string[]>([]);
@@ -637,6 +643,8 @@ const PickerModal = ({ config, onClose, onSelect }: {
       const assets = val.split(",").map(s => s.trim()).filter(Boolean);
       setCurrentAssets(assets);
       setSelected(assets);
+    } else {
+      setSelected(val ? [val] : []);
     }
   };
 
@@ -673,12 +681,29 @@ const PickerModal = ({ config, onClose, onSelect }: {
   useEffect(() => {
     // For single pick, try to load current value into manual field
     if (!config.multi) {
+      const pendingKey = config.id 
+        ? `${config.section}:${config.id}:${config.field}`
+        : `${config.section}:${config.field}`;
+      
+      const pendingValue = editor?.pendingChanges[pendingKey];
+      if (pendingValue !== undefined) {
+        setManualValue(pendingValue);
+        setSelected(pendingValue ? [pendingValue] : []);
+        return;
+      }
+
+      let table = config.section;
+      if (table === "clients") table = "client_logos";
+
       let url = config.id 
-        ? `/api/db/${config.section}?id=${config.id}&_single=1`
-        : `/api/db/site_content?section=${config.section}&_single=1`;
+        ? `/api/db/${table}?id=${config.id}&_single=1`
+        : `/api/db/site_content?section_key=${config.section}&_single=1`;
       
       if (config.section === "our_network") {
         url = `/api/db/site_content?section_key=our_network&_single=1`;
+      }
+      if (config.section === "global_presence") {
+        url = `/api/db/site_content?section_key=global_presence&_single=1`;
       }
       
       fetch(url)
@@ -696,25 +721,62 @@ const PickerModal = ({ config, onClose, onSelect }: {
             const co = companies.find((c: any) => c.id === config.id);
             if (co && co[config.field]) {
               setManualValue(co[config.field]);
+              setSelected(co[config.field] ? [co[config.field]] : []);
             }
             return;
           }
-          if (json.data && json.data[config.field]) {
-            setManualValue(json.data[config.field]);
+          if (config.section === "global_presence") {
+            let locations = [];
+            if (json.data && json.data.content) {
+              let contentObj = json.data.content;
+              if (typeof contentObj === "string") {
+                try { contentObj = JSON.parse(contentObj); } catch {}
+              }
+              locations = Array.isArray(contentObj.locations) ? contentObj.locations : [];
+            }
+            const loc = locations.find((l: any) => l.name === config.id);
+            if (loc && loc[config.field]) {
+              setManualValue(loc[config.field]);
+              setSelected(loc[config.field] ? [loc[config.field]] : []);
+            }
+            return;
+
+            setSelected(json.data[config.field] ? [json.data[config.field]] : []);
           }
         });
     }
-  }, [config.id, config.section, config.field, config.multi]);
+  }, [config.id, config.section, config.field, config.multi, editor?.pendingChanges]);
 
 
   useEffect(() => {
     if (config.multi) {
+      const pendingKey = config.id 
+        ? `${config.section}:${config.id}:${config.field}`
+        : `${config.section}:${config.field}`;
+      
+      const pendingValue = editor?.pendingChanges[pendingKey];
+      if (pendingValue !== undefined) {
+        const val = pendingValue;
+        const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
+        setCurrentAssets(assets);
+        setSelected(assets);
+        setManualValue(val);
+        if (assets.length === 0) setViewMode("pick");
+        return;
+      }
+
+      let table = config.section;
+      if (table === "clients") table = "client_logos";
+
       let url = config.id 
-        ? `/api/db/${config.section}?id=${config.id}&_single=1`
-        : `/api/db/site_content?section=${config.section}&_single=1`;
+        ? `/api/db/${table}?id=${config.id}&_single=1`
+        : `/api/db/site_content?section_key=${config.section}&_single=1`;
 
       if (config.section === "our_network") {
         url = `/api/db/site_content?section_key=our_network&_single=1`;
+      }
+      if (config.section === "global_presence") {
+        url = `/api/db/site_content?section_key=global_presence&_single=1`;
       }
 
       fetch(url)
@@ -740,6 +802,26 @@ const PickerModal = ({ config, onClose, onSelect }: {
             }
             return;
           }
+          if (config.section === "global_presence") {
+            let locations = [];
+            if (json.data && json.data.content) {
+              let contentObj = json.data.content;
+              if (typeof contentObj === "string") {
+                try { contentObj = JSON.parse(contentObj); } catch {}
+              }
+              locations = Array.isArray(contentObj.locations) ? contentObj.locations : [];
+            }
+            const loc = locations.find((l: any) => l.name === config.id);
+            if (loc && loc[config.field]) {
+              const val = loc[config.field];
+              const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
+              setCurrentAssets(assets);
+              setSelected(assets);
+              setManualValue(val);
+              if (assets.length === 0) setViewMode("pick");
+            }
+            return;
+          }
           if (json.data && json.data[config.field]) {
             const val = json.data[config.field];
             const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
@@ -750,7 +832,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
           }
         });
     }
-  }, [config.id, config.section, config.field, config.multi]);
+  }, [config.id, config.section, config.field, config.multi, editor?.pendingChanges]);
 
   
   return (
@@ -935,6 +1017,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
                       syncAssets(next);
                     } else {
                       setManualValue(v);
+                      setSelected([v]);
                     }
                   }} 
                   search={search} 
