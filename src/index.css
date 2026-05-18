@@ -177,6 +177,15 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent;
   }
 
+  .gradient-text *,
+  [class*="bg-clip-text"] * {
+    background-clip: inherit;
+    -webkit-background-clip: inherit;
+    background-image: inherit;
+    color: inherit;
+    -webkit-text-fill-color: inherit;
+  }
+
   .hero-bg {
     background: var(--hero-gradient);
   }

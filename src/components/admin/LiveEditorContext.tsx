@@ -114,8 +114,13 @@ export const EditableText: React.FC<{
   return (
     <span className="relative inline-block group/edit">
       <Tag
-        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10' : ''}`}
-        style={pendingColor ? { color: pendingColor } : undefined}
+        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 bg-background text-foreground px-1 rounded' : ''}`}
+        style={isEditing ? {
+          color: 'hsl(var(--foreground))',
+          background: 'none',
+          WebkitTextFillColor: 'hsl(var(--foreground))',
+          WebkitBackgroundClip: 'border-box'
+        } : (pendingColor ? { color: pendingColor } : undefined)}
         contentEditable
         suppressContentEditableWarning
         onFocus={() => setIsEditing(true)}

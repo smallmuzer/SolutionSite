@@ -158,7 +158,7 @@ const TechnologiesSection = () => {
           <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight relative" style={{ color: content.title_color || undefined }}>
             <span>
               <EditableText section="technologies" field="title" value={header.title || "Technologies"} colorField="title_color" />{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
+              <span className="gradient-text" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
                 <EditableText section="technologies" field="highlight" value={header.highlight || "We Use"} colorField="highlight_color" />
               </span>
             </span>
