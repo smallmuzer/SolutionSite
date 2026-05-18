@@ -144,7 +144,6 @@ const TechnologiesSection = () => {
 
   return (
     <section id="technologies" className="section-padding section-alt relative overflow-hidden group">
-      <SectionHeaderToolbar section="technologies" isVisible={header.is_visible !== false} className="-top-5 right-0" />
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
@@ -156,11 +155,14 @@ const TechnologiesSection = () => {
               <EditableText section="technologies" field="badge" value={header.badge || "Our Stack"} colorField="badge_color" />
             </span>
           </div>
-          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight" style={{ color: content.title_color || undefined }}>
-            <EditableText section="technologies" field="title" value={header.title || "Technologies"} colorField="title_color" />{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
-              <EditableText section="technologies" field="highlight" value={header.highlight || "We Use"} colorField="highlight_color" />
+          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight relative" style={{ color: content.title_color || undefined }}>
+            <span>
+              <EditableText section="technologies" field="title" value={header.title || "Technologies"} colorField="title_color" />{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
+                <EditableText section="technologies" field="highlight" value={header.highlight || "We Use"} colorField="highlight_color" />
+              </span>
             </span>
+            <SectionHeaderToolbar section="technologies" isVisible={header.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-[1rem] sm:text-[1.05rem] leading-relaxed" style={{ color: content.description_color || undefined }}>
             <EditableText section="technologies" field="description" value={header.description || ""} colorField="description_color" />

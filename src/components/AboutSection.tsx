@@ -156,7 +156,6 @@ const AboutSection = () => {
 
   return (
     <section id="about" className="section-padding relative overflow-hidden group">
-      <SectionHeaderToolbar section="about" />
       <div className="container-wide relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left: text — live from DB */}
@@ -165,8 +164,11 @@ const AboutSection = () => {
               <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
                 <EditableText section="about" field="badge" value="Who We Are" colorField="badge_color" />
               </span>
-              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6" style={{ color: content.title_color || undefined }}>
-                <EditableText section="about" field="title" value={content.title || "Driving Digital Transformation"} colorField="title_color" />
+              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6 relative" style={{ color: content.title_color || undefined }}>
+                <span>
+                  <EditableText section="about" field="title" value={content.title || "Driving Digital Transformation"} colorField="title_color" />
+                </span>
+                <SectionHeaderToolbar section="about" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h2>
               <p className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
                 <EditableText section="about" field="description" value={content.description || "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!"} colorField="description_color" />

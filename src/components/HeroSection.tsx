@@ -238,7 +238,7 @@ const HeroSection = () => {
         section="hero"
         multiImageField="hero_images"
         canHide={false}
-        className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10 !opacity-100 !scale-100"
+        className="top-24 left-4 sm:top-28 sm:left-6 lg:top-24 lg:left-10 !opacity-100 !scale-100 origin-top-left"
       />
     </section>
   );

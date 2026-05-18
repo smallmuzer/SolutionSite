@@ -142,17 +142,19 @@ const Footer = () => {
       {/* Associated Companies */}
       {(isNetworkVisible || editor?.isEditMode) && (
         <div className={`border-b border-border/50 relative group/sect ${!isNetworkVisible ? 'opacity-50 border-dashed border-2' : ''}`}>
-          <SectionHeaderToolbar section="our_network" targetSection="our_network" isVisible={isNetworkVisible} className="top-4 left-4" />
           <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
             <div className="text-center mb-10">
               <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.network_badge_color || undefined }}>
                 <EditableText section="footer" field="network_badge" value="Our Network" colorField="network_badge_color" />
               </span>
-              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground flex items-center justify-center gap-2" style={{ color: content.network_title_color || undefined }}>
-                <EditableText section="footer" field="network_title" value="Associated Companies" colorField="network_title_color" />
-                {!isNetworkVisible && editor?.isEditMode && (
-                  <span className="text-amber-500" title="Section Hidden"><EyeOff size={18} /></span>
-                )}
+              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground relative" style={{ color: content.network_title_color || undefined }}>
+                <span className="inline-flex items-center gap-2">
+                  <EditableText section="footer" field="network_title" value="Associated Companies" colorField="network_title_color" />
+                  {!isNetworkVisible && editor?.isEditMode && (
+                    <span className="text-amber-500" title="Section Hidden"><EyeOff size={18} /></span>
+                  )}
+                </span>
+                <SectionHeaderToolbar section="our_network" targetSection="our_network" isVisible={isNetworkVisible} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h3>
               <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground" style={{ color: content.network_subtitle_color || undefined }}>
                 <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." colorField="network_subtitle_color" />

@@ -186,17 +186,19 @@ const TestimonialsSection = () => {
 
   return (
     <section id="testimonials" className="section-padding section-alt relative group">
-      <SectionHeaderToolbar section="testimonials" isVisible={headerContent.is_visible !== false} />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-14">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: headerContent.badge_color || undefined }}>
             <EditableText section="testimonials" field="badge" value={header.badge || "Testimonials"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: headerContent.title_color || undefined }}>
-            <EditableText section="testimonials" field="title" value={header.title || "What Our"} colorField="title_color" />{" "}
-            <span className="gradient-text" style={{ color: headerContent.highlight_color || undefined, background: headerContent.highlight_color ? "none" : undefined, WebkitTextFillColor: headerContent.highlight_color ? "initial" : undefined }}>
-              <EditableText section="testimonials" field="highlight" value={header.highlight || "Clients Say"} colorField="highlight_color" />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: headerContent.title_color || undefined }}>
+            <span>
+              <EditableText section="testimonials" field="title" value={header.title || "What Our"} colorField="title_color" />{" "}
+              <span className="gradient-text" style={{ color: headerContent.highlight_color || undefined, background: headerContent.highlight_color ? "none" : undefined, WebkitTextFillColor: headerContent.highlight_color ? "initial" : undefined }}>
+                <EditableText section="testimonials" field="highlight" value={header.highlight || "Clients Say"} colorField="highlight_color" />
+              </span>
             </span>
+            <SectionHeaderToolbar section="testimonials" isVisible={headerContent.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
         </AnimatedSection>
 

@@ -546,17 +546,19 @@ const ProductsSection = () => {
       <EditorToolbar section="products" canAdd />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-6 relative group">
-          <SectionHeaderToolbar section="our_products" targetSection="products" />
           <div className="inline-flex items-center gap-2 mb-3">
             <span className="text-secondary font-bold text-sm uppercase tracking-widest" style={{ color: header.badge_color || undefined }}>
               <EditableText section="our_products" field="badge" value={header.badge || DEFAULT_HEADER.badge} colorField="badge_color" />
             </span>
           </div>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2" style={{ color: header.title_color || undefined }}>
-            <EditableText section="our_products" field="title" value={header.title || DEFAULT_HEADER.title || ""} colorField="title_color" />{" "}
-            <span className="gradient-text" style={{ color: header.highlight_color || undefined, background: header.highlight_color ? "none" : undefined, WebkitTextFillColor: header.highlight_color ? "initial" : undefined }}>
-                <EditableText section="our_products" field="highlight" value={header.highlight || DEFAULT_HEADER.highlight || ""} colorField="highlight_color" />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2 relative" style={{ color: header.title_color || undefined }}>
+            <span>
+              <EditableText section="our_products" field="title" value={header.title || DEFAULT_HEADER.title || ""} colorField="title_color" />{" "}
+              <span className="gradient-text" style={{ color: header.highlight_color || undefined, background: header.highlight_color ? "none" : undefined, WebkitTextFillColor: header.highlight_color ? "initial" : undefined }}>
+                  <EditableText section="our_products" field="highlight" value={header.highlight || DEFAULT_HEADER.highlight || ""} colorField="highlight_color" />
+              </span>
             </span>
+            <SectionHeaderToolbar section="our_products" targetSection="products" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: header.subtitle_color || undefined }}>
             <EditableText section="our_products" field="subtitle" value={header.subtitle || DEFAULT_HEADER.subtitle || ""} colorField="subtitle_color" />

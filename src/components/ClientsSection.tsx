@@ -371,9 +371,9 @@ const ClientCard = ({
   const editor = useLiveEditor();
   return (
     <div
-      className={`flex flex-col items-center rounded-lg border border-white/60 dark:border-white/20 backdrop-blur-sm bg-white/70 dark:bg-card/85 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-10 group/item relative ${
-        !client.is_visible ? 'opacity-50 grayscale' : ''
-      } ${draggedId === client.id ? 'opacity-20 scale-95' : ''}`}
+      className={`flex flex-col items-center rounded-lg border border-white/60 dark:border-white/20 bg-white dark:bg-card shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-10 group/item relative ${
+        draggedId === client.id ? 'opacity-20 scale-95' : ''
+      }`}
       style={flexible
         ? { width: '100%', minHeight: 100, overflow: 'visible', paddingTop: editor?.isEditMode ? 18 : 6 }
         : { width: CARD_W, height: CARD_H, overflow: 'visible' }
@@ -391,46 +391,54 @@ const ClientCard = ({
           id={client.id}
           isVisible={client.is_visible}
           imageField="logo_url"
-          className="-top-3 left-1/2 -translate-x-1/2"
+          className="-top-3 right-1 translate-x-0"
           group="item"
         />
       )}
 
-      {/* Logo image — constrained max height so name always shows */}
-      <div style={{
-        width: '100%',
-        height: flexible ? 56 : IMG_MAX_H,
-        maxHeight: flexible ? 56 : IMG_MAX_H,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: flexible ? '4px 8px 2px 8px' : '6px 6px 2px 6px',
-        flexShrink: 0,
-        overflow: 'hidden',
-      }}>
-        <div className="max-h-full max-w-full w-full h-full flex items-center justify-center transition-transform duration-300 group-hover/item:scale-110">
-          <ClientLogoImage client={client} />
+      {/* Inner content wrapper - applies opacity and grayscale ONLY to content when invisible */}
+      <div 
+        className={`w-full h-full flex flex-col items-center ${
+          !client.is_visible ? 'opacity-50 grayscale' : ''
+        }`}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%' }}
+      >
+        {/* Logo image — constrained max height so name always shows */}
+        <div style={{
+          width: '100%',
+          height: flexible ? 56 : IMG_MAX_H,
+          maxHeight: flexible ? 56 : IMG_MAX_H,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: flexible ? '4px 8px 2px 8px' : '6px 6px 2px 6px',
+          flexShrink: 0,
+          overflow: 'hidden',
+        }}>
+          <div className="max-h-full max-w-full w-full h-full flex items-center justify-center transition-transform duration-300 group-hover/item:scale-110">
+            <ClientLogoImage client={client} />
+          </div>
         </div>
-      </div>
 
-      {/* Company name — always at bottom, zero extra margin */}
-      <span style={{
-        fontSize: flexible ? 10 : 9,
-        lineHeight: 1.2,
-        textAlign: 'center',
-        fontWeight: 700,
-        color: 'hsl(var(--foreground))',
-        width: '100%',
-        padding: flexible ? '2px 6px 6px 6px' : '0 4px 4px 4px',
-        overflow: 'hidden',
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        flexShrink: 0,
-        marginTop: 'auto',
-      }}>
-        <EditableText section="clients" field="name" id={client.id} value={client.name} />
-      </span>
+        {/* Company name — always at bottom, zero extra margin */}
+        <span style={{
+          fontSize: flexible ? 10 : 9,
+          lineHeight: 1.2,
+          textAlign: 'center',
+          fontWeight: 700,
+          color: 'hsl(var(--foreground))',
+          width: '100%',
+          padding: flexible ? '2px 6px 6px 6px' : '0 4px 4px 4px',
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          flexShrink: 0,
+          marginTop: 'auto',
+        }}>
+          <EditableText section="clients" field="name" id={client.id} value={client.name} />
+        </span>
+      </div>
 
       {/* 4-directional move buttons — centered in card (grid mode only) */}
       {editor?.isEditMode && onMove && flexible && (
@@ -599,7 +607,6 @@ const ClientsSection = () => {
     <section id="portfolio" className="section-padding relative group" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div className="container-wide">
         <AnimatedSection className="text-center mb-8 relative group">
-          <SectionHeaderToolbar section="clients" targetSection="client_logos" className="top-0 left-4" />
           <div className="absolute right-0 top-0 sm:top-2">
             <button
               onClick={() => setShowAll(!showAll)}
@@ -615,13 +622,14 @@ const ClientsSection = () => {
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
             <EditableText section="clients" field="badge" value={header.badge || "Portfolio (Our Clients)"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 flex items-center justify-center flex-wrap gap-4">
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 relative">
             <span>
               <EditableText section="clients" field="title" value={header.title || "Trusted by"} colorField="title_color" />{" "}
               <span className="gradient-text">
                 <EditableText section="clients" field="highlight" value={header.highlight || "Industry Leaders"} colorField="highlight_color" />
               </span>
             </span>
+            <SectionHeaderToolbar section="clients" targetSection="client_logos" className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />
