@@ -81,8 +81,8 @@ const Footer = () => {
   const isNetworkVisible = isNetworkVisibleDraft !== false;
 
   const rawCompanies = associatedContent.companies || [
-    { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", logo_url: "/assets/clients/oblu.png", accent: "#3b82f6", is_visible: true },
-    { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", logo_url: "/assets/clients/villa.png", accent: "#10b981", is_visible: true },
+    { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", logo_url: "/logo.png", accent: "#3b82f6", is_visible: true },
+    { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", logo_url: "/assets/uploads/bhutan_partner.png", accent: "#10b981", is_visible: true },
   ];
 
   const associated = editor?.isEditMode 
@@ -169,12 +169,14 @@ const Footer = () => {
               {associated.map((co, idx) => {
                 const isCoVisibleDraft = editor?.pendingChanges[`our_network:${co.id}:is_visible`] ?? co.is_visible;
                 const isVisible = isCoVisibleDraft !== false;
+                const logoDraft = editor?.pendingChanges[`our_network:${co.id}:logo_url`] ?? (co as any).logo_url;
+                const hrefDraft = editor?.pendingChanges[`our_network:${co.id}:href`] ?? co.href;
 
                 return (
                   <React.Fragment key={co.id || co.name}>
                     <a
-                      href={co.href}
-                      target={co.href !== "#" ? "_blank" : undefined}
+                      href={hrefDraft}
+                      target={hrefDraft !== "#" ? "_blank" : undefined}
                       rel="noopener noreferrer"
                       onClick={(e) => {
                         if (editor?.isEditMode) {
@@ -182,8 +184,8 @@ const Footer = () => {
                         }
                       }}
                       onDoubleClick={() => {
-                        if (editor?.isEditMode && co.href && co.href !== "#") {
-                          window.open(co.href, "_blank");
+                        if (editor?.isEditMode && hrefDraft && hrefDraft !== "#") {
+                          window.open(hrefDraft, "_blank");
                         }
                       }}
                       className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
@@ -210,9 +212,10 @@ const Footer = () => {
                     <div className="flex items-center gap-3 relative z-10">
                       <div className="relative shrink-0">
                         <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden border border-border/50 shadow-inner">
-                          {(co as any).logo_url ? (
+                          {logoDraft ? (
                             <img
-                              src={(co as any).logo_url}
+                              key={logoDraft}
+                              src={logoDraft}
                               alt={co.name}
                               className="w-full h-full object-contain p-1"
                               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
@@ -225,16 +228,6 @@ const Footer = () => {
                             )
                           )}
                         </div>
-                        {/* Overlay country flag badge if both are present! */}
-                        {(co as any).logo_url && co.flag && (
-                          <div className="absolute -bottom-1 -right-1 w-5 h-4 rounded shadow-sm border border-background overflow-hidden flex items-center justify-center bg-card">
-                            {co.flag.startsWith("/") || co.flag.startsWith("http") || co.flag.includes(".") ? (
-                              <img src={co.flag} alt="country flag" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-[10px]">{co.flag}</span>
-                            )}
-                          </div>
-                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">

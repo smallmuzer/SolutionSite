@@ -78,6 +78,13 @@ const SEED_SITE_CONTENT: Record<string, Record<string, any>> = {
     badge: "Our Stack", title: "Technologies", highlight: "We Use",
     description: "We leverage cutting-edge technologies to build scalable, performant, and maintainable solutions.",
   },
+  our_network: {
+    companies: [
+      { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", logo_url: "/logo.png", flag: "🇲🇻", accent: "#3b82f6", is_visible: true },
+      { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", logo_url: "/assets/uploads/bhutan_partner.png", flag: "🇧🇹", accent: "#10b981", is_visible: true },
+    ],
+    is_visible: true
+  },
   settings: {},
 };
 
