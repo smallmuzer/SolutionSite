@@ -179,7 +179,7 @@ const TechnologiesSection = () => {
               return (
                 <AnimatedSection key={tech.id} delay={i * 0.04}>
                   <div 
-                    className={`relative group/item cursor-pointer h-full transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''}`} 
+                    className={`relative group/item cursor-pointer h-full transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''} ${!tech.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`} 
                     {...getNavProps(scrollToContact)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, tech.id)}

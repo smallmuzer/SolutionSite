@@ -740,8 +740,24 @@ const PickerModal = ({ config, onClose, onSelect }: {
               setSelected(loc[config.field] ? [loc[config.field]] : []);
             }
             return;
+          }
 
-            setSelected(json.data[config.field] ? [json.data[config.field]] : []);
+          if (json.data) {
+            let val;
+            if (!config.id && json.data.content) {
+              let contentObj = json.data.content;
+              if (typeof contentObj === "string") {
+                try { contentObj = JSON.parse(contentObj); } catch {}
+              }
+              val = contentObj[config.field];
+            } else {
+              val = json.data[config.field];
+            }
+
+            if (val !== undefined) {
+              setManualValue(val);
+              setSelected(val ? [val] : []);
+            }
           }
         });
     }
@@ -822,13 +838,26 @@ const PickerModal = ({ config, onClose, onSelect }: {
             }
             return;
           }
-          if (json.data && json.data[config.field]) {
-            const val = json.data[config.field];
-            const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
-            setCurrentAssets(assets);
-            setSelected(assets);
-            setManualValue(val);
-            if (assets.length === 0) setViewMode("pick");
+
+          if (json.data) {
+            let val;
+            if (!config.id && json.data.content) {
+              let contentObj = json.data.content;
+              if (typeof contentObj === "string") {
+                try { contentObj = JSON.parse(contentObj); } catch {}
+              }
+              val = contentObj[config.field];
+            } else {
+              val = json.data[config.field];
+            }
+
+            if (val !== undefined) {
+              const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
+              setCurrentAssets(assets);
+              setSelected(assets);
+              setManualValue(val);
+              if (assets.length === 0) setViewMode("pick");
+            }
           }
         });
     }

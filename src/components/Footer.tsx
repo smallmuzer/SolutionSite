@@ -97,7 +97,11 @@ const Footer = () => {
   const logoPath = settings.site_logo || "";
   const siteName = settings.site_name || "Systems Solutions";
 
-  const { data: servicesData } = useDbQuery<{ id: string; title: string; href?: string }[]>("services", { is_visible: true }, { order: "sort_order" });
+  const { data: servicesData } = useDbQuery<{ id: string; title: string; href?: string; is_visible?: boolean }[]>(
+    "services", 
+    editor?.isEditMode ? {} : { is_visible: true }, 
+    { order: "sort_order" }
+  );
   
   const hiddenLinksDraft = editor?.pendingChanges["footer:hidden_links"] ?? content.hidden_links;
   const hiddenLinks = (hiddenLinksDraft || "").split(",").filter(Boolean);
@@ -374,12 +378,14 @@ const Footer = () => {
                 <EditableText section="footer" field="label_services" value="Services" />
               </h4>
               <ul className="space-y-2.5">
-                {(editor?.isEditMode ? (servicesData || []) : (servicesData || []).slice(0, 6)).map(s => {
+                {(servicesData || [])
+                  .filter(s => editor?.isEditMode || (!hiddenLinks.includes(s.id) && s.is_visible !== false))
+                  .map(s => {
                   const isLinkVisible = !hiddenLinks.includes(s.id);
-                  if (!editor?.isEditMode && !isLinkVisible) return null;
+                  const isGloballyVisible = s.is_visible !== false;
                   
                   return (
-                    <li key={s.id} className={`relative flex flex-col group/item ${!isLinkVisible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
+                    <li key={s.id} className={`relative flex flex-col group/item ${(!isLinkVisible || !isGloballyVisible) ? 'opacity-40 grayscale-[0.5]' : ''}`}>
                       {editor?.isEditMode && (
                         <EditorToolbar 
                           section="services" 
@@ -393,8 +399,8 @@ const Footer = () => {
                         />
                       )}
                       <div className="flex items-center gap-1.5">
-                        {!isLinkVisible && editor?.isEditMode && (
-                          <span className="text-amber-500 shrink-0" title="Link Hidden"><EyeOff size={11} /></span>
+                        {(!isLinkVisible || !isGloballyVisible) && editor?.isEditMode && (
+                          <span className="text-amber-500 shrink-0" title={!isGloballyVisible ? "Service hidden globally" : "Link Hidden"}><EyeOff size={11} /></span>
                         )}
                         <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
                           onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
