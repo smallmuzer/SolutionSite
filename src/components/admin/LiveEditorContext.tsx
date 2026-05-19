@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { toast } from "sonner";
+import { TypographyEditorModal } from "./TypographyEditorModal";
 
 interface LiveEditorContextType {
   isEditMode: boolean;
@@ -20,6 +21,7 @@ interface LiveEditorContextType {
   handleSaveAll: () => void;
   handleDiscard: () => void;
   pendingChanges: Record<string, any>;
+  openTypographyEditor: (section: string, field: string, currentValue: string, id?: string) => void;
 }
 
 const LiveEditorContext = createContext<LiveEditorContextType | null>(null);
@@ -50,6 +52,28 @@ export const LiveEditorProvider: React.FC<{
   children, onUpdate, onHide, onDelete, onAdd, onClone, onSave, onPickImage, onPickMultiImage, onPickIcon, onPickLink, onPickColor, onOpenCustomizer, handleSaveAll, handleDiscard, pendingChanges
 }) => {
     const [activeElementId, setActiveElementId] = useState<string | null>(null);
+    const [typoState, setTypoState] = useState<{
+      isOpen: boolean;
+      section: string;
+      field: string;
+      value: string;
+      id?: string;
+    }>({
+      isOpen: false,
+      section: "",
+      field: "",
+      value: "",
+    });
+
+    const openTypographyEditor = (section: string, field: string, value: string, id?: string) => {
+      setTypoState({
+        isOpen: true,
+        section,
+        field,
+        value,
+        id
+      });
+    };
 
     return (
       <LiveEditorContext.Provider value={{
@@ -71,10 +95,22 @@ export const LiveEditorProvider: React.FC<{
         onOpenCustomizer,
         handleSaveAll,
         handleDiscard,
-        pendingChanges
+        pendingChanges,
+        openTypographyEditor
       }}>
         <div className="live-editor-container">
           {children}
+          <TypographyEditorModal
+            isOpen={typoState.isOpen}
+            section={typoState.section}
+            field={typoState.field}
+            initialValue={typoState.value}
+            id={typoState.id}
+            onClose={() => setTypoState(prev => ({ ...prev, isOpen: false }))}
+            onSave={(sec, fld, val, itemId) => {
+              onUpdate(sec, fld, val, itemId);
+            }}
+          />
         </div>
       </LiveEditorContext.Provider>
     );
@@ -101,7 +137,7 @@ export const EditableText: React.FC<{
   const pendingColor = colorField ? editor?.pendingChanges?.[colorDraftKey] : undefined;
 
   if (!editor?.isEditMode) {
-    return <Tag className={className} style={pendingColor ? { color: pendingColor } : undefined}>{displayValue}</Tag>;
+    return <Tag className={className} style={pendingColor ? { color: pendingColor } : undefined} dangerouslySetInnerHTML={{ __html: displayValue }} />;
   }
 
   const handleBlur = () => {
@@ -112,9 +148,9 @@ export const EditableText: React.FC<{
   };
 
   return (
-    <span className="relative inline-block group/edit">
+    <span className="relative group/edit">
       <Tag
-        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 bg-background text-foreground px-1 rounded' : ''}`}
+        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 bg-background text-foreground px-1 rounded animate-pulse' : ''}`}
         style={isEditing ? {
           color: 'hsl(var(--foreground))',
           background: 'none',
@@ -125,20 +161,30 @@ export const EditableText: React.FC<{
         suppressContentEditableWarning
         onFocus={() => setIsEditing(true)}
         onBlur={handleBlur}
-        onInput={(e) => setLocalValue(e.currentTarget.textContent || "")}
-      >
-        {displayValue}
-      </Tag>
+        onInput={(e) => setLocalValue(e.currentTarget.innerHTML || "")}
+        dangerouslySetInnerHTML={{ __html: displayValue }}
+      />
 
       {!isEditing && (
-        <span className="absolute -top-6 left-0 flex items-center gap-1 opacity-0 group-hover/edit:opacity-100 transition-opacity bg-card/90 backdrop-blur-sm border border-border/50 p-1 rounded-lg shadow-xl z-50 pointer-events-auto">
+        <span className="absolute bottom-0 right-0 flex items-center gap-0.5 opacity-0 group-hover/edit:opacity-100 transition-all bg-secondary text-secondary-foreground shadow-xl border border-secondary/20 p-0.5 rounded-[4px] z-[150] pointer-events-auto scale-90 origin-bottom-right hover:scale-100 m-0.5">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              editor.openTypographyEditor(section, field, displayValue, id);
+            }}
+            className="px-1.5 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center"
+            title="Edit Text Style"
+          >
+            <span className="font-serif font-extrabold text-[12px] leading-none text-white">A</span>
+          </button>
           {colorField && !hideColorPicker && (
             <button
               onClick={(e) => { e.stopPropagation(); editor.onPickColor(section, colorField, id); }}
-              className="p-1 hover:bg-secondary/10 rounded-md text-secondary transition-colors"
+              className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white"
               title="Change Color"
             >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
             </button>
           )}
         </span>
