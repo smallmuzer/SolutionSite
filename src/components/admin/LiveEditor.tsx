@@ -187,9 +187,9 @@ const LiveEditor = () => {
 
         for (const g of Object.values(grouped)) {
             const dbSec = g.section === "clients" ? "client_logos" : g.section;
-            let endpoint = g.id ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
-            let method = g.id ? "PATCH" : "POST";
-            let body = g.id ? g.data : { section_key: g.section, content: g.data };
+            const endpoint = g.id ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
+            const method = g.id ? "PATCH" : "POST";
+            const body = g.id ? g.data : { section_key: g.section, content: g.data };
 
             const resp = await fetch(endpoint, {
                 method,
@@ -714,7 +714,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             if (json.data && json.data.content) {
               let contentObj = json.data.content;
               if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch {}
+                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
               }
               companies = Array.isArray(contentObj.companies) ? contentObj.companies : [];
             }
@@ -730,7 +730,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             if (json.data && json.data.content) {
               let contentObj = json.data.content;
               if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch {}
+                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
               }
               locations = Array.isArray(contentObj.locations) ? contentObj.locations : [];
             }
@@ -747,7 +747,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             if (!config.id && json.data.content) {
               let contentObj = json.data.content;
               if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch {}
+                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
               }
               val = contentObj[config.field];
             } else {
@@ -803,7 +803,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             if (json.data && json.data.content) {
               let contentObj = json.data.content;
               if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch {}
+                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
               }
               companies = Array.isArray(contentObj.companies) ? contentObj.companies : [];
             }
@@ -823,7 +823,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             if (json.data && json.data.content) {
               let contentObj = json.data.content;
               if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch {}
+                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
               }
               locations = Array.isArray(contentObj.locations) ? contentObj.locations : [];
             }
@@ -844,7 +844,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             if (!config.id && json.data.content) {
               let contentObj = json.data.content;
               if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch {}
+                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
               }
               val = contentObj[config.field];
             } else {

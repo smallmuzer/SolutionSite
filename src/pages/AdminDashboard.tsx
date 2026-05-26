@@ -73,7 +73,7 @@ function useDarkMode() {
   return { isDark, toggle };
 }
 
-type Tab = "dashboard" | "inbox" | "website" | "sitehealth" | "settings" | "chat" | "appointments";
+type Tab = "dashboard" | "inbox" | "website" | "sitehealth" | "settings" | "chat";
 
 const AVAILABLE_FONTS: { label: string; value: string }[] = [
   { label: "Arial", value: "Arial, Helvetica, sans-serif" },
@@ -112,6 +112,430 @@ interface SiteSettings {
   social_count?: string;
   [key: string]: any;
 }
+
+const EditableDateInput = ({ type = "date", value, onChange, className, title, placeholder }: any) => {
+  const formatForDisplay = useCallback((val: string) => {
+    if (!val) return "";
+    if (type === "datetime-local") {
+      const match = val.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})$/);
+      if (match) return `${match[3]}-${match[2]}-${match[1]} ${match[4]}`;
+      return val;
+    } else {
+      const match = val.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+      return val;
+    }
+  }, [type]);
+
+  const parseFromDisplay = (val: string) => {
+    if (!val) return "";
+    if (type === "datetime-local") {
+      const match = val.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}:\d{2})$/);
+      if (match) return `${match[3]}-${match[2]}-${match[1]}T${match[4]}`;
+      return val;
+    } else {
+      const match = val.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+      return val;
+    }
+  };
+
+  const [displayValue, setDisplayValue] = useState(formatForDisplay(value || ""));
+
+  useEffect(() => {
+    setDisplayValue(formatForDisplay(value || ""));
+  }, [value, formatForDisplay]);
+
+  const handleTextChange = (e: any) => {
+    const raw = e.target.value;
+    setDisplayValue(raw);
+    const parsed = parseFromDisplay(raw);
+    
+    const isValidOut = type === "datetime-local" 
+      ? /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(parsed)
+      : /^\d{4}-\d{2}-\d{2}$/.test(parsed);
+      
+    if (isValidOut || raw === "") {
+      onChange({ target: { value: parsed } });
+    }
+  };
+
+  const isValidHTMLDate = type === "datetime-local" 
+    ? /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value || "")
+    : /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+    
+  return (
+    <div className={`relative flex items-center p-0 overflow-hidden bg-background border border-border focus-within:ring-1 focus-within:ring-ring ${className}`}>
+      <input
+        type="text"
+        value={displayValue}
+        onChange={handleTextChange}
+        title={title}
+        placeholder={placeholder || (type === "datetime-local" ? "DD-MM-YYYY HH:mm" : "DD-MM-YYYY")}
+        className="w-full h-full px-2.5 py-1.5 bg-transparent border-none outline-none text-xs text-foreground"
+      />
+      <div className="absolute right-0 top-0 bottom-0 w-8 flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity border-l border-border/50 bg-muted/20">
+        <LucideIcons.Calendar size={12} className="pointer-events-none text-muted-foreground" />
+        <input
+          type={type}
+          value={isValidHTMLDate ? value : ""}
+          onChange={(e) => {
+             onChange(e);
+             setDisplayValue(formatForDisplay(e.target.value));
+          }}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </div>
+    </div>
+  );
+};
+const SubmissionsCalendar = ({ submissions, applications = [], appointments = [], onSubmissionClick, onAppointmentCreated }: { submissions: any[], applications?: any[], appointments?: any[], onSubmissionClick: (s: any) => void, onAppointmentCreated?: (created: any) => void }) => {
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [newAppointment, setNewAppointment] = useState({
+    reference_type: "manual",
+    reference_id: "",
+    name: "",
+    email: "",
+    title: "",
+    description: "",
+    notes: "",
+    appointment_date: "",
+  });
+
+  const toLocalDatetime = (date: Date) => {
+    const pad = (value: number) => value.toString().padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const openCreateModalForDate = (day: number) => {
+    const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day, 9, 0);
+    setNewAppointment((prev) => ({ ...prev, appointment_date: toLocalDatetime(targetDate) }));
+    setShowCreateModal(true);
+    setModalPosition({ x: 0, y: 0 });
+  };
+
+  const openCreateModalGeneral = () => {
+    const targetDate = new Date();
+    targetDate.setHours(9, 0, 0, 0);
+    setNewAppointment((prev) => ({ ...prev, appointment_date: toLocalDatetime(targetDate) }));
+    setShowCreateModal(true);
+    setModalPosition({ x: 0, y: 0 });
+  };
+
+  const handlePopupPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setDragStart({ x: e.clientX, y: e.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePopupPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStart) return;
+    setModalPosition((prev) => ({
+      x: prev.x + (e.clientX - dragStart.x),
+      y: prev.y + (e.clientY - dragStart.y),
+    }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handlePopupPointerUp = () => {
+    setDragStart(null);
+  };
+
+  const resetNewAppointment = () => {
+    setNewAppointment({
+      reference_type: "manual",
+      reference_id: "",
+      name: "",
+      email: "",
+      title: "",
+      description: "",
+      notes: "",
+      appointment_date: "",
+    });
+  };
+
+  useEffect(() => {
+    if (!showCreateModal) resetNewAppointment();
+  }, [showCreateModal]);
+
+  useEffect(() => {
+    if (!newAppointment.reference_id) return;
+    if (newAppointment.reference_type === "contact") {
+      const selected = submissions.find((item: any) => item.id === newAppointment.reference_id);
+      if (selected) {
+        setNewAppointment((prev) => ({
+          ...prev,
+          name: selected.full_name || selected.name || prev.name,
+          email: selected.email || prev.email,
+        }));
+      }
+    }
+    if (newAppointment.reference_type === "application") {
+      const selected = applications.find((item: any) => item.id === newAppointment.reference_id);
+      if (selected) {
+        setNewAppointment((prev) => ({
+          ...prev,
+          name: selected.applicant_name || prev.name,
+          email: selected.email || prev.email,
+        }));
+      }
+    }
+  }, [newAppointment.reference_id, newAppointment.reference_type, submissions, applications]);
+
+  const normalizeAppointmentDate = (value: string) => {
+    if (!value || !value.trim()) return "";
+    const candidate = value.trim();
+    const parsed = new Date(candidate);
+    if (Number.isNaN(parsed.getTime())) return "";
+    return parsed.toISOString();
+  };
+
+  const createAppointment = async () => {
+    const trimmedName = newAppointment.name.trim();
+    const trimmedEmail = newAppointment.email.trim();
+    const trimmedTitle = newAppointment.title.trim();
+    const trimmedDate = newAppointment.appointment_date.trim();
+    const appointmentDate = normalizeAppointmentDate(trimmedDate);
+
+    if (!trimmedName || !trimmedEmail || !trimmedTitle || !appointmentDate) {
+      toast.error("Name, email, title and appointment date are required.");
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      const url = new URL(`/api/db/appointments`, window.location.origin);
+      const resp = await fetch(url.toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference_type: newAppointment.reference_type,
+          reference_id: newAppointment.reference_id || "",
+          name: trimmedName,
+          email: trimmedEmail,
+          title: trimmedTitle,
+          description: newAppointment.description.trim(),
+          notes: newAppointment.notes.trim() || null,
+          appointment_date: appointmentDate,
+          created_at: new Date().toISOString(),
+        }),
+      });
+      const json = await resp.json();
+      if (!json?.data) throw new Error(json?.error?.message || "Failed to create appointment.");
+      onAppointmentCreated?.(json.data);
+      setShowCreateModal(false);
+      toast.success("Appointment created successfully (email sent).");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to create appointment.");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+  
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+
+  const days = Array.from({ length: 42 }, (_, i) => {
+    const day = i - firstDay + 1;
+    return day > 0 && day <= daysInMonth ? day : null;
+  });
+
+  const getDaySubs = (day: number) => {
+    const dStr = new Date(year, month, day).toDateString();
+    return submissions.filter(s => {
+      let prefDateStr = null;
+      if (s.message) {
+        const lines = s.message.split("\n");
+        const pdLine = lines.find((l: string) => l.startsWith("Preferred Date 1: ") || l.startsWith("Preferred Date: "));
+        if (pdLine) prefDateStr = pdLine.replace(/^Preferred Date(?: 1)?:\s*/i, "").trim();
+      }
+      let pd = new Date(prefDateStr);
+      if (isNaN(pd.getTime())) pd = new Date(s.created_at);
+      if (isNaN(pd.getTime())) return false;
+      return pd.toDateString() === dStr;
+    });
+  };
+
+  const handlePrev = () => setCurrentDate(new Date(year, month - 1, 1));
+  const handleNext = () => setCurrentDate(new Date(year, month + 1, 1));
+  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  return (
+    <>
+      <div className="glass-card flex flex-col items-stretch overflow-hidden">
+        <div className="flex flex-col gap-2 sm:flex-row justify-between w-full items-center px-3 py-2 border-b border-border/50 bg-muted/20">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={handlePrev} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
+            <ChevronLeft size={16} />
+          </button>
+          <h2 className="text-sm font-heading font-black text-foreground flex items-center gap-1.5">
+            <CalendarIcon size={16} className="text-secondary" /> {monthName}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={openCreateModalGeneral} className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-secondary/10 px-3 py-1.5 text-xs font-semibold text-secondary transition hover:bg-secondary/15">
+            <Plus size={14} /> New Appointment
+          </button>
+          <button onClick={handleNext} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+      <div className="p-4 bg-background">
+        <div className="grid grid-cols-7 border-t border-l border-border/60 rounded-xl overflow-hidden shadow-sm bg-card/30">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+            <div key={d} className="bg-muted/40 p-2 text-center text-[0.65rem] font-bold uppercase text-muted-foreground/80 tracking-widest border-r border-b border-border/60">
+              {d}
+            </div>
+          ))}
+          {days.map((day, idx) => {
+            if (!day) return <div key={`empty-${idx}`} className="bg-muted/5 border-r border-b border-border/60 min-h-[120px]" />;
+            const daySubs = getDaySubs(day);
+            const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+            return (
+              <div key={`day-${day}`} onClick={() => openCreateModalForDate(day)} className="group relative bg-card hover:bg-muted/10 border-r border-b border-border/60 min-h-[120px] sm:min-h-[140px] transition-all p-1 cursor-pointer">
+                <div className="flex justify-end p-1 pb-1">
+                  <span className={`flex items-center justify-center w-6 h-6 text-[0.7rem] font-bold rounded-full transition-colors ${isToday ? 'bg-secondary text-white shadow-md shadow-secondary/20' : 'text-muted-foreground'}`}>
+                    {day}
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-[85px] sm:max-h-[105px] overflow-y-auto custom-scrollbar">
+                  {daySubs.map(s => {
+                    let timeStr = "";
+                    let pd = new Date(s.created_at);
+                    if (s.message) {
+                      const pdLine = s.message.split("\n").find((l: string) => l.startsWith("Preferred Date 1: ") || l.startsWith("Preferred Date: "));
+                      if (pdLine) {
+                         const d = new Date(pdLine.replace(/^Preferred Date(?: 1)?:\s*/i, "").trim());
+                         if (!isNaN(d.getTime())) pd = d;
+                      }
+                    }
+                    if (!isNaN(pd.getTime())) {
+                       timeStr = pd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase();
+                    }
+                    
+                    return (
+                      <button type="button" onClick={(e) => { e.stopPropagation(); onSubmissionClick(s); }} key={s.id} className="w-full flex items-center gap-1.5 text-left px-2 py-1 rounded-[4px] bg-blue-500/10 text-blue-700 border-l-2 border-blue-500/50 hover:brightness-95 active:scale-[0.98] transition-all truncate" title={s.full_name || s.name || s.email}>
+                        <span className="text-[0.6rem] font-bold opacity-70 shrink-0">{timeStr}</span>
+                        <span className="text-[0.65rem] font-bold truncate">{s.full_name || s.name || s.email}</span>
+                      </button>
+                    );
+                  })}
+                  {daySubs.length === 0 && (
+                    <div className="absolute inset-x-0 bottom-0 top-10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
+                      <Plus size={14} className="text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      </div>
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 p-4" onClick={() => setShowCreateModal(false)} onPointerMove={handlePopupPointerMove} onPointerUp={handlePopupPointerUp}>
+          <div className="absolute w-full max-w-md bg-card border border-border rounded-2xl shadow-xl overflow-hidden animate-in duration-150" style={{ top: '50%', left: '50%', transform: `translate(calc(-50% + ${modalPosition.x}px), calc(-50% + ${modalPosition.y}px))` }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="flex flex-col gap-1 cursor-grab" onPointerDown={handlePopupPointerDown}>
+                <h3 className="text-sm font-semibold text-foreground">New Appointment</h3>
+                {newAppointment.appointment_date && (
+                  <p className="text-[0.65rem] text-muted-foreground">{new Date(newAppointment.appointment_date).toLocaleString()}</p>
+                )}
+              </div>
+              <button onClick={() => setShowCreateModal(false)} onPointerDown={(e) => e.stopPropagation()} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X size={16} /></button>
+            </div>
+
+            {/* Form body */}
+            <div className="overflow-y-auto max-h-[70vh] px-4 py-3 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Name *</label>
+                  <input value={newAppointment.name} onChange={(e) => setNewAppointment((p) => ({ ...p, name: e.target.value }))}
+                    placeholder="Client name"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Email *</label>
+                  <input type="email" value={newAppointment.email} onChange={(e) => setNewAppointment((p) => ({ ...p, email: e.target.value }))}
+                    placeholder="client@example.com"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Date & Time *</label>
+                  <EditableDateInput type="datetime-local" value={newAppointment.appointment_date} onChange={(e: any) => setNewAppointment((p) => ({ ...p, appointment_date: e.target.value }))}
+                    className="w-full rounded-lg" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Reference</label>
+                  <select value={newAppointment.reference_type} onChange={(e) => setNewAppointment((p) => ({ ...p, reference_type: e.target.value, reference_id: "" }))}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring">
+                    <option value="manual">Manual</option>
+                    <option value="contact">Contact</option>
+                    <option value="application">Job Application</option>
+                  </select>
+                </div>
+              </div>
+              {newAppointment.reference_type !== "manual" && (
+                <div className="space-y-1">
+                  <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Link to {newAppointment.reference_type === "contact" ? "Contact" : "Application"}</label>
+                  <select value={newAppointment.reference_id} onChange={(e) => setNewAppointment((p) => ({ ...p, reference_id: e.target.value }))}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring">
+                    <option value="">Choose one</option>
+                    {newAppointment.reference_type === "contact" ? submissions.map((item: any) => (
+                      <option key={item.id} value={item.id}>{item.full_name || item.name || item.email}</option>
+                    )) : applications.map((item: any) => (
+                      <option key={item.id} value={item.id}>{item.applicant_name || item.email}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="space-y-1">
+                <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Title *</label>
+                <input value={newAppointment.title} onChange={(e) => setNewAppointment((p) => ({ ...p, title: e.target.value }))}
+                  placeholder="Meeting purpose"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Description</label>
+                <textarea value={newAppointment.description} onChange={(e) => setNewAppointment((p) => ({ ...p, description: e.target.value }))}
+                  rows={2} placeholder="Brief description"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none resize-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Notes (optional)</label>
+                <textarea value={newAppointment.notes} onChange={(e) => setNewAppointment((p) => ({ ...p, notes: e.target.value }))}
+                  rows={2} placeholder="Internal notes"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none resize-none focus:ring-2 focus:ring-ring" />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border bg-muted/20">
+              <button type="button" onClick={() => setShowCreateModal(false)}
+                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted transition-colors">
+                Cancel
+              </button>
+              <button type="button" onClick={createAppointment} disabled={createLoading}
+                className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
+                {createLoading ? 'Creating…' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 const AppointmentsCalendar = ({
   appointments,
@@ -768,6 +1192,7 @@ const AdminDashboard = () => {
   const [apptsLoading, setApptsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("inbox");
   const [inboxSubTab, setInboxSubTab] = useState("contacts");
+  const [subView, setSubView] = useState<"list" | "calendar">("list");
   const [siteHealthSubTab, setSiteHealthSubTab] = useState("seo");
   const [chatSearchQuery, setChatSearchQuery] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -779,10 +1204,18 @@ const AdminDashboard = () => {
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({});
   const [subReplies, setSubReplies] = useState<Record<string, any[]>>({});
   const [appReplies, setAppReplies] = useState<Record<string, any[]>>({});
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
   // Inbox filters & pagination
   const [subSearch, setSubSearch] = useState("");
   const [subStatusFilter, setSubStatusFilter] = useState("all");
-  const [subDateFilter, setSubDateFilter] = useState("");
+  const [subDateFilterFrom, setSubDateFilterFrom] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d.toISOString().split("T")[0];
+  });
+  const [subDateFilterTo, setSubDateFilterTo] = useState(() => {
+    return new Date().toISOString().split("T")[0];
+  });
   const [subPage, setSubPage] = useState(1);
   const [appSearch, setAppSearch] = useState("");
   const [appStatusFilter, setAppStatusFilter] = useState("all");
@@ -1192,10 +1625,15 @@ const AdminDashboard = () => {
       if (subStatusFilter === "unread" && s.is_read) return false;
       if (subStatusFilter !== "read" && subStatusFilter !== "unread" && s.status !== subStatusFilter) return false;
     }
-    if (subDateFilter) {
-      const filterDate = new Date(subDateFilter);
-      const createdDate = new Date(s.created_at);
-      if (createdDate.toDateString() !== filterDate.toDateString()) return false;
+    if (subDateFilterFrom) {
+      const from = new Date(subDateFilterFrom);
+      from.setHours(0, 0, 0, 0);
+      if (new Date(s.created_at) < from) return false;
+    }
+    if (subDateFilterTo) {
+      const to = new Date(subDateFilterTo);
+      to.setHours(23, 59, 59, 999);
+      if (new Date(s.created_at) > to) return false;
     }
     return true;
   });
@@ -1227,7 +1665,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     setSubPage(1);
-  }, [subSearch, subStatusFilter, subDateFilter]);
+  }, [subSearch, subStatusFilter, subDateFilterFrom, subDateFilterTo]);
 
   useEffect(() => {
     setAppPage(1);
@@ -1237,7 +1675,6 @@ const AdminDashboard = () => {
     { key: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { key: "inbox", icon: MessageSquare, label: "Inbox" },
     { key: "chat", icon: BotMessageSquare, label: "Live Chat" },
-    { key: "appointments", icon: CalendarIcon, label: "Appointments" },
     { key: "website", icon: FileText, label: "Edit Website" },
     { key: "sitehealth", icon: Shield, label: "Site Health" },
     { key: "settings", icon: Settings, label: "Settings" },
@@ -1384,37 +1821,93 @@ const AdminDashboard = () => {
                   {/* CONTACTS */}
                   {inboxSubTab === "contacts" && (
                     <div className="space-y-3">
-                      <div className="grid gap-3 sm:grid-cols-3 items-end mb-4">
-                        <div className="sm:col-span-2 grid gap-3 sm:grid-cols-3">
+                      <div className="flex flex-col lg:flex-row gap-2 items-center mb-3 bg-muted/20 p-1.5 rounded-xl border border-border/50 shadow-sm">
+                        <div className="flex-1 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
                           <input value={subSearch}
                             onChange={(e) => setSubSearch(e.target.value)}
                             placeholder="Search submissions..."
-                            className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring"
                           />
                           <select value={subStatusFilter} onChange={(e) => setSubStatusFilter(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-ring">
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring">
                             <option value="all">All statuses</option>
                             <option value="read">Read</option>
                             <option value="unread">Unread</option>
                             <option value="new">New</option>
                             <option value="responded">Responded</option>
                           </select>
-                          <input type="date" value={subDateFilter}
-                            onChange={(e) => setSubDateFilter(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-ring"
+                          <EditableDateInput type="date" value={subDateFilterFrom}
+                            onChange={(e: any) => setSubDateFilterFrom(e.target.value)}
+                            title="From Date"
+                            className="w-full rounded-lg h-[32px]"
+                          />
+                          <EditableDateInput type="date" value={subDateFilterTo}
+                            onChange={(e: any) => setSubDateFilterTo(e.target.value)}
+                            title="To Date"
+                            className="w-full rounded-lg h-[32px]"
                           />
                         </div>
-
+                        <div className="w-full lg:w-auto flex items-center gap-2">
+                          <div className="flex bg-background border border-border rounded-lg p-0.5 shrink-0 h-[32px]">
+                            <button onClick={() => setSubView("list")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>List</button>
+                            <button onClick={() => setSubView("calendar")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "calendar" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>Calendar</button>
+                          </div>
+                          <button onClick={() => {
+                            const headers = ["Name", "Email", "Phone", "Company", "Message", "Date"];
+                            const csvContent = [
+                              headers.join(","),
+                              ...filteredSubmissions.map(s => [
+                                `"${(s.full_name || s.name || '').replace(/"/g, '""')}"`,
+                                `"${(s.email || '').replace(/"/g, '""')}"`,
+                                `"${(s.phone || '').replace(/"/g, '""')}"`,
+                                `"${(s.company_name || '').replace(/"/g, '""')}"`,
+                                `"${(s.message || '').replace(/"/g, '""')}"`,
+                                `"${formatDate(s.created_at)}"`
+                              ].join(","))
+                            ].join("\n");
+                            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", url);
+                            link.setAttribute("download", "contact_submissions.csv");
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
+                            <LucideIcons.Download size={14} /> Export Excel
+                          </button>
+                        </div>
                       </div>
-                      {displayedSubmissions.map((s) => {
+                      
+                      {subView === "calendar" ? (
+                        <SubmissionsCalendar submissions={submissions} applications={applications} appointments={appointments} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
+                      ) : (
+                        <>
+                          {displayedSubmissions.map((s) => {
                         const isExpanded = collapsedCards[s.id] === true;
                         const replies = subReplies[s.id] || [];
+                        
+                        let displayMessage = s.message || "";
+                        let service = "";
+                        let prefDate1 = "";
+                        let prefDate2 = "";
+
+                        const lines = displayMessage.split("\n");
+                        const cleanLines = [];
+                        for (const line of lines) {
+                          if (line.startsWith("Service: ")) service = line.replace("Service: ", "");
+                          else if (line.startsWith("Preferred Date 1: ")) prefDate1 = line.replace("Preferred Date 1: ", "");
+                          else if (line.startsWith("Preferred Date 2: ")) prefDate2 = line.replace("Preferred Date 2: ", "");
+                          else cleanLines.push(line);
+                        }
+                        displayMessage = cleanLines.join("\n").trim();
+
                         return (
                           <div key={s.id} className={`glass-card overflow-hidden transition-all ${!s.is_read ? "border-l-4 border-l-secondary" : ""}`}>
                             {/* Card Header — always visible */}
                             <div className="flex justify-between items-center px-5 py-4 cursor-pointer hover:bg-muted/20 transition-colors"
                               onClick={() => toggleCardCollapse(s.id, "sub")}>
-                              <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <ChevronDown size={16} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                 <div className="min-w-0">
                                   <span className="font-semibold text-foreground text-sm">{s.full_name || s.name || s.email}</span>
@@ -1422,7 +1915,16 @@ const AdminDashboard = () => {
                                   <div className="text-xs text-muted-foreground mt-0.5 truncate">{s.email}{s.phone ? ` · ${s.phone}` : ""}</div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                              
+                              {service ? (
+                                <div className="hidden sm:flex flex-1 justify-center items-center px-4">
+                                  <span className="px-2.5 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-[0.6875rem] font-bold uppercase tracking-wider whitespace-nowrap">
+                                    {service}
+                                  </span>
+                                </div>
+                              ) : <div className="hidden sm:block flex-1" />}
+
+                              <div className="flex items-center gap-2 shrink-0 flex-1 justify-end" onClick={e => e.stopPropagation()}>
                                 <span className="text-xs text-muted-foreground hidden sm:block">{formatDate(s.created_at)}</span>
                                 <button onClick={() => toggleRead(s.id, s.is_read)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={s.is_read ? "Mark unread" : "Mark read"}>
                                   {s.is_read ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -1436,28 +1938,60 @@ const AdminDashboard = () => {
                             {/* Expanded body */}
                             {isExpanded && (
                               <div className="border-t border-border/50 px-5 pb-5">
-                                {/* Original message */}
-                                <div className="pt-4 flex justify-start">
-                                  <div className="max-w-[85%] bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-foreground border border-border/40">
-                                    <div className="text-[0.625rem] text-muted-foreground font-bold uppercase mb-1">{s.full_name || s.email}</div>
-                                    {s.message}
-                                    <div className="text-[0.625rem] text-muted-foreground mt-1.5 opacity-60">{formatDate(s.created_at)}</div>
+                                {/* Original message detailed view */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 mb-2 text-sm">
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Name</div>
+                                    <div className="font-medium text-foreground truncate">{s.full_name || s.name || '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Email</div>
+                                    <div className="font-medium text-foreground truncate">{s.email || '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Phone</div>
+                                    <div className="font-medium text-foreground truncate">{s.phone || '—'}</div>
+                                  </div>
+                                  
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Company</div>
+                                    <div className="font-medium text-foreground truncate">{s.company_name || '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 1</div>
+                                    <div className="font-medium text-secondary truncate">{prefDate1 ? formatDate(prefDate1) : '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 2</div>
+                                    <div className="font-medium text-secondary truncate">{prefDate2 ? formatDate(prefDate2) : '—'}</div>
                                   </div>
                                 </div>
 
-                                {/* Admin replies in chat style */}
-                                {replies.map((r: any) => (
-                                  <div key={r.id} className={`flex mt-3 ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
-                                    <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm border ${r.sender === "admin"
-                                      ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
-                                      : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
-                                      }`}>
-                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
-                                      {r.message}
-                                      <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
+                                {/* Chat View for Messages & Replies */}
+                                <div className="mt-6 space-y-4">
+                                  {/* Client Message Bubble */}
+                                  <div className="flex justify-start">
+                                    <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
+                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{s.full_name || s.name || "Client"}</div>
+                                      <div className="whitespace-pre-wrap leading-relaxed">{displayMessage}</div>
+                                      <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
                                     </div>
                                   </div>
-                                ))}
+
+                                  {/* Admin replies in chat style */}
+                                  {replies.map((r: any) => (
+                                    <div key={r.id} className={`flex ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
+                                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs border shadow-sm ${r.sender === "admin"
+                                        ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
+                                        : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
+                                        }`}>
+                                        <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
+                                        <div className="whitespace-pre-wrap leading-relaxed">{r.message}</div>
+                                        <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
 
                                 {/* Reply input */}
                                 <div className="mt-4 space-y-2">
@@ -1497,6 +2031,126 @@ const AdminDashboard = () => {
                           </button>
                         </div>
                       )}
+
+                      </>
+                      )}
+                      
+                      {selectedSubmission && (() => {
+                        const s = selectedSubmission;
+                        const replies = subReplies[s.id] || [];
+                        let displayMessage = s.message || "";
+                        let service = "";
+                        let prefDate1 = "";
+                        let prefDate2 = "";
+                        const lines = displayMessage.split("\n");
+                        const cleanLines = [];
+                        for (const line of lines) {
+                          if (line.startsWith("Service: ")) service = line.replace("Service: ", "");
+                          else if (line.startsWith("Preferred Date 1: ")) prefDate1 = line.replace("Preferred Date 1: ", "");
+                          else if (line.startsWith("Preferred Date 2: ")) prefDate2 = line.replace("Preferred Date 2: ", "");
+                          else cleanLines.push(line);
+                        }
+                        displayMessage = cleanLines.join("\n").trim();
+
+                        return (
+                          <div className="fixed inset-0 z-50 p-4 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedSubmission(null)}>
+                            <div className="absolute w-full max-w-2xl bg-card border border-border rounded-2xl shadow-xl overflow-hidden animate-in duration-150" 
+                                 style={{ top: '50%', left: '50%', transform: `translate(-50%, -50%)` }} 
+                                 onClick={(e) => e.stopPropagation()}>
+                              {/* Header */}
+                              <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
+                                      <User size={10} /> Contact
+                                    </span>
+                                    <h3 className="text-base font-bold text-foreground">{s.full_name || s.name || s.email}</h3>
+                                  </div>
+                                  <p className="text-[0.65rem] text-muted-foreground">{formatDate(s.created_at)}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={() => setSelectedSubmission(null)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X size={16} /></button>
+                                </div>
+                              </div>
+
+                              {/* Scrollable body */}
+                              <div className="overflow-y-auto max-h-[75vh] p-5 custom-scrollbar">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2 text-sm">
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Name</div>
+                                    <div className="font-medium text-foreground truncate">{s.full_name || s.name || '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Email</div>
+                                    <div className="font-medium text-foreground truncate">{s.email || '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Phone</div>
+                                    <div className="font-medium text-foreground truncate">{s.phone || '—'}</div>
+                                  </div>
+                                  
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Company</div>
+                                    <div className="font-medium text-foreground truncate">{s.company_name || '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 1</div>
+                                    <div className="font-medium text-secondary truncate">{prefDate1 ? formatDate(prefDate1) : '—'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 2</div>
+                                    <div className="font-medium text-secondary truncate">{prefDate2 ? formatDate(prefDate2) : '—'}</div>
+                                  </div>
+                                </div>
+
+                                {/* Chat View for Messages & Replies */}
+                                <div className="mt-6 space-y-4">
+                                  {/* Client Message Bubble */}
+                                  <div className="flex justify-start">
+                                    <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
+                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{s.full_name || s.name || "Client"}</div>
+                                      <div className="whitespace-pre-wrap leading-relaxed">{displayMessage}</div>
+                                      <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Admin replies in chat style */}
+                                  {replies.map((r: any) => (
+                                    <div key={r.id} className={`flex ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
+                                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs border shadow-sm ${r.sender === "admin"
+                                        ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
+                                        : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
+                                        }`}>
+                                        <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
+                                        <div className="whitespace-pre-wrap leading-relaxed">{r.message}</div>
+                                        <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Reply input */}
+                                <div className="mt-4 space-y-2">
+                                  <div className="flex gap-2">
+                                    <input
+                                      value={replyTexts[s.id] || ""}
+                                      onChange={(e) => setReplyTexts(p => ({ ...p, [s.id]: e.target.value }))}
+                                      onKeyDown={(e) => { if (e.key === "Enter") sendSubmissionReply(s.id); }}
+                                      placeholder="Type a reply (sends email)..."
+                                      className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
+                                    />
+                                    <button onClick={() => sendSubmissionReply(s.id)}
+                                      disabled={replyingSub === s.id || !replyTexts[s.id]?.trim()}
+                                      className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 shrink-0">
+                                      <Send size={14} /> {replyingSub === s.id ? "Sending..." : "Reply"}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
@@ -1507,27 +2161,26 @@ const AdminDashboard = () => {
                         filteredApplications.length === 0
                           ? <p className="text-muted-foreground text-center py-12">No applications match the selected filters.</p>
                           : <div className="space-y-3">
-                            <div className="grid gap-3 sm:grid-cols-3 items-end mb-4">
-                              <div className="sm:col-span-2 grid gap-3 sm:grid-cols-3">
+                            <div className="flex flex-col lg:flex-row gap-2 items-center mb-3 bg-muted/20 p-1.5 rounded-xl border border-border/50 shadow-sm">
+                              <div className="flex-1 grid gap-2 grid-cols-1 sm:grid-cols-3 w-full">
                                 <input value={appSearch}
                                   onChange={(e) => setAppSearch(e.target.value)}
                                   placeholder="Search applications..."
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-ring"
+                                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring"
                                 />
                                 <select value={appStatusFilter} onChange={(e) => setAppStatusFilter(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-ring">
+                                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring">
                                   <option value="all">All statuses</option>
                                   <option value="applied">Applied</option>
                                   <option value="in_review">In Review</option>
                                   <option value="selected">Selected</option>
                                   <option value="rejected">Rejected</option>
                                 </select>
-                                <input type="date" value={appDateFilter}
-                                  onChange={(e) => setAppDateFilter(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border text-sm outline-none focus:ring-2 focus:ring-ring"
+                                <EditableDateInput type="date" value={appDateFilter}
+                                  onChange={(e: any) => setAppDateFilter(e.target.value)}
+                                  className="w-full rounded-lg h-[32px]"
                                 />
                               </div>
-
                             </div>
                             {displayedApplications.map((app) => {
                               const isExpanded = collapsedCards[`app-${app.id}`] === true;
@@ -2495,29 +3148,6 @@ const AdminDashboard = () => {
 
 
 
-
-              {tab === "appointments" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Appointments Calendar</h1>
-                    <button onClick={loadAppointments} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted">
-                      <RefreshCw size={14} /> Refresh
-                    </button>
-                  </div>
-                  {apptsLoading ? <div className="text-muted-foreground">Loading...</div> : (
-                    <div className="animate-in fade-in duration-500">
-                      <AppointmentsCalendar
-                        appointments={appointments}
-                        submissions={submissions}
-                        applications={applications}
-                        onAppointmentUpdated={(updated) => setAppointments((prev) => prev.map((appt) => appt.id === updated.id ? updated : appt))}
-                        onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))}
-                        onAppointmentDeleted={(id) => setAppointments((prev) => prev.filter((a) => a.id !== id))}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
 
             </>
           )}

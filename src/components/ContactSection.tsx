@@ -29,120 +29,20 @@ const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?
   return <Icon size={size} className={className} />;
 };
 
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const DAYS   = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-
 function DateTimePicker({ label, value, onChange, minDate }: {
   label: string; value: string; onChange: (v: string) => void; minDate: Date;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const parsed = value ? new Date(value) : null;
-  const [view, setView] = useState(() => { const d = parsed || new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
-  const [time, setTime] = useState(() => {
-    if (parsed) return { h: parsed.getHours(), min: parsed.getMinutes() };
-    return { h: new Date().getHours(), min: 0 };
-  });
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const minDay = new Date(minDate); minDay.setHours(0,0,0,0);
-
-  const firstDay = new Date(view.y, view.m, 1).getDay();
-  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
-
-  const selectDay = (d: number) => {
-    const dt = new Date(view.y, view.m, d, time.h, time.min);
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    const localStr = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-    onChange(localStr);
-  };
-
-  const applyTime = (h: number, min: number) => {
-    setTime({ h, min });
-    if (parsed) {
-      const dt = new Date(parsed);
-      dt.setHours(h, min);
-      const pad = (n: number) => n.toString().padStart(2, "0");
-      const localStr = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-      onChange(localStr);
-    }
-  };
-
-  const fmt = (v: string) => {
-    if (!v) return "";
-    const d = new Date(v);
-    return `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}, ${d.getFullYear()}  ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-  };
-
   return (
-    <div style={{ position: "relative" }} ref={ref}>
+    <div style={{ position: "relative" }}>
       <label className="text-[0.75rem] font-medium text-foreground mb-1 block">{label}</label>
-      <button type="button" onClick={() => setOpen(o => !o)}
-        className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.8125rem] outline-none transition-all focus:ring-2 focus:ring-ring flex items-center gap-2 hover:border-secondary"
-      >
-        <Calendar size={14} className="text-secondary shrink-0" />
-        <span className={fmt(value) ? "text-foreground" : "text-muted-foreground"}>
-          {fmt(value) || "Select date & time"}
-        </span>
-      </button>
-
-      {open && (
-        <div className="absolute z-50 mt-1 rounded-xl border border-border bg-card shadow-xl" style={{ minWidth: 260, left: 0 }}>
-          <div className="flex items-center justify-between px-3 pt-2 pb-1">
-            <button type="button" onClick={() => setView(v => { const d = new Date(v.y, v.m-1); return { y: d.getFullYear(), m: d.getMonth() }; })}
-              className="p-1 rounded hover:bg-muted text-muted-foreground"><ChevronLeft size={14} /></button>
-            <span className="text-[0.8125rem] font-semibold text-foreground">{MONTHS[view.m]} {view.y}</span>
-            <div className="flex items-center gap-1">
-              <button type="button" onClick={() => setView(v => { const d = new Date(v.y, v.m+1); return { y: d.getFullYear(), m: d.getMonth() }; })}
-                className="p-1 rounded hover:bg-muted text-muted-foreground"><ChevronRight size={14} /></button>
-              <button type="button" onClick={() => setOpen(false)}
-                className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive ml-1">
-                <X size={14} />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-7 px-2 pb-1">
-            {DAYS.map(d => <div key={d} className="text-center text-[0.625rem] font-semibold text-muted-foreground py-1">{d}</div>)}
-          </div>
-
-          <div className="grid grid-cols-7 px-2 pb-2">
-            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
-              const cellDate = new Date(view.y, view.m, d);
-              const isDisabled = cellDate < minDay;
-              const isSelected = parsed && parsed.getDate() === d && parsed.getMonth() === view.m && parsed.getFullYear() === view.y;
-              const isToday = cellDate.toDateString() === today.toDateString();
-              return (
-                <button key={d} type="button" disabled={isDisabled} onClick={() => selectDay(d)}
-                  className={`text-[0.75rem] rounded-lg py-1 mx-0.5 my-0.5 transition-colors ${
-                    isSelected ? "bg-secondary text-secondary-foreground font-bold" :
-                    isToday ? "border border-secondary text-secondary font-semibold" :
-                    isDisabled ? "text-muted-foreground/40 cursor-not-allowed" :
-                    "hover:bg-secondary/10 text-foreground"
-                  }`}
-                >{d}</button>
-              );
-            })}
-          </div>
-
-          <div className="border-t border-border px-3 py-2 flex items-center gap-2">
-            <Clock size={13} className="text-secondary shrink-0" />
-            <span className="text-[0.6875rem] text-muted-foreground">Time</span>
-            <select value={time.h} onChange={e => applyTime(Number(e.target.value), time.min)}
-              className="ml-auto text-[0.75rem] bg-background border border-border rounded px-1 py-0.5 text-foreground outline-none">
-              {Array.from({length:24},(_,i)=><option key={i} value={i}>{String(i).padStart(2,"0")}</option>)}
-            </select>
-            <span className="text-muted-foreground text-[0.75rem]">:</span>
-            <select value={time.min} onChange={e => applyTime(time.h, Number(e.target.value))}
-              className="text-[0.75rem] bg-background border border-border rounded px-1 py-0.5 text-foreground outline-none">
-              {[0,15,30,45].map(m=><option key={m} value={m}>{String(m).padStart(2,"0")}</option>)}
-            </select>
-            <button type="button" onClick={() => setOpen(false)}
-              className="ml-2 px-2 py-0.5 bg-secondary text-secondary-foreground rounded text-[0.6875rem] font-semibold">Done</button>
-          </div>
-        </div>
-      )}
+      <div className="relative">
+        <input 
+          type="datetime-local" 
+          value={value} 
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.8125rem] outline-none transition-all focus:ring-2 focus:ring-ring hover:border-secondary cursor-text"
+        />
+      </div>
     </div>
   );
 }
@@ -289,9 +189,9 @@ const ContactSection = () => {
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: content.title_color || undefined }}>
             <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: content.subtitle_color || undefined }}>
+          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: content.subtitle_color || undefined }}>
             <EditableText section="contact" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
-          </p>
+          </div>
         </AnimatedSection>
 
         <div className="flex flex-col lg:flex-row gap-20 max-w-6xl mx-auto items-stretch">

@@ -156,9 +156,9 @@ const WorldMap = () => {
             </span>
             <SectionHeaderToolbar section="global_presence" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: (header as any).description_color || undefined }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: (header as any).description_color || undefined }}>
             <EditableText section="global_reach" field="description" value={header.description || ""} colorField="description_color" />
-          </p>
+          </div>
         </AnimatedSection>
 
         <AnimatedSection>

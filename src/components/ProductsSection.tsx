@@ -5,6 +5,7 @@ import { useGlobalView } from "./ui-customizer-context";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { TypographyEditorModal } from "./admin/TypographyEditorModal";
 
 const PRODUCT_ICON_CONFIG: Record<string, { Icon: React.ElementType; bg: string }> = {};
 
@@ -42,6 +43,7 @@ const DEFAULT_HEADER: SectionHeader = {};
 
 const ProductCard = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { product: Product; onDemo: () => void; cardStyle: "icon" | "image"; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const editor = useLiveEditor();
+  const [typoFeature, setTypoFeature] = useState<{ id: string, idx: number, value: string, isNegative: boolean } | null>(null);
   const [expanded, setExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
   const badgeColor = product.extra_color || "#007600";
@@ -107,9 +109,9 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedI
           <EditableText section="products" field="name" id={product.id} value={product.name} colorField="name_color" />
         </h3>
         <div className="relative">
-          <p className={`text-[0.75rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}>
+          <div className={`text-[0.75rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}>
             <EditableText section="products" field="description" id={product.id} value={product.description} colorField="description_color" />
-          </p>
+          </div>
           {product.description.length > 80 && (
             <button
               onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
@@ -144,7 +146,7 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedI
           {(() => {
             const draftKey = product.id ? `products:${product.id}:extra_text` : `products:extra_text`;
             const extraText = editor?.pendingChanges[draftKey] ?? product.extra_text;
-            const features = extraText ? extraText.split(",") : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
+            const features = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")) : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
             
             const colorDraftKey = product.id ? `products:${product.id}:extra_color` : `products:extra_color`;
             const extraColor = editor?.pendingChanges[colorDraftKey] ?? product.extra_color;
@@ -168,19 +170,32 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedI
                     onBlur={(e) => {
                       if (!editor?.isEditMode) return;
                       const newVal = e.currentTarget.textContent || "";
-                      const currentFeatures = extraText ? extraText.split(",").map(s => s.trim()) : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
+                      const currentFeatures = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map(s => s.trim()) : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
                       currentFeatures[idx] = isNegative ? `! ${newVal}` : newVal;
-                      editor.onUpdate("products", "extra_text", currentFeatures.join(", "), product.id);
+                      editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
                     }}
-                  >
-                    {cleanText}
-                  </span>
+                    dangerouslySetInnerHTML={{ __html: cleanText }}
+                  />
+                  {editor?.isEditMode && (
+                    <div
+                      role="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setTypoFeature({ id: product.id, idx, value: cleanText, isNegative });
+                      }}
+                      className="ml-1 p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0"
+                      title="Edit Text Style"
+                    >
+                      <span className="font-serif font-extrabold text-[10px] leading-none px-1 py-0.5">A</span>
+                    </div>
+                  )}
                   {editor?.isEditMode && (
                     <button
                       onClick={() => {
-                        const currentFeatures = extraText ? extraText.split(",").map(s => s.trim()) : [];
+                        const currentFeatures = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map(s => s.trim()) : [];
                         currentFeatures.splice(idx, 1);
-                        editor.onUpdate("products", "extra_text", currentFeatures.join(", "), product.id);
+                        editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
                       }}
                       className="ml-auto opacity-0 group-hover/badge:opacity-100 p-0.5 text-destructive hover:bg-destructive/10 rounded transition-all"
                       title="Remove Feature"
@@ -253,11 +268,13 @@ const ProductCard = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedI
 
 const ProductCardList = ({ product, onDemo, cardStyle, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { product: Product; onDemo: () => void; cardStyle: "icon" | "image"; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const editor = useLiveEditor();
+  const [typoFeature, setTypoFeature] = useState<{ id: string, idx: number, value: string, isNegative: boolean } | null>(null);
   const { Icon, bg } = getProductIcon(product.name);
 
   return (
-    <div 
-      className={`flex flex-col sm:flex-row gap-5 bg-white dark:bg-[#11111f] rounded-2xl border border-border/50 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 group/item relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
+    <>
+      <div 
+        className={`flex flex-col sm:flex-row gap-5 bg-white dark:bg-[#11111f] rounded-2xl border border-border/50 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 group/item relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
       {...getNavProps(() => {})}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
@@ -310,9 +327,9 @@ const ProductCardList = ({ product, onDemo, cardStyle, getNavProps, onMove, drag
         <h3 className="font-extrabold text-[1.0625rem] text-gray-900 dark:text-white group-hover:text-[#C7511F] dark:group-hover:text-[#4db8c8] transition-colors">
           <EditableText section="products" field="name" id={product.id} value={product.name} />
         </h3>
-        <p className="text-[0.8125rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
+        <div className="text-[0.8125rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
           <EditableText section="products" field="description" id={product.id} value={product.description} />
-        </p>
+        </div>
         <div className="flex flex-wrap items-center gap-3 mt-auto pt-2">
           <div className="relative flex flex-col gap-2 mb-4 w-full group/features">
             {editor?.isEditMode && (
@@ -338,7 +355,7 @@ const ProductCardList = ({ product, onDemo, cardStyle, getNavProps, onMove, drag
             {(() => {
               const draftKey = product.id ? `products:${product.id}:extra_text` : `products:extra_text`;
               const extraText = editor?.pendingChanges[draftKey] ?? product.extra_text;
-              const features = extraText ? extraText.split(",") : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
+              const features = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")) : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
               
               const colorDraftKey = product.id ? `products:${product.id}:extra_color` : `products:extra_color`;
               const extraColor = editor?.pendingChanges[colorDraftKey] ?? product.extra_color;
@@ -362,19 +379,32 @@ const ProductCardList = ({ product, onDemo, cardStyle, getNavProps, onMove, drag
                       onBlur={(e) => {
                         if (!editor?.isEditMode) return;
                         const newVal = e.currentTarget.textContent || "";
-                        const currentFeatures = extraText ? extraText.split(",").map(s => s.trim()) : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
+                        const currentFeatures = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map(s => s.trim()) : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
                         currentFeatures[idx] = isNegative ? `! ${newVal}` : newVal;
-                        editor.onUpdate("products", "extra_text", currentFeatures.join(", "), product.id);
+                        editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
                       }}
+                    dangerouslySetInnerHTML={{ __html: cleanText }}
+                  />
+                  {editor?.isEditMode && (
+                    <div
+                      role="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setTypoFeature({ id: product.id, idx, value: cleanText, isNegative });
+                      }}
+                      className="ml-1 p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0"
+                      title="Edit Text Style"
                     >
-                      {cleanText}
-                    </span>
-                    {editor?.isEditMode && (
+                      <span className="font-serif font-extrabold text-[10px] leading-none px-1 py-0.5">A</span>
+                    </div>
+                  )}
+                  {editor?.isEditMode && (
                       <button
                         onClick={() => {
-                          const currentFeatures = extraText ? extraText.split(",").map(s => s.trim()) : [];
+                          const currentFeatures = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map(s => s.trim()) : [];
                           currentFeatures.splice(idx, 1);
-                          editor.onUpdate("products", "extra_text", currentFeatures.join(", "), product.id);
+                          editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
                         }}
                         className="ml-auto opacity-0 group-hover/badge:opacity-100 p-0.5 text-destructive hover:bg-destructive/10 rounded transition-all"
                         title="Remove Feature"
@@ -421,9 +451,32 @@ const ProductCardList = ({ product, onDemo, cardStyle, getNavProps, onMove, drag
               </span>
             </button>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+      {typoFeature && (
+        <TypographyEditorModal
+          isOpen={!!typoFeature}
+          section="products"
+          field="extra_text_badge"
+          initialValue={typoFeature.value}
+          onClose={() => setTypoFeature(null)}
+          onSave={(_, __, val) => {
+            const draftKey = product.id ? `products:${product.id}:extra_text` : `products:extra_text`;
+            const extraText = editor?.pendingChanges[draftKey] ?? product.extra_text;
+            const currentFeatures = extraText 
+              ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map(s => s.trim()) 
+              : ["15 Days Free Trial", "Cloud-based SaaS", "24/7 Support", "Custom Onboarding"];
+            
+            currentFeatures[typoFeature.idx] = typoFeature.isNegative ? `! ${val}` : val;
+            if (editor?.onUpdate) {
+               editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
+            }
+            setTypoFeature(null);
+          }}
+        />
+      )}
+    </>
   );
 };
 
@@ -533,7 +586,7 @@ const ProductsSection = () => {
     };
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [products, globalView]);
+  }, [products, globalView, editor?.isEditMode]);
 
   const scrollToContact = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
@@ -560,9 +613,9 @@ const ProductsSection = () => {
             </span>
             <SectionHeaderToolbar section="our_products" targetSection="products" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: header.subtitle_color || undefined }}>
+          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: header.subtitle_color || undefined }}>
             <EditableText section="our_products" field="subtitle" value={header.subtitle || DEFAULT_HEADER.subtitle || ""} colorField="subtitle_color" />
-          </p>
+          </div>
         </AnimatedSection>
 
 
@@ -591,13 +644,13 @@ const ProductsSection = () => {
         )}
 
         <AnimatedSection className="text-center mt-8">
-          <p className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {globalView === "grid" && "Hover over any product to pause · "}
             <button onClick={scrollToContact} className="text-secondary underline underline-offset-2 hover:opacity-80">
               Contact us
             </button>{" "}
             for a personalised demo
-          </p>
+          </div>
         </AnimatedSection>
       </div>
     </section>

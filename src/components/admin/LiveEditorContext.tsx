@@ -150,11 +150,10 @@ export const EditableText: React.FC<{
   return (
     <span className="relative group/edit">
       <Tag
-        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 bg-background text-foreground px-1 rounded animate-pulse' : ''}`}
+        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 px-1 rounded animate-pulse' : ''}`}
         style={isEditing ? {
-          color: 'hsl(var(--foreground))',
-          background: 'none',
-          WebkitTextFillColor: 'hsl(var(--foreground))',
+          background: 'rgba(var(--background), 0.1)',
+          WebkitTextFillColor: 'initial',
           WebkitBackgroundClip: 'border-box'
         } : (pendingColor ? { color: pendingColor } : undefined)}
         contentEditable
@@ -166,26 +165,28 @@ export const EditableText: React.FC<{
       />
 
       {!isEditing && (
-        <span className="absolute bottom-0 right-0 flex items-center gap-0.5 opacity-0 group-hover/edit:opacity-100 transition-all bg-secondary text-secondary-foreground shadow-xl border border-secondary/20 p-0.5 rounded-[4px] z-[150] pointer-events-auto scale-90 origin-bottom-right hover:scale-100 m-0.5">
-          <button
+        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/edit:opacity-100 transition-all bg-secondary/95 backdrop-blur-sm text-secondary-foreground shadow-2xl border border-secondary/40 p-1 rounded-md z-[150] pointer-events-auto scale-95 hover:scale-105">
+          <span
+            role="button"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
               editor.openTypographyEditor(section, field, displayValue, id);
             }}
-            className="px-1.5 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center"
+            className="px-1.5 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
             title="Edit Text Style"
           >
             <span className="font-serif font-extrabold text-[12px] leading-none text-white">A</span>
-          </button>
+          </span>
           {colorField && !hideColorPicker && (
-            <button
+            <span
+              role="button"
               onClick={(e) => { e.stopPropagation(); editor.onPickColor(section, colorField, id); }}
-              className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white"
+              className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
               title="Change Color"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-            </button>
+            </span>
           )}
         </span>
       )}

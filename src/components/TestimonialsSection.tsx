@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import AnimatedSection from "./AnimatedSection";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, StarHalf, Edit2 } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useGlobalView } from "./ui-customizer-context";
 import { useSiteContent } from "@/hooks/useSiteContent";
@@ -11,17 +11,50 @@ const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=random&color=fff&
 
 const CARDS_PER_PAGE = 4;
 
-const StarRating = ({ rating }: { rating: number }) => (
-  <div className="flex gap-0.5 mb-3">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <Star
-        key={i}
-        size={14}
-        className={i < rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}
-      />
-    ))}
-  </div>
-);
+const StarRating = ({ rating, id, editor }: { rating: number, id?: string, editor?: any }) => {
+  const safeRating = Math.max(0, Math.min(5, rating || 5));
+  const fullStars = Math.floor(safeRating);
+  const hasHalfStar = safeRating % 1 >= 0.5;
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!editor?.isEditMode || !id) return;
+    const newRating = window.prompt("Enter new rating (0-5) allowing decimals:", safeRating.toString());
+    if (newRating !== null) {
+      const parsed = parseFloat(newRating);
+      if (!isNaN(parsed) && parsed >= 0 && parsed <= 5) {
+        editor.onUpdate("testimonials", "rating", parsed, id);
+      } else {
+        alert("Please enter a valid number between 0 and 5.");
+      }
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center sm:justify-start gap-1.5 mb-3 group/star">
+      <div className="flex gap-0.5">
+        {Array.from({ length: 5 }).map((_, i) => {
+          if (i < fullStars) {
+            return <Star key={i} size={14} className="text-amber-400 fill-amber-400" />;
+          } else if (i === fullStars && hasHalfStar) {
+            return <StarHalf key={i} size={14} className="text-amber-400 fill-amber-400" />;
+          } else {
+            return <Star key={i} size={14} className="text-muted-foreground/30" />;
+          }
+        })}
+      </div>
+      {editor?.isEditMode && id && (
+        <button 
+          onClick={handleEdit}
+          className="p-1 rounded-md opacity-0 group-hover/star:opacity-100 bg-secondary/10 hover:bg-secondary/20 text-secondary transition-all"
+          title="Edit Star Rating"
+        >
+          <Edit2 size={12} />
+        </button>
+      )}
+    </div>
+  );
+};
 
 const TestimonialsSection = () => {
   const view = useGlobalView();
@@ -154,10 +187,10 @@ const TestimonialsSection = () => {
       <div className="text-secondary text-[0.8125rem] font-medium mb-2">
         <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
       </div>
-      <StarRating rating={t.rating} />
-      <p className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1">
+      <StarRating rating={t.rating} id={t.id} editor={editor} />
+      <div className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1">
         <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
-      </p>
+      </div>
     </div>
   );
 
@@ -171,15 +204,15 @@ const TestimonialsSection = () => {
         <div className="font-heading font-semibold text-foreground text-[0.875rem] text-center mt-2">
           <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
         </div>
-        <div className="text-secondary text-[0.75rem] text-center font-medium">
+        <div className="text-secondary text-[0.75rem] text-center font-medium mb-1">
           <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
         </div>
-        <StarRating rating={t.rating} />
+        <StarRating rating={t.rating} id={t.id} editor={editor} />
       </div>
       <div className="flex-1">
-        <p className="text-muted-foreground text-[0.875rem] leading-relaxed">
+        <div className="text-muted-foreground text-[0.875rem] leading-relaxed">
           <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
-        </p>
+        </div>
       </div>
     </div>
   );

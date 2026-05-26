@@ -162,11 +162,11 @@ const TechnologiesSection = () => {
                 <EditableText section="technologies" field="highlight" value={header.highlight || "We Use"} colorField="highlight_color" />
               </span>
             </span>
-            <SectionHeaderToolbar section="technologies" isVisible={header.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
+            <SectionHeaderToolbar section="technologies" isVisible={content.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-[1rem] sm:text-[1.05rem] leading-relaxed" style={{ color: content.description_color || undefined }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[1rem] sm:text-[1.05rem] leading-relaxed" style={{ color: content.description_color || undefined }}>
             <EditableText section="technologies" field="description" value={header.description || ""} colorField="description_color" />
-          </p>
+          </div>
         </AnimatedSection>
 
         {view === "grid" ? (
@@ -226,9 +226,9 @@ const TechnologiesSection = () => {
                           <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                         </span>
                       </div>
-                      <p className="text-[0.75rem] text-muted-foreground leading-relaxed line-clamp-3 mt-auto">
+                      <div className="text-[0.75rem] text-muted-foreground leading-relaxed line-clamp-3 mt-auto">
                         <EditableText section="technologies" field="description" id={tech.id} value={tech.description} />
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </AnimatedSection>
@@ -290,9 +290,9 @@ const TechnologiesSection = () => {
                             <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                           </span>
                         </div>
-                        <p className="text-muted-foreground text-[0.85rem] mt-1 sm:mt-0 flex-1 line-clamp-2 sm:line-clamp-1 leading-relaxed">
+                        <div className="text-muted-foreground text-[0.85rem] mt-1 sm:mt-0 flex-1 line-clamp-2 sm:line-clamp-1 leading-relaxed">
                           <EditableText section="technologies" field="description" id={tech.id} value={tech.description} />
-                        </p>
+                        </div>
                       </div>
                       <div className="hidden xs:flex shrink-0 ml-2 w-8 h-8 rounded-full items-center justify-center bg-secondary/5 group-hover/item:bg-secondary/15 transition-colors border border-transparent group-hover/item:border-secondary/20">
                         <ArrowRight size={16} className="text-secondary/70 group-hover/item:text-secondary group-hover/item:translate-x-0.5 transition-all" />

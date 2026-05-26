@@ -164,9 +164,9 @@ const HeroSection = () => {
             <EditableText section="hero" field="title" value={content.title || "Transforming Business Across Maldives"} colorField="title_color" />
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s", color: content.subtitle_color || undefined }}>
+          <div className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s", color: content.subtitle_color || undefined }}>
             <EditableText section="hero" field="subtitle" value={content.subtitle || "Enterprise software, ERP, and digital transformation solutions for the hospitality, finance, and government sectors."} colorField="subtitle_color" />
-          </p>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 hero-fade-in group/item relative" style={{ animationDelay: "0.5s" }}>
             <EditorToolbar section="hero" linkField="cta_url" className="-top-10 left-0" />

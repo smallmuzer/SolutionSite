@@ -13,7 +13,7 @@ function isHtmlIcon(icon: string): boolean {
 const MobileReadMore = ({ text, clampClass, textClass, section, field }: { text: string; clampClass: string; textClass: string; section?: string; field?: string }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -29,11 +29,11 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field }: { text:
   }, [text]);
   return (
     <div>
-      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
         {section && field ? (
             <EditableText section={section} field={field} value={text} />
         ) : text}
-      </p>
+      </div>
       {overflows && !expanded && (
         <button
           type="button"
@@ -88,7 +88,7 @@ const AboutSection = () => {
             return;
           }
         }
-      } catch (e) {}
+      } catch (e) { /* ignore */ }
     }
     setCardsState(initialCardData);
   }, [content.card_order]);
@@ -170,12 +170,12 @@ const AboutSection = () => {
                 </span>
                 <SectionHeaderToolbar section="about" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h2>
-              <p className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
+              <div className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
                 <EditableText section="about" field="description" value={content.description || "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!"} colorField="description_color" />
-              </p>
-              <p className="text-gray-500 leading-relaxed text-[0.9375rem]" style={{ color: content.vision_color || undefined }}>
+              </div>
+              <div className="text-gray-500 leading-relaxed text-[0.9375rem]" style={{ color: content.vision_color || undefined }}>
                 <EditableText section="about" field="vision" value={content.vision || "Our journey began out of the passion for a unique position in the industry."} colorField="vision_color" />
-              </p>
+              </div>
             </AnimatedSection>
           </div>
 

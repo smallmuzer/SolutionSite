@@ -29,7 +29,7 @@ const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?
 const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -45,11 +45,11 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { t
   }, [text]);
   return (
     <div>
-      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
         {section && field ? (
           <EditableText section={section} field={field} id={id} value={text} />
         ) : text}
-      </p>
+      </div>
       {overflows && !expanded && (
         <button
           type="button"
@@ -160,9 +160,9 @@ const Footer = () => {
                 </span>
                 <SectionHeaderToolbar section="our_network" targetSection="our_network" isVisible={isNetworkVisible} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h3>
-              <p className="text-sm mt-2 max-w-md mx-auto text-muted-foreground" style={{ color: content.network_subtitle_color || undefined }}>
+              <div className="text-sm mt-2 max-w-md mx-auto text-muted-foreground" style={{ color: content.network_subtitle_color || undefined }}>
                 <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." colorField="network_subtitle_color" />
-              </p>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch gap-0 w-full max-w-4xl mx-auto">
@@ -457,16 +457,23 @@ const Footer = () => {
             <div>
               <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>Contact</h4>
               <ul className="space-y-2.5 text-sm" style={{ color: "#64748b" }}>
-                <li>{(contact.address as string)?.split("\n")[0] || "Alia Building, 7th Floor"}</li>
-                <li>{(contact.address as string)?.split("\n")[1] || "Gandhakoalhi Magu, Malé"}</li>
+                <li>
+                  <EditableText section="contact" field="address" value={contact.address || "Alia Building, 7th Floor\nGandhakoalhi Magu, Malé"} />
+                </li>
                 <li>
                   <a href={`mailto:${contact.email || "info@solutions.com.mv"}`} style={{ color: "#60a5fa" }}
                     onMouseEnter={e => ((e.target as HTMLElement).style.textDecoration = "underline")}
                     onMouseLeave={e => ((e.target as HTMLElement).style.textDecoration = "none")}
-                  >{contact.email || "info@solutions.com.mv"}</a>
+                  >
+                    <EditableText section="contact" field="email" value={contact.email || "info@solutions.com.mv"} />
+                  </a>
                 </li>
-                <li>{contact.phone || "+960 301-1355"}</li>
-                <li>{contact.landline || "+91-452 238 7388"}</li>
+                <li>
+                  <EditableText section="contact" field="phone" value={contact.phone || "+960 301-1355"} />
+                </li>
+                <li>
+                  <EditableText section="contact" field="landline" value={contact.landline || "+91-452 238 7388"} />
+                </li>
               </ul>
             </div>
           </div>

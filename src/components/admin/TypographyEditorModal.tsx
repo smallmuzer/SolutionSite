@@ -190,20 +190,19 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragOffset.x,
-        y: Math.max(e.clientY - dragOffset.y, 0)
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: Math.max(e.clientY - dragOffset.y, 0)
+        });
+      }
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
@@ -740,7 +739,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       textTransform: activeStyles.textTransform as any,
                       textAlign: activeStyles.textAlign as any,
                       color: activeStyles.textColor,
-                      backgroundColor: activeStyles.bgColor,
+                      backgroundColor: activeStyles.bgColor || "rgba(var(--card), 0.5)",
                       paddingTop: activeStyles.paddingTop,
                       paddingRight: activeStyles.paddingRight,
                       paddingBottom: activeStyles.paddingBottom,
@@ -752,7 +751,6 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       border: "1px dashed rgba(var(--secondary), 0.3)",
                       borderRadius: "8px",
                       padding: "16px",
-                      backgroundColor: "rgba(var(--card), 0.5)",
                     }}
                     onInput={(e) => setEditorHtml(e.currentTarget.innerHTML)}
                     dangerouslySetInnerHTML={{ __html: editorHtml }}

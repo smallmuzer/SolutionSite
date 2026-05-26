@@ -542,7 +542,10 @@ const ClientsSection = () => {
 
   // Local sorted state for move/drag
   const [clientsState, setClientsState] = useState<ClientLogo[]>([]);
-  useEffect(() => { setClientsState(rawClients); }, [dbClients]);
+  useEffect(() => {
+    const raw = (dbClients && dbClients.length > 0) ? dbClients : (SEED_CLIENTS as ClientLogo[]);
+    setClientsState(raw);
+  }, [dbClients]);
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -631,9 +634,9 @@ const ClientsSection = () => {
             </span>
             <SectionHeaderToolbar section="clients" targetSection="client_logos" className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
+          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />
-          </p>
+          </div>
         </AnimatedSection>
         <AnimatedSection>
           {effectiveShowAll ? (

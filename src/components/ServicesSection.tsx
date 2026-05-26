@@ -10,7 +10,7 @@ import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLi
 const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -28,11 +28,11 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { t
 
   return (
     <div>
-      <p ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
         {section && field ? (
             <EditableText section={section} field={field} value={text} />
         ) : text}
-      </p>
+      </div>
       {overflows && !expanded && (
         <button
           type="button"
@@ -217,9 +217,9 @@ const ServicesSection = () => {
             </span>
             <SectionHeaderToolbar section="services" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: content.subtitle_color || undefined }}>
+          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: content.subtitle_color || undefined }}>
             <EditableText section="services" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
-          </p>
+          </div>
         </AnimatedSection>
 
 
@@ -362,9 +362,9 @@ const ServicesSection = () => {
                       <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug">
                         <EditableText section="services" field="title" id={service.id} value={service.title} />
                       </h3>
-                      <p className="text-muted-foreground text-[0.8125rem] mt-0.5 line-clamp-1">
+                      <div className="text-muted-foreground text-[0.8125rem] mt-0.5 line-clamp-1">
                         <EditableText section="services" field="description" id={service.id} value={service.description} />
-                      </p>
+                      </div>
                     </div>
                     <ArrowRight size={16} className="text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all shrink-0 relative z-10" />
                   </div>

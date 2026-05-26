@@ -55,6 +55,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
   const { Icon, bg, fg } = getJobMeta(job);
   const [isExpanded, setIsExpanded] = useState(false);
   const editor = useLiveEditor();
+  const careersContent = useSiteContent("careers");
 
   const getThemedImg = () => {
     return (job.image_url && job.image_url.trim()) ? job.image_url.trim() : "";
@@ -99,9 +100,9 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
                 <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
             </h3>
             <div className="relative flex-1 mb-2">
-              <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-3"}`}>
+              <div className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-3"}`}>
                 <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
-              </p>
+              </div>
               {isLongDescription && (
                 <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.625rem] font-extrabold mt-0.5 hover:underline focus:outline-none flex items-center gap-1">
                   {isExpanded ? "Show Less" : "Read More..."}
@@ -114,7 +115,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
             </div>
             <button onClick={(e) => { e.stopPropagation(); onApply(); }}
               className="px-4 py-2 bg-secondary text-white rounded-lg font-extrabold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 shrink-0">
-              <EditableText section="careers" field="apply_now_text" value={useSiteContent("careers").apply_now_text || "Apply Now"} />
+              <EditableText section="careers" field="apply_now_text" value={careersContent.apply_now_text || "Apply Now"} />
             </button>
           </div>
         </>
@@ -133,9 +134,9 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
             <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> <EditableText section="career_jobs" field="job_type" id={job.id} value={job.job_type} /></span>
           </div>
           <div className="relative mb-3 flex-1 overflow-visible">
-            <p className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}>
+            <div className={`text-slate-600 dark:text-slate-300 text-[0.7rem] font-medium leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}>
               <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
-            </p>
+            </div>
             {isLongDescription && (
               <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.6rem] font-extrabold mt-1 hover:underline focus:outline-none">
                 {isExpanded ? "Show Less" : "Read More..."}
@@ -144,7 +145,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
           </div>
           <button onClick={(e) => { e.stopPropagation(); onApply(); }}
             className="px-4 py-2 bg-secondary text-white rounded-lg font-extrabold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 mt-auto">
-            <EditableText section="careers" field="apply_now_text" value={useSiteContent("careers").apply_now_text || "Apply Now"} />
+            <EditableText section="careers" field="apply_now_text" value={careersContent.apply_now_text || "Apply Now"} />
           </button>
         </div>
       )}
@@ -155,6 +156,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
 const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
   const { Icon, bg, fg } = getJobMeta(job);
   const editor = useLiveEditor();
+  const careersContent = useSiteContent("careers");
   const fallbackImg = "";
   const imgSrc = (job.image_url && job.image_url.trim()) ? job.image_url.trim() : fallbackImg;
 
@@ -197,9 +199,9 @@ const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragSt
           <h3 className="font-heading font-extrabold text-foreground text-[1rem] mb-1">
             <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
           </h3>
-          <p className="text-muted-foreground text-[0.8125rem] line-clamp-2">
+          <div className="text-muted-foreground text-[0.8125rem] line-clamp-2">
             <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
-          </p>
+          </div>
           <div className="flex gap-5 mt-3">
             <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><MapPin size={13} className="text-secondary" /> <EditableText section="career_jobs" field="location" id={job.id} value={job.location} /></span>
             <span className="flex items-center gap-1.5 text-[0.75rem] text-muted-foreground font-medium"><Clock size={13} className="text-secondary" /> <EditableText section="career_jobs" field="job_type" id={job.id} value={job.job_type} /></span>
@@ -207,7 +209,7 @@ const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragSt
         </div>
         <button onClick={() => onApply()}
           className="flex items-center gap-2 px-6 py-2.5 bg-secondary text-white rounded-xl font-bold text-[0.875rem] hover:opacity-90 transition-opacity shrink-0 shadow-md">
-          <Briefcase size={15} /> <EditableText section="careers" field="apply_now_text" value={useSiteContent("careers").apply_now_text || "Apply Now"} />
+          <Briefcase size={15} /> <EditableText section="careers" field="apply_now_text" value={careersContent.apply_now_text || "Apply Now"} />
         </button>
       </div>
     </div>
@@ -378,9 +380,9 @@ const CareersSection = () => {
             </span>
             <SectionHeaderToolbar section="careers" targetSection="career_jobs" isVisible={content.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
             <EditableText section="careers" field="description" value={header.description || ""} colorField="description_color" />
-          </p>
+          </div>
         </AnimatedSection>
 
         {editor?.isEditMode ? (

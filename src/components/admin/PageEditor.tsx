@@ -1112,10 +1112,22 @@ const PageEditor = () => {
                             <InlineField label="Company" value={tempTestimonial.company || ""} onChange={(v) => setTempTestimonial({ ...tempTestimonial, company: v })} />
                             <div className="space-y-1">
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Rating Selection</label>
-                              <select value={tempTestimonial.rating || 5} onChange={(e) => setTempTestimonial({ ...tempTestimonial, rating: Number(e.target.value) })}
-                                className={selectCls}>
-                                {[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{r} Stars Rating</option>)}
-                              </select>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                max="5" 
+                                step="0.1"
+                                value={tempTestimonial.rating ?? 5} 
+                                onChange={(e) => {
+                                  let val = parseFloat(e.target.value);
+                                  if (isNaN(val)) val = 0;
+                                  if (val > 5) val = 5;
+                                  if (val < 0) val = 0;
+                                  setTempTestimonial({ ...tempTestimonial, rating: val });
+                                }}
+                                className={fieldCls}
+                                placeholder="e.g. 4.5"
+                              />
                             </div>
                           </div>
                           <InlineField label="Avatar Asset URL" value={tempTestimonial.avatar_url || ""} onChange={(v) => setTempTestimonial({ ...tempTestimonial, avatar_url: v })} />
@@ -1132,7 +1144,18 @@ const PageEditor = () => {
                             <div className="font-bold text-sm text-foreground">{t.name} <span className="text-muted-foreground font-normal ml-1">@ {t.company}</span></div>
                             <div className="text-xs text-muted-foreground italic">"{t.message?.replace(/<[^>]*>/g, "")}"</div>
                             <div className="flex gap-0.5 mt-1">
-                              {[...Array(t.rating || 5)].map((_, i) => <Star key={i} size={10} className="fill-yellow-500 text-yellow-500" />)}
+                              {Array.from({ length: 5 }).map((_, i) => {
+                                const r = t.rating ?? 5;
+                                const fullStars = Math.floor(r);
+                                const hasHalfStar = r % 1 >= 0.5;
+                                if (i < fullStars) {
+                                  return <Star key={i} size={10} className="fill-yellow-500 text-yellow-500" />;
+                                } else if (i === fullStars && hasHalfStar) {
+                                  return <Star key={i} size={10} className="fill-yellow-500 text-yellow-500 opacity-50" />;
+                                } else {
+                                  return <Star key={i} size={10} className="text-muted-foreground/30" />;
+                                }
+                              })}
                             </div>
                           </div>
                           <div className="flex gap-1 shrink-0">
