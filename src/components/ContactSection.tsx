@@ -279,6 +279,7 @@ const ContactSection = () => {
                         const iconKey = `social_icon_${i}`;
                         const hrefKey = `social_href_${i}`;
                         const visibleKey = `social_visible_${i}`;
+                        const colorKey = `social_color_${i}`;
                         
                         const icon = settings[iconKey] ?? (
                           i === 1 ? "Facebook" :
@@ -298,17 +299,35 @@ const ContactSection = () => {
                         
                         const isVisible = settings[visibleKey] !== "false" && settings[visibleKey] !== false;
                         
+                        const color = settings[colorKey] ?? (
+                          i === 1 ? "#1877F2" :
+                          i === 2 ? "#1DA1F2" :
+                          i === 3 ? "#0A66C2" :
+                          i === 4 ? "#E4405F" :
+                          i === 5 ? "#7360f2" : "#3b82f6"
+                        );
+                        
                         if (isVisible) {
-                          socialList.push({ index: i, icon, href });
+                          socialList.push({ index: i, icon, href, color });
                         }
                       }
                       return socialList.map((s) => {
                         const isViber = s.icon?.trim().toLowerCase() === "viber";
                         const viberNumber = settings.viber_number || "9489477144";
                         const dynamicHref = isViber ? `viber://chat?number=${viberNumber.replace("+", "")}` : (s.href || "#");
+                        const iconColor = s.color || (isViber ? "#7360f2" : "#3b82f6");
                         return (
                           <a key={s.index} href={dynamicHref} target={isViber ? undefined : (s.href ? "_blank" : undefined)} rel="noopener noreferrer"
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${isViber ? 'bg-[#7360f2]/10 text-[#7360f2] hover:bg-[#7360f2] hover:text-white' : 'bg-secondary/10 text-secondary hover:bg-secondary hover:text-white'}`}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all border shadow-sm"
+                            style={{ backgroundColor: `${iconColor}1A`, color: iconColor, borderColor: `${iconColor}33` }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = iconColor;
+                              e.currentTarget.style.color = "#ffffff";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = `${iconColor}1A`;
+                              e.currentTarget.style.color = iconColor;
+                            }}
                             onClick={isViber ? (e) => { e.preventDefault(); openViber(viberNumber); } : undefined}
                           >
                             <DynamicSocialIcon name={s.icon} size={15} />

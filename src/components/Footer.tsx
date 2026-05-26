@@ -120,6 +120,8 @@ const Footer = () => {
     const hrefKey = `social_href_${i}`;
     const visibleKey = `social_visible_${i}`;
     
+    const colorKey = `social_color_${i}`;
+    
     const icon = editor?.pendingChanges[`settings:${iconKey}`] ?? settings[iconKey] ?? (
       i === 1 ? "Facebook" :
       i === 2 ? "Twitter" :
@@ -138,7 +140,15 @@ const Footer = () => {
     
     const isVisible = (editor?.pendingChanges[`settings:${visibleKey}`] ?? settings[visibleKey]) !== false;
     
-    socialList.push({ index: i, icon, href, isVisible });
+    const color = editor?.pendingChanges[`settings:${colorKey}`] ?? settings[colorKey] ?? (
+      i === 1 ? "#1877F2" :
+      i === 2 ? "#1DA1F2" :
+      i === 3 ? "#0A66C2" :
+      i === 4 ? "#E4405F" :
+      i === 5 ? "#7360f2" : "#3b82f6"
+    );
+    
+    socialList.push({ index: i, icon, href, isVisible, color });
   }
 
   return (
@@ -333,7 +343,7 @@ const Footer = () => {
                 {socialList.map((s) => {
                   if (!editor?.isEditMode && !s.isVisible) return null;
                   const isViber = s.icon?.trim().toLowerCase() === "viber";
-                  const viberPurple = "#7360f2";
+                  const iconColor = s.color || (isViber ? "#7360f2" : "#3b82f6");
                   
                   return (
                     <div key={s.index} className={`relative group/soc ${!s.isVisible ? 'opacity-40' : ''}`}>
@@ -345,14 +355,14 @@ const Footer = () => {
                           target={isViber ? undefined : (s.href ? "_blank" : undefined)} 
                           rel="noopener noreferrer"
                           className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                          style={{ background: "rgba(255,255,255,0.07)", color: isViber ? viberPurple : "#94a3b8" }}
+                          style={{ background: "rgba(255,255,255,0.07)", color: iconColor }}
                           onMouseEnter={e => { 
-                            (e.currentTarget as HTMLElement).style.background = isViber ? viberPurple : "#2563eb"; 
+                            (e.currentTarget as HTMLElement).style.background = iconColor; 
                             (e.currentTarget as HTMLElement).style.color = "#fff"; 
                           }}
                           onMouseLeave={e => { 
                             (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; 
-                            (e.currentTarget as HTMLElement).style.color = isViber ? viberPurple : "#94a3b8"; 
+                            (e.currentTarget as HTMLElement).style.color = iconColor; 
                           }}
                           onClick={isViber ? (e) => { e.preventDefault(); openViber(settings.viber_number || "9489477144"); } : undefined}
                         >

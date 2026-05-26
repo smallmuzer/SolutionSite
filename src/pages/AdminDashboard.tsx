@@ -2513,6 +2513,7 @@ const AdminDashboard = () => {
                                   const iconKey = `social_icon_${i}`;
                                   const hrefKey = `social_href_${i}`;
                                   const visibleKey = `social_visible_${i}`;
+                                  const colorKey = `social_color_${i}`;
                                   
                                   const icon = siteSettings[iconKey] || (
                                     i === 1 ? "Facebook" :
@@ -2520,6 +2521,14 @@ const AdminDashboard = () => {
                                     i === 3 ? "Linkedin" :
                                     i === 4 ? "Instagram" :
                                     i === 5 ? "Viber" : "Globe"
+                                  );
+                                  
+                                  const color = siteSettings[colorKey] || (
+                                    i === 1 ? "#1877F2" :
+                                    i === 2 ? "#1DA1F2" :
+                                    i === 3 ? "#0A66C2" :
+                                    i === 4 ? "#E4405F" :
+                                    i === 5 ? "#7360f2" : "#3b82f6"
                                   );
                                   
                                   const href = siteSettings[hrefKey] || (
@@ -2533,25 +2542,21 @@ const AdminDashboard = () => {
                                   const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
                                   
                                   return (
-                                    <div key={i} className="flex flex-col sm:flex-row sm:items-end gap-3 bg-background p-4 rounded-xl border border-border/45 shadow-sm relative group/item">
+                                    <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-background p-1.5 pr-2 rounded-lg border border-border/30 hover:border-border/80 transition-colors shadow-sm group/item relative">
                                       {/* Icon Live Preview */}
-                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-inner shrink-0 sm:mb-[2px] ${icon.trim().toLowerCase() === "viber" ? "bg-[#7360f2]/10 text-[#7360f2] border-[#7360f2]/20" : "bg-secondary/10 text-secondary border-secondary/20"}`} title="Live Icon Preview">
-                                        <DynamicSocialIcon name={icon} size={18} />
+                                      <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 border" style={{ backgroundColor: `${color}1A`, color: color, borderColor: `${color}33` }} title="Live Icon Preview">
+                                        <DynamicSocialIcon name={icon} size={14} />
                                       </div>
 
                                       {/* Icon / SVG Code Input */}
-                                      <div className="flex-1 min-w-[200px] relative">
-                                        <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Brand Icon (Lucide name or paste raw &lt;svg&gt; code)</label>
-                                        <div className="flex items-center gap-1.5">
-                                          <textarea
-                                            rows={1}
+                                      <div className="relative shrink-0 w-full sm:w-[130px]">
+                                        <div className="flex items-center gap-1">
+                                          <input
+                                            type="text"
                                             value={icon}
-                                            onChange={(e) => {
-                                              const val = e.target.value;
-                                              setSiteSettings(p => ({ ...p, [iconKey]: val }));
-                                            }}
-                                            placeholder="e.g. Facebook or <svg ...>...</svg>"
-                                            className="flex-1 px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs outline-none focus:ring-1 focus:ring-secondary/35 font-mono resize-y min-h-[34px] custom-scrollbar"
+                                            onChange={(e) => setSiteSettings(p => ({ ...p, [iconKey]: e.target.value }))}
+                                            placeholder="Icon"
+                                            className="w-full px-2 py-1.5 rounded-md bg-muted/50 border border-border/50 text-[10px] outline-none focus:ring-1 focus:ring-secondary/35 font-mono"
                                           />
                                           <button
                                             type="button"
@@ -2559,122 +2564,105 @@ const AdminDashboard = () => {
                                               setActivePickerIdx(activePickerIdx === i ? null : i);
                                               setPickerSearch("");
                                             }}
-                                            className={`px-2.5 py-1 bg-secondary/10 hover:bg-secondary border border-secondary/20 hover:border-transparent text-secondary hover:text-white rounded-lg text-[10px] font-bold h-[34px] flex items-center justify-center gap-1 transition-all shrink-0 ${activePickerIdx === i ? 'bg-secondary text-white' : ''}`}
-                                            title="Choose dynamic Lucide icon"
+                                            className={`px-1.5 py-1.5 bg-secondary/10 hover:bg-secondary border border-secondary/20 text-secondary hover:text-white rounded-md text-[9px] font-bold flex items-center justify-center transition-all ${activePickerIdx === i ? 'bg-secondary text-white' : ''}`}
+                                            title="Choose Icon"
                                           >
-                                            <Search size={10} /> Choose
+                                            <Search size={11} />
                                           </button>
+                                        </div>
 
-                                          {activePickerIdx === i && (
-                                            <div className="absolute left-0 right-0 sm:w-[320px] bg-popover border border-border rounded-2xl p-4 shadow-2xl z-50 mt-1" style={{ top: '100%' }}>
-                                              <div className="flex items-center justify-between mb-3 border-b border-border pb-1.5">
-                                                <span className="text-[10px] font-black text-foreground uppercase tracking-wider">Choose Brand Graphic</span>
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setActivePickerIdx(null)}
-                                                  className="text-muted-foreground hover:text-destructive transition-colors"
-                                                >
-                                                  <X size={12} />
-                                                </button>
-                                              </div>
+                                        {activePickerIdx === i && (
+                                          <div className="absolute left-0 sm:w-[320px] bg-popover border border-border rounded-xl p-3 shadow-2xl z-50 mt-1" style={{ top: '100%' }}>
+                                            <div className="flex items-center justify-between mb-2 border-b border-border pb-1.5">
+                                              <span className="text-[9px] font-black text-foreground uppercase tracking-wider">Choose Brand Graphic</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => setActivePickerIdx(null)}
+                                                className="text-muted-foreground hover:text-destructive transition-colors"
+                                              >
+                                                <X size={12} />
+                                              </button>
+                                            </div>
 
-                                              {/* Section 1: Popular Brand Presets */}
-                                              <div className="mb-4">
-                                                <span className="text-[8px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-2">Popular Brand Presets</span>
-                                                <div className="grid grid-cols-4 gap-1.5">
-                                                  {[
-                                                    { name: "Facebook", value: "Facebook" },
-                                                    { name: "Twitter / X", value: "Twitter" },
-                                                    { name: "LinkedIn", value: "Linkedin" },
-                                                    { name: "Instagram", value: "Instagram" },
-                                                    { name: "YouTube", value: "Youtube" },
-                                                    { name: "GitHub", value: "Github" },
-                                                    { name: "Viber", value: "Viber" },
-                                                    { name: "Website", value: "Globe" },
-                                                    { name: "Email", value: "Mail" },
-                                                    { name: "Phone", value: "Phone" },
-                                                    { 
-                                                      name: "WhatsApp", 
-                                                      value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` 
-                                                    },
-                                                    {
-                                                      name: "Telegram",
-                                                      value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-telegram"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`
-                                                    },
-                                                    {
-                                                      name: "TikTok",
-                                                      value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tiktok"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>`
-                                                    },
-                                                    {
-                                                      name: "Discord",
-                                                      value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-discord"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M7.5 16.5c2 1.5 7 1.5 9 0M12 2a10 10 0 0 0-10 10c0 4.4 2.8 8.1 6.8 9.4l.2-1.4c-.6-.2-1.2-.5-1.8-.9l1-1.6c.6.4 1.3.7 2 .8M12 22a10 10 0 0 0 10-10c0-4.4-2.8-8.1-6.8-9.4l-.2 1.4c.6.2 1.2.5 1.8.9l-1 1.6c-.6-.4-1.3-.7-2-.8"/></svg>`
-                                                    },
-                                                    {
-                                                      name: "Snapchat",
-                                                      value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snapchat"><path d="M12 3c-1.2 0-2.4.5-3.2 1.3C8 5.1 7.5 6.3 7.5 7.5c0 1.2-.5 2.4-1.3 3.2-.8.8-2 1.3-3.2 1.3H2.5l.8 1.6c.4.8.8 1.6.8 2.4 0 .8-.4 1.6-.8 2.4l-.8 1.6h.5c1.2 0 2.4-.5 3.2-1.3.8-.8 1.3-2 1.3-3.2V15c0-1.2.5-2.4 1.3-3.2.8-.8 2-1.3 3.2-1.3s2.4.5 3.2 1.3c.8.8 1.3 2 1.3 3.2v.5c0 1.2.5 2.4 1.3 3.2.8.8 2 1.3 3.2 1.3h.5l-.8-1.6c-.4-.8-.8-1.6-.8-2.4 0-.8.4-1.6.8-2.4l.8-1.6h-.5c-1.2 0-2.4-.5-3.2-1.3-.8-.8-1.3-2-1.3-3.2 0-1.2-.5-2.4-1.3-3.2-.8-.8-2-1.3-3.2-1.3z"/></svg>`
-                                                    }
-                                                  ].map(bp => (
-                                                    <button
-                                                      key={bp.name}
-                                                      type="button"
-                                                      onClick={() => {
-                                                        setSiteSettings(p => ({ ...p, [iconKey]: bp.value }));
-                                                        setActivePickerIdx(null);
-                                                      }}
-                                                      className="p-1.5 rounded-lg bg-muted/40 hover:bg-secondary/20 hover:text-secondary border border-border/20 flex flex-col items-center justify-center gap-1 transition-all group"
-                                                      title={bp.name}
-                                                    >
-                                                      <div className="text-foreground group-hover:text-secondary">
-                                                        <DynamicSocialIcon name={bp.value} size={14} />
-                                                      </div>
-                                                      <span className="text-[7.5px] font-bold text-muted-foreground truncate max-w-full leading-none">{bp.name}</span>
-                                                    </button>
-                                                  ))}
-                                                </div>
-                                              </div>
-
-                                              {/* Section 2: Full Catalog Search */}
-                                              <div>
-                                                <span className="text-[8px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-2">Search 1000+ Other Icons</span>
-                                                <input
-                                                  type="text"
-                                                  value={pickerSearch}
-                                                  onChange={(e) => setPickerSearch(e.target.value)}
-                                                  placeholder="Type to search (e.g. globe, cloud)..."
-                                                  className="w-full px-2.5 py-1.5 bg-muted border border-border text-[11px] rounded-lg mb-2.5 outline-none focus:ring-1 focus:ring-secondary/35 text-foreground"
-                                                  autoFocus
-                                                />
-                                                <div className="grid grid-cols-6 gap-1 max-h-[120px] overflow-y-auto custom-scrollbar p-0.5">
-                                                  {Object.keys(LucideIcons)
-                                                    .filter(k => /^[A-Z]/.test(k) && k !== "Icon" && k !== "createLucideIcon")
-                                                    .filter(name => name.toLowerCase().includes(pickerSearch.toLowerCase()))
-                                                    .slice(0, 36)
-                                                    .map(iconName => {
-                                                      const IconComp = (LucideIcons as any)[iconName];
-                                                      return (
-                                                        <button
-                                                          key={iconName}
-                                                          type="button"
-                                                          onClick={() => {
-                                                            setSiteSettings(p => ({ ...p, [iconKey]: iconName }));
-                                                            setActivePickerIdx(null);
-                                                          }}
-                                                          className={`p-1.5 rounded bg-muted/30 hover:bg-secondary/20 hover:text-secondary flex items-center justify-center border border-border/10 transition-all ${icon === iconName ? 'bg-secondary/20 text-secondary border-secondary/30 font-bold' : 'text-muted-foreground'}`}
-                                                          title={iconName}
-                                                        >
-                                                          <IconComp size={13} />
-                                                        </button>
-                                                      );
-                                                    })}
-                                                </div>
+                                            {/* Section 1: Popular Brand Presets */}
+                                            <div className="mb-3">
+                                              <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1.5">Popular Presets</span>
+                                              <div className="grid grid-cols-5 gap-1">
+                                                {[
+                                                  { name: "Facebook", value: "Facebook" },
+                                                  { name: "Twitter", value: "Twitter" },
+                                                  { name: "LinkedIn", value: "Linkedin" },
+                                                  { name: "Instagram", value: "Instagram" },
+                                                  { name: "YouTube", value: "Youtube" },
+                                                  { name: "GitHub", value: "Github" },
+                                                  { name: "Viber", value: "Viber" },
+                                                  { name: "Website", value: "Globe" },
+                                                  { name: "Email", value: "Mail" },
+                                                  { name: "WhatsApp", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` },
+                                                  { name: "Telegram", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-telegram"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>` },
+                                                  { name: "TikTok", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tiktok"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>` },
+                                                  { name: "Discord", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-discord"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M7.5 16.5c2 1.5 7 1.5 9 0M12 2a10 10 0 0 0-10 10c0 4.4 2.8 8.1 6.8 9.4l.2-1.4c-.6-.2-1.2-.5-1.8-.9l1-1.6c.6.4 1.3.7 2 .8M12 22a10 10 0 0 0 10-10c0-4.4-2.8-8.1-6.8-9.4l-.2 1.4c.6.2 1.2.5 1.8.9l-1 1.6c-.6-.4-1.3-.7-2-.8"/></svg>` },
+                                                  { name: "Snapchat", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snapchat"><path d="M12 3c-1.2 0-2.4.5-3.2 1.3C8 5.1 7.5 6.3 7.5 7.5c0 1.2-.5 2.4-1.3 3.2-.8.8-2 1.3-3.2 1.3H2.5l.8 1.6c.4.8.8 1.6.8 2.4 0 .8-.4 1.6-.8 2.4l-.8 1.6h.5c1.2 0 2.4-.5 3.2-1.3.8-.8 1.3-2 1.3-3.2V15c0-1.2.5-2.4 1.3-3.2.8-.8 2-1.3 3.2-1.3s2.4.5 3.2 1.3c.8.8 1.3 2 1.3 3.2v.5c0 1.2.5 2.4 1.3 3.2.8-.8 2-1.3 3.2-1.3h.5l-.8-1.6c-.4-.8-.8-1.6-.8-2.4 0-.8.4-1.6.8-2.4l.8-1.6h-.5c-1.2 0-2.4-.5-3.2-1.3-.8-.8-1.3-2-1.3-3.2 0-1.2-.5-2.4-1.3-3.2-.8-.8-2-1.3-3.2-1.3z"/></svg>` },
+                                                  { name: "Phone", value: "Phone" }
+                                                ].map(bp => (
+                                                  <button
+                                                    key={bp.name}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setSiteSettings(p => ({ ...p, [iconKey]: bp.value }));
+                                                      setActivePickerIdx(null);
+                                                    }}
+                                                    className="p-1 rounded bg-muted/40 hover:bg-secondary/20 hover:text-secondary border border-border/20 flex flex-col items-center justify-center gap-0.5 transition-all group"
+                                                    title={bp.name}
+                                                  >
+                                                    <div className="text-foreground group-hover:text-secondary">
+                                                      <DynamicSocialIcon name={bp.value} size={12} />
+                                                    </div>
+                                                  </button>
+                                                ))}
                                               </div>
                                             </div>
-                                          )}
-                                        </div>
+
+                                            {/* Section 2: Full Catalog Search */}
+                                            <div>
+                                              <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1">Search 1000+ Icons</span>
+                                              <input
+                                                type="text"
+                                                value={pickerSearch}
+                                                onChange={(e) => setPickerSearch(e.target.value)}
+                                                placeholder="Type to search (e.g. globe)..."
+                                                className="w-full px-2 py-1 bg-muted border border-border text-[10px] rounded-md mb-2 outline-none focus:ring-1 focus:ring-secondary/35 text-foreground"
+                                              />
+                                              <div className="grid grid-cols-8 gap-1 max-h-[100px] overflow-y-auto custom-scrollbar p-0.5">
+                                                {Object.keys(LucideIcons)
+                                                  .filter(k => /^[A-Z]/.test(k) && k !== "Icon" && k !== "createLucideIcon")
+                                                  .filter(name => name.toLowerCase().includes(pickerSearch.toLowerCase()))
+                                                  .slice(0, 40)
+                                                  .map(iconName => {
+                                                    const IconComp = (LucideIcons as any)[iconName];
+                                                    return (
+                                                      <button
+                                                        key={iconName}
+                                                        type="button"
+                                                        onClick={() => {
+                                                          setSiteSettings(p => ({ ...p, [iconKey]: iconName }));
+                                                          setActivePickerIdx(null);
+                                                        }}
+                                                        className={`p-1 rounded bg-muted/30 hover:bg-secondary/20 hover:text-secondary flex items-center justify-center border border-border/10 transition-all ${icon === iconName ? 'bg-secondary/20 text-secondary border-secondary/30 font-bold' : 'text-muted-foreground'}`}
+                                                        title={iconName}
+                                                      >
+                                                        <IconComp size={12} />
+                                                      </button>
+                                                    );
+                                                  })}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                       
                                       {/* URL Input */}
-                                      <div className="flex-[1.5] min-w-[150px]">
+                                      <div className="flex-1 w-full sm:w-auto">
                                         <input 
                                           type="text"
                                           value={href}
@@ -2689,24 +2677,28 @@ const AdminDashboard = () => {
                                               return next;
                                             });
                                           }}
-                                          placeholder="https://..."
-                                          className="w-full px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs outline-none focus:ring-1 focus:ring-secondary/35 font-mono h-[34px]"
+                                          placeholder="URL (https://...)"
+                                          className="w-full px-2 py-1.5 rounded-md bg-muted/50 border border-border/50 text-[10px] outline-none focus:ring-1 focus:ring-secondary/35 font-mono"
                                         />
                                       </div>
                                       
+                                      {/* Color Input */}
+                                      <div className="flex items-center gap-1 shrink-0 bg-muted/40 px-1 py-1 rounded-md border border-border/50">
+                                        <input type="color" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-4 h-4 rounded cursor-pointer p-0 border-0 bg-transparent" title="Icon Color" />
+                                        <input type="text" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-12 px-1 py-0.5 bg-transparent text-[9px] outline-none font-mono uppercase text-muted-foreground border-none focus:text-foreground" />
+                                      </div>
+                                      
                                       {/* Action Buttons */}
-                                      <div className="flex items-center gap-1.5 shrink-0 sm:mb-[2px]">
-                                        {/* Toggle Visibility */}
+                                      <div className="flex items-center gap-1 shrink-0 ml-1">
                                         <button
                                           type="button"
                                           onClick={() => setSiteSettings(p => ({ ...p, [visibleKey]: isVisible ? "false" : "true" }))}
-                                          className={`p-1.5 rounded-lg hover:scale-105 active:scale-95 transition-all border ${isVisible ? 'bg-secondary/10 text-secondary border-secondary/20' : 'bg-muted text-muted-foreground border-border/40'}`}
+                                          className={`p-1.5 rounded-md hover:scale-105 active:scale-95 transition-all border ${isVisible ? 'bg-secondary/10 text-secondary border-secondary/20' : 'bg-muted text-muted-foreground border-border/40 opacity-70 hover:opacity-100'}`}
                                           title={isVisible ? "Visible on site" : "Hidden on site"}
                                         >
-                                          {isVisible ? <Eye size={13} /> : <EyeOff size={13} />}
+                                          {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
                                         </button>
                                         
-                                        {/* Delete Social Links */}
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -2714,7 +2706,6 @@ const AdminDashboard = () => {
                                             const count = parseInt(siteSettings.social_count || "5", 10);
                                             const nextSettings = { ...siteSettings };
                                             
-                                            // 1. Pre-resolve all current values so shifting doesn't run into fallback re-assignment problems
                                             const resolvedList = Array.from({ length: count }).map((_, idx) => {
                                               const idxPlus = idx + 1;
                                               return {
@@ -2730,37 +2721,42 @@ const AdminDashboard = () => {
                                                   idxPlus === 3 ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
                                                   idxPlus === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : idxPlus === 5 ? "viber://chat?number=" : ""
                                                 ),
-                                                visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false
+                                                visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
+                                                color: siteSettings[`social_color_${idxPlus}`] || (
+                                                  idxPlus === 1 ? "#1877F2" :
+                                                  idxPlus === 2 ? "#1DA1F2" :
+                                                  idxPlus === 3 ? "#0A66C2" :
+                                                  idxPlus === 4 ? "#E4405F" :
+                                                  idxPlus === 5 ? "#7360f2" : "#3b82f6"
+                                                )
                                               };
                                             });
 
-                                            // 2. Remove the deleted item at index i - 1
                                             resolvedList.splice(i - 1, 1);
 
-                                            // 3. Clear all old dynamic social settings keys
                                             for (let j = 1; j <= count; j++) {
                                               delete nextSettings[`social_icon_${j}`];
                                               delete nextSettings[`social_href_${j}`];
                                               delete nextSettings[`social_visible_${j}`];
+                                              delete nextSettings[`social_color_${j}`];
                                             }
 
-                                            // 4. Populate remaining shifted list items
                                             resolvedList.forEach((item, idx) => {
                                               const idxPlus = idx + 1;
                                               nextSettings[`social_icon_${idxPlus}`] = item.icon;
                                               nextSettings[`social_href_${idxPlus}`] = item.href;
                                               nextSettings[`social_visible_${idxPlus}`] = item.visible ? "true" : "false";
+                                              nextSettings[`social_color_${idxPlus}`] = item.color;
                                             });
 
-                                            // 5. Decrement social count
                                             nextSettings.social_count = Math.max(0, count - 1).toString();
                                             setSiteSettings(nextSettings);
                                             toast.success("Social link removed successfully!");
                                           }}
-                                          className="p-1.5 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 hover:scale-105 active:scale-95 transition-all"
+                                          className="p-1.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 hover:scale-105 active:scale-95 transition-all"
                                           title="Delete Social Link"
                                         >
-                                          <Trash2 size={13} />
+                                          <Trash2 size={12} />
                                         </button>
                                       </div>
                                     </div>
