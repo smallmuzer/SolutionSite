@@ -189,7 +189,7 @@ const EditableDateInput = ({ type = "date", value, onChange, className, title, p
     </div>
   );
 };
-const SubmissionsCalendar = ({ submissions, applications = [], appointments = [], onSubmissionClick, onAppointmentCreated }: { submissions: any[], applications?: any[], appointments?: any[], onSubmissionClick: (s: any) => void, onAppointmentCreated?: (created: any) => void }) => {
+const SubmissionsCalendar = ({ submissions, applications = [], appointments = [], visible = true, onSubmissionClick, onAppointmentCreated }: { submissions: any[], applications?: any[], appointments?: any[], visible?: boolean, onSubmissionClick: (s: any) => void, onAppointmentCreated?: (created: any) => void }) => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -206,6 +206,12 @@ const SubmissionsCalendar = ({ submissions, applications = [], appointments = []
     notes: "",
     appointment_date: "",
   });
+
+  useEffect(() => {
+    const handler = () => openCreateModalGeneral();
+    window.addEventListener("ss:openNewAppointment", handler);
+    return () => window.removeEventListener("ss:openNewAppointment", handler);
+  }, []);
 
   const toLocalDatetime = (date: Date) => {
     const pad = (value: number) => value.toString().padStart(2, "0");
@@ -368,7 +374,7 @@ const SubmissionsCalendar = ({ submissions, applications = [], appointments = []
 
   return (
     <>
-      <div className="glass-card flex flex-col items-stretch overflow-hidden">
+      <div className={`glass-card flex flex-col items-stretch overflow-hidden ${visible ? "" : "hidden"}`}>
         <div className="flex flex-col gap-2 sm:flex-row justify-between w-full items-center px-3 py-2 border-b border-border/50 bg-muted/20">
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={handlePrev} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
@@ -379,9 +385,6 @@ const SubmissionsCalendar = ({ submissions, applications = [], appointments = []
           </h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={openCreateModalGeneral} className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-secondary/10 px-3 py-1.5 text-xs font-semibold text-secondary transition hover:bg-secondary/15">
-            <Plus size={14} /> New Appointment
-          </button>
           <button onClick={handleNext} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
             <ChevronRight size={16} />
           </button>
@@ -1673,7 +1676,7 @@ const AdminDashboard = () => {
 
   const sideItems: { key: Tab; icon: any; label: string }[] = [
     { key: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { key: "inbox", icon: MessageSquare, label: "Inbox" },
+    { key: "inbox", icon: MessageSquare, label: "Leads" },
     { key: "chat", icon: BotMessageSquare, label: "Live Chat" },
     { key: "website", icon: FileText, label: "Edit Website" },
     { key: "sitehealth", icon: Shield, label: "Site Health" },
@@ -1681,7 +1684,7 @@ const AdminDashboard = () => {
   ];
 
   const unreadCount = submissions.filter((s) => !s.is_read).length;
-  const inboxBadge = unreadCount + applications.filter((a: any) => a.status === "applied").length;
+  const inboxBadge = unreadCount;
 
   if (authChecking || loggingOut) return <LoadingSpinner message={loggingOut ? "Signing out..." : "Verifying access..."} />;
 
@@ -1799,28 +1802,13 @@ const AdminDashboard = () => {
               {tab === "inbox" && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Inbox</h1>
+                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Leads</h1>
                     <button onClick={() => { loadData(); loadApplications(); }} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted">
                       <RefreshCw size={13} /> Refresh
                     </button>
                   </div>
-                  {/* Sub-tabs */}
-                  <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
-                    <div className="flex gap-1 bg-muted/40 rounded-xl p-1 shrink-0">
-                      <button onClick={() => setInboxSubTab("contacts")}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${inboxSubTab === "contacts" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                        📩 Contact Submissions {unreadCount > 0 && <span className="ml-1 bg-destructive text-destructive-foreground text-[0.625rem] px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
-                      </button>
-                      <button onClick={() => setInboxSubTab("applications")}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${inboxSubTab === "applications" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                        💼 Job Applications {applications.filter((a: any) => a.status === "applied").length > 0 && <span className="ml-1 bg-blue-500 text-white text-[0.625rem] px-1.5 py-0.5 rounded-full">{applications.filter((a: any) => a.status === "applied").length}</span>}
-                      </button>
-                    </div>
-                  </div>
-
                   {/* CONTACTS */}
-                  {inboxSubTab === "contacts" && (
-                    <div className="space-y-3">
+                  <div className="space-y-3">
                       <div className="flex flex-col lg:flex-row gap-2 items-center mb-3 bg-muted/20 p-1.5 rounded-xl border border-border/50 shadow-sm">
                         <div className="flex-1 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
                           <input value={subSearch}
@@ -1876,12 +1864,15 @@ const AdminDashboard = () => {
                           }} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
                             <LucideIcons.Download size={14} /> Export Excel
                           </button>
+                          <button onClick={() => window.dispatchEvent(new CustomEvent("ss:openNewAppointment"))} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
+                            <LucideIcons.Plus size={14} /> New Appointment
+                          </button>
                         </div>
                       </div>
                       
-                      {subView === "calendar" ? (
-                        <SubmissionsCalendar submissions={submissions} applications={applications} appointments={appointments} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
-                      ) : (
+                      <SubmissionsCalendar visible={subView === "calendar"} submissions={submissions} applications={applications} appointments={appointments} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
+                      
+                      {subView === "list" && (
                         <>
                           {displayedSubmissions.map((s) => {
                         const isExpanded = collapsedCards[s.id] === true;
@@ -2152,152 +2143,6 @@ const AdminDashboard = () => {
                         );
                       })()}
                     </div>
-                  )}
-
-                  {/* APPLICATIONS */}
-                  {inboxSubTab === "applications" && (
-                    <div className="space-y-3">
-                      {appsLoading ? <div className="text-muted-foreground">Loading...</div> : (
-                        filteredApplications.length === 0
-                          ? <p className="text-muted-foreground text-center py-12">No applications match the selected filters.</p>
-                          : <div className="space-y-3">
-                            <div className="flex flex-col lg:flex-row gap-2 items-center mb-3 bg-muted/20 p-1.5 rounded-xl border border-border/50 shadow-sm">
-                              <div className="flex-1 grid gap-2 grid-cols-1 sm:grid-cols-3 w-full">
-                                <input value={appSearch}
-                                  onChange={(e) => setAppSearch(e.target.value)}
-                                  placeholder="Search applications..."
-                                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring"
-                                />
-                                <select value={appStatusFilter} onChange={(e) => setAppStatusFilter(e.target.value)}
-                                  className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring">
-                                  <option value="all">All statuses</option>
-                                  <option value="applied">Applied</option>
-                                  <option value="in_review">In Review</option>
-                                  <option value="selected">Selected</option>
-                                  <option value="rejected">Rejected</option>
-                                </select>
-                                <EditableDateInput type="date" value={appDateFilter}
-                                  onChange={(e: any) => setAppDateFilter(e.target.value)}
-                                  className="w-full rounded-lg h-[32px]"
-                                />
-                              </div>
-                            </div>
-                            {displayedApplications.map((app) => {
-                              const isExpanded = collapsedCards[`app-${app.id}`] === true;
-                              const replies = (appReplies as any)?.[app.id] || [];
-                              return (
-                                <div key={app.id} className="glass-card overflow-hidden">
-                                  {/* Header */}
-                                  <div className="flex justify-between items-center px-5 py-4 cursor-pointer hover:bg-muted/20 transition-colors"
-                                    onClick={() => toggleCardCollapse(`app-${app.id}`, "app")}>
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <ChevronDown size={16} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                                      <div className="min-w-0">
-                                        <div className="font-semibold text-foreground text-sm">{app.applicant_name}</div>
-                                        <div className="text-xs text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</div>
-                                        <div className="text-xs text-muted-foreground mt-0.5">Applied for: <span className="text-foreground font-medium">{app.job_id || "General"}</span></div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${app.status === "selected" ? "bg-green-100 text-green-700" :
-                                        app.status === "rejected" ? "bg-red-100 text-red-700" :
-                                          app.status === "in_review" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
-                                        }`}>{app.status}</span>
-                                      <select value={app.status} onChange={(e) => updateApplicationStatus(app.id, e.target.value)}
-                                        className="text-xs border border-border rounded-lg px-2 py-1 bg-background text-foreground">
-                                        {["applied", "in_review", "selected", "rejected"].map(s => (
-                                          <option key={s} value={s}>{s.replace("_", " ")}</option>
-                                        ))}
-                                      </select>
-                                      <button
-                                        onClick={() => {
-                                          if (!confirm("Delete this application?")) return;
-                                          dbFetch("job_applications", { method: "DELETE", query: { id: app.id } })
-                                            .then(() => setApplications(prev => prev.filter(a => a.id !== app.id)));
-                                          toast.success("Application deleted.");
-                                        }}
-                                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive"
-                                        title="Delete application"
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* Expanded body */}
-                                  {isExpanded && (
-                                    <div className="border-t border-border/50 px-5 pb-5">
-                                      {app.cover_letter && (
-                                        <div className="pt-4 flex justify-start">
-                                          <div className="max-w-[85%] bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-foreground border border-border/40">
-                                            <div className="text-[0.625rem] text-muted-foreground font-bold uppercase mb-1">{app.applicant_name}</div>
-                                            {app.cover_letter}
-                                            <div className="text-[0.625rem] text-muted-foreground mt-1.5 opacity-60">{formatDate(app.created_at)}</div>
-                                          </div>
-                                        </div>
-                                      )}
-                                      {replies.map((r: any) => (
-                                        <div key={r.id} className={`flex mt-3 ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
-                                          <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm border ${r.sender === "admin"
-                                            ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
-                                            : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
-                                            }`}>
-                                            <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
-                                            {r.message}
-                                            <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                      <div className="mt-4 space-y-2">
-                                        <div className="flex gap-2">
-                                          <input placeholder="Reply to applicant (sends email)..."
-                                            className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-sm focus:ring-2 focus:ring-ring outline-none"
-                                            value={replyTexts[app.id] || ""}
-                                            onChange={(e) => setReplyTexts(p => ({ ...p, [app.id]: e.target.value }))}
-                                            disabled={replyingApp === app.id}
-                                            onKeyDown={(e) => {
-                                              if (e.key === "Enter" && replyTexts[app.id]?.trim() && replyingApp !== app.id) {
-                                                e.preventDefault();
-                                                updateApplicationStatus(app.id, app.status, replyTexts[app.id]);
-                                                setReplyTexts(p => ({ ...p, [app.id]: "" }));
-                                              }
-                                            }}
-                                          />
-                                          <button
-                                            onClick={() => {
-                                              updateApplicationStatus(app.id, app.status, replyTexts[app.id]);
-                                              setReplyTexts(p => ({ ...p, [app.id]: "" }));
-                                            }}
-                                            disabled={replyingApp === app.id || !replyTexts[app.id]?.trim()}
-                                            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 shrink-0">
-                                            <Send size={14} /> {replyingApp === app.id ? "Sending..." : "Send"}
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {filteredApplications.length > PAGE_SIZE && (
-                              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-sm text-muted-foreground">
-                                <button onClick={() => setAppPage((prev) => Math.max(1, prev - 1))}
-                                  disabled={appPage === 1}
-                                  className="px-3 py-2 rounded-lg bg-background border border-border text-sm disabled:opacity-50">
-                                  Previous
-                                </button>
-                                <span>Page {appPage} of {totalAppPages}</span>
-                                <button onClick={() => setAppPage((prev) => Math.min(totalAppPages, prev + 1))}
-                                  disabled={appPage === totalAppPages}
-                                  className="px-3 py-2 rounded-lg bg-background border border-border text-sm disabled:opacity-50">
-                                  Next
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 

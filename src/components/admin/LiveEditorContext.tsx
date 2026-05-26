@@ -124,8 +124,9 @@ export const EditableText: React.FC<{
   className?: string;
   tag?: keyof JSX.IntrinsicElements;
   colorField?: string;
+  linkField?: string;
   hideColorPicker?: boolean;
-}> = ({ section, field, value, id, className = "", tag: Tag = "span", colorField, hideColorPicker = false }) => {
+}> = ({ section, field, value, id, className = "", tag: Tag = "span", colorField, linkField, hideColorPicker = false }) => {
   const editor = useLiveEditor();
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
@@ -165,7 +166,10 @@ export const EditableText: React.FC<{
       />
 
       {!isEditing && (
-        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/edit:opacity-100 transition-all bg-secondary/95 backdrop-blur-sm text-secondary-foreground shadow-2xl border border-secondary/40 p-1 rounded-md z-[150] pointer-events-auto scale-95 hover:scale-105">
+        <span 
+          className="absolute top-0 right-0 flex items-center opacity-0 group-hover/edit:opacity-100 transition-all bg-secondary text-secondary-foreground shadow-2xl rounded-[4px] z-[150] pointer-events-auto"
+          style={{ WebkitBackgroundClip: 'initial', WebkitTextFillColor: 'initial', backgroundClip: 'initial', padding: '2px' }}
+        >
           <span
             role="button"
             onClick={(e) => {
@@ -173,10 +177,10 @@ export const EditableText: React.FC<{
               e.preventDefault();
               editor.openTypographyEditor(section, field, displayValue, id);
             }}
-            className="px-1.5 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
+            className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
             title="Edit Text Style"
           >
-            <span className="font-serif font-extrabold text-[12px] leading-none text-white">A</span>
+            <span className="font-serif font-extrabold text-[12px] leading-none text-white pr-[1px]">A</span>
           </span>
           {colorField && !hideColorPicker && (
             <span
@@ -186,6 +190,16 @@ export const EditableText: React.FC<{
               title="Change Color"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+            </span>
+          )}
+          {linkField && (
+            <span
+              role="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); editor.onPickLink(section, linkField, id); }}
+              className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+              title="Change Link Target"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
             </span>
           )}
         </span>
@@ -265,7 +279,7 @@ export const EditorToolbar: React.FC<{
 
       {imageField2 && (
         <button onClick={() => editor.onPickImage(section, imageField2, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Secondary Image">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
         </button>
       )}
 

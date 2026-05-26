@@ -62,7 +62,13 @@ const Header = () => {
   const demoLink = settings.demo_url || "https://demo.hrmetrics.com.mv/";
   const logoPath = settings.site_logo || null;
   const siteName = settings.site_name || "Systems Solutions";
-  const navItems = DEFAULT_NAV;
+  const navItems = DEFAULT_NAV.map(item => {
+    const key = `nav_link_${item.href.replace('#', '')}`;
+    return {
+      ...item,
+      resolvedHref: (settings as any)[key] || item.href
+    };
+  });
   const careersSectionVisible = careersContent.section_visible !== false && careersContent.section_visible !== "false";
 
   useEffect(() => {
@@ -101,11 +107,19 @@ const Header = () => {
   };
   const scrollTo = (href: string) => {
     closeMobile();
+    if (href.startsWith("http://") || href.startsWith("https://")) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      return;
+    }
     setTimeout(() => {
-      const el = document.querySelector(href);
-      if (el) {
-        const y = el.getBoundingClientRect().top + window.scrollY - 70;
-        window.scrollTo({ top: y, behavior: "smooth" });
+      try {
+        const el = document.querySelector(href);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 70;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      } catch (e) {
+        console.error("Invalid scroll target:", href);
       }
     }, 50);
   };
@@ -182,18 +196,20 @@ const Header = () => {
 
         {/* Desktop Nav */}
         <nav className="hidden xl:flex items-center justify-end gap-1.5 flex-1 mx-4">
-          {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
-            <div key={item.href} {...getNavProps(() => scrollTo(item.href))} className={navBtn(activeSection === item.href) + " cursor-pointer inline-flex items-center justify-center"}>
-              <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} value={item.label} />
-              <span
-                className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full"
-                style={{
-                  opacity: activeSection === item.href ? 1 : 0,
-                  transform: activeSection === item.href ? "scaleX(1)" : "scaleX(0)",
-                  transition: "opacity 0.2s ease, transform 0.2s ease",
-                  transformOrigin: "center",
-                }}
-              />
+          {navItems.map((item) => (
+            <div key={item.href} className="relative group/item inline-flex items-center justify-center">
+              <div {...getNavProps(() => scrollTo(item.resolvedHref))} className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}>
+                <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} linkField={`nav_link_${item.href.replace('#', '')}`} value={item.label} />
+                <span
+                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full"
+                  style={{
+                    opacity: activeSection === item.resolvedHref ? 1 : 0,
+                    transform: activeSection === item.resolvedHref ? "scaleX(1)" : "scaleX(0)",
+                    transition: "opacity 0.2s ease, transform 0.2s ease",
+                    transformOrigin: "center",
+                  }}
+                />
+              </div>
             </div>
           ))}
 
@@ -274,17 +290,18 @@ const Header = () => {
           </div>
 
           <nav className="flex flex-col p-2 gap-1 max-h-[70vh] overflow-y-auto custom-scrollbar">
-            {navItems.filter(item => !(item.href === '#careers' && !careersSectionVisible)).map((item) => (
-              <div
-                key={item.href}
-                {...getNavProps(() => scrollTo(item.href))}
-                className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.href
-                    ? "text-secondary bg-secondary/10"
-                    : "text-foreground/80 hover:text-foreground hover:bg-muted"
-                  }`}
-              >
-                <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} value={item.label} />
-                {activeSection === item.href && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
+            {navItems.map((item) => (
+              <div key={item.href} className="relative group/item block">
+                <div
+                  {...getNavProps(() => scrollTo(item.resolvedHref))}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
+                      ? "text-secondary bg-secondary/10"
+                      : "text-foreground/80 hover:text-foreground hover:bg-muted"
+                    }`}
+                >
+                  <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} linkField={`nav_link_${item.href.replace('#', '')}`} value={item.label} />
+                  {activeSection === item.resolvedHref && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
+                </div>
               </div>
             ))}
 

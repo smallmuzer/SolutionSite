@@ -17,7 +17,7 @@ const ProductsSection    = lazy(() => import("@/components/ProductsSection"));
 const ClientsSection     = lazy(() => import("@/components/ClientsSection"));
 const WorldMap           = lazy(() => import("@/components/WorldMap"));
 const TestimonialsSection= lazy(() => import("@/components/TestimonialsSection"));
-const CareersSection     = lazy(() => import("@/components/CareersSection"));
+
 const TechnologiesSection = lazy(() => import("@/components/TechnologiesSection"));
 const ContactSection     = lazy(() => import("@/components/ContactSection"));
 const Footer             = lazy(() => import("@/components/Footer"));
@@ -39,7 +39,7 @@ const LiveEditor = () => {
     { table: "services",      order: "sort_order" },
     { table: "technologies",  order: "sort_order" },
     { table: "products",      order: "sort_order" },
-    { table: "career_jobs",   order: "sort_order" },
+
     { table: "hero_stats",    order: "sort_order" },
     { table: "testimonials",  order: "created_at", asc: false },
   ]);
@@ -599,7 +599,7 @@ const LiveEditor = () => {
                 <TestimonialsSection />
                 <WorldMap />
                 <TechnologiesSection />
-                <CareersSection />
+
                 <ContactSection />
                 <Footer />
                 <WhatsAppButton />
