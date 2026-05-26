@@ -360,7 +360,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           position: "absolute",
           left: `${position.x}px`,
           top: `${position.y}px`,
-          width: "920px",
+          width: "800px",
           maxHeight: "85vh",
         }}
         className="flex flex-col rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl pointer-events-auto transition-all overflow-hidden"
@@ -410,90 +410,23 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           </div>
         </div>
 
-        {/* Global Toolbar Area */}
-        <div className="flex items-center flex-wrap gap-1 px-4 py-2 border-b border-border/50 bg-muted/20">
-          {/* Format actions */}
-          <div className="flex items-center gap-0.5 border-r border-border/50 pr-2 mr-2">
-            <button onClick={() => execCmd("bold")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Bold"><Bold size={14} /></button>
-            <button onClick={() => execCmd("italic")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Italic"><Italic size={14} /></button>
-            <button onClick={() => execCmd("underline")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Underline"><Underline size={14} /></button>
-            <button onClick={() => execCmd("strikeThrough")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Strike Through"><Strikethrough size={14} /></button>
-            <button onClick={() => execCmd("superscript")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Superscript"><Superscript size={14} /></button>
-            <button onClick={() => execCmd("subscript")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Subscript"><Subscript size={14} /></button>
-          </div>
-
-          {/* Heading shortcuts */}
-          <div className="flex items-center gap-1 border-r border-border/50 pr-2 mr-2">
-            <select 
-              onChange={(e) => execCmd("formatBlock", e.target.value)} 
-              className="px-2 py-1 bg-background border border-border rounded text-xs focus:outline-none"
-              defaultValue="div"
-            >
-              <option value="p">Paragraph</option>
-              <option value="h1">Heading 1</option>
-              <option value="h2">Heading 2</option>
-              <option value="h3">Heading 3</option>
-              <option value="h4">Heading 4</option>
-              <option value="h5">Heading 5</option>
-              <option value="h6">Heading 6</option>
-              <option value="blockquote">Quote</option>
-            </select>
-          </div>
-
-          {/* List Shortcuts */}
-          <div className="flex items-center gap-0.5 border-r border-border/50 pr-2 mr-2">
-            <button onClick={() => execCmd("insertUnorderedList")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={14} /></button>
-            <button onClick={() => execCmd("insertOrderedList")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={14} /></button>
-          </div>
-
-          {/* Advanced Insertion options */}
-          <div className="flex items-center gap-0.5 border-r border-border/50 pr-2 mr-2">
-            <button onClick={promptLink} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Insert Link"><Link size={14} /></button>
-            <button onClick={() => execCmd("unlink")} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Remove Link"><Link2Off size={14} /></button>
-            <button onClick={promptImage} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Insert Image"><Image size={14} /></button>
-            <button onClick={insertTable} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Insert Table"><Table size={14} /></button>
-            <button onClick={insertHorizontalRule} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Horizontal Rule"><Minus size={14} /></button>
-            <button onClick={insertCodeBlock} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Insert Code Block"><Code size={14} /></button>
-          </div>
-
-          {/* Emojis selection */}
-          <div className="flex items-center gap-0.5 border-r border-border/50 pr-2 mr-2">
-            {["😀", "💡", "🚀", "✨", "🔥", "💻", "💼", "🏢"].map(emoji => (
-              <button 
-                key={emoji} 
-                onClick={() => insertEmoji(emoji)} 
-                className="p-1 hover:bg-muted rounded text-xs transition-colors"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-
-          {/* Undo/Redo & Clear format */}
-          <div className="flex items-center gap-0.5">
-            <button onClick={handleUndo} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Undo"><Undo2 size={14} /></button>
-            <button onClick={handleRedo} className="p-1.5 hover:bg-muted rounded text-foreground transition-colors" title="Redo"><Redo2 size={14} /></button>
-            <button onClick={clearFormatting} className="p-1.5 hover:bg-destructive/10 text-destructive rounded transition-colors ml-1" title="Clear Formatting"><X size={14} /></button>
-          </div>
-        </div>
-
         {/* Main Side-by-Side Content Area */}
-        <div className="flex flex-1 min-h-[400px] overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left Styling Sidebar */}
-          <div className="w-[300px] border-r border-border/60 bg-muted/10 p-4 overflow-y-auto space-y-4 max-h-[58vh]">
+          <div className="w-[230px] shrink-0 border-r border-border/60 bg-muted/10 p-3 overflow-y-auto space-y-3">
             <div>
-              <h4 className="text-xs font-bold text-foreground/80 uppercase tracking-widest flex items-center gap-1.5 mb-3">
-                <Palette size={12} className="text-secondary" />
+              <h4 className="text-[11px] font-bold text-foreground/80 uppercase tracking-widest flex items-center gap-1.5 mb-2.5">
+                <Palette size={11} className="text-secondary" />
                 <span>Typography</span>
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {/* Font Family */}
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Font Family</label>
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Font Family</label>
                   <select
                     value={activeStyles.fontFamily}
                     onChange={(e) => setActiveStyles(prev => ({ ...prev, fontFamily: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                    className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                   >
                     <option value="">Default (Inherit)</option>
                     <option value="system-ui, sans-serif">System Sans</option>
@@ -507,13 +440,13 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 </div>
 
                 {/* Font Size & Weight */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Font Size</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Font Size</label>
                     <select
                       value={activeStyles.fontSize}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, fontSize: e.target.value }))}
-                      className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                      className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
                       <option value="">Inherit</option>
                       {["11px", "12px", "13px", "14px", "15px", "16px", "18px", "20px", "24px", "28px", "32px", "36px", "40px", "48px", "56px", "64px", "72px"].map(sz => (
@@ -522,11 +455,11 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Weight</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Weight</label>
                     <select
                       value={activeStyles.fontWeight}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, fontWeight: e.target.value }))}
-                      className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                      className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
                       <option value="">Inherit</option>
                       <option value="100">Thin (100)</option>
@@ -542,37 +475,37 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 </div>
 
                 {/* Letter Spacing & Line Height */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Line Height</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Line Height</label>
                     <input 
                       type="text" 
                       placeholder="e.g. 1.5, 24px"
                       value={activeStyles.lineHeight}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, lineHeight: e.target.value }))}
-                      className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                      className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Letter Space</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Letter Space</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. -0.5px, 2px"
+                      placeholder="e.g. -0.5px"
                       value={activeStyles.letterSpacing}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, letterSpacing: e.target.value }))}
-                      className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                      className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Text Transform & Align */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Transform</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Transform</label>
                     <select
                       value={activeStyles.textTransform}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, textTransform: e.target.value }))}
-                      className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                      className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
                       <option value="">None</option>
                       <option value="uppercase">UPPERCASE</option>
@@ -581,11 +514,11 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Alignment</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Alignment</label>
                     <select
                       value={activeStyles.textAlign}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, textAlign: e.target.value }))}
-                      className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none"
+                      className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
                       <option value="">Inherit</option>
                       <option value="left">Left</option>
@@ -597,40 +530,40 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 </div>
 
                 {/* Colors */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Text Color</label>
-                    <div className="flex gap-1.5 items-center">
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Text Color</label>
+                    <div className="flex gap-1 items-center">
                       <input 
                         type="color" 
                         value={activeStyles.textColor || "#000000"} 
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
-                        className="w-7 h-7 border border-border rounded cursor-pointer"
+                        className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
                       />
                       <input 
                         type="text" 
                         placeholder="Hex/RGB" 
                         value={activeStyles.textColor} 
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
-                        className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none"
+                        className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Bg Highlight</label>
-                    <div className="flex gap-1.5 items-center">
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Bg Highlight</label>
+                    <div className="flex gap-1 items-center">
                       <input 
                         type="color" 
                         value={activeStyles.bgColor || "#ffffff"} 
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
-                        className="w-7 h-7 border border-border rounded cursor-pointer"
+                        className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
                       />
                       <input 
                         type="text" 
                         placeholder="Hex/RGB" 
                         value={activeStyles.bgColor} 
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
-                        className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none"
+                        className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
                       />
                     </div>
                   </div>
@@ -639,15 +572,15 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
             </div>
 
             {/* Layout (Padding & Margin) */}
-            <div className="pt-3 border-t border-border/50">
-              <h4 className="text-xs font-bold text-foreground/80 uppercase tracking-widest flex items-center gap-1.5 mb-3">
-                <Grid size={12} className="text-secondary" />
-                <span>Layout (Padding / Margin)</span>
+            <div className="pt-2.5 border-t border-border/50">
+              <h4 className="text-[11px] font-bold text-foreground/80 uppercase tracking-widest flex items-center gap-1.5 mb-2.5">
+                <Grid size={11} className="text-secondary" />
+                <span>Layout (Pad / Margin)</span>
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {/* Padding Inputs */}
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Padding (Top, Right, Bottom, Left)</label>
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Padding</label>
                   <div className="grid grid-cols-4 gap-1">
                     {["Top", "Right", "Bottom", "Left"].map((dir) => {
                       const key = `padding${dir}` as keyof ActiveStyles;
@@ -655,10 +588,10 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                         <div key={dir}>
                           <input 
                             type="text" 
-                            placeholder="0px" 
+                            placeholder="0" 
                             value={activeStyles[key]} 
                             onChange={(e) => setActiveStyles(prev => ({ ...prev, [key]: e.target.value }))}
-                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-center font-mono text-[10px] focus:outline-none"
+                            className="w-full px-1 py-1 bg-background border border-border rounded text-center font-mono text-[10px] focus:outline-none"
                             title={`Padding ${dir}`}
                           />
                           <span className="text-[8px] text-muted-foreground font-semibold uppercase tracking-widest text-center block mt-0.5">{dir.substring(0, 1)}</span>
@@ -670,7 +603,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
                 {/* Margin Inputs */}
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Margin (Top, Right, Bottom, Left)</label>
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Margin</label>
                   <div className="grid grid-cols-4 gap-1">
                     {["Top", "Right", "Bottom", "Left"].map((dir) => {
                       const key = `margin${dir}` as keyof ActiveStyles;
@@ -678,10 +611,10 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                         <div key={dir}>
                           <input 
                             type="text" 
-                            placeholder="0px" 
+                            placeholder="0" 
                             value={activeStyles[key]} 
                             onChange={(e) => setActiveStyles(prev => ({ ...prev, [key]: e.target.value }))}
-                            className="w-full px-1.5 py-1 bg-background border border-border rounded text-center font-mono text-[10px] focus:outline-none"
+                            className="w-full px-1 py-1 bg-background border border-border rounded text-center font-mono text-[10px] focus:outline-none"
                             title={`Margin ${dir}`}
                           />
                           <span className="text-[8px] text-muted-foreground font-semibold uppercase tracking-widest text-center block mt-0.5">{dir.substring(0, 1)}</span>
@@ -695,135 +628,195 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           </div>
 
           {/* Right Editor Area */}
-          <div className="flex-1 flex flex-col bg-background/50 overflow-hidden relative">
-            {viewMode === "visual" ? (
-              <div className="flex-1 p-6 overflow-y-auto max-h-[58vh]">
-                {previewMode ? (
-                  /* Preview Mode */
-                  <div 
-                    style={{
-                      fontFamily: activeStyles.fontFamily,
-                      fontSize: activeStyles.fontSize,
-                      fontWeight: activeStyles.fontWeight,
-                      lineHeight: activeStyles.lineHeight,
-                      letterSpacing: activeStyles.letterSpacing,
-                      textTransform: activeStyles.textTransform as any,
-                      textAlign: activeStyles.textAlign as any,
-                      color: activeStyles.textColor,
-                      backgroundColor: activeStyles.bgColor,
-                      paddingTop: activeStyles.paddingTop,
-                      paddingRight: activeStyles.paddingRight,
-                      paddingBottom: activeStyles.paddingBottom,
-                      paddingLeft: activeStyles.paddingLeft,
-                      marginTop: activeStyles.marginTop,
-                      marginRight: activeStyles.marginRight,
-                      marginBottom: activeStyles.marginBottom,
-                      marginLeft: activeStyles.marginLeft,
-                    }}
-                    className="prose dark:prose-invert max-w-none break-words"
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(editorHtml) }}
+          <div className="flex-1 flex flex-col bg-background/50 overflow-hidden relative min-w-0 p-4 pb-0">
+            <div className="flex-1 flex flex-col border border-secondary/40 rounded-xl overflow-hidden bg-card shadow-sm mb-4">
+              {/* Rich Text Toolbar (Always visible, but disabled in HTML mode) */}
+              <div className={`flex items-center flex-wrap gap-1 px-3 py-1.5 border-b border-border/60 bg-muted/20 transition-all ${viewMode === "html" ? "opacity-40 pointer-events-none grayscale select-none" : "opacity-100"}`}>
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
+                  <button onClick={() => execCmd("bold")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bold"><Bold size={13} /></button>
+                  <button onClick={() => execCmd("italic")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Italic"><Italic size={13} /></button>
+                  <button onClick={() => execCmd("underline")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Underline"><Underline size={13} /></button>
+                  <button onClick={() => execCmd("strikeThrough")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Strike Through"><Strikethrough size={13} /></button>
+                  <button onClick={() => execCmd("superscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Superscript"><Superscript size={13} /></button>
+                  <button onClick={() => execCmd("subscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Subscript"><Subscript size={13} /></button>
+                </div>
+
+                <div className="flex items-center gap-1 border-r border-border/50 pr-1.5 mr-1.5">
+                  <select 
+                    onChange={(e) => execCmd("formatBlock", e.target.value)} 
+                    className="px-1.5 py-0.5 bg-background border border-border rounded text-[11px] focus:outline-none"
+                    defaultValue="div"
+                  >
+                    <option value="p">Paragraph</option>
+                    <option value="h1">Heading 1</option>
+                    <option value="h2">Heading 2</option>
+                    <option value="h3">Heading 3</option>
+                    <option value="h4">Heading 4</option>
+                    <option value="h5">Heading 5</option>
+                    <option value="h6">Heading 6</option>
+                    <option value="blockquote">Quote</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
+                  <button onClick={() => execCmd("insertUnorderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={13} /></button>
+                  <button onClick={() => execCmd("insertOrderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={13} /></button>
+                </div>
+
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
+                  <button onClick={promptLink} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Link"><Link size={13} /></button>
+                  <button onClick={() => execCmd("unlink")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Remove Link"><Link2Off size={13} /></button>
+                  <button onClick={promptImage} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Image"><Image size={13} /></button>
+                  <button onClick={insertTable} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Table"><Table size={13} /></button>
+                  <button onClick={insertHorizontalRule} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Horizontal Rule"><Minus size={13} /></button>
+                  <button onClick={insertCodeBlock} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Code Block"><Code size={13} /></button>
+                </div>
+
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
+                  {["😀", "💡", "🚀", "✨", "🔥"].map(emoji => (
+                    <button key={emoji} onClick={() => insertEmoji(emoji)} className="p-1 hover:bg-muted rounded text-[10px] transition-colors">{emoji}</button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-0.5">
+                  <button onClick={handleUndo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Undo"><Undo2 size={13} /></button>
+                  <button onClick={handleRedo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Redo"><Redo2 size={13} /></button>
+                  <button onClick={clearFormatting} className="p-1 hover:bg-destructive/10 text-destructive rounded transition-colors ml-0.5" title="Clear Formatting"><X size={13} /></button>
+                </div>
+              </div>
+
+              {viewMode === "visual" ? (
+
+                  <div className="flex-1 overflow-y-auto relative bg-background/50 p-4">
+                    {previewMode ? (
+                      /* Preview Mode */
+                      <div 
+                        style={{
+                          fontFamily: activeStyles.fontFamily,
+                          fontSize: activeStyles.fontSize,
+                          fontWeight: activeStyles.fontWeight,
+                          lineHeight: activeStyles.lineHeight,
+                          letterSpacing: activeStyles.letterSpacing,
+                          textTransform: activeStyles.textTransform as any,
+                          textAlign: activeStyles.textAlign as any,
+                          color: activeStyles.textColor,
+                          backgroundColor: activeStyles.bgColor,
+                          paddingTop: activeStyles.paddingTop,
+                          paddingRight: activeStyles.paddingRight,
+                          paddingBottom: activeStyles.paddingBottom,
+                          paddingLeft: activeStyles.paddingLeft,
+                          marginTop: activeStyles.marginTop,
+                          marginRight: activeStyles.marginRight,
+                          marginBottom: activeStyles.marginBottom,
+                          marginLeft: activeStyles.marginLeft,
+                        }}
+                        className="prose dark:prose-invert max-w-none break-words"
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(editorHtml) }}
+                      />
+                    ) : (
+                      /* Visual contentEditable rich-text area */
+                      <div
+                        ref={editorRef}
+                        className="w-full h-full min-h-[250px] outline-none prose dark:prose-invert max-w-none break-words"
+                        contentEditable
+                        suppressContentEditableWarning
+                        style={{
+                          fontFamily: activeStyles.fontFamily,
+                          fontSize: activeStyles.fontSize,
+                          fontWeight: activeStyles.fontWeight,
+                          lineHeight: activeStyles.lineHeight,
+                          letterSpacing: activeStyles.letterSpacing,
+                          textTransform: activeStyles.textTransform as any,
+                          textAlign: activeStyles.textAlign as any,
+                          color: activeStyles.textColor,
+                          backgroundColor: activeStyles.bgColor || "transparent",
+                          paddingTop: activeStyles.paddingTop,
+                          paddingRight: activeStyles.paddingRight,
+                          paddingBottom: activeStyles.paddingBottom,
+                          paddingLeft: activeStyles.paddingLeft,
+                          marginTop: activeStyles.marginTop,
+                          marginRight: activeStyles.marginRight,
+                          marginBottom: activeStyles.marginBottom,
+                          marginLeft: activeStyles.marginLeft,
+                        }}
+                        onInput={(e) => setEditorHtml(e.currentTarget.innerHTML)}
+                        dangerouslySetInnerHTML={{ __html: editorHtml }}
+                      />
+                    )}
+                    
+                    {/* Context/Mode status badge */}
+                    <div className="absolute bottom-2 right-2 flex gap-1.5 items-center z-30 pointer-events-none">
+                      <span className="text-[8px] font-bold bg-muted/80 backdrop-blur-sm px-2 py-0.5 rounded border border-border/50 uppercase tracking-widest text-muted-foreground shadow-sm">
+                        WYSIWYG MODE
+                      </span>
+                    </div>
+                  </div>
+              ) : (
+                /* Raw HTML Code View Area */
+                <div className="flex-1 flex flex-col h-full relative bg-slate-950">
+                  <textarea
+                    value={editorHtml}
+                    onChange={(e) => setEditorHtml(e.target.value)}
+                    className="w-full h-full flex-1 p-4 bg-transparent text-slate-100 font-mono text-xs focus:outline-none resize-none"
+                    placeholder="<h2>Enter raw HTML code here</h2>"
                   />
-                ) : (
-                  /* Visual contentEditable rich-text area */
-                  <div
-                    ref={editorRef}
-                    className="w-full h-full min-h-[250px] outline-none prose dark:prose-invert max-w-none break-words"
-                    contentEditable
-                    suppressContentEditableWarning
-                    style={{
-                      fontFamily: activeStyles.fontFamily,
-                      fontSize: activeStyles.fontSize,
-                      fontWeight: activeStyles.fontWeight,
-                      lineHeight: activeStyles.lineHeight,
-                      letterSpacing: activeStyles.letterSpacing,
-                      textTransform: activeStyles.textTransform as any,
-                      textAlign: activeStyles.textAlign as any,
-                      color: activeStyles.textColor,
-                      backgroundColor: activeStyles.bgColor || "rgba(var(--card), 0.5)",
-                      paddingTop: activeStyles.paddingTop,
-                      paddingRight: activeStyles.paddingRight,
-                      paddingBottom: activeStyles.paddingBottom,
-                      paddingLeft: activeStyles.paddingLeft,
-                      marginTop: activeStyles.marginTop,
-                      marginRight: activeStyles.marginRight,
-                      marginBottom: activeStyles.marginBottom,
-                      marginLeft: activeStyles.marginLeft,
-                      border: "1px dashed rgba(var(--secondary), 0.3)",
-                      borderRadius: "8px",
-                      padding: "16px",
-                    }}
-                    onInput={(e) => setEditorHtml(e.currentTarget.innerHTML)}
-                    dangerouslySetInnerHTML={{ __html: editorHtml }}
-                  />
+                  <div className="absolute bottom-4 right-4 flex gap-1.5 items-center z-30 pointer-events-none">
+                    <span className="text-[8px] font-bold bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 uppercase tracking-widest shadow-sm">
+                      SOURCE HTML MODE
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions (Right side only) */}
+            <div className="border-t border-border/60 bg-muted/20 px-3 py-2 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                {/* View Mode & Preview Toggles */}
+                <div className="flex items-center gap-0.5 bg-background border border-border/80 p-0.5 rounded-md shadow-sm">
+                  <button 
+                    onClick={() => setViewMode("visual")} 
+                    className={`px-2 py-1 text-[10px] font-bold rounded-[4px] whitespace-nowrap transition-colors ${viewMode === "visual" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+                  >
+                    Visual Editor
+                  </button>
+                  <button 
+                    onClick={() => setViewMode("html")} 
+                    className={`px-2 py-1 text-[10px] font-bold rounded-[4px] whitespace-nowrap transition-colors ${viewMode === "html" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+                  >
+                    HTML Code
+                  </button>
+                </div>
+
+                {viewMode === "visual" && (
+                  <label className="flex items-center gap-1 cursor-pointer select-none bg-background/50 px-1.5 py-1 rounded-md border border-transparent hover:border-border/50 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      checked={previewMode} 
+                      onChange={(e) => setPreviewMode(e.target.checked)}
+                      className="w-3 h-3 rounded border-border focus:ring-0 cursor-pointer text-secondary"
+                    />
+                    <span className="text-[10px] font-bold whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">Style Preview</span>
+                  </label>
                 )}
               </div>
-            ) : (
-              /* Raw HTML Code View Area */
-              <div className="flex-1 p-4 flex flex-col max-h-[58vh]">
-                <textarea
-                  value={editorHtml}
-                  onChange={(e) => setEditorHtml(e.target.value)}
-                  className="w-full flex-1 p-4 bg-slate-950 text-slate-100 font-mono text-xs border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/50 resize-none h-[350px]"
-                  placeholder="<h2>Enter raw HTML code here</h2>"
-                />
+
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={onClose}
+                  className="px-2 py-1 border border-border/80 bg-background hover:bg-muted text-[10px] font-bold whitespace-nowrap rounded-lg transition-all shadow-sm active:scale-95 text-foreground/80 hover:text-foreground"
+                >
+                  Discard Changes
+                </button>
+                <button 
+                  onClick={handleSave}
+                  className="px-2.5 py-1 bg-secondary text-secondary-foreground hover:scale-[1.02] active:scale-95 text-[10px] font-bold whitespace-nowrap rounded-lg shadow-sm border border-secondary/20 flex items-center gap-1 transition-all"
+                >
+                  <Save size={11} />
+                  <span>Apply & Save</span>
+                </button>
               </div>
-            )}
-            
-            {/* Context/Mode status badge */}
-            <div className="absolute bottom-2 right-4 flex gap-1.5 items-center z-30 pointer-events-auto">
-              <span className="text-[8px] font-bold bg-muted px-2 py-0.5 rounded border uppercase tracking-widest text-muted-foreground">
-                {viewMode === "visual" ? "WYSIWYG MODE" : "SOURCE HTML MODE"}
-              </span>
             </div>
-          </div>
-        </div>
-
-        {/* Footer Actions */}
-        <div className="border-t border-border/60 bg-muted/30 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* View Mode & Preview Toggles */}
-            <div className="flex items-center gap-1 bg-background border border-border/80 p-0.5 rounded-lg">
-              <button 
-                onClick={() => setViewMode("visual")} 
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${viewMode === "visual" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Visual Editor
-              </button>
-              <button 
-                onClick={() => setViewMode("html")} 
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${viewMode === "html" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                HTML Code
-              </button>
-            </div>
-
-            {viewMode === "visual" && (
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input 
-                  type="checkbox" 
-                  checked={previewMode} 
-                  onChange={(e) => setPreviewMode(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-border focus:ring-0 cursor-pointer text-secondary"
-                />
-                <span className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">Style Preview</span>
-              </label>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={onClose}
-              className="px-4 py-2 border border-border hover:bg-muted text-xs font-bold rounded-xl transition-all active:scale-95"
-            >
-              Discard Changes
-            </button>
-            <button 
-              onClick={handleSave}
-              className="px-5 py-2 bg-secondary text-secondary-foreground hover:scale-[1.03] active:scale-95 text-xs font-extrabold rounded-xl shadow-lg border border-secondary/20 flex items-center gap-1.5 transition-all"
-            >
-              <Save size={14} />
-              <span>Apply & Save</span>
-            </button>
           </div>
         </div>
       </div>
