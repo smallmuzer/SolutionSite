@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
 import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
-import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
 const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?: number; className?: string }) => {
   if (!name) return <LucideIcons.Globe size={size} className={className} />;
@@ -173,20 +173,20 @@ const Footer = () => {
         <div className={`border-b border-border/50 relative group/sect ${!isNetworkVisible ? 'opacity-50 border-dashed border-2' : ''}`}>
           <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
             <div className="text-center mb-10">
-              <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.network_badge_color || undefined }}>
-                <EditableText section="footer" field="network_badge" value="Our Network" colorField="network_badge_color" />
+              <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.network_badge) ? undefined : (content.network_badge_color || undefined) }}>
+                <EditableText section="footer" field="network_badge" value={content.network_badge || "Our Network"} colorField="network_badge_color" />
               </span>
-              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground relative" style={{ color: content.network_title_color || undefined }}>
+              <h3 className="font-heading font-bold text-2xl mt-2 text-foreground relative" style={{ color: hasEmbeddedColor(content.network_title) ? undefined : (content.network_title_color || undefined) }}>
                 <span className="inline-flex items-center gap-2">
-                  <EditableText section="footer" field="network_title" value="Associated Companies" colorField="network_title_color" />
+                  <EditableText section="footer" field="network_title" value={content.network_title || "Associated Companies"} colorField="network_title_color" />
                   {!isNetworkVisible && editor?.isEditMode && (
                     <span className="text-amber-500" title="Section Hidden"><EyeOff size={18} /></span>
                   )}
                 </span>
                 <SectionHeaderToolbar section="our_network" targetSection="our_network" isVisible={isNetworkVisible} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h3>
-              <div className="text-sm mt-2 max-w-md mx-auto text-muted-foreground" style={{ color: content.network_subtitle_color || undefined }}>
-                <EditableText section="footer" field="network_subtitle" value="Part of a growing family of technology companies across South Asia." colorField="network_subtitle_color" />
+              <div className="text-sm mt-2 max-w-md mx-auto text-muted-foreground" style={{ color: hasEmbeddedColor(content.network_subtitle) ? undefined : (content.network_subtitle_color || undefined) }}>
+                <EditableText section="footer" field="network_subtitle" value={content.network_subtitle || "Part of a growing family of technology companies across South Asia."} colorField="network_subtitle_color" />
               </div>
             </div>
 
@@ -391,7 +391,7 @@ const Footer = () => {
             {/* Services */}
             <div {...getNavProps(() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" }))}>
               <h4 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2 group/h" style={{ color: "#f1f5f9" }}>
-                <EditableText section="footer" field="label_services" value="Services" />
+                <EditableText section="footer" field="label_services" value={content.label_services || "Services"} />
               </h4>
               <ul className="space-y-2.5">
                 {(servicesData || [])
@@ -432,7 +432,7 @@ const Footer = () => {
             {/* Company */}
             <div {...getNavProps(() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" }))}>
               <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
-                <EditableText section="footer" field="label_company" value="Company" />
+                <EditableText section="footer" field="label_company" value={content.label_company || "Company"} />
               </h4>
               <ul className="space-y-2.5">
                 {[
@@ -510,7 +510,7 @@ const Footer = () => {
             <div className="flex items-center gap-1.5">
               <Globe size={12} />
               <span>
-                <EditableText section="footer" field="location" value="Malé, Maldives" />
+                <EditableText section="footer" field="location" value={content.location || "Malé, Maldives"} />
               </span>
             </div>
           </div>

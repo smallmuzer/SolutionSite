@@ -2,6 +2,16 @@ import React, { createContext, useContext, useState } from "react";
 import { toast } from "sonner";
 import { TypographyEditorModal, parseInlineStyles } from "./TypographyEditorModal";
 
+// Re-export so components can import from one place
+export { parseInlineStyles };
+
+// Helper: returns true if the value has an inline color set via the Typography Editor
+// Used by parent containers to avoid overriding embedded colors with a separate colorField
+export function hasEmbeddedColor(value: string): boolean {
+  if (!value) return false;
+  return /\bcolor\s*:/.test(value);
+}
+
 interface LiveEditorContextType {
   isEditMode: boolean;
   activeElementId: string | null;
@@ -22,7 +32,7 @@ interface LiveEditorContextType {
   handleSaveAll: () => void;
   handleDiscard: () => void;
   pendingChanges: Record<string, any>;
-  openTypographyEditor: (section: string, field: string, currentValue: string, id?: string, targetStyles?: Record<string, string>) => void;
+  openTypographyEditor: (section: string, field: string, currentValue: string, id?: string, targetStyles?: Record<string, string>, colorField?: string) => void;
 }
 
 const LiveEditorContext = createContext<LiveEditorContextType | null>(null);
@@ -60,6 +70,7 @@ export const LiveEditorProvider: React.FC<{
       value: string;
       id?: string;
       targetStyles?: Record<string, string>;
+      colorField?: string;
     }>({
       isOpen: false,
       section: "",
@@ -67,14 +78,15 @@ export const LiveEditorProvider: React.FC<{
       value: "",
     });
 
-    const openTypographyEditor = (section: string, field: string, value: string, id?: string, targetStyles?: Record<string, string>) => {
+    const openTypographyEditor = (section: string, field: string, value: string, id?: string, targetStyles?: Record<string, string>, colorField?: string) => {
       setTypoState({
         isOpen: true,
         section,
         field,
         value,
         id,
-        targetStyles
+        targetStyles,
+        colorField,
       });
     };
 
@@ -113,6 +125,13 @@ export const LiveEditorProvider: React.FC<{
             onClose={() => setTypoState(prev => ({ ...prev, isOpen: false }))}
             onSave={(sec, fld, val, itemId) => {
               onUpdate(sec, fld, val, itemId);
+              // If the saved value has an inline color, sync the colorField too
+              // so the parent element's style.color doesn't override the inline color
+              if (typoState.colorField) {
+                const colorMatch = val.match(/color:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|[a-zA-Z]+)/);
+                const newColor = colorMatch ? colorMatch[1] : "";
+                onUpdate(sec, typoState.colorField, newColor, itemId);
+              }
             }}
           />
         </div>
@@ -167,7 +186,7 @@ export const EditableText: React.FC<{
       if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
       if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
     }
-    if (pendingColor) inlineStyle.color = pendingColor;
+    if (pendingColor && !parsedStyles.textColor) inlineStyle.color = pendingColor;
     
     return <Tag className={className} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
   }
@@ -231,7 +250,7 @@ export const EditableText: React.FC<{
                   marginLeft: comp.marginLeft
                 };
               }
-              editor.openTypographyEditor(section, field, displayValue, id, targetStyles);
+              editor.openTypographyEditor(section, field, displayValue, id, targetStyles, colorField);
             }}
             className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
             title="Edit Text Style"

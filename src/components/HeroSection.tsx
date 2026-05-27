@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
-import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
 function useCountUp(end: number, duration: number, start: boolean) {
   const [count, setCount] = useState(0);
@@ -155,16 +155,16 @@ const HeroSection = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-10 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-            <span className="text-white/90 text-sm font-medium" style={{ color: content.badge_color || undefined }}>
-              <EditableText section="hero" field="badge" value="Maldives' Leading IT Solutions Partner" colorField="badge_color" />
+            <span className="text-white/90 text-sm font-medium" style={{ color: hasEmbeddedColor("Maldives' Leading IT Solutions Partner") ? undefined : (content.badge_color || undefined) }}>
+              <EditableText section="hero" field="badge" value={content.badge || "Maldives' Leading IT Solutions Partner"} colorField="badge_color" />
             </span>
           </div>
 
-          <h1 className="text-[2.5rem] sm:text-[3.25rem] lg:text-[4.5rem] font-heading font-bold text-white leading-[1.1] mb-6 drop-shadow-2xl hero-fade-in" style={{ animationDelay: "0.2s", color: content.title_color || undefined }}>
+          <h1 className="text-[2.5rem] sm:text-[3.25rem] lg:text-[4.5rem] font-heading font-bold text-white leading-[1.1] mb-6 drop-shadow-2xl hero-fade-in" style={{ animationDelay: "0.2s", color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <EditableText section="hero" field="title" value={content.title || "Transforming Business Across Maldives"} colorField="title_color" />
           </h1>
 
-          <div className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s", color: content.subtitle_color || undefined }}>
+          <div className="text-lg sm:text-xl text-white/80 max-w-2xl mb-8 leading-relaxed drop-shadow hero-fade-in" style={{ animationDelay: "0.35s", color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
             <EditableText section="hero" field="subtitle" value={content.subtitle || "Enterprise software, ERP, and digital transformation solutions for the hospitality, finance, and government sectors."} colorField="subtitle_color" />
           </div>
 

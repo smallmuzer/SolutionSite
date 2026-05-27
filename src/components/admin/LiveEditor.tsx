@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { LiveEditorProvider, useLiveEditor } from "./LiveEditorContext";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
@@ -33,6 +34,7 @@ const SkeletonSection = () => (
 
 const LiveEditor = () => {
   const { data: settings } = useSiteSettings();
+  const queryClient = useQueryClient();
   
   useBatchQuery([
     { table: "client_logos",  order: "sort_order" },
@@ -187,9 +189,27 @@ const LiveEditor = () => {
 
         for (const g of Object.values(grouped)) {
             const dbSec = g.section === "clients" ? "client_logos" : g.section;
+            let finalData = g.data;
+
+            if (!g.id) {
+                try {
+                    const getResp = await fetch(`/api/db/site_content?section_key=${g.section}&_single=1`);
+                    const getData = await getResp.json();
+                    if (getData.data && getData.data.content) {
+                        let existingContent = getData.data.content;
+                        if (typeof existingContent === "string") {
+                            try { existingContent = JSON.parse(existingContent); } catch { existingContent = {}; }
+                        }
+                        finalData = { ...existingContent, ...g.data };
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch existing content", e);
+                }
+            }
+
             const endpoint = g.id ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
             const method = g.id ? "PATCH" : "POST";
-            const body = g.id ? g.data : { section_key: g.section, content: g.data };
+            const body = g.id ? finalData : { section_key: g.section, content: finalData };
 
             const resp = await fetch(endpoint, {
                 method,
@@ -203,6 +223,7 @@ const LiveEditor = () => {
         setPendingChanges({});
         toast.success("All changes saved successfully", { id: toastId });
         window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        queryClient.invalidateQueries();
     } catch (err: any) {
         toast.error(`Failed to save changes: ${err.message}`, { id: toastId });
     }

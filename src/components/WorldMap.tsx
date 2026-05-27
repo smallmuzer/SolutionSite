@@ -5,7 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Users, Building2, Map, X } from "lucide-react";
 import { dbSelect } from "@/lib/api";
-import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -146,17 +146,17 @@ const WorldMap = () => {
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-10">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: (header as any).badge_color || undefined }}>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(header.badge) ? undefined : ((header as any).badge_color || undefined) }}>
             <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: (header as any).title_color || undefined }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: hasEmbeddedColor(header.title) ? undefined : ((header as any).title_color || undefined) }}>
             <EditableText section="global_reach" field="title" value={header.title || "Our"} colorField="title_color" />{" "}
-            <span className="gradient-text" style={{ color: (header as any).highlight_color || undefined, background: (header as any).highlight_color ? "none" : undefined, WebkitTextFillColor: (header as any).highlight_color ? "initial" : undefined }}>
+            <span className="gradient-text" style={{ color: hasEmbeddedColor(header.highlight) ? undefined : ((header as any).highlight_color || undefined), background: (header as any).highlight_color && !hasEmbeddedColor(header.highlight) ? "none" : undefined, WebkitTextFillColor: (header as any).highlight_color && !hasEmbeddedColor(header.highlight) ? "initial" : undefined }}>
               <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} colorField="highlight_color" />
             </span>
             <SectionHeaderToolbar section="global_presence" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: (header as any).description_color || undefined }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(header.description) ? undefined : ((header as any).description_color || undefined) }}>
             <EditableText section="global_reach" field="description" value={header.description || ""} colorField="description_color" />
           </div>
         </AnimatedSection>

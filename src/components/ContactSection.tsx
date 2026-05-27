@@ -7,7 +7,7 @@ import { useSiteContent, useSiteSettings } from "@/hooks/useSiteContent";
 import { openViber, ViberIcon } from "@/lib/viber";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { COUNTRIES, detectCountry, validatePhone } from "@/lib/phone-utils";
-import { EditableText, EditorToolbar, useLiveEditor } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, useLiveEditor, hasEmbeddedColor } from "./admin/LiveEditorContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ————————————————————————————————————————————————————————————————————————————————
@@ -188,13 +188,13 @@ const ContactSection = () => {
       <EditorToolbar section="contact" canHide={false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <div id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest inline-block" style={{ color: content.badge_color || undefined }}>
-            <EditableText section="contact" field="badge" value="Reach Us" colorField="badge_color" />
+          <div id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest inline-block" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
+            <EditableText section="contact" field="badge" value={content.badge || "Reach Us"} colorField="badge_color" />
           </div>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: content.title_color || undefined }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
           </h2>
-          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: content.subtitle_color || undefined }}>
+          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
             <EditableText section="contact" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
           </div>
         </AnimatedSection>
@@ -203,7 +203,7 @@ const ContactSection = () => {
           <AnimatedSection className="w-full lg:w-[48%] flex flex-col">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
               <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
-                <EditableText section="contact" field="label_office_info" value="Office Information" />
+                <EditableText section="contact" field="label_office_info" value={content.label_office_info || "Office Information"} />
               </h3>
               <div className="space-y-4 flex-1">
                 <div className="flex gap-4">
@@ -212,7 +212,7 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <div className="font-heading font-semibold text-foreground text-[12.5px]">
-                      <EditableText section="contact" field="label_address" value="Office Address" />
+                      <EditableText section="contact" field="label_address" value={content.label_address || "Office Address"} />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="address" value={(() => {
@@ -235,7 +235,7 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <div className="font-heading font-semibold text-foreground text-[12.5px]">
-                      <EditableText section="contact" field="label_email" value="Email" />
+                      <EditableText section="contact" field="label_email" value={content.label_email || "Email"} />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="email" value={content.email || "info@solutions.com.mv"} />
@@ -248,7 +248,7 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <div className="font-heading font-semibold text-foreground text-[12.5px]">
-                      <EditableText section="contact" field="label_phone_side" value="Phone" />
+                      <EditableText section="contact" field="label_phone_side" value={content.label_phone_side || "Phone"} />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="phone" value={content.phone || "+960 301 1355"} />
@@ -261,7 +261,7 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <div className="font-heading font-semibold text-foreground text-[12.5px]">
-                      <EditableText section="contact" field="label_landline" value="Landline" />
+                      <EditableText section="contact" field="label_landline" value={content.label_landline || "Landline"} />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="landline" value={content.landline || "+960 301 1355"} />
@@ -274,7 +274,7 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <div className="font-heading font-semibold text-foreground text-[12.5px]">
-                      <EditableText section="contact" field="label_hours" value="Business Hours" />
+                      <EditableText section="contact" field="label_hours" value={content.label_hours || "Business Hours"} />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="hours" value={content.hours || "Sunday - Thursday: 09:00 - 17:00\nFriday - Saturday: Closed"} />
@@ -286,7 +286,7 @@ const ContactSection = () => {
               <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
                   <div className="text-[0.8125rem] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-[0.15em] inline-block">
-                    <EditableText section="contact" field="label_follow_us" value="Follow Us" />
+                    <EditableText section="contact" field="label_follow_us" value={content.label_follow_us || "Follow Us"} />
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {(() => {
@@ -376,7 +376,7 @@ const ContactSection = () => {
 
                 <div className="pt-3">
                   <p className="text-muted-foreground text-[0.6875rem] text-center font-medium">
-                    <EditableText section="contact" field="label_response_time" value="We respond within 24 hours on business days." />
+                    <EditableText section="contact" field="label_response_time" value={content.label_response_time || "We respond within 24 hours on business days."} />
                   </p>
                 </div>
               </div>
@@ -388,22 +388,22 @@ const ContactSection = () => {
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-12 text-center flex-1 flex flex-col items-center justify-center min-h-[500px] transition-all duration-300">
                 <CheckCircle size={48} className="text-secondary mx-auto mb-4" />
                 <h3 className="font-heading font-bold text-[1.125rem] text-foreground mb-2">
-                  <EditableText section="contact" field="label_thank_you" value="Thank You!" />
+                  <EditableText section="contact" field="label_thank_you" value={content.label_thank_you || "Thank You!"} />
                 </h3>
                 <p className="text-muted-foreground text-[0.875rem]">
-                  <EditableText section="contact" field="label_success_message" value="We've received your message and will get back to you within 24 hours." />
+                  <EditableText section="contact" field="label_success_message" value={content.label_success_message || "We've received your message and will get back to you within 24 hours."} />
                 </p>
                 <button
                   onClick={() => { setSubmitted(false); setForm({ name: "", company: "", email: "", phone: "", service: "", message: "", date1: "", date2: "", website: "" }); }}
                   className="mt-6 text-secondary font-medium text-[0.8125rem] hover:underline"
                 >
-                  <EditableText section="contact" field="label_send_another" value="Send Another Message" />
+                  <EditableText section="contact" field="label_send_another" value={content.label_send_another || "Send Another Message"} />
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
                 <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
-                  <EditableText section="contact" field="label_send_message" value="Send a Message" />
+                  <EditableText section="contact" field="label_send_message" value={content.label_send_message || "Send a Message"} />
                 </h3>
                 <div className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">

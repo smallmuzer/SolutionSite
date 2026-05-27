@@ -4,7 +4,7 @@ import { ArrowUpRight, ArrowRight, Target, Users, Award, Globe } from "lucide-re
 import { useCardStyle, useGlobalView } from "./ui-customizer-context";
 import * as LucideIcons from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditorNavigation, useLiveEditor } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditorNavigation, useLiveEditor, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
 function isHtmlIcon(icon: string): boolean {
   return !!icon && (icon.trim().startsWith("<") || icon.includes("class="));
@@ -161,19 +161,19 @@ const AboutSection = () => {
           {/* Left: text — live from DB */}
           <div>
             <AnimatedSection>
-              <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
-                <EditableText section="about" field="badge" value="Who We Are" colorField="badge_color" />
+              <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
+                <EditableText section="about" field="badge" value={content.badge || "Who We Are"} colorField="badge_color" />
               </span>
-              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6 relative" style={{ color: content.title_color || undefined }}>
+              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
                 <span>
                   <EditableText section="about" field="title" value={content.title || "Driving Digital Transformation"} colorField="title_color" />
                 </span>
                 <SectionHeaderToolbar section="about" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h2>
-              <div className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
+              <div className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.description) ? undefined : (content.description_color || undefined) }}>
                 <EditableText section="about" field="description" value={content.description || "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!"} colorField="description_color" />
               </div>
-              <div className="text-gray-500 leading-relaxed text-[0.9375rem]" style={{ color: content.vision_color || undefined }}>
+              <div className="text-gray-500 leading-relaxed text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.vision) ? undefined : (content.vision_color || undefined) }}>
                 <EditableText section="about" field="vision" value={content.vision || "Our journey began out of the passion for a unique position in the industry."} colorField="vision_color" />
               </div>
             </AnimatedSection>

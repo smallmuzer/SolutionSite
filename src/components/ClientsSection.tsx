@@ -675,7 +675,7 @@ const ClientsSection = () => {
             </>
           )}
           <p className="text-xs text-muted-foreground mt-8 text-center bg-muted/20 py-2 px-4 rounded-full w-fit mx-auto">
-            {clients.length} <EditableText section="clients" field="clients_summary" value="clients across Maldives, Bhutan &amp; beyond" />
+            {clients.length} <EditableText section="clients" field="clients_summary" value={content.clients_summary || "clients across Maldives, Bhutan &amp; beyond"} />
           </p>
         </AnimatedSection>
       </div>

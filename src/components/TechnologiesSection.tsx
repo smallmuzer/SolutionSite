@@ -4,7 +4,7 @@ import { useGlobalView } from "./ui-customizer-context";
 import { ArrowRight, Code2, Database, Smartphone, Globe, Server, Cloud, GitBranch, Layers } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
-import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
 interface Technology {
   id: string;
@@ -151,20 +151,20 @@ const TechnologiesSection = () => {
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-12 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 mb-4 shadow-sm backdrop-blur-sm">
-            <span className="text-secondary font-semibold text-xs uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
+            <span className="text-secondary font-semibold text-xs uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
               <EditableText section="technologies" field="badge" value={header.badge || "Our Stack"} colorField="badge_color" />
             </span>
           </div>
-          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight relative" style={{ color: content.title_color || undefined }}>
+          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <span>
               <EditableText section="technologies" field="title" value={header.title || "Technologies"} colorField="title_color" />{" "}
-              <span className="gradient-text" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
+              <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
                 <EditableText section="technologies" field="highlight" value={header.highlight || "We Use"} colorField="highlight_color" />
               </span>
             </span>
             <SectionHeaderToolbar section="technologies" isVisible={content.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <div className="text-muted-foreground max-w-2xl mx-auto text-[1rem] sm:text-[1.05rem] leading-relaxed" style={{ color: content.description_color || undefined }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[1rem] sm:text-[1.05rem] leading-relaxed" style={{ color: hasEmbeddedColor(content.description) ? undefined : (content.description_color || undefined) }}>
             <EditableText section="technologies" field="description" value={header.description || ""} colorField="description_color" />
           </div>
         </AnimatedSection>

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { dbInsert } from "@/lib/api";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
-import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
 type CareerJob = Tables<"career_jobs">;
 
@@ -368,19 +368,19 @@ const CareersSection = () => {
     <section id="careers" className="section-padding relative overflow-hidden group">
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
             <EditableText section="careers" field="badge" value={header.badge || "Careers"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: content.title_color || undefined }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <span>
               <EditableText section="careers" field="title" value={header.title || "Join Our"} colorField="title_color" />{" "}
-              <span className="gradient-text" style={{ color: content.highlight_color || undefined, background: content.highlight_color ? "none" : undefined, WebkitTextFillColor: content.highlight_color ? "initial" : undefined }}>
+              <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
                 <EditableText section="careers" field="highlight" value={header.highlight || "Team"} colorField="highlight_color" />
               </span>
             </span>
             <SectionHeaderToolbar section="careers" targetSection="career_jobs" isVisible={content.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <div className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]" style={{ color: content.description_color || undefined }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto mb-4 text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.description) ? undefined : (content.description_color || undefined) }}>
             <EditableText section="careers" field="description" value={header.description || ""} colorField="description_color" />
           </div>
         </AnimatedSection>

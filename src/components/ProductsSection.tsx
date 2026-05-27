@@ -25,6 +25,7 @@ import {
   SectionHeaderToolbar,
   useLiveEditor,
   useLiveEditorNavigation,
+  hasEmbeddedColor,
 } from "./admin/LiveEditorContext";
 import { TypographyEditorModal, parseInlineStyles } from "./admin/TypographyEditorModal";
 
@@ -68,7 +69,12 @@ interface SectionHeader {
 
 const FALLBACK_PRODUCTS: Product[] = [];
 
-const DEFAULT_HEADER: SectionHeader = {};
+const DEFAULT_HEADER: SectionHeader = {
+  badge: "Our Solutions",
+  title: "Premium",
+  highlight: "Software Products",
+  subtitle: "Explore our suite of enterprise-grade software solutions designed to transform your business operations."
+};
 
 const ProductCard = ({
   product,
@@ -1093,7 +1099,7 @@ const ProductsSection = () => {
   const products = productsState.length > 0 ? productsState : FALLBACK_PRODUCTS;
   const header = {
     ...DEFAULT_HEADER,
-    ...(content.header || {}),
+    ...(content || {}),
   };
 
   useEffect(() => {
@@ -1133,7 +1139,7 @@ const ProductsSection = () => {
           <div className="inline-flex items-center gap-2 mb-3">
             <span
               className="text-secondary font-bold text-sm uppercase tracking-widest"
-              style={{ color: header.badge_color || undefined }}
+              style={{ color: hasEmbeddedColor(header.badge) ? undefined : (header.badge_color || undefined) }}
             >
               <EditableText
                 section="our_products"
@@ -1145,7 +1151,7 @@ const ProductsSection = () => {
           </div>
           <h2
             className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2 relative"
-            style={{ color: header.title_color || undefined }}
+            style={{ color: hasEmbeddedColor(header.title) ? undefined : (header.title_color || undefined) }}
           >
             <span>
               <EditableText
@@ -1180,7 +1186,7 @@ const ProductsSection = () => {
           </h2>
           <div
             className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]"
-            style={{ color: header.subtitle_color || undefined }}
+            style={{ color: hasEmbeddedColor(header.subtitle) ? undefined : (header.subtitle_color || undefined) }}
           >
             <EditableText
               section="our_products"
@@ -1268,14 +1274,14 @@ const ProductsSection = () => {
 
         <AnimatedSection className="text-center mt-8">
           <div className="text-xs text-muted-foreground">
-            {globalView === "grid" && <EditableText section="products" field="hover_hint" value="Hover over any product to pause · " />}
+            {globalView === "grid" && <EditableText section="products" field="hover_hint" value={content.hover_hint || "Hover over any product to pause · "} />}
             <button
               onClick={scrollToContact}
               className="text-secondary underline underline-offset-2 hover:opacity-80"
             >
-              <EditableText section="products" field="contact_us" value="Contact us" />
+              <EditableText section="products" field="contact_us" value={content.contact_us || "Contact us"} />
             </button>{" "}
-            <EditableText section="products" field="demo_text" value="for a personalised demo" />
+            <EditableText section="products" field="demo_text" value={content.demo_text || "for a personalised demo"} />
           </div>
         </AnimatedSection>
       </div>
