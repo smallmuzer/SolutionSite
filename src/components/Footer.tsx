@@ -220,7 +220,6 @@ const Footer = () => {
                         id={co.id}
                         isVisible={isVisible}
                         imageField="logo_url"
-                        imageField2="flag"
                         linkField="href"
                         className="-top-4 right-2 scale-75"
                         group="item"

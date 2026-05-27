@@ -170,7 +170,7 @@ const WorldMap = () => {
                   <div
                     key={loc.name}
                     {...getNavProps(() => handleLocationClick(loc))}
-                    className="group group/item p-4 rounded-xl text-left cursor-pointer border relative overflow-hidden transition-all duration-300 hover:shadow-xl w-full sm:w-[calc(50%-1rem)] lg:w-[28%] max-w-sm flex flex-col"
+                    className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 w-full sm:w-[calc(50%-1rem)] lg:w-[28%] max-w-sm flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
                     style={{
                       border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
                       background: isActive
@@ -182,7 +182,7 @@ const WorldMap = () => {
                       minHeight: 100,
                     }}
                   >
-                    <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute top-2 right-2 scale-90" onMove={(dir) => handleMove(loc.name, dir)} />
+                    <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove(loc.name, dir)} />
                       <div className="flex items-center gap-2.5">
                         <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
                           {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
