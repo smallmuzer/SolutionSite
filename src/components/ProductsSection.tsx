@@ -1020,6 +1020,7 @@ const ProductsSection = () => {
     value: string;
     isNegative: boolean;
     extra_text?: string;
+    targetStyles?: Record<string, string>;
   } | null>(null);
 
   const handleDragStart = (e: React.DragEvent, id: string) => {

@@ -273,7 +273,7 @@ const ContactSection = () => {
                   <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {(() => {
-                      const socialCount = parseInt(settings?.social_count || "5", 10);
+                      const socialCount = parseInt(settings?.social_count || "6", 10);
                       const socialList = [];
                       for (let i = 1; i <= socialCount; i++) {
                         const iconKey = `social_icon_${i}`;
@@ -286,38 +286,49 @@ const ContactSection = () => {
                           i === 2 ? "Twitter" :
                           i === 3 ? "Linkedin" :
                           i === 4 ? "Instagram" :
-                          i === 5 ? "Viber" : "Globe"
+                          i === 5 ? "Viber" : 
+                          i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
                         );
                         
-                        const href = settings[hrefKey] ?? (
-                          i === 1 ? (settings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                          i === 2 ? (settings.social_twitter || "https://x.com/bsspl_india") :
-                          i === 3 ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                          i === 4 ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                          i === 5 ? "viber://chat?number=" : "#"
-                        );
+                        const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                        const isWhatsApp = iconName.includes("whatsapp");
+                        const isFacebook = iconName === "facebook";
+                        const isTwitter = iconName === "twitter";
+                        const isLinkedin = iconName === "linkedin";
+                        const isInstagram = iconName === "instagram";
+                        const isViber = iconName === "viber";
+                        
+                        const fallbackHref = isFacebook ? (settings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+                          isTwitter ? (settings.social_twitter || "https://x.com/bsspl_india") :
+                          isLinkedin ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                          isInstagram ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                          isViber ? "viber://chat?number=" : 
+                          isWhatsApp ? `https://wa.me/${(settings.whatsapp_number || "9603011355").replace("+", "")}` : "#";
+                          
+                        let href = settings[hrefKey] ?? fallbackHref;
+                        if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
+                        if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
                         
                         const isVisible = settings[visibleKey] !== "false" && settings[visibleKey] !== false;
                         
-                        const color = settings[colorKey] ?? (
-                          i === 1 ? "#1877F2" :
-                          i === 2 ? "#1DA1F2" :
-                          i === 3 ? "#0A66C2" :
-                          i === 4 ? "#E4405F" :
-                          i === 5 ? "#7360f2" : "#3b82f6"
-                        );
+                        const fallbackColor = isFacebook ? "#1877F2" :
+                          isTwitter ? "#1DA1F2" :
+                          isLinkedin ? "#0A66C2" :
+                          isInstagram ? "#E4405F" :
+                          isViber ? "#7360f2" : 
+                          isWhatsApp ? "#25D366" : "#3b82f6";
+
+                        const color = settings[colorKey] ?? fallbackColor;
                         
                         if (isVisible) {
                           socialList.push({ index: i, icon, href, color });
                         }
                       }
                       return socialList.map((s) => {
-                        const isViber = s.icon?.trim().toLowerCase() === "viber";
-                        const viberNumber = settings.viber_number || "9489477144";
-                        const dynamicHref = isViber ? `viber://chat?number=${viberNumber.replace("+", "")}` : (s.href || "#");
-                        const iconColor = s.color || (isViber ? "#7360f2" : "#3b82f6");
+                        const dynamicHref = s.href || "#";
+                        const iconColor = s.color || "#3b82f6";
                         return (
-                          <a key={s.index} href={dynamicHref} target={isViber ? undefined : (s.href ? "_blank" : undefined)} rel="noopener noreferrer"
+                          <a key={s.index} href={dynamicHref} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
                             className="w-9 h-9 rounded-lg flex items-center justify-center transition-all border shadow-sm"
                             style={{ backgroundColor: `${iconColor}1A`, color: iconColor, borderColor: `${iconColor}33` }}
                             onMouseEnter={(e) => {
@@ -328,7 +339,6 @@ const ContactSection = () => {
                               e.currentTarget.style.backgroundColor = `${iconColor}1A`;
                               e.currentTarget.style.color = iconColor;
                             }}
-                            onClick={isViber ? (e) => { e.preventDefault(); openViber(viberNumber); } : undefined}
                           >
                             <DynamicSocialIcon name={s.icon} size={15} />
                           </a>

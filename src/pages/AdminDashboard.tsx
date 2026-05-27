@@ -1214,7 +1214,7 @@ const AdminDashboard = () => {
   const [subStatusFilter, setSubStatusFilter] = useState("all");
   const [subDateFilterFrom, setSubDateFilterFrom] = useState(() => {
     const d = new Date();
-    d.setMonth(d.getMonth() - 1);
+    d.setFullYear(d.getFullYear() - 1);
     return d.toISOString().split("T")[0];
   });
   const [subDateFilterTo, setSubDateFilterTo] = useState(() => {
@@ -2337,7 +2337,7 @@ const AdminDashboard = () => {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const nextCount = parseInt(siteSettings.social_count || "5", 10) + 1;
+                                    const nextCount = parseInt(siteSettings.social_count || "6", 10) + 1;
                                     setSiteSettings(p => ({
                                       ...p,
                                       social_count: nextCount.toString(),
@@ -2354,7 +2354,7 @@ const AdminDashboard = () => {
                               </div>
                               
                               <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                                {Array.from({ length: parseInt(siteSettings.social_count || "5", 10) }).map((_, idx) => {
+                                {Array.from({ length: parseInt(siteSettings.social_count || "6", 10) }).map((_, idx) => {
                                   const i = idx + 1;
                                   const iconKey = `social_icon_${i}`;
                                   const hrefKey = `social_href_${i}`;
@@ -2366,24 +2366,37 @@ const AdminDashboard = () => {
                                     i === 2 ? "Twitter" :
                                     i === 3 ? "Linkedin" :
                                     i === 4 ? "Instagram" :
-                                    i === 5 ? "Viber" : "Globe"
+                                    i === 5 ? "Viber" : 
+                                    i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
                                   );
                                   
-                                  const color = siteSettings[colorKey] || (
-                                    i === 1 ? "#1877F2" :
-                                    i === 2 ? "#1DA1F2" :
-                                    i === 3 ? "#0A66C2" :
-                                    i === 4 ? "#E4405F" :
-                                    i === 5 ? "#7360f2" : "#3b82f6"
-                                  );
+                                  const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                                  const isWhatsApp = iconName.includes("whatsapp");
+                                  const isFacebook = iconName === "facebook";
+                                  const isTwitter = iconName === "twitter";
+                                  const isLinkedin = iconName === "linkedin";
+                                  const isInstagram = iconName === "instagram";
+                                  const isViber = iconName === "viber";
                                   
-                                  const href = siteSettings[hrefKey] || (
-                                    i === 1 ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                                    i === 2 ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
-                                    i === 3 ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                    i === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                    i === 5 ? "viber://chat?number=" : ""
-                                  );
+                                  const fallbackColor = isFacebook ? "#1877F2" :
+                                    isTwitter ? "#1DA1F2" :
+                                    isLinkedin ? "#0A66C2" :
+                                    isInstagram ? "#E4405F" :
+                                    isViber ? "#7360f2" : 
+                                    isWhatsApp ? "#25D366" : "#3b82f6";
+                                    
+                                  const color = siteSettings[colorKey] !== undefined ? siteSettings[colorKey] : fallbackColor;
+                                  
+                                  const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+                                    isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
+                                    isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                                    isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                    isViber ? "viber://chat?number=" : 
+                                    isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
+                                    
+                                  let href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : fallbackHref;
+                                  if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
+                                  if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
                                   
                                   const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
                                   
@@ -2549,33 +2562,51 @@ const AdminDashboard = () => {
                                           type="button"
                                           onClick={() => {
                                             if (!confirm("Are you sure you want to delete this social link row?")) return;
-                                            const count = parseInt(siteSettings.social_count || "5", 10);
+                                            const count = parseInt(siteSettings.social_count || "6", 10);
                                             const nextSettings = { ...siteSettings };
                                             
                                             const resolvedList = Array.from({ length: count }).map((_, idx) => {
                                               const idxPlus = idx + 1;
-                                              return {
-                                                icon: siteSettings[`social_icon_${idxPlus}`] || (
-                                                  idxPlus === 1 ? "Facebook" :
-                                                  idxPlus === 2 ? "Twitter" :
-                                                  idxPlus === 3 ? "Linkedin" :
-                                                  idxPlus === 4 ? "Instagram" : idxPlus === 5 ? "Viber" : "Globe"
-                                                ),
-                                                href: siteSettings[`social_href_${idxPlus}`] || (
-                                                  idxPlus === 1 ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                                                  idxPlus === 2 ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
-                                                  idxPlus === 3 ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                                  idxPlus === 4 ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") : idxPlus === 5 ? "viber://chat?number=" : ""
-                                                ),
-                                                visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
-                                                color: siteSettings[`social_color_${idxPlus}`] || (
-                                                  idxPlus === 1 ? "#1877F2" :
-                                                  idxPlus === 2 ? "#1DA1F2" :
-                                                  idxPlus === 3 ? "#0A66C2" :
-                                                  idxPlus === 4 ? "#E4405F" :
-                                                  idxPlus === 5 ? "#7360f2" : "#3b82f6"
-                                                )
-                                              };
+                                              const icon = siteSettings[`social_icon_${idxPlus}`] || (
+                                                idxPlus === 1 ? "Facebook" :
+                                                idxPlus === 2 ? "Twitter" :
+                                                idxPlus === 3 ? "Linkedin" :
+                                                idxPlus === 4 ? "Instagram" :
+                                                idxPlus === 5 ? "Viber" : 
+                                                idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                                              );
+                                                const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                                                const isWhatsApp = iconName.includes("whatsapp");
+                                                const isFacebook = iconName === "facebook";
+                                                const isTwitter = iconName === "twitter";
+                                                const isLinkedin = iconName === "linkedin";
+                                                const isInstagram = iconName === "instagram";
+                                                const isViber = iconName === "viber";
+                                                
+                                                const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+                                                  isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
+                                                  isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                                                  isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                                  isViber ? "viber://chat?number=" : 
+                                                  isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
+                                                  
+                                                const fallbackColor = isFacebook ? "#1877F2" :
+                                                  isTwitter ? "#1DA1F2" :
+                                                  isLinkedin ? "#0A66C2" :
+                                                  isInstagram ? "#E4405F" :
+                                                  isViber ? "#7360f2" : 
+                                                  isWhatsApp ? "#25D366" : "#3b82f6";
+                                                  
+                                                let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
+                                                if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
+                                                if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
+                                                
+                                                return {
+                                                  icon,
+                                                  href,
+                                                  visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
+                                                  color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
+                                                };
                                             });
 
                                             resolvedList.splice(i - 1, 1);
