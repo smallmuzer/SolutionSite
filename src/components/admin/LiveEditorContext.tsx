@@ -189,6 +189,7 @@ export const EditableText: React.FC<{
           WebkitBackgroundClip: 'border-box'
         } : (pendingColor ? { color: pendingColor } : undefined)}
         contentEditable
+        spellCheck={false}
         suppressContentEditableWarning
         onFocus={() => setIsEditing(true)}
         onBlur={handleBlur}
@@ -237,16 +238,7 @@ export const EditableText: React.FC<{
           >
             <span className="font-serif font-extrabold text-[12px] leading-none text-white pr-[1px]">A</span>
           </span>
-          {colorField && !hideColorPicker && (
-            <span
-              role="button"
-              onClick={(e) => { e.stopPropagation(); editor.onPickColor(section, colorField, id); }}
-              className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
-              title="Change Color"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-            </span>
-          )}
+          {/* Color picker icon removed: Typography editor (A icon) handles text color now */}
           {linkField && (
             <span
               role="button"

@@ -1268,14 +1268,14 @@ const ProductsSection = () => {
 
         <AnimatedSection className="text-center mt-8">
           <div className="text-xs text-muted-foreground">
-            {globalView === "grid" && "Hover over any product to pause · "}
+            {globalView === "grid" && <EditableText section="products" field="hover_hint" value="Hover over any product to pause · " />}
             <button
               onClick={scrollToContact}
               className="text-secondary underline underline-offset-2 hover:opacity-80"
             >
-              Contact us
+              <EditableText section="products" field="contact_us" value="Contact us" />
             </button>{" "}
-            for a personalised demo
+            <EditableText section="products" field="demo_text" value="for a personalised demo" />
           </div>
         </AnimatedSection>
       </div>

@@ -33,14 +33,10 @@ export const openViber = (phoneNumbers: string = "9489477144", shareMessage: str
     } else {
       window.location.href = `viber://chat?number=${phoneNumbers.replace("+", "")}`;
       tryCopy();
-      setTimeout(() => {
-        toast.info("Message copied! Paste it in the Viber window that just opened.");
-      }, 800);
     }
   } else {
     window.location.href = `viber://forward?text=${encodedMessage}`;
     tryCopy();
-    toast.info("Viber should open now.");
   }
 };
 

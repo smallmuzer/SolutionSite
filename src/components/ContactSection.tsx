@@ -15,7 +15,7 @@ const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?
   const trimmed = name.trim();
   if (trimmed.toLowerCase().startsWith("<svg")) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center ${className || ""}`}
         style={{ width: size, height: size }}
         dangerouslySetInnerHTML={{ __html: trimmed }}
@@ -29,23 +29,7 @@ const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?
   return <Icon size={size} className={className} />;
 };
 
-function DateTimePicker({ label, value, onChange, minDate }: {
-  label: string; value: string; onChange: (v: string) => void; minDate: Date;
-}) {
-  return (
-    <div style={{ position: "relative" }}>
-      <label className="text-[0.75rem] font-medium text-foreground mb-1 block">{label}</label>
-      <div className="relative">
-        <input 
-          type="datetime-local" 
-          value={value} 
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.8125rem] outline-none transition-all focus:ring-2 focus:ring-ring hover:border-secondary cursor-text"
-        />
-      </div>
-    </div>
-  );
-}
+
 
 const ContactSection = () => {
   const content = useSiteContent("contact");
@@ -54,10 +38,10 @@ const ContactSection = () => {
   const { data: servicesData } = useDbQuery<{ title: string }[]>("services", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order" });
   const services = servicesData || [];
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading]     = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const toLocalISO = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  const nowDate  = new Date();
+  const nowDate = new Date();
   const nowLocal = toLocalISO(nowDate);
 
   const normalizeAppointmentDate = (value: string) => {
@@ -113,18 +97,18 @@ const ContactSection = () => {
       const json = await resp.json();
       const contactData = json.data;
       if (json.error) throw new Error(json.error.message);
-      
+
       if (contactData) {
         const contactId = contactData.id;
         const apptTitle = form.service ? `Inquiry: ${form.service}` : "General Inquiry";
-        const apptDesc  = form.message.slice(0, 100) + (form.message.length > 100 ? "..." : "");
+        const apptDesc = form.message.slice(0, 100) + (form.message.length > 100 ? "..." : "");
         const date1 = normalizeAppointmentDate(form.date1);
         const date2 = normalizeAppointmentDate(form.date2);
 
         // Always create an entry for the calendar on the day of submission if no dates are picked
         // OR if Date 1 is picked, use that.
         const effectiveDate1 = date1 || new Date().toISOString();
-        
+
         await fetch("/api/db/appointments", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -171,9 +155,29 @@ const ContactSection = () => {
 
   const update = (f: string, v: string) => setForm((p) => ({ ...p, [f]: v }));
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    
+    // Auto-detect pasted ISD code (e.g., +91 or 0091)
+    if (val.startsWith("+") || val.startsWith("00")) {
+      const normalizedVal = val.startsWith("00") ? "+" + val.slice(2) : val;
+      // Check longest dial codes first to avoid partial matches (e.g. +1 vs +1242)
+      const sortedCountries = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length);
+      const matchedCountry = sortedCountries.find(c => normalizedVal.replace(/\s+/g, '').startsWith(c.dial));
+      
+      if (matchedCountry) {
+        setSelectedCountry(matchedCountry);
+        // Remove the dial code and trim spaces
+        val = normalizedVal.replace(/\s+/g, '').slice(matchedCountry.dial.length);
+      }
+    }
+    
+    update("phone", val);
+  };
+
   const contactItems = [
-    { icon: MapPin, label: "Office Address",  value: content?.address || "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives" },
-    { icon: Mail,   label: "Email",           value: content?.email   || "info@solutions.com.mv" },
+    { icon: MapPin, label: "Office Address", value: content?.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives" },
+    { icon: Mail, label: "Email", value: content?.email || "info@solutions.com.mv" },
   ];
   const inputCls = "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.875rem] focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all";
   const labelCls = "text-[0.75rem] font-medium text-foreground mb-1 block";
@@ -183,9 +187,9 @@ const ContactSection = () => {
       <EditorToolbar section="contact" canHide={false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-14">
-          <span id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: content.badge_color || undefined }}>
+          <div id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest inline-block" style={{ color: content.badge_color || undefined }}>
             <EditableText section="contact" field="badge" value="Reach Us" colorField="badge_color" />
-          </span>
+          </div>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: content.title_color || undefined }}>
             <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
           </h2>
@@ -194,9 +198,9 @@ const ContactSection = () => {
           </div>
         </AnimatedSection>
 
-        <div className="flex flex-col lg:flex-row gap-20 max-w-6xl mx-auto items-stretch">
-          <AnimatedSection className="w-full lg:w-1/2 flex flex-col">
-            <div className="glass-card p-4 sm:p-6 flex-1 flex flex-col">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
+          <AnimatedSection className="w-full lg:w-[48%] flex flex-col">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
               <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
                 <EditableText section="contact" field="label_office_info" value="Office Information" />
               </h3>
@@ -210,7 +214,17 @@ const ContactSection = () => {
                       <EditableText section="contact" field="label_address" value="Office Address" />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
-                      <EditableText section="contact" field="address" value={content.address || "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives"} />
+                      <EditableText section="contact" field="address" value={(() => {
+                        let addr = content.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives";
+                        // If it has 3 lines due to legacy DB state, forcefully convert to 2 lines
+                        if (addr.includes('\n')) {
+                          const lines = addr.split('\n');
+                          if (lines.length >= 3) {
+                            return `${lines[0]}, ${lines[1]}\n${lines.slice(2).join(' ')}`;
+                          }
+                        }
+                        return addr;
+                      })()} />
                     </div>
                   </div>
                 </div>
@@ -267,11 +281,13 @@ const ContactSection = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-2.5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-[0.75rem] font-semibold text-foreground uppercase tracking-wider">Follow Us</span>
-                  <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
+                  <div className="text-[0.8125rem] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-[0.15em] inline-block">
+                    <EditableText section="contact" field="label_follow_us" value="Follow Us" />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     {(() => {
                       const socialCount = parseInt(settings?.social_count || "6", 10);
                       const socialList = [];
@@ -280,16 +296,16 @@ const ContactSection = () => {
                         const hrefKey = `social_href_${i}`;
                         const visibleKey = `social_visible_${i}`;
                         const colorKey = `social_color_${i}`;
-                        
+
                         const icon = settings[iconKey] ?? (
                           i === 1 ? "Facebook" :
-                          i === 2 ? "Twitter" :
-                          i === 3 ? "Linkedin" :
-                          i === 4 ? "Instagram" :
-                          i === 5 ? "Viber" : 
-                          i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                            i === 2 ? "Twitter" :
+                              i === 3 ? "Linkedin" :
+                                i === 4 ? "Instagram" :
+                                  i === 5 ? "Viber" :
+                                    i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
                         );
-                        
+
                         const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
                         const isWhatsApp = iconName.includes("whatsapp");
                         const isFacebook = iconName === "facebook";
@@ -297,97 +313,103 @@ const ContactSection = () => {
                         const isLinkedin = iconName === "linkedin";
                         const isInstagram = iconName === "instagram";
                         const isViber = iconName === "viber";
-                        
+
                         const fallbackHref = isFacebook ? (settings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
                           isTwitter ? (settings.social_twitter || "https://x.com/bsspl_india") :
-                          isLinkedin ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                          isInstagram ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                          isViber ? "viber://chat?number=" : 
-                          isWhatsApp ? `https://wa.me/${(settings.whatsapp_number || "9603011355").replace("+", "")}` : "#";
-                          
+                            isLinkedin ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                              isInstagram ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                isViber ? "viber://chat?number=" :
+                                  isWhatsApp ? `https://wa.me/${(settings.whatsapp_number || "9603011355").replace("+", "")}` : "#";
+
                         let href = settings[hrefKey] ?? fallbackHref;
                         if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
                         if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
-                        
+
                         const isVisible = settings[visibleKey] !== "false" && settings[visibleKey] !== false;
-                        
+
                         const fallbackColor = isFacebook ? "#1877F2" :
                           isTwitter ? "#1DA1F2" :
-                          isLinkedin ? "#0A66C2" :
-                          isInstagram ? "#E4405F" :
-                          isViber ? "#7360f2" : 
-                          isWhatsApp ? "#25D366" : "#3b82f6";
+                            isLinkedin ? "#0A66C2" :
+                              isInstagram ? "#E4405F" :
+                                isViber ? "#7360f2" :
+                                  isWhatsApp ? "#25D366" : "#3b82f6";
 
                         const color = settings[colorKey] ?? fallbackColor;
-                        
-                        if (isVisible) {
-                          socialList.push({ index: i, icon, href, color });
+
+                        if (isVisible || editor?.isEditMode) {
+                          socialList.push({ index: i, icon, href, color, isVisible });
                         }
                       }
                       return socialList.map((s) => {
                         const dynamicHref = s.href || "#";
                         const iconColor = s.color || "#3b82f6";
                         return (
-                          <a key={s.index} href={dynamicHref} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all border shadow-sm"
-                            style={{ backgroundColor: `${iconColor}1A`, color: iconColor, borderColor: `${iconColor}33` }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = iconColor;
-                              e.currentTarget.style.color = "#ffffff";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = `${iconColor}1A`;
-                              e.currentTarget.style.color = iconColor;
-                            }}
-                          >
-                            <DynamicSocialIcon name={s.icon} size={15} />
-                          </a>
+                          <div key={s.index} className={`relative group/soc ${!s.isVisible ? 'opacity-40' : ''}`}>
+                            {!s.isVisible && editor?.isEditMode && (
+                              <span className="text-amber-500 shrink-0 absolute -top-1.5 -right-1.5 bg-black/80 rounded-full p-0.5 z-10" title="Hidden (Managed in Settings page)">
+                                <LucideIcons.EyeOff size={10} />
+                              </span>
+                            )}
+                            <a href={dynamicHref} target={s.href ? "_blank" : undefined} rel="noopener noreferrer"
+                              className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-all border"
+                              style={{ backgroundColor: `${iconColor}14`, color: iconColor, borderColor: `${iconColor}26` }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = iconColor;
+                                e.currentTarget.style.color = "#ffffff";
+                                e.currentTarget.style.borderColor = iconColor;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = `${iconColor}14`;
+                                e.currentTarget.style.color = iconColor;
+                                e.currentTarget.style.borderColor = `${iconColor}26`;
+                              }}
+                            >
+                              <DynamicSocialIcon name={s.icon} size={15} />
+                            </a>
+                          </div>
                         );
                       });
                     })()}
                   </div>
                 </div>
 
-                <button 
-                  type="button"
-                  onClick={() => openViber(settings.viber_number || "9489477144")}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/5 border border-secondary/10 hover:bg-secondary/10 transition-all group shadow-sm"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-[#7360f2] flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
-                    <ViberIcon size={26} />
-                  </div>
-                  <div className="text-left flex-1">
-                    <div className="text-[0.8125rem] font-bold text-foreground leading-tight">Chat on Viber</div>
-                    <div className="text-[0.625rem] text-[#f97316] dark:text-[#fb923c] font-bold tracking-tight mt-0.5">Official Business Channel</div>
-                  </div>
-                </button>
-                <p className="text-muted-foreground text-[0.625rem] text-center">We respond within 24 hours on business days.</p>
+                <div className="pt-3">
+                  <p className="text-muted-foreground text-[0.6875rem] text-center font-medium">
+                    <EditableText section="contact" field="label_response_time" value="We respond within 24 hours on business days." />
+                  </p>
+                </div>
               </div>
             </div>
           </AnimatedSection>
 
-          <AnimatedSection delay={0.2} className="w-full lg:w-1/2 flex flex-col">
+          <AnimatedSection delay={0.2} className="w-full lg:w-[52%] flex flex-col">
             {submitted ? (
-              <div className="glass-card p-12 text-center flex-1 flex flex-col items-center justify-center min-h-[500px]">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-12 text-center flex-1 flex flex-col items-center justify-center min-h-[500px] transition-all duration-300">
                 <CheckCircle size={48} className="text-secondary mx-auto mb-4" />
-                <h3 className="font-heading font-bold text-[1.125rem] text-foreground mb-2">Thank You!</h3>
-                <p className="text-muted-foreground text-[0.875rem]">We've received your message and will get back to you within 24 hours.</p>
+                <h3 className="font-heading font-bold text-[1.125rem] text-foreground mb-2">
+                  <EditableText section="contact" field="label_thank_you" value="Thank You!" />
+                </h3>
+                <p className="text-muted-foreground text-[0.875rem]">
+                  <EditableText section="contact" field="label_success_message" value="We've received your message and will get back to you within 24 hours." />
+                </p>
                 <button
                   onClick={() => { setSubmitted(false); setForm({ name: "", company: "", email: "", phone: "", service: "", message: "", date1: "", date2: "", website: "" }); }}
                   className="mt-6 text-secondary font-medium text-[0.8125rem] hover:underline"
                 >
-                  Send Another Message
+                  <EditableText section="contact" field="label_send_another" value="Send Another Message" />
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="glass-card p-4 sm:p-6 flex-1 flex flex-col">
-                <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">Send a Message</h3>
-                <div className="space-y-3 flex-1">
+              <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
+                <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
+                  <EditableText section="contact" field="label_send_message" value="Send a Message" />
+                </h3>
+                <div className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_name" value={content.label_name || "Full Name *"} />
-                        {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_name" value={content.placeholder_name || "Your name"} />)</span>}
+                        {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_name" value={content.placeholder_name || "Your name"} />)</div>}
                       </label>
                       <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)}
                         className={inputCls} placeholder={content.placeholder_name || "Your name"} maxLength={100} />
@@ -395,7 +417,7 @@ const ContactSection = () => {
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_company" value={content.label_company || "Company"} />
-                        {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_company" value={content.placeholder_company || "Your company"} />)</span>}
+                        {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_company" value={content.placeholder_company || "Your company"} />)</div>}
                       </label>
                       <input type="text" value={form.company} onChange={(e) => update("company", e.target.value)}
                         className={inputCls} placeholder={content.placeholder_company || "Your company"} maxLength={100} />
@@ -405,7 +427,7 @@ const ContactSection = () => {
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_email" value={content.label_email || "Email *"} />
-                        {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_email" value={content.placeholder_email || "you@email.com"} />)</span>}
+                        {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_email" value={content.placeholder_email || "you@email.com"} />)</div>}
                       </label>
                       <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)}
                         className={inputCls} placeholder={content.placeholder_email || "you@email.com"} maxLength={255} />
@@ -413,11 +435,12 @@ const ContactSection = () => {
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_phone" value={content.label_phone || "Phone"} />
+                        {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_phone" value={content.placeholder_phone || "Number"} />)</div>}
                       </label>
                       <div className="flex items-stretch">
                         <div className="relative w-24 shrink-0">
-                          <select 
-                            value={selectedCountry.code} 
+                          <select
+                            value={selectedCountry.code}
                             onChange={(e) => {
                               const country = COUNTRIES.find(c => c.code === e.target.value);
                               if (country) setSelectedCountry(country);
@@ -429,10 +452,10 @@ const ContactSection = () => {
                             ))}
                           </select>
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4"/></svg>
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4" /></svg>
                           </div>
                         </div>
-                        <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)}
+                        <input type="tel" value={form.phone} onChange={handlePhoneChange}
                           className={`${inputCls} rounded-l-none flex-1`} placeholder={content.placeholder_phone || "Number"} maxLength={20} />
                       </div>
                     </div>
@@ -449,25 +472,20 @@ const ContactSection = () => {
                           {services.map(s => <option key={(s as any).id || s.title} value={s.title}>{s.title}</option>)}
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4" /></svg>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <DateTimePicker label="Preferred Date 1" value={form.date1} minDate={nowDate}
-                      onChange={(v) => update("date1", v)} />
-                    <DateTimePicker label="Preferred Date 2" value={form.date2} minDate={nowDate}
-                      onChange={(v) => update("date2", v)} />
-                  </div>
-                  <div className="flex-1 flex flex-col">
+
+                  <div className="flex flex-col">
                     <label className={labelCls}>
                       <EditableText section="contact" field="label_message" value={content.label_message || "Message *"} />
-                      {editor?.isEditMode && <span className="ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_message" value={content.placeholder_message || "Tell us about your project..."} />)</span>}
+                      {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_message" value={content.placeholder_message || "Tell us about your project..."} />)</div>}
                     </label>
                     <textarea
                       value={form.message} onChange={(e) => update("message", e.target.value)}
-                      className={`${inputCls} resize-none flex-1`} style={{ minHeight: 80 }}
+                      className={`${inputCls} resize-y min-h-[90px]`}
                       placeholder={content.placeholder_message || "Tell us about your project..."} maxLength={1000}
                     />
                   </div>

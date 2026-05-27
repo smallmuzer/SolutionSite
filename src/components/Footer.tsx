@@ -151,7 +151,8 @@ const Footer = () => {
     if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
     if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
     
-    const isVisible = (editor?.pendingChanges[`settings:${visibleKey}`] ?? settings[visibleKey]) !== false;
+    const visibleVal = editor?.pendingChanges[`settings:${visibleKey}`] ?? settings[visibleKey];
+    const isVisible = visibleVal !== false && visibleVal !== "false";
     
     const fallbackColor = isFacebook ? "#1877F2" :
       isTwitter ? "#1DA1F2" :
@@ -508,7 +509,9 @@ const Footer = () => {
             <span style={{ color: "rgba(255,255,255,0.15)" }} className="hidden sm:inline">•</span>
             <div className="flex items-center gap-1.5">
               <Globe size={12} />
-              <span>Malé, Maldives</span>
+              <span>
+                <EditableText section="footer" field="location" value="Malé, Maldives" />
+              </span>
             </div>
           </div>
         </div>

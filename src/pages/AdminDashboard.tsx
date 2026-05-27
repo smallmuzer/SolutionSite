@@ -1902,9 +1902,9 @@ const AdminDashboard = () => {
                               <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <ChevronDown size={16} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                 <div className="min-w-0">
-                                  <span className="font-semibold text-foreground text-sm">{s.full_name || s.name || s.email}</span>
-                                  {s.company_name && <span className="text-muted-foreground text-xs ml-2">({s.company_name})</span>}
-                                  <div className="text-xs text-muted-foreground mt-0.5 truncate">{s.email}{s.phone ? ` · ${s.phone}` : ""}</div>
+                                  <span className="font-semibold text-foreground text-sm">{String(s.full_name || s.name || s.email || '—')}</span>
+                                  {s.company_name && <span className="text-muted-foreground text-xs ml-2">({String(s.company_name)})</span>}
+                                  <div className="text-xs text-muted-foreground mt-0.5 truncate">{String(s.email || '')}{s.phone ? ` · ${String(s.phone)}` : ""}</div>
                                 </div>
                               </div>
                               
@@ -1931,41 +1931,15 @@ const AdminDashboard = () => {
                             {isExpanded && (
                               <div className="border-t border-border/50 px-5 pb-5">
                                 {/* Original message detailed view */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 mb-2 text-sm">
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Name</div>
-                                    <div className="font-medium text-foreground truncate">{s.full_name || s.name || '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Email</div>
-                                    <div className="font-medium text-foreground truncate">{s.email || '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Phone</div>
-                                    <div className="font-medium text-foreground truncate">{s.phone || '—'}</div>
-                                  </div>
-                                  
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Company</div>
-                                    <div className="font-medium text-foreground truncate">{s.company_name || '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 1</div>
-                                    <div className="font-medium text-secondary truncate">{prefDate1 ? formatDate(prefDate1) : '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 2</div>
-                                    <div className="font-medium text-secondary truncate">{prefDate2 ? formatDate(prefDate2) : '—'}</div>
-                                  </div>
-                                </div>
+
 
                                 {/* Chat View for Messages & Replies */}
                                 <div className="mt-6 space-y-4">
                                   {/* Client Message Bubble */}
                                   <div className="flex justify-start">
                                     <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
-                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{s.full_name || s.name || "Client"}</div>
-                                      <div className="whitespace-pre-wrap leading-relaxed">{displayMessage}</div>
+                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{String(s.full_name || s.name || "Client")}</div>
+                                      <div className="whitespace-pre-wrap leading-relaxed">{String(displayMessage)}</div>
                                       <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
                                     </div>
                                   </div>
@@ -2067,33 +2041,7 @@ const AdminDashboard = () => {
 
                               {/* Scrollable body */}
                               <div className="overflow-y-auto max-h-[75vh] p-5 custom-scrollbar">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2 text-sm">
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Name</div>
-                                    <div className="font-medium text-foreground truncate">{s.full_name || s.name || '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Email</div>
-                                    <div className="font-medium text-foreground truncate">{s.email || '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Phone</div>
-                                    <div className="font-medium text-foreground truncate">{s.phone || '—'}</div>
-                                  </div>
-                                  
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Company</div>
-                                    <div className="font-medium text-foreground truncate">{s.company_name || '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 1</div>
-                                    <div className="font-medium text-secondary truncate">{prefDate1 ? formatDate(prefDate1) : '—'}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground text-[0.625rem] uppercase font-bold tracking-widest">Preferred Date 2</div>
-                                    <div className="font-medium text-secondary truncate">{prefDate2 ? formatDate(prefDate2) : '—'}</div>
-                                  </div>
-                                </div>
+
 
                                 {/* Chat View for Messages & Replies */}
                                 <div className="mt-6 space-y-4">
