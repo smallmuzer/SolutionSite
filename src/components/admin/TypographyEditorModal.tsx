@@ -323,6 +323,129 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   }, [isDragging, dragOffset]);
 
   // ── Formatting Commands ─────────────────────────────────────────────────────
+  const escapeHtml = (text: string) =>
+    text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  const getCurrentRange = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current) {
+      const range = sel.getRangeAt(0);
+      if (editorRef.current.contains(range.commonAncestorContainer)) return range;
+    }
+    return savedSelectionRef.current;
+  };
+
+  const closestEditableElement = (node: Node | null, selector: string) => {
+    if (!node || !editorRef.current) return null;
+    let el: Node | null = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    while (el && el !== editorRef.current) {
+      if (el instanceof HTMLElement && el.matches(selector)) return el;
+      el = el.parentNode;
+    }
+    return null;
+  };
+
+  const setCaretAtEnd = (element: Node) => {
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    savedSelectionRef.current = range.cloneRange();
+  };
+
+  const insertListFallback = (tagName: "ul" | "ol") => {
+    if (!editorRef.current) return;
+    const range = getCurrentRange();
+    const selectedText = range?.toString();
+    const existingList = closestEditableElement(range?.commonAncestorContainer || null, "ul,ol");
+    if (existingList) {
+      const replacement = document.createElement(tagName);
+      replacement.innerHTML = existingList.innerHTML;
+      existingList.replaceWith(replacement);
+      setCaretAtEnd(replacement);
+      return;
+    }
+
+    const makeList = (source: string) => {
+      const list = document.createElement(tagName);
+      const lines = source
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (lines.length === 0) {
+        list.innerHTML = "<li><br></li>";
+      } else {
+        list.innerHTML = lines.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
+      }
+      return list;
+    };
+
+    if (range && selectedText?.trim()) {
+      const list = makeList(selectedText);
+      range.deleteContents();
+      range.insertNode(list);
+      setCaretAtEnd(list);
+      return;
+    }
+
+    const block = closestEditableElement(range?.commonAncestorContainer || null, "p,div,h1,h2,h3,h4,h5,h6,blockquote,li");
+    if (block && block !== editorRef.current) {
+      const list = makeList(block.innerText || block.textContent || "");
+      block.replaceWith(list);
+      setCaretAtEnd(list);
+      return;
+    }
+
+    const list = makeList(editorRef.current.innerText.trim());
+    editorRef.current.innerHTML = "";
+    editorRef.current.appendChild(list);
+    setCaretAtEnd(list);
+  };
+
+  const findEditableBlock = () => {
+    const range = getCurrentRange();
+    if (!range || !editorRef.current) return editorRef.current;
+    let node: Node | null = range.commonAncestorContainer;
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+    while (node && node !== editorRef.current) {
+      if (node instanceof HTMLElement && /^(P|DIV|LI|H[1-6]|BLOCKQUOTE|UL|OL)$/i.test(node.tagName)) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return editorRef.current;
+  };
+
+  const indentFallback = (direction: "in" | "out") => {
+    if (!editorRef.current) return;
+    const range = getCurrentRange();
+    const selector = "li,p,div,h1,h2,h3,h4,h5,h6,blockquote";
+    let targets: HTMLElement[] = [];
+
+    if (range && !range.collapsed) {
+      targets = Array.from(editorRef.current.querySelectorAll<HTMLElement>(selector))
+        .filter((el) => range.intersectsNode(el));
+    }
+
+    if (targets.length === 0) {
+      const block = findEditableBlock();
+      if (block instanceof HTMLElement) targets = [block === editorRef.current ? editorRef.current : block];
+    }
+
+    targets.forEach((target) => {
+      const current = parseInt(target.style.marginLeft || "0", 10) || 0;
+      const next = direction === "in" ? current + 32 : Math.max(0, current - 32);
+      target.style.marginLeft = next ? `${next}px` : "";
+    });
+  };
+
   const execCmd = (command: string, value: string = "") => {
     // Ensure editor has focus first
     if (editorRef.current) {
@@ -336,14 +459,23 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     undoStackRef.current = [...undoStackRef.current, currentHtml];
     redoStackRef.current = [];
 
-    // Execute the command directly on the focused, selected DOM
-    document.execCommand(command, false, value);
+    if (command === "insertUnorderedList") insertListFallback("ul");
+    else if (command === "insertOrderedList") insertListFallback("ol");
+    else if (command === "indent") indentFallback("in");
+    else if (command === "outdent") indentFallback("out");
+    else document.execCommand(command, false, value);
 
     // Now sync React state from DOM (marked as internal so useEffect won't overwrite DOM)
     syncEditorState();
     saveSelection();
     setUndoStack([...undoStackRef.current]);
     setRedoStack([]);
+  };
+
+  const runToolbarCommand = (e: React.MouseEvent, command: string, value = "") => {
+    e.preventDefault();
+    e.stopPropagation();
+    execCmd(command, value);
   };
 
   const clearFormatting = () => {
@@ -916,14 +1048,14 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
                 {/* Lists */}
                 <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
-                  <button onClick={() => execCmd("insertUnorderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={14} /></button>
-                  <button onClick={() => execCmd("insertOrderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={14} /></button>
+                  <button onMouseDown={(e) => runToolbarCommand(e, "insertUnorderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={14} /></button>
+                  <button onMouseDown={(e) => runToolbarCommand(e, "insertOrderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={14} /></button>
                 </div>
 
                 {/* Indent & Others */}
                 <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
-                  <button onClick={() => execCmd("outdent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Decrease Indent"><Outdent size={14} /></button>
-                  <button onClick={() => execCmd("indent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Increase Indent"><Indent size={14} /></button>
+                  <button onMouseDown={(e) => runToolbarCommand(e, "outdent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Decrease Indent"><Outdent size={14} /></button>
+                  <button onMouseDown={(e) => runToolbarCommand(e, "indent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Increase Indent"><Indent size={14} /></button>
                   <button onClick={() => execCmd("superscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Superscript"><Superscript size={14} /></button>
                   <button onClick={() => execCmd("subscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Subscript"><Subscript size={14} /></button>
                 </div>

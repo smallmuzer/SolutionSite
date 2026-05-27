@@ -1511,15 +1511,6 @@ export const detectCountry = async (): Promise<Country> => {
     if (tz.includes('New_York') || tz.includes('Los_Angeles') || tz.includes('Chicago')) return getCountryByCode('US');
     if (tz.includes('Singapore')) return getCountryByCode('SG');
 
-    // Advanced IP location fallback
-    const res = await fetch('https://ipapi.co/json/').catch(() => null);
-    if (res && res.ok) {
-      const data = await res.json().catch(() => ({}));
-      if (data.country_code) {
-        const found = getCountryByCode(data.country_code);
-        if (found) return found;
-      }
-    }
   } catch (e) {
     // Silent fail
   }

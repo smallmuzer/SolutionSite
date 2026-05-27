@@ -268,7 +268,7 @@ export const EditableText: React.FC<{
               }
               editor.openTypographyEditor(section, field, displayValue, id, targetStyles, colorField);
             }}
-            className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
+            className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer [@media(hover:none)]:hidden"
             title="Edit Text Style"
           >
             <span className="font-serif font-extrabold text-[12px] leading-none text-white pr-[1px]">A</span>
