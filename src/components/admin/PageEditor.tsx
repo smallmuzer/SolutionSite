@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import {
   Eye, EyeOff, Trash2, Plus, Edit2, Check, X, Save, Image,
   Star, Briefcase, Users, FileText, Phone, Globe, ChevronDown, ChevronUp,
-  GripVertical, Home, Settings, Mail, MapPin, Building, Layers,
+  GripVertical, Home, Settings, Mail, MapPin, Building, Layers, Menu,
   Monitor, Smartphone, Code, Database, Cloud, Palette, BarChart, Shield,
   Search, Megaphone, Zap, Lock, HeartHandshake, Cpu, Wifi, Server,
   LineChart, PieChart, ShoppingCart, Truck, CreditCard, BookOpen,
@@ -136,6 +136,17 @@ interface NetworkCompany {
   is_visible: boolean;
   flag?: string;
 }
+
+const NAV_ITEMS = [
+  { label: "Who We Are", href: "#about" },
+  { label: "What We Do", href: "#services" },
+  { label: "Our Products", href: "#products" },
+  { label: "Portfolio", href: "#portfolio" },
+  { label: "Testimonials", href: "#testimonials" },
+  { label: "Global Presence", href: "#global-reach" },
+  { label: "Careers", href: "#careers" },
+  { label: "Reach Us", href: "#contact" },
+];
 
 const DEFAULT_NETWORK: NetworkCompany[] = [
   { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", logo_url: "/assets/clients/oblu.png", accent: "#3b82f6", is_visible: true },
@@ -286,7 +297,7 @@ const MapPicker = ({ lat, lng, onPick }: { lat: number, lng: number, onPick: (la
 };
 
 const PageEditor = () => {
-  const [activeTab, setActiveTab] = useState("hero");
+  const [activeTab, setActiveTab] = useState("header_nav");
   const [siteContent, setSiteContent] = useState<Record<string, Record<string, string>>>(DEFAULT_CONTENT);
   const [services, setServices] = useState<Service[]>([]);
   const [clients, setClients] = useState<ClientLogo[]>([]);
@@ -296,6 +307,7 @@ const PageEditor = () => {
   const [network, setNetwork] = useState<NetworkCompany[]>(DEFAULT_NETWORK);
   const [heroStats, setHeroStats] = useState<any[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
+  const [navSettings, setNavSettings] = useState<Record<string, string>>({});
 
   const [editingService, setEditingService] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<string | null>(null);
@@ -316,6 +328,7 @@ const PageEditor = () => {
   useEffect(() => { loadAll(); }, []);
 
   const SECTIONS = [
+    { id: "header_nav", label: "Header / Nav", icon: Menu },
     { id: "hero", label: "Hero Section", icon: Home },
     { id: "about", label: "About Section", icon: FileText },
     { id: "products", label: "Our Products", icon: Briefcase },
@@ -343,7 +356,9 @@ const PageEditor = () => {
       const map: Record<string, Record<string, string>> = {};
       let foundPresence = false;
       contentRes.data.forEach((row: any) => {
-        if (row.section_key === "global_presence") {
+        if (row.section_key === "settings") {
+          setNavSettings(row.content as Record<string, string>);
+        } else if (row.section_key === "global_presence") {
           foundPresence = true;
           const c = row.content as any;
           const locs = Array.isArray(c.locations) && c.locations.length > 0 ? c.locations : [...DEFAULT_LOCATIONS];
@@ -360,7 +375,7 @@ const PageEditor = () => {
         } else if (row.section_key === "our_network") {
           const c = row.content as any;
           if (Array.isArray(c.companies)) setNetwork(c.companies);
-        } else if (row.section_key !== "settings" && row.section_key !== "security") {
+        } else if (row.section_key !== "settings" && row.section_key !== "security" && row.section_key !== "our_network" && row.section_key !== "global_presence") {
           map[row.section_key] = row.content as Record<string, string>;
         }
       });
@@ -404,6 +419,17 @@ const PageEditor = () => {
     if (testimonialsRes.data) setTestimonials(testimonialsRes.data);
     if (careersRes.data) setCareers(careersRes.data);
     if (heroStatsRes.data) setHeroStats(heroStatsRes.data);
+  };
+
+  const toggleNavItem = async (href: string) => {
+    const hidden = (navSettings.nav_hidden_items || "").split(",").filter(Boolean);
+    const isHidden = hidden.includes(href);
+    const next = isHidden ? hidden.filter(h => h !== href) : [...hidden, href];
+    const updated = { ...navSettings, nav_hidden_items: next.join(",") };
+    setNavSettings(updated);
+    await dbFetch("site_content", { method: "POST", body: { section_key: "settings", content: updated } });
+    toast.success(isHidden ? "Nav item is now visible." : "Nav item hidden.");
+    window.dispatchEvent(new CustomEvent("ss:contentSaved"));
   };
 
   const upsertSection = async (key: string) => {
@@ -625,6 +651,39 @@ const PageEditor = () => {
 
   const renderActiveSection = () => {
     switch (activeTab) {
+      case "header_nav": {
+        const hiddenItems = (navSettings.nav_hidden_items || "").split(",").filter(Boolean);
+        return (
+          <div className="space-y-4 pt-2">
+            <h3 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
+              <Menu size={20} className="text-secondary" /> Header Navigation
+            </h3>
+            <p className="text-xs text-muted-foreground">Toggle which menu items appear in the website header. Hidden items are removed from both desktop and mobile nav.</p>
+            <div className="glass-card p-4 space-y-2">
+              {NAV_ITEMS.map((item) => {
+                const isHidden = hiddenItems.includes(item.href);
+                return (
+                  <div key={item.href} className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${isHidden ? "border-border/30 bg-muted/20 opacity-60" : "border-border/50 bg-card"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${isHidden ? "bg-muted-foreground/30" : "bg-secondary"}`} />
+                      <span className={`font-semibold text-sm ${isHidden ? "text-muted-foreground line-through" : "text-foreground"}`}>{item.label}</span>
+                      <span className="text-xs text-muted-foreground font-mono bg-muted/50 px-1.5 py-0.5 rounded">{item.href}</span>
+                    </div>
+                    <button
+                      onClick={() => toggleNavItem(item.href)}
+                      title={isHidden ? "Show in nav" : "Hide from nav"}
+                      className={`p-2 rounded-lg transition-colors hover:bg-muted ${isHidden ? "text-muted-foreground" : "text-secondary"}`}
+                    >
+                      {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
       case "hero":
         return (
           <div className="space-y-4 pt-2">

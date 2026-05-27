@@ -149,7 +149,23 @@ export const EditableText: React.FC<{
   colorField?: string;
   linkField?: string;
   hideColorPicker?: boolean;
-}> = ({ section, field, value, id, className = "", tag: Tag = "span", colorField, linkField, hideColorPicker = false }) => {
+  extraControls?: React.ReactNode;
+  toolbarClassName?: string;
+  toolbarVisibilityClassName?: string;
+}> = ({
+  section,
+  field,
+  value,
+  id,
+  className = "",
+  tag: Tag = "span",
+  colorField,
+  linkField,
+  hideColorPicker = false,
+  extraControls,
+  toolbarClassName = "top-0 right-0",
+  toolbarVisibilityClassName = "opacity-0 group-hover/edit:opacity-100"
+}) => {
   const editor = useLiveEditor();
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
@@ -218,7 +234,7 @@ export const EditableText: React.FC<{
 
       {!isEditing && (
         <span 
-          className="absolute top-0 right-0 flex items-center opacity-0 group-hover/edit:opacity-100 transition-all bg-secondary text-secondary-foreground shadow-2xl rounded-[4px] z-[150] pointer-events-auto"
+          className={`absolute ${toolbarClassName} flex items-center ${toolbarVisibilityClassName} transition-all bg-secondary text-secondary-foreground shadow-2xl rounded-[4px] z-[150] pointer-events-auto`}
           style={{ WebkitBackgroundClip: 'initial', WebkitTextFillColor: 'initial', backgroundClip: 'initial', padding: '2px' }}
         >
           <span
@@ -268,6 +284,7 @@ export const EditableText: React.FC<{
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
             </span>
           )}
+          {extraControls}
         </span>
       )}
     </span>

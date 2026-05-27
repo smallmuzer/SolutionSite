@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Menu, X, ExternalLink, Sun, Moon, ShieldCheck, Settings } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Menu, X, Sun, Moon, ShieldCheck, Settings, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 
@@ -62,13 +61,29 @@ const Header = () => {
   const demoLink = settings.demo_url || "https://demo.hrmetrics.com.mv/";
   const logoPath = settings.site_logo || null;
   const siteName = settings.site_name || "Systems Solutions";
+  const pendingHiddenNavItems = editor?.pendingChanges?.["settings:nav_hidden_items"];
+  const hiddenNavItemsValue = String(pendingHiddenNavItems ?? (settings as any).nav_hidden_items ?? "");
+  const hiddenNavItems = useMemo(
+    () => hiddenNavItemsValue.split(",").filter(Boolean),
+    [hiddenNavItemsValue]
+  );
   const navItems = DEFAULT_NAV.map(item => {
     const key = `nav_link_${item.href.replace('#', '')}`;
     return {
       ...item,
       resolvedHref: (settings as any)[key] || item.href
     };
+  }).filter(item => {
+    return editor?.isEditMode || !hiddenNavItems.includes(item.href);
   });
+
+  const toggleNavVisibility = async (href: string) => {
+    const isHidden = hiddenNavItems.includes(href);
+    const next = isHidden
+      ? hiddenNavItems.filter((h: string) => h !== href)
+      : [...hiddenNavItems, href];
+    editor?.onUpdate("settings", "nav_hidden_items", next.join(","));
+  };
   const careersSectionVisible = careersContent.section_visible !== false && careersContent.section_visible !== "false";
 
   useEffect(() => {
@@ -129,6 +144,28 @@ const Header = () => {
     }`;
 
   const iconBtn = "p-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors";
+  const renderNavVisibilityToggle = (href: string, mobile = false, inlineEditor = false) => {
+    if (!editor?.isEditMode) return null;
+    const isHidden = hiddenNavItems.includes(href);
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleNavVisibility(href);
+        }}
+        className={inlineEditor
+          ? "p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+          : `${mobile ? "absolute right-2 top-1/2 -translate-y-1/2 p-1.5" : "ml-1 p-1"} z-[80] rounded-md border border-border/60 bg-card shadow-lg transition-all hover:scale-110 active:scale-95 ${isHidden ? "opacity-100 text-muted-foreground" : "opacity-0 group-hover/item:opacity-100 text-secondary"}`
+        }
+        title={isHidden ? "Show Menu Item" : "Hide Menu Item"}
+        aria-label={isHidden ? "Show menu item" : "Hide menu item"}
+      >
+        {isHidden ? <EyeOff size={mobile ? 14 : 12} /> : <Eye size={mobile ? 14 : 12} />}
+      </button>
+    );
+  };
 
   // Resolve logo: prefer DB path, fallback to bundled asset
   const resolvedLogo = logoPath && logoPath !== "src/assets/logo.png" ? logoPath : logo;
@@ -197,9 +234,17 @@ const Header = () => {
         {/* Desktop Nav */}
         <nav className="hidden xl:flex items-center justify-end gap-1.5 flex-1 mx-4">
           {navItems.map((item) => (
-            <div key={item.href} className="relative group/item inline-flex items-center justify-center">
+            <div key={item.href} className={`relative group/item inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}>
               <div {...getNavProps(() => scrollTo(item.resolvedHref))} className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}>
-                <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} linkField={`nav_link_${item.href.replace('#', '')}`} value={item.label} />
+                <EditableText
+                  section="settings"
+                  field={`nav_label_${item.href.replace('#', '')}`}
+                  linkField={`nav_link_${item.href.replace('#', '')}`}
+                  value={item.label}
+                  toolbarClassName="-top-3 -right-3"
+                  toolbarVisibilityClassName="opacity-0 group-hover/item:opacity-100"
+                  extraControls={renderNavVisibilityToggle(item.href, false, true)}
+                />
                 <span
                   className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full"
                   style={{
@@ -291,15 +336,23 @@ const Header = () => {
 
           <nav className="flex flex-col p-2 gap-1 max-h-[70vh] overflow-y-auto custom-scrollbar">
             {navItems.map((item) => (
-              <div key={item.href} className="relative group/item block">
+              <div key={item.href} className={`relative group/item block ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}>
                 <div
                   {...getNavProps(() => scrollTo(item.resolvedHref))}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
+                  className={`w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
                       ? "text-secondary bg-secondary/10"
                       : "text-foreground/80 hover:text-foreground hover:bg-muted"
                     }`}
                 >
-                  <EditableText section="settings" field={`nav_label_${item.href.replace('#', '')}`} linkField={`nav_link_${item.href.replace('#', '')}`} value={item.label} />
+                  <EditableText
+                    section="settings"
+                    field={`nav_label_${item.href.replace('#', '')}`}
+                    linkField={`nav_link_${item.href.replace('#', '')}`}
+                    value={item.label}
+                    toolbarClassName="-top-2 right-0"
+                    toolbarVisibilityClassName="opacity-0 group-hover/item:opacity-100"
+                    extraControls={renderNavVisibilityToggle(item.href, true, true)}
+                  />
                   {activeSection === item.resolvedHref && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
                 </div>
               </div>
