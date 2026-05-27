@@ -208,6 +208,7 @@ const Footer = () => {
                           e.preventDefault();
                         }
                       }}
+                      onPointerDown={() => editor?.setActiveElementId(`toolbar:our_network:${co.id}`)}
                       onDoubleClick={() => {
                         if (editor?.isEditMode && hrefDraft && hrefDraft !== "#") {
                           window.open(hrefDraft, "_blank");

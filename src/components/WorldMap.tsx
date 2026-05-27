@@ -169,6 +169,7 @@ const WorldMap = () => {
                 return (
                   <div
                     key={loc.name}
+                    onPointerDown={() => editor?.setActiveElementId(`toolbar:global_presence:${loc.name}`)}
                     {...getNavProps(() => handleLocationClick(loc))}
                     className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 w-full sm:w-[calc(50%-1rem)] lg:w-[28%] max-w-sm flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
                     style={{

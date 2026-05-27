@@ -15,6 +15,8 @@ import {
   Plane,
   Star,
   Plus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useGlobalView } from "./ui-customizer-context";
 import { useDbQuery } from "@/hooks/useDbQuery";
@@ -998,6 +1000,8 @@ const ProductCardList = ({
 const ProductsSection = () => {
   const globalView = useGlobalView();
   const cardStyle = "image" as const;
+  const [isMobileProducts, setIsMobileProducts] = useState(false);
+  const [mobilePage, setMobilePage] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
   const posRef = useRef<number>(0);
@@ -1103,7 +1107,19 @@ const ProductsSection = () => {
   };
 
   useEffect(() => {
-    if (globalView !== "grid" || products.length === 0 || editor?.isEditMode)
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobileProducts(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    setMobilePage(0);
+  }, [products.length, globalView]);
+
+  useEffect(() => {
+    if (globalView !== "grid" || isMobileProducts || products.length === 0 || editor?.isEditMode)
       return;
     const el = trackRef.current;
     if (!el) return;
@@ -1119,7 +1135,7 @@ const ProductsSection = () => {
     };
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [products, globalView, editor?.isEditMode]);
+  }, [products, globalView, isMobileProducts, editor?.isEditMode]);
 
   const scrollToContact = () =>
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
@@ -1127,6 +1143,10 @@ const ProductsSection = () => {
   if (!dbProducts && !products.length) return null;
 
   const tripled = [...products, ...products, ...products];
+  const mobileCardsPerPage = 2;
+  const mobileTotalPages = Math.max(1, Math.ceil(products.length / mobileCardsPerPage));
+  const mobileProducts = products.slice(mobilePage * mobileCardsPerPage, (mobilePage + 1) * mobileCardsPerPage);
+  const goToMobilePage = (page: number) => setMobilePage(((page % mobileTotalPages) + mobileTotalPages) % mobileTotalPages);
 
   return (
     <section
@@ -1197,7 +1217,53 @@ const ProductsSection = () => {
           </div>
         </AnimatedSection>
 
-        {globalView === "grid" ? (
+        {globalView === "grid" && isMobileProducts && !editor?.isEditMode ? (
+          <div className="max-w-3xl mx-auto px-1">
+            <div className="grid grid-cols-1 gap-4 items-stretch transition-all duration-500">
+              {mobileProducts.map((product, i) => (
+                <AnimatedSection key={product.id} delay={i * 0.08}>
+                  <ProductCardList
+                    product={product}
+                    onDemo={scrollToContact}
+                    cardStyle={cardStyle}
+                    getNavProps={getNavProps}
+                    draggedId={draggedId}
+                    onEditTypo={setTypoFeature}
+                  />
+                </AnimatedSection>
+              ))}
+            </div>
+
+            {mobileTotalPages > 1 && (
+              <div className="flex items-center justify-center gap-5 mt-8">
+                <button
+                  onClick={() => goToMobilePage(mobilePage - 1)}
+                  className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
+                  aria-label="Previous products"
+                >
+                  <ChevronLeft size={19} className="group-hover/nav:-translate-x-0.5 transition-transform" />
+                </button>
+                <div className="flex gap-2.5">
+                  {Array.from({ length: mobileTotalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToMobilePage(i)}
+                      className={`h-1.5 rounded-full transition-all ${i === mobilePage ? "w-8 bg-secondary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`}
+                      aria-label={`Go to products page ${i + 1}`}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={() => goToMobilePage(mobilePage + 1)}
+                  className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
+                  aria-label="Next products"
+                >
+                  <ChevronRight size={19} className="group-hover/nav:translate-x-0.5 transition-transform" />
+                </button>
+              </div>
+            )}
+          </div>
+        ) : globalView === "grid" ? (
           <div
             className={`relative ${editor?.isEditMode ? "overflow-x-auto custom-scrollbar pb-4" : "overflow-hidden"}`}
             style={

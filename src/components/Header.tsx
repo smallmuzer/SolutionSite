@@ -166,6 +166,7 @@ const Header = () => {
       </button>
     );
   };
+  const activeNavToolbar = (href: string) => editor?.activeElementId === `header-nav:${href}`;
 
   // Resolve logo: prefer DB path, fallback to bundled asset
   const resolvedLogo = logoPath && logoPath !== "src/assets/logo.png" ? logoPath : logo;
@@ -186,9 +187,9 @@ const Header = () => {
         borderBottom: scrolled ? "1px solid hsl(var(--border)/0.5)" : "1px solid transparent",
       }}
     >
-      <div className="w-full flex items-center justify-between px-4 sm:px-6 h-[60px] lg:h-[55px]">
+      <div className="w-full flex items-center justify-between gap-2 px-3 sm:px-6 h-[60px] lg:h-[55px]">
         {/* Logo */}
-        <div className="relative group/logo flex items-center shrink-0">
+        <div className="relative group/logo flex items-center min-w-0 shrink">
           {editor?.isEditMode && (
             <EditorToolbar
               section="settings"
@@ -199,16 +200,17 @@ const Header = () => {
               canClone={false}
             />
           )}
-          <a href="#home" className="flex items-center gap-2.5 shrink-0">
+          <a href="#home" className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink">
             <img
               src={resolvedLogo}
               alt={siteName}
-              style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain" }}
+              className="shrink-0"
+              style={{ width: "clamp(34px, 8vw, 40px)", height: "clamp(34px, 8vw, 40px)", borderRadius: 10, objectFit: "contain" }}
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
             />
-            <div className="flex items-center gap-1.5 leading-none overflow-hidden select-none whitespace-nowrap">
+            <div className="flex items-center gap-1 sm:gap-1.5 leading-none overflow-hidden select-none whitespace-nowrap min-w-0 max-w-[calc(100vw-7rem)] sm:max-w-none">
               <span
-                className="font-heading font-bold text-lg sm:text-xl leading-tight"
+                className="font-heading font-bold text-base sm:text-xl leading-tight truncate"
                 style={{
                   color: isDark ? "#f1f5f9" : "#0f172a",
                   textShadow: "none",
@@ -217,7 +219,7 @@ const Header = () => {
                 <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0]} />
               </span>
               <span
-                className="font-heading font-bold text-lg sm:text-xl leading-tight"
+                className="font-heading font-bold text-base sm:text-xl leading-tight truncate"
                 style={{
                   background: "linear-gradient(90deg,#60a5fa,#818cf8)",
                   WebkitBackgroundClip: "text",
@@ -234,7 +236,11 @@ const Header = () => {
         {/* Desktop Nav */}
         <nav className="hidden xl:flex items-center justify-end gap-1.5 flex-1 mx-4">
           {navItems.map((item) => (
-            <div key={item.href} className={`relative group/item inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}>
+            <div
+              key={item.href}
+              onPointerDown={() => editor?.setActiveElementId(`header-nav:${item.href}`)}
+              className={`relative group/item inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
+            >
               <div {...getNavProps(() => scrollTo(item.resolvedHref))} className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}>
                 <EditableText
                   section="settings"
@@ -242,7 +248,7 @@ const Header = () => {
                   linkField={`nav_link_${item.href.replace('#', '')}`}
                   value={item.label}
                   toolbarClassName="-top-3 -right-3"
-                  toolbarVisibilityClassName="opacity-0 group-hover/item:opacity-100"
+                  toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0 group-hover/item:opacity-100"}
                   extraControls={renderNavVisibilityToggle(item.href, false, true)}
                 />
                 <span
@@ -306,7 +312,7 @@ const Header = () => {
         </nav>
 
         {/* Mobile controls */}
-        <div className="flex items-center gap-1 xl:hidden">
+        <div className="flex items-center gap-1 xl:hidden shrink-0">
           <button onClick={toggle} className="p-1.5 rounded-lg text-foreground hover:bg-muted transition-colors">
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -319,7 +325,7 @@ const Header = () => {
       {/* Mobile menu - Compact Right Popup */}
       {mobileOpen && (
         <div
-          className="xl:hidden fixed top-14 right-4 w-64 bg-card/95 backdrop-blur-2xl border border-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] overflow-hidden"
+          className="xl:hidden fixed top-14 right-3 sm:right-4 w-[calc(100vw-1.5rem)] max-w-72 sm:max-w-80 bg-card/95 backdrop-blur-2xl border border-border rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] overflow-hidden"
           style={{
             opacity: mobileVisible ? 1 : 0,
             transform: mobileVisible ? "translateY(0) scale(1)" : "translateY(-10px) scale(0.95)",
@@ -334,9 +340,13 @@ const Header = () => {
             </button>
           </div>
 
-          <nav className="flex flex-col p-2 gap-1 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <nav className="flex flex-col p-2 gap-1 max-h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar">
             {navItems.map((item) => (
-              <div key={item.href} className={`relative group/item block ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}>
+              <div
+                key={item.href}
+                onPointerDown={() => editor?.setActiveElementId(`header-nav:${item.href}`)}
+                className={`relative group/item block ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
+              >
                 <div
                   {...getNavProps(() => scrollTo(item.resolvedHref))}
                   className={`w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
@@ -350,7 +360,7 @@ const Header = () => {
                     linkField={`nav_link_${item.href.replace('#', '')}`}
                     value={item.label}
                     toolbarClassName="-top-2 right-0"
-                    toolbarVisibilityClassName="opacity-0 group-hover/item:opacity-100"
+                    toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0"}
                     extraControls={renderNavVisibilityToggle(item.href, true, true)}
                   />
                   {activeSection === item.resolvedHref && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
