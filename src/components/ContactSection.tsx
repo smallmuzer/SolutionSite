@@ -8,6 +8,7 @@ import { openViber, ViberIcon } from "@/lib/viber";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { COUNTRIES, detectCountry, validatePhone } from "@/lib/phone-utils";
 import { EditableText, EditorToolbar, useLiveEditor } from "./admin/LiveEditorContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ————————————————————————————————————————————————————————————————————————————————
 const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?: number; className?: string }) => {
@@ -438,22 +439,23 @@ const ContactSection = () => {
                         {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_phone" value={content.placeholder_phone || "Number"} />)</div>}
                       </label>
                       <div className="flex items-stretch">
-                        <div className="relative w-24 shrink-0">
-                          <select
+                        <div className="relative w-24 shrink-0 h-[42px]">
+                          <Select
                             value={selectedCountry.code}
-                            onChange={(e) => {
-                              const country = COUNTRIES.find(c => c.code === e.target.value);
+                            onValueChange={(val) => {
+                              const country = COUNTRIES.find(c => c.code === val);
                               if (country) setSelectedCountry(country);
                             }}
-                            className={`${inputCls} appearance-none rounded-r-none border-r-0 bg-no-repeat pr-7 px-2 text-[0.75rem] h-full`}
                           >
-                            {COUNTRIES.map(c => (
-                              <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
-                            ))}
-                          </select>
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4" /></svg>
-                          </div>
+                            <SelectTrigger className={`${inputCls} rounded-r-none border-r-0 px-2 h-full !py-0 [&>svg]:opacity-50 [&>svg]:w-3 [&>svg]:h-3`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COUNTRIES.map(c => (
+                                <SelectItem key={c.code} value={c.code}>{c.flag} {c.dial}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <input type="tel" value={form.phone} onChange={handlePhoneChange}
                           className={`${inputCls} rounded-l-none flex-1`} placeholder={content.placeholder_phone || "Number"} maxLength={20} />
@@ -466,14 +468,17 @@ const ContactSection = () => {
                         <EditableText section="contact" field="label_inquiry" value={content.label_inquiry || "Inquiry For *"} />
                       </label>
                       <div className="relative">
-                        <select value={form.service} onChange={(e) => update("service", e.target.value)}
-                          className={`${inputCls} appearance-none bg-no-repeat pr-10 hover:border-secondary transition-colors`}>
-                          <option value="">Select a service</option>
-                          {services.map(s => <option key={(s as any).id || s.title} value={s.title}>{s.title}</option>)}
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l4 4 4-4" /></svg>
-                        </div>
+                        <Select value={form.service || undefined} onValueChange={(val) => update("service", val)}>
+                          <SelectTrigger className={`${inputCls} hover:border-secondary transition-colors`}>
+                            <SelectValue placeholder="Select a service" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {services.map(s => (
+                              <SelectItem key={(s as any).id || s.title} value={s.title}>{s.title}</SelectItem>
+                            ))}
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
