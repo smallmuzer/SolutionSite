@@ -56,7 +56,7 @@ const ClientsManager = () => {
     const maxOrder = clients.length > 0 ? Math.max(...clients.map(c => c.sort_order)) + 1 : 0;
     const res = await dbInsert("client_logos", { ...newForm, sort_order: maxOrder });
     if (res.error) { toast.error("Failed to add."); }
-    else if (res.data) { setClients(prev => [...prev, res.data]); setNewForm({ ...emptyForm }); setAdding(false); toast.success("Client added!"); }
+    else if (res.data) { setClients(prev => [...prev, res.data as ClientLogo]); setNewForm({ ...emptyForm }); setAdding(false); toast.success("Client added!"); }
     setSaving(false);
   };
 
