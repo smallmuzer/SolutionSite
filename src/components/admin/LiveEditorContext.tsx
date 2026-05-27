@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { toast } from "sonner";
-import { TypographyEditorModal } from "./TypographyEditorModal";
+import { TypographyEditorModal, parseInlineStyles } from "./TypographyEditorModal";
 
 interface LiveEditorContextType {
   isEditMode: boolean;
@@ -15,13 +15,14 @@ interface LiveEditorContextType {
   onPickImage: (section: string, field: string, id?: string) => void;
   onPickMultiImage: (section: string, field: string, id?: string) => void;
   onPickIcon: (section: string, field: string, id?: string) => void;
+  onPickLink: (section: string, field: string, id?: string) => void;
   onPickColor: (section: string, field: string, id?: string) => void;
-  onMove: (section: string, id: string, direction: "up" | "down") => void;
+  onMove: (section: string, id: string, direction: "up" | "down" | "left" | "right") => void;
   onOpenCustomizer: () => void;
   handleSaveAll: () => void;
   handleDiscard: () => void;
   pendingChanges: Record<string, any>;
-  openTypographyEditor: (section: string, field: string, currentValue: string, id?: string) => void;
+  openTypographyEditor: (section: string, field: string, currentValue: string, id?: string, targetStyles?: Record<string, string>) => void;
 }
 
 const LiveEditorContext = createContext<LiveEditorContextType | null>(null);
@@ -58,6 +59,7 @@ export const LiveEditorProvider: React.FC<{
       field: string;
       value: string;
       id?: string;
+      targetStyles?: Record<string, string>;
     }>({
       isOpen: false,
       section: "",
@@ -65,13 +67,14 @@ export const LiveEditorProvider: React.FC<{
       value: "",
     });
 
-    const openTypographyEditor = (section: string, field: string, value: string, id?: string) => {
+    const openTypographyEditor = (section: string, field: string, value: string, id?: string, targetStyles?: Record<string, string>) => {
       setTypoState({
         isOpen: true,
         section,
         field,
         value,
-        id
+        id,
+        targetStyles
       });
     };
 
@@ -106,6 +109,7 @@ export const LiveEditorProvider: React.FC<{
             field={typoState.field}
             initialValue={typoState.value}
             id={typoState.id}
+            targetStyles={typoState.targetStyles}
             onClose={() => setTypoState(prev => ({ ...prev, isOpen: false }))}
             onSave={(sec, fld, val, itemId) => {
               onUpdate(sec, fld, val, itemId);
@@ -138,7 +142,34 @@ export const EditableText: React.FC<{
   const pendingColor = colorField ? editor?.pendingChanges?.[colorDraftKey] : undefined;
 
   if (!editor?.isEditMode) {
-    return <Tag className={className} style={pendingColor ? { color: pendingColor } : undefined} dangerouslySetInnerHTML={{ __html: displayValue }} />;
+    // Extract inline styles from the saved <div style="..."> wrapper and apply them
+    // directly to the Tag element to prevent layout issues (e.g., nested <div> inside <span>)
+    const { styles: parsedStyles, innerHtml } = parseInlineStyles(displayValue);
+    const hasStyles = Object.values(parsedStyles).some(v => !!v);
+    
+    const inlineStyle: React.CSSProperties = {};
+    if (hasStyles) {
+      if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
+      if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
+      if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
+      if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
+      if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
+      if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
+      if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
+      if (parsedStyles.textColor) inlineStyle.color = parsedStyles.textColor;
+      if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
+      if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
+      if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
+      if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
+      if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
+      if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
+      if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
+      if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
+      if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
+    }
+    if (pendingColor) inlineStyle.color = pendingColor;
+    
+    return <Tag className={className} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
   }
 
   const handleBlur = () => {
@@ -175,7 +206,31 @@ export const EditableText: React.FC<{
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              editor.openTypographyEditor(section, field, displayValue, id);
+              const target = e.currentTarget.closest('.group\\/edit')?.firstElementChild as HTMLElement;
+              let targetStyles: Record<string, string> | undefined = undefined;
+              if (target) {
+                const comp = window.getComputedStyle(target);
+                targetStyles = {
+                  fontFamily: comp.fontFamily,
+                  fontSize: comp.fontSize,
+                  fontWeight: comp.fontWeight,
+                  lineHeight: comp.lineHeight,
+                  letterSpacing: comp.letterSpacing,
+                  textTransform: comp.textTransform,
+                  textAlign: comp.textAlign,
+                  textColor: comp.color,
+                  bgColor: comp.backgroundColor,
+                  paddingTop: comp.paddingTop,
+                  paddingRight: comp.paddingRight,
+                  paddingBottom: comp.paddingBottom,
+                  paddingLeft: comp.paddingLeft,
+                  marginTop: comp.marginTop,
+                  marginRight: comp.marginRight,
+                  marginBottom: comp.marginBottom,
+                  marginLeft: comp.marginLeft
+                };
+              }
+              editor.openTypographyEditor(section, field, displayValue, id, targetStyles);
             }}
             className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer"
             title="Edit Text Style"

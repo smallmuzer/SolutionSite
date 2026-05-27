@@ -211,6 +211,7 @@ const SubmissionsCalendar = ({ submissions, applications = [], appointments = []
     const handler = () => openCreateModalGeneral();
     window.addEventListener("ss:openNewAppointment", handler);
     return () => window.removeEventListener("ss:openNewAppointment", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toLocalDatetime = (date: Date) => {

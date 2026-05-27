@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import EmojiPicker from 'emoji-picker-react';
 import { 
   Bold, Italic, Underline, Strikethrough, Superscript, Subscript, 
   AlignLeft, AlignCenter, AlignRight, AlignJustify, 
   Type, Sparkles, Copy, Clipboard, Save, X, Maximize2, Minimize2, 
   Undo2, Redo2, Link, Link2Off, Image, Smile, Table, Code, Grid, 
-  Minus, Palette, CheckSquare, List, ListOrdered, Type as TypeIcon
+  Minus, Palette, CheckSquare, List, ListOrdered, Type as TypeIcon,
+  Paperclip, Mic, Folder, Outdent, Indent
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,6 +16,7 @@ interface TypographyEditorModalProps {
   field: string;
   initialValue: string;
   id?: string;
+  targetStyles?: Record<string, string>;
   onClose: () => void;
   onSave: (section: string, field: string, value: string, id?: string) => void;
 }
@@ -72,20 +75,37 @@ function sanitizeHtml(html: string): string {
   return clean;
 }
 
+// ── RGB to Hex Helper ─────────────────────────────────────────────────────────
+function rgbToHex(rgbStr: string): string {
+  if (!rgbStr) return "";
+  const str = rgbStr.toLowerCase().replace(/\s/g, '');
+  if (str === 'transparent' || str === 'rgba(0,0,0,0)') return "";
+  
+  const match = str.match(/^rgba?\((\d+),(\d+),(\d+)/i);
+  if (match) {
+    const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
+    const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
+    const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+  }
+  return rgbStr;
+}
+
 // ── Parse Inline Styles Helper ────────────────────────────────────────────────
-function parseInlineStyles(html: string): { styles: ActiveStyles; innerHtml: string } {
+export function parseInlineStyles(html: string): { styles: ActiveStyles; innerHtml: string } {
   const trimmed = (html || "").trim();
-  if (!trimmed.startsWith("<div style=")) {
-    return { styles: { ...DEFAULT_STYLES }, innerHtml: trimmed };
+  const parsed = { ...DEFAULT_STYLES };
+
+  // ONLY strip the wrapper if it exactly matches what the editor creates: <div style="...">...</div>
+  // This prevents stripping user's custom tags (e.g. <h1>) or classes.
+  const match = trimmed.match(/^<div style="([^"]+)">([\s\S]*)<\/div>$/i);
+  
+  if (!match) {
+    return { styles: parsed, innerHtml: trimmed };
   }
 
-  // Parse style attribute and innerHtml
-  const match = trimmed.match(/<div style="([^"]+)"[^>]*>([\s\S]*)<\/div>/);
-  if (!match) return { styles: { ...DEFAULT_STYLES }, innerHtml: trimmed };
-
   const styleStr = match[1];
-  const innerHtml = match[2];
-  const parsed = { ...DEFAULT_STYLES };
+  const wrapperHtml = match[2];
 
   const declarations = styleStr.split(";").map(d => d.trim()).filter(Boolean);
   declarations.forEach(decl => {
@@ -101,8 +121,8 @@ function parseInlineStyles(html: string): { styles: ActiveStyles; innerHtml: str
     else if (key === "letter-spacing") parsed.letterSpacing = val;
     else if (key === "text-transform") parsed.textTransform = val;
     else if (key === "text-align") parsed.textAlign = val;
-    else if (key === "color") parsed.textColor = val;
-    else if (key === "background-color") parsed.bgColor = val;
+    else if (key === "color") parsed.textColor = rgbToHex(val);
+    else if (key === "background-color") parsed.bgColor = rgbToHex(val);
     else if (key === "padding-top") parsed.paddingTop = val;
     else if (key === "padding-right") parsed.paddingRight = val;
     else if (key === "padding-bottom") parsed.paddingBottom = val;
@@ -113,11 +133,11 @@ function parseInlineStyles(html: string): { styles: ActiveStyles; innerHtml: str
     else if (key === "margin-left") parsed.marginLeft = val;
   });
 
-  return { styles: parsed, innerHtml };
+  return { styles: parsed, innerHtml: wrapperHtml };
 }
 
 export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
-  isOpen, section, field, initialValue, id, onClose, onSave
+  isOpen, section, field, initialValue, id, targetStyles, onClose, onSave
 }) => {
   const [editorHtml, setEditorHtml] = useState("");
   const [activeStyles, setActiveStyles] = useState<ActiveStyles>({ ...DEFAULT_STYLES });
@@ -127,6 +147,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   const [position, setPosition] = useState({ x: 100, y: 50 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   // Rich Text Editor Undo/Redo stacks
   const [undoStack, setUndoStack] = useState<string[]>([]);
@@ -134,45 +155,133 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
   const editorRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const savedSelectionRef = useRef<Range | null>(null);
+  const undoStackRef = useRef<string[]>([]);
+  const redoStackRef = useRef<string[]>([]);
+
+  // Helper to save the current selection
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current) {
+      const range = sel.getRangeAt(0);
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        savedSelectionRef.current = range.cloneRange();
+      }
+    }
+  };
+
+  // Helper to restore the saved selection
+  const restoreSelection = () => {
+    const sel = window.getSelection();
+    if (sel && savedSelectionRef.current) {
+      sel.removeAllRanges();
+      sel.addRange(savedSelectionRef.current);
+    }
+  };
 
   // Initialize and parse current content
   useEffect(() => {
     if (isOpen) {
       const { styles, innerHtml } = parseInlineStyles(initialValue);
+      
+      // Merge targetStyles if properties are empty/default
+      if (targetStyles) {
+        if (!styles.fontFamily) styles.fontFamily = targetStyles.fontFamily?.replace(/['"]/g, "") || "";
+        if (!styles.fontSize) styles.fontSize = targetStyles.fontSize || "";
+        if (!styles.fontWeight) styles.fontWeight = targetStyles.fontWeight || "";
+        if (!styles.lineHeight) styles.lineHeight = targetStyles.lineHeight || "";
+        if (!styles.letterSpacing) styles.letterSpacing = targetStyles.letterSpacing || "";
+        if (!styles.textTransform || styles.textTransform === "none") styles.textTransform = targetStyles.textTransform !== "none" ? targetStyles.textTransform : "";
+        if (!styles.textAlign || styles.textAlign === "start") styles.textAlign = targetStyles.textAlign !== "start" ? targetStyles.textAlign : "";
+        if (!styles.textColor) styles.textColor = rgbToHex(targetStyles.textColor || "");
+        if (!styles.bgColor) styles.bgColor = rgbToHex(targetStyles.bgColor || "");
+        
+        // Margins and paddings if empty (sometimes getComputedStyle returns 0px)
+        if (!styles.paddingTop) styles.paddingTop = targetStyles.paddingTop || "";
+        if (!styles.paddingRight) styles.paddingRight = targetStyles.paddingRight || "";
+        if (!styles.paddingBottom) styles.paddingBottom = targetStyles.paddingBottom || "";
+        if (!styles.paddingLeft) styles.paddingLeft = targetStyles.paddingLeft || "";
+        
+        if (!styles.marginTop) styles.marginTop = targetStyles.marginTop || "";
+        if (!styles.marginRight) styles.marginRight = targetStyles.marginRight || "";
+        if (!styles.marginBottom) styles.marginBottom = targetStyles.marginBottom || "";
+        if (!styles.marginLeft) styles.marginLeft = targetStyles.marginLeft || "";
+      }
+      
       setActiveStyles(styles);
       setEditorHtml(innerHtml);
+      undoStackRef.current = [];
+      redoStackRef.current = [];
       setUndoStack([]);
       setRedoStack([]);
       setViewMode("visual");
       setPreviewMode(false);
+      savedSelectionRef.current = null;
       
       // Auto center position
       const w = window.innerWidth;
       setPosition({ x: Math.max((w - 900) / 2, 50), y: 80 });
     }
-  }, [isOpen, initialValue]);
+  }, [isOpen, initialValue, targetStyles]);
+
+
+
+
+  const isInternalEditRef = useRef(false);
+  const isHtmlEditRef = useRef(false);
+  useEffect(() => {
+    if (editorRef.current && !isInternalEditRef.current) {
+      editorRef.current.innerHTML = editorHtml;
+    }
+    isInternalEditRef.current = false;
+  }, [editorHtml]);
+
+  // Wrapper to update editorHtml from user typing (marks as internal so useEffect doesn't re-set DOM)
+  const syncEditorState = () => {
+    if (editorRef.current) {
+      isInternalEditRef.current = true;
+      setEditorHtml(editorRef.current.innerHTML);
+    }
+  };
 
   // Save current state for undo/redo
   const recordHistory = (html: string) => {
-    setUndoStack(prev => [...prev, html]);
-    setRedoStack([]); // Clear redo
+    undoStackRef.current = [...undoStackRef.current, html];
+    redoStackRef.current = [];
+    setUndoStack([...undoStackRef.current]);
+    setRedoStack([]);
+  };
+
+  // Get current editor HTML directly from DOM (not state)
+  const getEditorHtml = () => {
+    return editorRef.current ? editorRef.current.innerHTML : editorHtml;
   };
 
   const handleUndo = () => {
-    if (undoStack.length > 0) {
-      const prev = undoStack[undoStack.length - 1];
-      setRedoStack(r => [...r, editorHtml]);
+    if (undoStackRef.current.length > 0) {
+      const prev = undoStackRef.current[undoStackRef.current.length - 1];
+      redoStackRef.current = [...redoStackRef.current, getEditorHtml()];
+      undoStackRef.current = undoStackRef.current.slice(0, -1);
       setEditorHtml(prev);
-      setUndoStack(prevStack => prevStack.slice(0, -1));
+      setUndoStack([...undoStackRef.current]);
+      setRedoStack([...redoStackRef.current]);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = prev;
+      }
     }
   };
 
   const handleRedo = () => {
-    if (redoStack.length > 0) {
-      const next = redoStack[redoStack.length - 1];
-      setUndoStack(u => [...u, editorHtml]);
+    if (redoStackRef.current.length > 0) {
+      const next = redoStackRef.current[redoStackRef.current.length - 1];
+      undoStackRef.current = [...undoStackRef.current, getEditorHtml()];
+      redoStackRef.current = redoStackRef.current.slice(0, -1);
       setEditorHtml(next);
-      setRedoStack(prevStack => prevStack.slice(0, -1));
+      setUndoStack([...undoStackRef.current]);
+      setRedoStack([...redoStackRef.current]);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = next;
+      }
     }
   };
 
@@ -215,56 +324,175 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
   // ── Formatting Commands ─────────────────────────────────────────────────────
   const execCmd = (command: string, value: string = "") => {
-    recordHistory(editorHtml);
-    document.execCommand(command, false, value);
+    // Ensure editor has focus first
     if (editorRef.current) {
-      setEditorHtml(editorRef.current.innerHTML);
+      editorRef.current.focus();
     }
+    // Restore selection if it was lost
+    restoreSelection();
+
+    // Record current DOM state for undo (use ref, no re-render)
+    const currentHtml = getEditorHtml();
+    undoStackRef.current = [...undoStackRef.current, currentHtml];
+    redoStackRef.current = [];
+
+    // Execute the command directly on the focused, selected DOM
+    document.execCommand(command, false, value);
+
+    // Now sync React state from DOM (marked as internal so useEffect won't overwrite DOM)
+    syncEditorState();
+    saveSelection();
+    setUndoStack([...undoStackRef.current]);
+    setRedoStack([]);
   };
 
   const clearFormatting = () => {
-    recordHistory(editorHtml);
-    execCmd("removeFormat");
-    // Strip other HTML wrappers as well
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+    restoreSelection();
+
+    const currentHtml = getEditorHtml();
+    undoStackRef.current = [...undoStackRef.current, currentHtml];
+    redoStackRef.current = [];
+
+    document.execCommand("removeFormat", false, "");
+    // Also strip remaining wrappers
     if (editorRef.current) {
       const text = editorRef.current.innerText;
-      setEditorHtml(text);
+      editorRef.current.innerHTML = text;
     }
+    syncEditorState();
+    setUndoStack([...undoStackRef.current]);
+    setRedoStack([]);
   };
 
   // ── Save/Publish Logic ──────────────────────────────────────────────────────
   const handleSave = () => {
-    // Construct CSS styles string
-    const stylesList = [
-      activeStyles.fontFamily && `font-family: ${activeStyles.fontFamily}`,
-      activeStyles.fontSize && `font-size: ${activeStyles.fontSize}`,
-      activeStyles.fontWeight && `font-weight: ${activeStyles.fontWeight}`,
-      activeStyles.lineHeight && `line-height: ${activeStyles.lineHeight}`,
-      activeStyles.letterSpacing && `letter-spacing: ${activeStyles.letterSpacing}`,
-      activeStyles.textTransform && `text-transform: ${activeStyles.textTransform}`,
-      activeStyles.textAlign && `text-align: ${activeStyles.textAlign}`,
-      activeStyles.textColor && `color: ${activeStyles.textColor}`,
-      activeStyles.bgColor && `background-color: ${activeStyles.bgColor}`,
-      activeStyles.paddingTop && `padding-top: ${activeStyles.paddingTop}`,
-      activeStyles.paddingRight && `padding-right: ${activeStyles.paddingRight}`,
-      activeStyles.paddingBottom && `padding-bottom: ${activeStyles.paddingBottom}`,
-      activeStyles.paddingLeft && `padding-left: ${activeStyles.paddingLeft}`,
-      activeStyles.marginTop && `margin-top: ${activeStyles.marginTop}`,
-      activeStyles.marginRight && `margin-right: ${activeStyles.marginRight}`,
-      activeStyles.marginBottom && `margin-bottom: ${activeStyles.marginBottom}`,
-      activeStyles.marginLeft && `margin-left: ${activeStyles.marginLeft}`,
-    ].filter(Boolean);
+    let serialized = editorHtml;
 
-    const cssText = stylesList.join("; ").trim();
-    const finalHtml = sanitizeHtml(editorHtml);
-    const serialized = cssText 
-      ? `<div style="${cssText}">${finalHtml}</div>` 
-      : finalHtml;
+    if (viewMode === "visual") {
+      // Construct CSS styles string
+      const stylesList = [
+        activeStyles.fontFamily && `font-family: ${activeStyles.fontFamily}`,
+        activeStyles.fontSize && `font-size: ${activeStyles.fontSize}`,
+        activeStyles.fontWeight && `font-weight: ${activeStyles.fontWeight}`,
+        activeStyles.lineHeight && `line-height: ${activeStyles.lineHeight}`,
+        activeStyles.letterSpacing && `letter-spacing: ${activeStyles.letterSpacing}`,
+        activeStyles.textTransform && `text-transform: ${activeStyles.textTransform}`,
+        activeStyles.textAlign && `text-align: ${activeStyles.textAlign}`,
+        activeStyles.textColor && `color: ${activeStyles.textColor}`,
+        activeStyles.bgColor && `background-color: ${activeStyles.bgColor}`,
+        activeStyles.paddingTop && `padding-top: ${activeStyles.paddingTop}`,
+        activeStyles.paddingRight && `padding-right: ${activeStyles.paddingRight}`,
+        activeStyles.paddingBottom && `padding-bottom: ${activeStyles.paddingBottom}`,
+        activeStyles.paddingLeft && `padding-left: ${activeStyles.paddingLeft}`,
+        activeStyles.marginTop && `margin-top: ${activeStyles.marginTop}`,
+        activeStyles.marginRight && `margin-right: ${activeStyles.marginRight}`,
+        activeStyles.marginBottom && `margin-bottom: ${activeStyles.marginBottom}`,
+        activeStyles.marginLeft && `margin-left: ${activeStyles.marginLeft}`,
+      ].filter(Boolean);
+
+      const cssText = stylesList.join("; ").trim();
+      const finalHtml = sanitizeHtml(editorHtml);
+      serialized = cssText 
+        ? `<div style="${cssText}">${finalHtml}</div>` 
+        : finalHtml;
+    } else {
+      serialized = sanitizeHtml(editorHtml);
+    }
 
     onSave(section, field, serialized, id);
     toast.success("Text style updated successfully!");
     onClose();
   };
+
+  const handleRevert = () => {
+    const { styles, innerHtml } = parseInlineStyles(initialValue);
+    setActiveStyles(styles);
+    setEditorHtml(innerHtml);
+    setUndoStack([]);
+    setRedoStack([]);
+    if (editorRef.current) {
+      editorRef.current.innerHTML = innerHtml;
+    }
+    toast.info("Changes reverted to original state.");
+  };
+
+  // ── View Mode Change ────────────────────────────────────────────────────────
+  const handleViewModeChange = (newMode: "visual" | "html") => {
+    if (newMode === viewMode) return;
+
+    if (newMode === "html") {
+      // Serialize current activeStyles into the HTML string
+      const stylesList = [
+        activeStyles.fontFamily && `font-family: ${activeStyles.fontFamily}`,
+        activeStyles.fontSize && `font-size: ${activeStyles.fontSize}`,
+        activeStyles.fontWeight && `font-weight: ${activeStyles.fontWeight}`,
+        activeStyles.lineHeight && `line-height: ${activeStyles.lineHeight}`,
+        activeStyles.letterSpacing && `letter-spacing: ${activeStyles.letterSpacing}`,
+        activeStyles.textTransform && `text-transform: ${activeStyles.textTransform}`,
+        activeStyles.textAlign && `text-align: ${activeStyles.textAlign}`,
+        activeStyles.textColor && `color: ${activeStyles.textColor}`,
+        activeStyles.bgColor && `background-color: ${activeStyles.bgColor}`,
+        activeStyles.paddingTop && `padding-top: ${activeStyles.paddingTop}`,
+        activeStyles.paddingRight && `padding-right: ${activeStyles.paddingRight}`,
+        activeStyles.paddingBottom && `padding-bottom: ${activeStyles.paddingBottom}`,
+        activeStyles.paddingLeft && `padding-left: ${activeStyles.paddingLeft}`,
+        activeStyles.marginTop && `margin-top: ${activeStyles.marginTop}`,
+        activeStyles.marginRight && `margin-right: ${activeStyles.marginRight}`,
+        activeStyles.marginBottom && `margin-bottom: ${activeStyles.marginBottom}`,
+        activeStyles.marginLeft && `margin-left: ${activeStyles.marginLeft}`,
+      ].filter(Boolean);
+
+      const cssText = stylesList.join("; ").trim();
+      const serialized = cssText ? `<div style="${cssText}">${editorHtml}</div>` : editorHtml;
+      
+      setEditorHtml(serialized);
+      // Removed clearing of activeStyles here to keep sidebar in sync
+    } else {
+      // Parse styles back out of editorHtml
+      const { styles, innerHtml } = parseInlineStyles(editorHtml);
+      setEditorHtml(innerHtml);
+      setActiveStyles(styles);
+      isInternalEditRef.current = false;
+    }
+    setViewMode(newMode);
+  };
+
+  // Sync sidebar to HTML code mode when activeStyles changes via sidebar
+  useEffect(() => {
+    if (viewMode === "html" && !isHtmlEditRef.current) {
+      const { innerHtml } = parseInlineStyles(editorHtml);
+      const stylesList = [
+        activeStyles.fontFamily && `font-family: ${activeStyles.fontFamily}`,
+        activeStyles.fontSize && `font-size: ${activeStyles.fontSize}`,
+        activeStyles.fontWeight && `font-weight: ${activeStyles.fontWeight}`,
+        activeStyles.lineHeight && `line-height: ${activeStyles.lineHeight}`,
+        activeStyles.letterSpacing && `letter-spacing: ${activeStyles.letterSpacing}`,
+        activeStyles.textTransform && `text-transform: ${activeStyles.textTransform}`,
+        activeStyles.textAlign && `text-align: ${activeStyles.textAlign}`,
+        activeStyles.textColor && `color: ${activeStyles.textColor}`,
+        activeStyles.bgColor && `background-color: ${activeStyles.bgColor}`,
+        activeStyles.paddingTop && `padding-top: ${activeStyles.paddingTop}`,
+        activeStyles.paddingRight && `padding-right: ${activeStyles.paddingRight}`,
+        activeStyles.paddingBottom && `padding-bottom: ${activeStyles.paddingBottom}`,
+        activeStyles.paddingLeft && `padding-left: ${activeStyles.paddingLeft}`,
+        activeStyles.marginTop && `margin-top: ${activeStyles.marginTop}`,
+        activeStyles.marginRight && `margin-right: ${activeStyles.marginRight}`,
+        activeStyles.marginBottom && `margin-bottom: ${activeStyles.marginBottom}`,
+        activeStyles.marginLeft && `margin-left: ${activeStyles.marginLeft}`,
+      ].filter(Boolean);
+
+      const cssText = stylesList.join("; ").trim();
+      const serialized = cssText ? `<div style="${cssText}">${innerHtml}</div>` : innerHtml;
+      if (editorHtml !== serialized) {
+        setEditorHtml(serialized);
+      }
+    }
+    isHtmlEditRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStyles]);
 
   // ── Copy/Paste Style ────────────────────────────────────────────────────────
   const handleCopyStyle = () => {
@@ -289,22 +517,38 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
   // ── Advanced Insertion Modals ──────────────────────────────────────────────
   const promptLink = () => {
+    const selection = window.getSelection();
+    const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
     const url = prompt("Enter link URL:", "https://");
+    if (range && selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
     if (url) execCmd("createLink", url);
   };
 
-  const promptImage = () => {
-    const src = prompt("Enter Image URL:", "/assets/uploads/");
-    if (src) {
-      const html = `<img src="${src}" alt="Rich Text Image" class="max-w-full h-auto inline-block rounded-lg shadow border p-1" style="display:inline-block; margin: 10px 0;" />`;
-      recordHistory(editorHtml);
-      execCmd("insertHTML", html);
+  const onEmojiClick = (emojiData: any) => {
+    // Ensure editor has focus first
+    if (editorRef.current) {
+      editorRef.current.focus();
     }
+    // Restore selection if it was lost
+    restoreSelection();
+    
+    recordHistory(editorHtml);
+    execCmd("insertHTML", emojiData.emoji);
+    setShowEmojiPicker(false);
   };
 
   const insertTable = () => {
+    const selection = window.getSelection();
+    const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
     const rows = parseInt(prompt("Enter number of rows:", "3") || "3", 10);
     const cols = parseInt(prompt("Enter number of columns:", "3") || "3", 10);
+    if (range && selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
     if (rows > 0 && cols > 0) {
       let tableHtml = `<table class="w-full border-collapse border border-border my-4 rounded overflow-hidden shadow-sm"><thead><tr class="bg-muted">`;
       for (let c = 0; c < cols; c++) {
@@ -334,9 +578,6 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     execCmd("insertHTML", code);
   };
 
-  const insertEmoji = (emoji: string) => {
-    execCmd("insertHTML", emoji);
-  };
 
   if (!isOpen) return null;
 
@@ -630,58 +871,70 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           {/* Right Editor Area */}
           <div className="flex-1 flex flex-col bg-background/50 overflow-hidden relative min-w-0 p-4 pb-0">
             <div className="flex-1 flex flex-col border border-secondary/40 rounded-xl overflow-hidden bg-card shadow-sm mb-4">
-              {/* Rich Text Toolbar (Always visible, but disabled in HTML mode) */}
-              <div className={`flex items-center flex-wrap gap-1 px-3 py-1.5 border-b border-border/60 bg-muted/20 transition-all ${viewMode === "html" ? "opacity-40 pointer-events-none grayscale select-none" : "opacity-100"}`}>
-                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
-                  <button onClick={() => execCmd("bold")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bold"><Bold size={13} /></button>
-                  <button onClick={() => execCmd("italic")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Italic"><Italic size={13} /></button>
-                  <button onClick={() => execCmd("underline")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Underline"><Underline size={13} /></button>
-                  <button onClick={() => execCmd("strikeThrough")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Strike Through"><Strikethrough size={13} /></button>
-                  <button onClick={() => execCmd("superscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Superscript"><Superscript size={13} /></button>
-                  <button onClick={() => execCmd("subscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Subscript"><Subscript size={13} /></button>
-                </div>
-
-                <div className="flex items-center gap-1 border-r border-border/50 pr-1.5 mr-1.5">
-                  <select 
-                    onChange={(e) => execCmd("formatBlock", e.target.value)} 
-                    className="px-1.5 py-0.5 bg-background border border-border rounded text-[11px] focus:outline-none"
-                    defaultValue="div"
+              {/* Rich Text Toolbar (Zoho Mail Style) */}
+              <div 
+                className={`flex items-center flex-wrap gap-1.5 px-3 py-2 border-b border-border/60 bg-muted/20 transition-all ${viewMode === "html" ? "opacity-40 pointer-events-none grayscale select-none" : "opacity-100"}`}
+                onMouseDown={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (!target.closest("select") && !target.closest("input")) {
+                    e.preventDefault();
+                  }
+                }}
+              >
+                
+                {/* Attachment / Insert Group */}
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 relative">
+                  <button 
+                    onClick={() => {
+                      saveSelection();
+                      setShowEmojiPicker(!showEmojiPicker);
+                    }} 
+                    className={`p-1 rounded text-foreground transition-colors ${showEmojiPicker ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`} 
+                    title="Insert Emoji"
                   >
-                    <option value="p">Paragraph</option>
-                    <option value="h1">Heading 1</option>
-                    <option value="h2">Heading 2</option>
-                    <option value="h3">Heading 3</option>
-                    <option value="h4">Heading 4</option>
-                    <option value="h5">Heading 5</option>
-                    <option value="h6">Heading 6</option>
-                    <option value="blockquote">Quote</option>
-                  </select>
+                    <Smile size={14} />
+                  </button>
+                  {showEmojiPicker && (
+                    <div className="absolute top-full left-0 mt-2 z-50 shadow-2xl rounded-lg overflow-hidden border border-border">
+                      <EmojiPicker 
+                        onEmojiClick={onEmojiClick}
+                        width={300}
+                        height={400}
+                        theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light' as any}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
-                  <button onClick={() => execCmd("insertUnorderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={13} /></button>
-                  <button onClick={() => execCmd("insertOrderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={13} /></button>
+                {/* Formatting Group */}
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
+                  <button onClick={() => execCmd("bold")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bold"><Bold size={14} /></button>
+                  <button onClick={() => execCmd("italic")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Italic"><Italic size={14} /></button>
+                  <button onClick={() => execCmd("underline")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Underline"><Underline size={14} /></button>
+                  <button onClick={() => execCmd("strikeThrough")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Strike Through"><Strikethrough size={14} /></button>
                 </div>
 
-                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
-                  <button onClick={promptLink} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Link"><Link size={13} /></button>
-                  <button onClick={() => execCmd("unlink")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Remove Link"><Link2Off size={13} /></button>
-                  <button onClick={promptImage} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Image"><Image size={13} /></button>
-                  <button onClick={insertTable} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Table"><Table size={13} /></button>
-                  <button onClick={insertHorizontalRule} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Horizontal Rule"><Minus size={13} /></button>
-                  <button onClick={insertCodeBlock} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Code Block"><Code size={13} /></button>
+                {/* Lists */}
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
+                  <button onClick={() => execCmd("insertUnorderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={14} /></button>
+                  <button onClick={() => execCmd("insertOrderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={14} /></button>
                 </div>
 
-                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 mr-1.5">
-                  {["😀", "💡", "🚀", "✨", "🔥"].map(emoji => (
-                    <button key={emoji} onClick={() => insertEmoji(emoji)} className="p-1 hover:bg-muted rounded text-[10px] transition-colors">{emoji}</button>
-                  ))}
+                {/* Indent & Others */}
+                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
+                  <button onClick={() => execCmd("outdent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Decrease Indent"><Outdent size={14} /></button>
+                  <button onClick={() => execCmd("indent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Increase Indent"><Indent size={14} /></button>
+                  <button onClick={() => execCmd("superscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Superscript"><Superscript size={14} /></button>
+                  <button onClick={() => execCmd("subscript")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Subscript"><Subscript size={14} /></button>
                 </div>
 
+                {/* Utilities */}
                 <div className="flex items-center gap-0.5">
-                  <button onClick={handleUndo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Undo"><Undo2 size={13} /></button>
-                  <button onClick={handleRedo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Redo"><Redo2 size={13} /></button>
-                  <button onClick={clearFormatting} className="p-1 hover:bg-destructive/10 text-destructive rounded transition-colors ml-0.5" title="Clear Formatting"><X size={13} /></button>
+                  <button onClick={promptLink} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Link"><Link size={14} /></button>
+                  <button onClick={insertTable} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Table"><Table size={14} /></button>
+                  <button onClick={clearFormatting} className="p-1 hover:bg-destructive/10 text-destructive rounded transition-colors" title="Clear Formatting"><X size={14} /></button>
+                  <button onClick={handleUndo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Undo"><Undo2 size={14} /></button>
+                  <button onClick={handleRedo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Redo"><Redo2 size={14} /></button>
                 </div>
               </div>
 
@@ -739,8 +992,13 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                           marginBottom: activeStyles.marginBottom,
                           marginLeft: activeStyles.marginLeft,
                         }}
-                        onInput={(e) => setEditorHtml(e.currentTarget.innerHTML)}
-                        dangerouslySetInnerHTML={{ __html: editorHtml }}
+                        onInput={() => {
+                          syncEditorState();
+                          saveSelection();
+                        }}
+                        onMouseUp={saveSelection}
+                        onKeyUp={saveSelection}
+                        onFocus={saveSelection}
                       />
                     )}
                     
@@ -756,7 +1014,13 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 <div className="flex-1 flex flex-col h-full relative bg-slate-950">
                   <textarea
                     value={editorHtml}
-                    onChange={(e) => setEditorHtml(e.target.value)}
+                    onChange={(e) => {
+                      const newHtml = e.target.value;
+                      isHtmlEditRef.current = true;
+                      setEditorHtml(newHtml);
+                      const { styles } = parseInlineStyles(newHtml);
+                      setActiveStyles(styles);
+                    }}
                     className="w-full h-full flex-1 p-4 bg-transparent text-slate-100 font-mono text-xs focus:outline-none resize-none"
                     placeholder="<h2>Enter raw HTML code here</h2>"
                   />
@@ -775,13 +1039,13 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 {/* View Mode & Preview Toggles */}
                 <div className="flex items-center gap-0.5 bg-background border border-border/80 p-0.5 rounded-md shadow-sm">
                   <button 
-                    onClick={() => setViewMode("visual")} 
+                    onClick={() => handleViewModeChange("visual")} 
                     className={`px-2 py-1 text-[10px] font-bold rounded-[4px] whitespace-nowrap transition-colors ${viewMode === "visual" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
                   >
                     Visual Editor
                   </button>
                   <button 
-                    onClick={() => setViewMode("html")} 
+                    onClick={() => handleViewModeChange("html")} 
                     className={`px-2 py-1 text-[10px] font-bold rounded-[4px] whitespace-nowrap transition-colors ${viewMode === "html" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
                   >
                     HTML Code
@@ -803,7 +1067,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
               <div className="flex items-center gap-1.5">
                 <button 
-                  onClick={onClose}
+                  onClick={handleRevert}
                   className="px-2 py-1 border border-border/80 bg-background hover:bg-muted text-[10px] font-bold whitespace-nowrap rounded-lg transition-all shadow-sm active:scale-95 text-foreground/80 hover:text-foreground"
                 >
                   Discard Changes
