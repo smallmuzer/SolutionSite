@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import EmojiPicker from 'emoji-picker-react';
-import { 
-  Bold, Italic, Underline, Strikethrough, Superscript, Subscript, 
-  AlignLeft, AlignCenter, AlignRight, AlignJustify, 
-  Type, Sparkles, Copy, Clipboard, Save, X, Maximize2, Minimize2, 
-  Undo2, Redo2, Link, Link2Off, Image, Smile, Table, Code, Grid, 
+import {
+  Bold, Italic, Underline, Strikethrough, Superscript, Subscript,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Type, Sparkles, Copy, Clipboard, Save, X, Maximize2, Minimize2,
+  Undo2, Redo2, Link, Link2Off, Image, Smile, Table, Code, Grid,
   Minus, Palette, CheckSquare, List, ListOrdered, Type as TypeIcon,
   Paperclip, Mic, Folder, Outdent, Indent
 } from "lucide-react";
@@ -65,12 +65,12 @@ const DEFAULT_STYLES: ActiveStyles = {
 function sanitizeHtml(html: string): string {
   // Allow all common tags, style properties, classes, links, lists, images, tables
   const allowedTags = /<\/?(span|div|p|br|hr|h1|h2|h3|h4|h5|h6|strong|em|u|s|sub|sup|blockquote|ul|ol|li|a|img|table|thead|tbody|tr|th|td|pre|code)( [^>]*)?>/gi;
-  
+
   // Clean potentially malicious attribute tags like onerror, onload, javascript:
   let clean = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
   clean = clean.replace(/on\w+="[^"]*"/g, "");
   clean = clean.replace(/javascript:/gi, "");
-  
+
   // Basic balance tags check
   return clean;
 }
@@ -80,7 +80,7 @@ function rgbToHex(rgbStr: string): string {
   if (!rgbStr) return "";
   const str = rgbStr.toLowerCase().replace(/\s/g, '');
   if (str === 'transparent' || str === 'rgba(0,0,0,0)') return "";
-  
+
   const match = str.match(/^rgba?\((\d+),(\d+),(\d+)/i);
   if (match) {
     const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
@@ -99,7 +99,7 @@ export function parseInlineStyles(html: string): { styles: ActiveStyles; innerHt
   // ONLY strip the wrapper if it exactly matches what the editor creates: <div style="...">...</div>
   // This prevents stripping user's custom tags (e.g. <h1>) or classes.
   const match = trimmed.match(/^<div style="([^"]+)">([\s\S]*)<\/div>$/i);
-  
+
   if (!match) {
     return { styles: parsed, innerHtml: trimmed };
   }
@@ -183,7 +183,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       const { styles, innerHtml } = parseInlineStyles(initialValue);
-      
+
       // Merge targetStyles if properties are empty/default
       if (targetStyles) {
         if (!styles.fontFamily) styles.fontFamily = targetStyles.fontFamily?.replace(/['"]/g, "") || "";
@@ -195,19 +195,19 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
         if (!styles.textAlign || styles.textAlign === "start") styles.textAlign = targetStyles.textAlign !== "start" ? targetStyles.textAlign : "";
         if (!styles.textColor) styles.textColor = rgbToHex(targetStyles.textColor || "");
         if (!styles.bgColor) styles.bgColor = rgbToHex(targetStyles.bgColor || "");
-        
+
         // Margins and paddings if empty (sometimes getComputedStyle returns 0px)
         if (!styles.paddingTop) styles.paddingTop = targetStyles.paddingTop || "";
         if (!styles.paddingRight) styles.paddingRight = targetStyles.paddingRight || "";
         if (!styles.paddingBottom) styles.paddingBottom = targetStyles.paddingBottom || "";
         if (!styles.paddingLeft) styles.paddingLeft = targetStyles.paddingLeft || "";
-        
+
         if (!styles.marginTop) styles.marginTop = targetStyles.marginTop || "";
         if (!styles.marginRight) styles.marginRight = targetStyles.marginRight || "";
         if (!styles.marginBottom) styles.marginBottom = targetStyles.marginBottom || "";
         if (!styles.marginLeft) styles.marginLeft = targetStyles.marginLeft || "";
       }
-      
+
       setActiveStyles(styles);
       setEditorHtml(innerHtml);
       undoStackRef.current = [];
@@ -217,7 +217,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
       setViewMode("visual");
       setPreviewMode(false);
       savedSelectionRef.current = null;
-      
+      isInternalEditRef.current = false;
+
       // Auto center position
       const w = window.innerWidth;
       setPosition({ x: Math.max((w - 900) / 2, 50), y: 80 });
@@ -234,7 +235,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
       editorRef.current.innerHTML = editorHtml;
     }
     isInternalEditRef.current = false;
-  }, [editorHtml]);
+  }, [editorHtml, isOpen, viewMode]);
 
   // Wrapper to update editorHtml from user typing (marks as internal so useEffect doesn't re-set DOM)
   const syncEditorState = () => {
@@ -527,8 +528,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
       const cssText = stylesList.join("; ").trim();
       const finalHtml = sanitizeHtml(editorHtml);
-      serialized = cssText 
-        ? `<div style="${cssText}">${finalHtml}</div>` 
+      serialized = cssText
+        ? `<div style="${cssText}">${finalHtml}</div>`
         : finalHtml;
     } else {
       serialized = sanitizeHtml(editorHtml);
@@ -579,7 +580,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
       const cssText = stylesList.join("; ").trim();
       const serialized = cssText ? `<div style="${cssText}">${editorHtml}</div>` : editorHtml;
-      
+
       setEditorHtml(serialized);
       // Removed clearing of activeStyles here to keep sidebar in sync
     } else {
@@ -666,7 +667,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     }
     // Restore selection if it was lost
     restoreSelection();
-    
+
     recordHistory(editorHtml);
     execCmd("insertHTML", emojiData.emoji);
     setShowEmojiPicker(false);
@@ -716,7 +717,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   return (
     <div className="fixed inset-0 z-[9999] flex items-start justify-start pointer-events-none">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-background/30 backdrop-blur-[2px] pointer-events-auto transition-opacity"
         onClick={onClose}
       />
@@ -739,7 +740,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
         className="flex flex-col rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl pointer-events-auto transition-all overflow-hidden"
       >
         {/* Header Drag Handle */}
-        <div 
+        <div
           onMouseDown={handleMouseDown}
           className={`drag-handle flex items-center justify-between border-b border-border/60 bg-muted/40 px-5 py-3.5 select-none ${isFullscreen ? "cursor-default" : "cursor-move"}`}
         >
@@ -751,7 +752,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={handleCopyStyle}
               className="py-1 px-2.5 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center gap-1.5 transition-colors"
               title="Copy all styles of this element"
@@ -759,7 +760,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
               <Copy size={12} />
               <span>Copy Style</span>
             </button>
-            <button 
+            <button
               onClick={handlePasteStyle}
               className="py-1 px-2.5 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center gap-1.5 transition-colors"
               title="Paste copied style settings"
@@ -768,14 +769,14 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
               <span>Paste Style</span>
             </button>
             <div className="w-px h-5 bg-border mx-1" />
-            <button 
-              onClick={() => setIsFullscreen(!isFullscreen)} 
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
               className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
             >
               {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
             </button>
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-lg text-muted-foreground transition-all duration-150"
             >
               <X size={15} />
@@ -851,8 +852,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 <div className="grid grid-cols-2 gap-1.5">
                   <div>
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Line Height</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. 1.5, 24px"
                       value={activeStyles.lineHeight}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, lineHeight: e.target.value }))}
@@ -861,8 +862,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                   </div>
                   <div>
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Letter Space</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. -0.5px"
                       value={activeStyles.letterSpacing}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, letterSpacing: e.target.value }))}
@@ -907,16 +908,16 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                   <div>
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Text Color</label>
                     <div className="flex gap-1 items-center">
-                      <input 
-                        type="color" 
-                        value={activeStyles.textColor || "#000000"} 
+                      <input
+                        type="color"
+                        value={activeStyles.textColor || "#000000"}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
                         className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
                       />
-                      <input 
-                        type="text" 
-                        placeholder="Hex/RGB" 
-                        value={activeStyles.textColor} 
+                      <input
+                        type="text"
+                        placeholder="Hex/RGB"
+                        value={activeStyles.textColor}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
                         className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
                       />
@@ -925,16 +926,16 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                   <div>
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Bg Highlight</label>
                     <div className="flex gap-1 items-center">
-                      <input 
-                        type="color" 
-                        value={activeStyles.bgColor || "#ffffff"} 
+                      <input
+                        type="color"
+                        value={activeStyles.bgColor || "#ffffff"}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
                         className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
                       />
-                      <input 
-                        type="text" 
-                        placeholder="Hex/RGB" 
-                        value={activeStyles.bgColor} 
+                      <input
+                        type="text"
+                        placeholder="Hex/RGB"
+                        value={activeStyles.bgColor}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
                         className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
                       />
@@ -959,11 +960,14 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       const key = `padding${dir}` as keyof ActiveStyles;
                       return (
                         <div key={dir}>
-                          <input 
-                            type="text" 
-                            placeholder="0" 
-                            value={activeStyles[key]} 
-                            onChange={(e) => setActiveStyles(prev => ({ ...prev, [key]: e.target.value }))}
+                          <input
+                            type="text"
+                            placeholder="0"
+                            value={String(activeStyles[key] || "").replace(/px$/, '')}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setActiveStyles(prev => ({ ...prev, [key]: /^\d+$/.test(val) ? `${val}px` : val }));
+                            }}
                             className="w-full px-1 py-1 bg-background border border-border rounded text-center font-mono text-[10px] focus:outline-none"
                             title={`Padding ${dir}`}
                           />
@@ -982,11 +986,14 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       const key = `margin${dir}` as keyof ActiveStyles;
                       return (
                         <div key={dir}>
-                          <input 
-                            type="text" 
-                            placeholder="0" 
-                            value={activeStyles[key]} 
-                            onChange={(e) => setActiveStyles(prev => ({ ...prev, [key]: e.target.value }))}
+                          <input
+                            type="text"
+                            placeholder="0"
+                            value={String(activeStyles[key] || "").replace(/px$/, '')}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setActiveStyles(prev => ({ ...prev, [key]: /^\d+$/.test(val) ? `${val}px` : val }));
+                            }}
                             className="w-full px-1 py-1 bg-background border border-border rounded text-center font-mono text-[10px] focus:outline-none"
                             title={`Margin ${dir}`}
                           />
@@ -1004,7 +1011,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           <div className="flex-1 flex flex-col bg-background/50 overflow-hidden relative min-w-0 p-4 pb-0">
             <div className="flex-1 flex flex-col border border-secondary/40 rounded-xl overflow-hidden bg-card shadow-sm mb-4">
               {/* Rich Text Toolbar (Zoho Mail Style) */}
-              <div 
+              <div
                 className={`flex items-center flex-wrap gap-1.5 px-3 py-2 border-b border-border/60 bg-muted/20 transition-all ${viewMode === "html" ? "opacity-40 pointer-events-none grayscale select-none" : "opacity-100"}`}
                 onMouseDown={(e) => {
                   const target = e.target as HTMLElement;
@@ -1013,22 +1020,22 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                   }
                 }}
               >
-                
+
                 {/* Attachment / Insert Group */}
                 <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5 relative">
-                  <button 
+                  <button
                     onClick={() => {
                       saveSelection();
                       setShowEmojiPicker(!showEmojiPicker);
-                    }} 
-                    className={`p-1 rounded text-foreground transition-colors ${showEmojiPicker ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`} 
+                    }}
+                    className={`p-1 rounded text-foreground transition-colors ${showEmojiPicker ? 'bg-secondary text-secondary-foreground' : 'hover:bg-muted'}`}
                     title="Insert Emoji"
                   >
                     <Smile size={14} />
                   </button>
                   {showEmojiPicker && (
                     <div className="absolute top-full left-0 mt-2 z-50 shadow-2xl rounded-lg overflow-hidden border border-border">
-                      <EmojiPicker 
+                      <EmojiPicker
                         onEmojiClick={onEmojiClick}
                         width={300}
                         height={400}
@@ -1046,12 +1053,6 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                   <button onClick={() => execCmd("strikeThrough")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Strike Through"><Strikethrough size={14} /></button>
                 </div>
 
-                {/* Lists */}
-                <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
-                  <button onMouseDown={(e) => runToolbarCommand(e, "insertUnorderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Bullet List"><List size={14} /></button>
-                  <button onMouseDown={(e) => runToolbarCommand(e, "insertOrderedList")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Numbered List"><ListOrdered size={14} /></button>
-                </div>
-
                 {/* Indent & Others */}
                 <div className="flex items-center gap-0.5 border-r border-border/50 pr-1.5">
                   <button onMouseDown={(e) => runToolbarCommand(e, "outdent")} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Decrease Indent"><Outdent size={14} /></button>
@@ -1063,7 +1064,6 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 {/* Utilities */}
                 <div className="flex items-center gap-0.5">
                   <button onClick={promptLink} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Link"><Link size={14} /></button>
-                  <button onClick={insertTable} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Insert Table"><Table size={14} /></button>
                   <button onClick={clearFormatting} className="p-1 hover:bg-destructive/10 text-destructive rounded transition-colors" title="Clear Formatting"><X size={14} /></button>
                   <button onClick={handleUndo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Undo"><Undo2 size={14} /></button>
                   <button onClick={handleRedo} className="p-1 hover:bg-muted rounded text-foreground transition-colors" title="Redo"><Redo2 size={14} /></button>
@@ -1072,75 +1072,75 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
               {viewMode === "visual" ? (
 
-                  <div className="flex-1 overflow-y-auto relative bg-background/50 p-4">
-                    {previewMode ? (
-                      /* Preview Mode */
-                      <div 
-                        style={{
-                          fontFamily: activeStyles.fontFamily,
-                          fontSize: activeStyles.fontSize,
-                          fontWeight: activeStyles.fontWeight,
-                          lineHeight: activeStyles.lineHeight,
-                          letterSpacing: activeStyles.letterSpacing,
-                          textTransform: activeStyles.textTransform as any,
-                          textAlign: activeStyles.textAlign as any,
-                          color: activeStyles.textColor,
-                          backgroundColor: activeStyles.bgColor,
-                          paddingTop: activeStyles.paddingTop,
-                          paddingRight: activeStyles.paddingRight,
-                          paddingBottom: activeStyles.paddingBottom,
-                          paddingLeft: activeStyles.paddingLeft,
-                          marginTop: activeStyles.marginTop,
-                          marginRight: activeStyles.marginRight,
-                          marginBottom: activeStyles.marginBottom,
-                          marginLeft: activeStyles.marginLeft,
-                        }}
-                        className="prose dark:prose-invert max-w-none break-words"
-                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(editorHtml) }}
-                      />
-                    ) : (
-                      /* Visual contentEditable rich-text area */
-                      <div
-                        ref={editorRef}
-                        className="w-full h-full min-h-[250px] outline-none prose dark:prose-invert max-w-none break-words"
-                        contentEditable
-                        suppressContentEditableWarning
-                        style={{
-                          fontFamily: activeStyles.fontFamily,
-                          fontSize: activeStyles.fontSize,
-                          fontWeight: activeStyles.fontWeight,
-                          lineHeight: activeStyles.lineHeight,
-                          letterSpacing: activeStyles.letterSpacing,
-                          textTransform: activeStyles.textTransform as any,
-                          textAlign: activeStyles.textAlign as any,
-                          color: activeStyles.textColor,
-                          backgroundColor: activeStyles.bgColor || "transparent",
-                          paddingTop: activeStyles.paddingTop,
-                          paddingRight: activeStyles.paddingRight,
-                          paddingBottom: activeStyles.paddingBottom,
-                          paddingLeft: activeStyles.paddingLeft,
-                          marginTop: activeStyles.marginTop,
-                          marginRight: activeStyles.marginRight,
-                          marginBottom: activeStyles.marginBottom,
-                          marginLeft: activeStyles.marginLeft,
-                        }}
-                        onInput={() => {
-                          syncEditorState();
-                          saveSelection();
-                        }}
-                        onMouseUp={saveSelection}
-                        onKeyUp={saveSelection}
-                        onFocus={saveSelection}
-                      />
-                    )}
-                    
-                    {/* Context/Mode status badge */}
-                    <div className="absolute bottom-2 right-2 flex gap-1.5 items-center z-30 pointer-events-none">
-                      <span className="text-[8px] font-bold bg-muted/80 backdrop-blur-sm px-2 py-0.5 rounded border border-border/50 uppercase tracking-widest text-muted-foreground shadow-sm">
-                        WYSIWYG MODE
-                      </span>
-                    </div>
+                <div className="flex-1 overflow-y-auto relative bg-background/50 p-4">
+                  {previewMode ? (
+                    /* Preview Mode */
+                    <div
+                      style={{
+                        fontFamily: activeStyles.fontFamily,
+                        fontSize: activeStyles.fontSize,
+                        fontWeight: activeStyles.fontWeight,
+                        lineHeight: activeStyles.lineHeight,
+                        letterSpacing: activeStyles.letterSpacing,
+                        textTransform: activeStyles.textTransform as any,
+                        textAlign: activeStyles.textAlign as any,
+                        color: activeStyles.textColor,
+                        backgroundColor: activeStyles.bgColor,
+                        paddingTop: activeStyles.paddingTop,
+                        paddingRight: activeStyles.paddingRight,
+                        paddingBottom: activeStyles.paddingBottom,
+                        paddingLeft: activeStyles.paddingLeft,
+                        marginTop: activeStyles.marginTop,
+                        marginRight: activeStyles.marginRight,
+                        marginBottom: activeStyles.marginBottom,
+                        marginLeft: activeStyles.marginLeft,
+                      }}
+                      className="prose dark:prose-invert max-w-none break-words"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(editorHtml) }}
+                    />
+                  ) : (
+                    /* Visual contentEditable rich-text area */
+                    <div
+                      ref={editorRef}
+                      className="w-full h-full min-h-[250px] outline-none prose dark:prose-invert max-w-none break-words"
+                      contentEditable
+                      suppressContentEditableWarning
+                      style={{
+                        fontFamily: activeStyles.fontFamily,
+                        fontSize: activeStyles.fontSize,
+                        fontWeight: activeStyles.fontWeight,
+                        lineHeight: activeStyles.lineHeight,
+                        letterSpacing: activeStyles.letterSpacing,
+                        textTransform: activeStyles.textTransform as any,
+                        textAlign: activeStyles.textAlign as any,
+                        color: activeStyles.textColor,
+                        backgroundColor: activeStyles.bgColor || "transparent",
+                        paddingTop: activeStyles.paddingTop,
+                        paddingRight: activeStyles.paddingRight,
+                        paddingBottom: activeStyles.paddingBottom,
+                        paddingLeft: activeStyles.paddingLeft,
+                        marginTop: activeStyles.marginTop,
+                        marginRight: activeStyles.marginRight,
+                        marginBottom: activeStyles.marginBottom,
+                        marginLeft: activeStyles.marginLeft,
+                      }}
+                      onInput={() => {
+                        syncEditorState();
+                        saveSelection();
+                      }}
+                      onMouseUp={saveSelection}
+                      onKeyUp={saveSelection}
+                      onFocus={saveSelection}
+                    />
+                  )}
+
+                  {/* Context/Mode status badge */}
+                  <div className="absolute bottom-2 right-2 flex gap-1.5 items-center z-30 pointer-events-none">
+                    <span className="text-[8px] font-bold bg-muted/80 backdrop-blur-sm px-2 py-0.5 rounded border border-border/50 uppercase tracking-widest text-muted-foreground shadow-sm">
+                      WYSIWYG MODE
+                    </span>
                   </div>
+                </div>
               ) : (
                 /* Raw HTML Code View Area */
                 <div className="flex-1 flex flex-col h-full relative bg-slate-950">
@@ -1170,41 +1170,30 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
               <div className="flex items-center gap-2">
                 {/* View Mode & Preview Toggles */}
                 <div className="flex items-center gap-0.5 bg-background border border-border/80 p-0.5 rounded-md shadow-sm">
-                  <button 
-                    onClick={() => handleViewModeChange("visual")} 
+                  <button
+                    onClick={() => handleViewModeChange("visual")}
                     className={`px-2 py-1 text-[10px] font-bold rounded-[4px] whitespace-nowrap transition-colors ${viewMode === "visual" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
                   >
                     Visual Editor
                   </button>
-                  <button 
-                    onClick={() => handleViewModeChange("html")} 
+                  <button
+                    onClick={() => handleViewModeChange("html")}
                     className={`px-2 py-1 text-[10px] font-bold rounded-[4px] whitespace-nowrap transition-colors ${viewMode === "html" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
                   >
                     HTML Code
                   </button>
                 </div>
 
-                {viewMode === "visual" && (
-                  <label className="flex items-center gap-1 cursor-pointer select-none bg-background/50 px-1.5 py-1 rounded-md border border-transparent hover:border-border/50 transition-colors">
-                    <input 
-                      type="checkbox" 
-                      checked={previewMode} 
-                      onChange={(e) => setPreviewMode(e.target.checked)}
-                      className="w-3 h-3 rounded border-border focus:ring-0 cursor-pointer text-secondary"
-                    />
-                    <span className="text-[10px] font-bold whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors">Style Preview</span>
-                  </label>
-                )}
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button 
+                <button
                   onClick={handleRevert}
                   className="px-2 py-1 border border-border/80 bg-background hover:bg-muted text-[10px] font-bold whitespace-nowrap rounded-lg transition-all shadow-sm active:scale-95 text-foreground/80 hover:text-foreground"
                 >
                   Discard Changes
                 </button>
-                <button 
+                <button
                   onClick={handleSave}
                   className="px-2.5 py-1 bg-secondary text-secondary-foreground hover:scale-[1.02] active:scale-95 text-[10px] font-bold whitespace-nowrap rounded-lg shadow-sm border border-secondary/20 flex items-center gap-1 transition-all"
                 >

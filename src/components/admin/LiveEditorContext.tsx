@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { TypographyEditorModal, parseInlineStyles } from "./TypographyEditorModal";
 
@@ -166,130 +166,152 @@ export const EditableText: React.FC<{
   toolbarClassName = "top-0 right-0",
   toolbarVisibilityClassName = "opacity-0 group-hover/edit:opacity-100"
 }) => {
-  const editor = useLiveEditor();
-  const [isEditing, setIsEditing] = useState(false);
-  const [localValue, setLocalValue] = useState(value);
+    const editor = useLiveEditor();
+    const [isEditing, setIsEditing] = useState(false);
 
-  const draftKey = id ? `${section}:${id}:${field}` : `${section}:${field}`;
-  const displayValue = editor?.pendingChanges?.[draftKey] ?? value;
+    const draftKey = id ? `${section}:${id}:${field}` : `${section}:${field}`;
+    const displayValue = editor?.pendingChanges?.[draftKey] ?? value;
 
-  const colorDraftKey = id ? `${section}:${id}:${colorField}` : `${section}:${colorField}`;
-  const pendingColor = colorField ? editor?.pendingChanges?.[colorDraftKey] : undefined;
+    const [localValue, setLocalValue] = useState(displayValue);
 
-  if (!editor?.isEditMode) {
-    // Extract inline styles from the saved <div style="..."> wrapper and apply them
-    // directly to the Tag element to prevent layout issues (e.g., nested <div> inside <span>)
-    const { styles: parsedStyles, innerHtml } = parseInlineStyles(displayValue);
-    const hasStyles = Object.values(parsedStyles).some(v => !!v);
-    
-    const inlineStyle: React.CSSProperties = {};
-    if (hasStyles) {
-      if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
-      if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
-      if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
-      if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
-      if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
-      if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
-      if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
-      if (parsedStyles.textColor) inlineStyle.color = parsedStyles.textColor;
-      if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
-      if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
-      if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
-      if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
-      if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
-      if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
-      if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
-      if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
-      if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
+    useEffect(() => {
+      if (!isEditing) {
+        setLocalValue(displayValue);
+      }
+    }, [displayValue, isEditing]);
+
+    const colorDraftKey = id ? `${section}:${id}:${colorField}` : `${section}:${colorField}`;
+    const pendingColor = colorField ? editor?.pendingChanges?.[colorDraftKey] : undefined;
+
+    if (!editor?.isEditMode) {
+      // Extract inline styles from the saved <div style="..."> wrapper and apply them
+      // directly to the Tag element to prevent layout issues (e.g., nested <div> inside <span>)
+      const { styles: parsedStyles, innerHtml } = parseInlineStyles(displayValue);
+      const hasStyles = Object.values(parsedStyles).some(v => !!v);
+
+      const inlineStyle: React.CSSProperties = {};
+      if (hasStyles) {
+        if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
+        if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
+        if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
+        if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
+        if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
+        if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
+        if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
+        if (parsedStyles.textColor) inlineStyle.color = parsedStyles.textColor;
+        if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
+        if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
+        if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
+        if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
+        if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
+        if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
+        if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
+        if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
+        if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
+      }
+      if (pendingColor && !parsedStyles.textColor) inlineStyle.color = pendingColor;
+
+      return <Tag className={className} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
     }
-    if (pendingColor && !parsedStyles.textColor) inlineStyle.color = pendingColor;
-    
-    return <Tag className={className} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
-  }
 
-  const handleBlur = () => {
-    setIsEditing(false);
-    if (localValue !== value) {
-      editor.onUpdate(section, field, localValue, id);
-    }
-  };
+    const handleBlur = () => {
+      setIsEditing(false);
+      if (localValue !== value) {
+        editor.onUpdate(section, field, localValue, id);
+      }
+    };
 
-  return (
-    <span className="relative group/edit">
-      <Tag
-        className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 px-1 rounded animate-pulse' : ''}`}
-        style={isEditing ? {
-          background: 'rgba(var(--background), 0.1)',
-          WebkitTextFillColor: 'initial',
-          WebkitBackgroundClip: 'border-box'
-        } : (pendingColor ? { color: pendingColor } : undefined)}
-        contentEditable
-        spellCheck={false}
-        suppressContentEditableWarning
-        onFocus={() => setIsEditing(true)}
-        onBlur={handleBlur}
-        onInput={(e) => setLocalValue(e.currentTarget.innerHTML || "")}
-        dangerouslySetInnerHTML={{ __html: displayValue }}
-      />
+    return (
+      <span className="relative group/edit">
+        <Tag
+          className={`${className} hover:outline hover:outline-1 hover:outline-secondary/30 cursor-text transition-all ${isEditing ? 'outline outline-2 outline-secondary ring-4 ring-secondary/10 px-1 rounded animate-pulse' : ''}`}
+          style={isEditing ? {
+            background: 'rgba(var(--background), 0.1)',
+            WebkitTextFillColor: 'initial',
+            WebkitBackgroundClip: 'border-box'
+          } : (pendingColor ? { color: pendingColor } : undefined)}
+          contentEditable
+          spellCheck={false}
+          suppressContentEditableWarning
+          onFocus={() => setIsEditing(true)}
+          onBlur={handleBlur}
+          onInput={(e) => setLocalValue(e.currentTarget.innerHTML || "")}
+          dangerouslySetInnerHTML={{ __html: displayValue }}
+        />
 
-      {!isEditing && (
-        <span 
-          className={`absolute ${toolbarClassName} flex items-center ${toolbarVisibilityClassName} transition-all bg-secondary text-secondary-foreground shadow-2xl rounded-[4px] z-[150] pointer-events-auto`}
-          style={{ WebkitBackgroundClip: 'initial', WebkitTextFillColor: 'initial', backgroundClip: 'initial', padding: '2px' }}
-        >
+        {!isEditing && (
           <span
-            role="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              const target = e.currentTarget.closest('.group\\/edit')?.firstElementChild as HTMLElement;
-              let targetStyles: Record<string, string> | undefined = undefined;
-              if (target) {
-                const comp = window.getComputedStyle(target);
-                targetStyles = {
-                  fontFamily: comp.fontFamily,
-                  fontSize: comp.fontSize,
-                  fontWeight: comp.fontWeight,
-                  lineHeight: comp.lineHeight,
-                  letterSpacing: comp.letterSpacing,
-                  textTransform: comp.textTransform,
-                  textAlign: comp.textAlign,
-                  textColor: comp.color,
-                  bgColor: comp.backgroundColor,
-                  paddingTop: comp.paddingTop,
-                  paddingRight: comp.paddingRight,
-                  paddingBottom: comp.paddingBottom,
-                  paddingLeft: comp.paddingLeft,
-                  marginTop: comp.marginTop,
-                  marginRight: comp.marginRight,
-                  marginBottom: comp.marginBottom,
-                  marginLeft: comp.marginLeft
-                };
-              }
-              editor.openTypographyEditor(section, field, displayValue, id, targetStyles, colorField);
-            }}
-            className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer [@media(hover:none)]:hidden"
-            title="Edit Text Style"
+            className={`absolute ${toolbarClassName} flex items-center ${toolbarVisibilityClassName} transition-all bg-secondary text-secondary-foreground shadow-2xl rounded-[4px] z-[150] pointer-events-auto`}
+            style={{ WebkitBackgroundClip: 'initial', WebkitTextFillColor: 'initial', backgroundClip: 'initial', padding: '2px' }}
           >
-            <span className="font-serif font-extrabold text-[12px] leading-none text-white pr-[1px]">A</span>
-          </span>
-          {/* Color picker icon removed: Typography editor (A icon) handles text color now */}
-          {linkField && (
             <span
               role="button"
-              onClick={(e) => { e.stopPropagation(); e.preventDefault(); editor.onPickLink(section, linkField, id); }}
-              className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
-              title="Change Link Target"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const target = e.currentTarget.closest('.group\\/edit')?.firstElementChild as HTMLElement;
+                let targetStyles: Record<string, string> | undefined = undefined;
+                if (target) {
+                  const comp = window.getComputedStyle(target);
+
+                  let realBg = comp.backgroundColor;
+                  let currentElem: HTMLElement | null = target;
+                  while (currentElem) {
+                    const bg = window.getComputedStyle(currentElem).backgroundColor;
+                    const rgbaMatch = bg.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([0-9.]+)\)/);
+                    const alpha = rgbaMatch ? parseFloat(rgbaMatch[1]) : 1;
+                    
+                    if (bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent' && alpha > 0.2) {
+                      realBg = bg;
+                      break;
+                    }
+                    currentElem = currentElem.parentElement;
+                  }
+
+                  targetStyles = {
+                    fontFamily: comp.fontFamily,
+                    fontSize: comp.fontSize,
+                    fontWeight: comp.fontWeight,
+                    lineHeight: comp.lineHeight,
+                    letterSpacing: comp.letterSpacing,
+                    textTransform: comp.textTransform,
+                    textAlign: comp.textAlign,
+                    textColor: comp.color,
+                    bgColor: realBg,
+                    paddingTop: comp.paddingTop,
+                    paddingRight: comp.paddingRight,
+                    paddingBottom: comp.paddingBottom,
+                    paddingLeft: comp.paddingLeft,
+                    marginTop: comp.marginTop,
+                    marginRight: comp.marginRight,
+                    marginBottom: comp.marginBottom,
+                    marginLeft: comp.marginLeft
+                  };
+                }
+                editor.openTypographyEditor(section, field, displayValue, id, targetStyles, colorField);
+              }}
+              className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer [@media(hover:none)]:hidden"
+              title="Edit Text Style"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+              <span className="font-serif font-extrabold text-[12px] leading-none text-white pr-[1px]">A</span>
             </span>
-          )}
-          {extraControls}
-        </span>
-      )}
-    </span>
-  );
-};
+            {/* Color picker icon removed: Typography editor (A icon) handles text color now */}
+            {linkField && (
+              <span
+                role="button"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); editor.onPickLink(section, linkField, id); }}
+                className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+                title="Change Link Target"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+              </span>
+            )}
+            {extraControls}
+          </span>
+        )}
+      </span>
+    );
+  };
 
 export const useLiveEditorNavigation = () => {
   const editor = useLiveEditor();
