@@ -358,11 +358,11 @@ const UICustomizer = () => {
             opacity: resetting ? 0.6 : 1 }}>
           <RotateCcw size={10} style={{ animation: resetting ? "spin 1s linear infinite" : "none" }} /> {resetting ? "..." : "Reset"}
         </button>
-        <button onClick={save}
+        <button onClick={() => { setPrefs(draft); setCookie(draft); setOpen(false); }}
           style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
             padding: "6px 0", borderRadius: 6, fontSize: 10, fontWeight: 700,
-            background: accent, border: "none", color: "#fff", cursor: "pointer" }}>
-          <Save size={10} color="#fff" /> Save
+            background: border, border: "none", color: text, cursor: "pointer" }}>
+          <X size={10} color={text} /> Close
         </button>
       </div>
     </div>
