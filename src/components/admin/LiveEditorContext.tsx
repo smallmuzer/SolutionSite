@@ -147,6 +147,7 @@ export const EditableText: React.FC<{
   className?: string;
   tag?: keyof JSX.IntrinsicElements;
   colorField?: string;
+  colorValue?: string;
   linkField?: string;
   hideColorPicker?: boolean;
   extraControls?: React.ReactNode;
@@ -160,6 +161,7 @@ export const EditableText: React.FC<{
   className = "",
   tag: Tag = "span",
   colorField,
+  colorValue,
   linkField,
   hideColorPicker = false,
   extraControls,
@@ -182,6 +184,7 @@ export const EditableText: React.FC<{
 
     const colorDraftKey = id ? `${section}:${id}:${colorField}` : `${section}:${colorField}`;
     const pendingColor = colorField ? editor?.pendingChanges?.[colorDraftKey] : undefined;
+    const finalColor = pendingColor ?? colorValue;
 
     if (!editor?.isEditMode) {
       // Extract inline styles from the saved <div style="..."> wrapper and apply them
@@ -209,7 +212,7 @@ export const EditableText: React.FC<{
         if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
         if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
       }
-      if (pendingColor && !parsedStyles.textColor) inlineStyle.color = pendingColor;
+      if (finalColor && !parsedStyles.textColor) inlineStyle.color = finalColor;
 
       return <Tag className={className} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
     }
@@ -229,7 +232,7 @@ export const EditableText: React.FC<{
             background: 'rgba(var(--background), 0.1)',
             WebkitTextFillColor: 'initial',
             WebkitBackgroundClip: 'border-box'
-          } : (pendingColor ? { color: pendingColor } : undefined)}
+          } : (finalColor ? { color: finalColor } : undefined)}
           contentEditable
           spellCheck={false}
           suppressContentEditableWarning
@@ -268,6 +271,39 @@ export const EditableText: React.FC<{
                     currentElem = currentElem.parentElement;
                   }
 
+                  // Detect if element uses gradient-text / bg-clip-text
+                  // In that case, getComputedStyle().color returns transparent which is useless
+                  let detectedColor = comp.color;
+                  const textFillColor = (comp as any).webkitTextFillColor || comp.getPropertyValue('-webkit-text-fill-color');
+                  const isGradientText = textFillColor === 'transparent' ||
+                    target.closest('.gradient-text') !== null ||
+                    comp.getPropertyValue('background-clip') === 'text' ||
+                    comp.getPropertyValue('-webkit-background-clip') === 'text';
+                  
+                  if (isGradientText && colorValue) {
+                    // Use the database color value instead of the transparent computed color
+                    detectedColor = colorValue;
+                  } else if (isGradientText) {
+                    // No colorValue available — try to extract from the gradient background
+                    // Check the target first, then the closest .gradient-text ancestor
+                    let bgImg = comp.backgroundImage;
+                    const gradientParent = target.closest('.gradient-text') as HTMLElement | null;
+                    if (gradientParent && (!bgImg || bgImg === 'none')) {
+                      bgImg = window.getComputedStyle(gradientParent).backgroundImage;
+                    }
+                    const gradientColorMatch = bgImg?.match(/rgb[a]?\([^)]+\)/);
+                    if (gradientColorMatch) {
+                      detectedColor = gradientColorMatch[0];
+                    } else {
+                      // Last resort: use the --secondary CSS variable color
+                      const rootStyle = getComputedStyle(document.documentElement);
+                      const secondaryHsl = rootStyle.getPropertyValue('--secondary').trim();
+                      if (secondaryHsl) {
+                        detectedColor = `hsl(${secondaryHsl})`;
+                      }
+                    }
+                  }
+
                   targetStyles = {
                     fontFamily: comp.fontFamily,
                     fontSize: comp.fontSize,
@@ -276,7 +312,7 @@ export const EditableText: React.FC<{
                     letterSpacing: comp.letterSpacing,
                     textTransform: comp.textTransform,
                     textAlign: comp.textAlign,
-                    textColor: comp.color,
+                    textColor: detectedColor,
                     bgColor: realBg,
                     paddingTop: comp.paddingTop,
                     paddingRight: comp.paddingRight,

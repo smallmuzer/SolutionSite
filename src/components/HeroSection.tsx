@@ -36,11 +36,11 @@ const StatItem = ({ count, label, color, suffix, isVisible, inView, id }: {
 
   return (
     <div className="flex flex-col transition-transform hover:scale-110 duration-300 relative group/item px-2">
-      <EditorToolbar section="hero_stats" id={id} isVisible={isVisible} colorField="count_color" className="-top-8 right-1/2 translate-x-1/2" />
+      <EditorToolbar section="hero_stats" id={id} isVisible={isVisible} colorField="color" className="-top-8 right-1/2 translate-x-1/2" />
       <div className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl">
         <span className={isGradient ? "gradient-text" : ""}>
-          <EditableText section="hero_stats" field="count" id={id} value={count} colorField="count_color" hideColorPicker />
-          {suffix && <EditableText section="hero_stats" field="suffix" id={id} value={suffix} colorField="count_color" hideColorPicker />}
+          <EditableText section="hero_stats" field="count" id={id} value={count} colorField="color" colorValue={isGradient ? undefined : color} hideColorPicker />
+          {suffix && <EditableText section="hero_stats" field="suffix" id={id} value={suffix} colorField="color" colorValue={isGradient ? undefined : color} hideColorPicker />}
         </span>
       </div>
       <div className="text-white/50 text-[0.625rem] sm:text-xs tracking-wider uppercase font-bold mt-0.5 whitespace-nowrap">

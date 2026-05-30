@@ -132,44 +132,44 @@ const SEED_CLIENTS = [
 
 const SEED_SERVICES = [
   { id: "s-1", title: "Software Development", description: "Custom enterprise software built to your exact specifications — scalable, secure, and maintainable.", image_url: "/assets/uploads/softwaredevelopemnt_1775027454431.jpg", icon: "Monitor", is_visible: true, sort_order: 1 },
-  { id: "s-2", title: "Web Development",       description: "Modern, responsive websites and web applications using the latest frameworks and best practices.",     image_url: "/assets/uploads/CloudInfra_1775027818619.png",           icon: "Globe",    is_visible: true, sort_order: 2 },
-  { id: "s-3", title: "Mobile Development",    description: "Native and cross-platform mobile apps for iOS and Android that deliver exceptional user experiences.",  image_url: "/assets/uploads/white_dev_1775409804566.png",             icon: "Smartphone", is_visible: true, sort_order: 3 },
-  { id: "s-4", title: "ERP Solutions",         description: "End-to-end ERP implementation and integration — finance, inventory, and operations unified.",          image_url: "/assets/uploads/bsol_1774778245083.jpg",                  icon: "Database", is_visible: true, sort_order: 4 },
-  { id: "s-5", title: "HR & Payroll",          description: "Streamline hiring, attendance, payroll, and performance management with our HR platform.",             image_url: "/assets/uploads/HR_PayRoll_1775027318902.jpg",            icon: "Users",    is_visible: true, sort_order: 5 },
-  { id: "s-6", title: "IT Consulting",         description: "Strategic technology consulting to align your IT infrastructure with your business goals.",            image_url: "/assets/uploads/white_designer_1775410426535.png",        icon: "Briefcase", is_visible: true, sort_order: 6 },
+  { id: "s-2", title: "Web Development", description: "Modern, responsive websites and web applications using the latest frameworks and best practices.", image_url: "/assets/uploads/CloudInfra_1775027818619.png", icon: "Globe", is_visible: true, sort_order: 2 },
+  { id: "s-3", title: "Mobile Development", description: "Native and cross-platform mobile apps for iOS and Android that deliver exceptional user experiences.", image_url: "/assets/uploads/white_dev_1775409804566.png", icon: "Smartphone", is_visible: true, sort_order: 3 },
+  { id: "s-4", title: "ERP Solutions", description: "End-to-end ERP implementation and integration — finance, inventory, and operations unified.", image_url: "/assets/uploads/bsol_1774778245083.jpg", icon: "Database", is_visible: true, sort_order: 4 },
+  { id: "s-5", title: "HR & Payroll", description: "Streamline hiring, attendance, payroll, and performance management with our HR platform.", image_url: "/assets/uploads/HR_PayRoll_1775027318902.jpg", icon: "Users", is_visible: true, sort_order: 5 },
+  { id: "s-6", title: "IT Consulting", description: "Strategic technology consulting to align your IT infrastructure with your business goals.", image_url: "/assets/uploads/white_designer_1775410426535.png", icon: "Briefcase", is_visible: true, sort_order: 6 },
 ];
 
 const SEED_PRODUCTS = [
-  { id: "p-1", name: "BSOL",       tagline: "Integrated ERP & CRM Ecosystem",  description: "BSOL seamlessly unifies your financial operations, inventory control, and customer relationships.", image_url: "/assets/uploads/bsol_1774778245083.jpg",       contact_url: "#contact", is_popular: false, is_visible: true, sort_order: 1 },
-  { id: "p-2", name: "HR-Metrics", tagline: "Modern Human Capital Hub",         description: "Revolutionize your workforce management with agile task boards and HR processes.",                   image_url: "/assets/uploads/hr-metrics_1774778245110.jpg", contact_url: "#contact", is_popular: true,  is_visible: true, sort_order: 2 },
+  { id: "p-1", name: "BSOL", tagline: "Integrated ERP & CRM Ecosystem", description: "BSOL seamlessly unifies your financial operations, inventory control, and customer relationships.", image_url: "/assets/uploads/bsol_1774778245083.jpg", contact_url: "#contact", is_popular: false, is_visible: true, sort_order: 1 },
+  { id: "p-2", name: "HR-Metrics", tagline: "Modern Human Capital Hub", description: "Revolutionize your workforce management with agile task boards and HR processes.", image_url: "/assets/uploads/hr-metrics_1774778245110.jpg", contact_url: "#contact", is_popular: true, is_visible: true, sort_order: 2 },
 ];
 
 const SEED_TECHNOLOGIES = [
-  { id: "t-1",  name: "React",       description: "Modern UI library for building interactive interfaces.", image_url: "/assets/uploads/React_1775583324344.png",        icon: null, category: "Frontend", name_color: "#61DAFB", category_color: "#61DAFB", is_visible: true, sort_order: 1  },
-  { id: "t-2",  name: "Angular",     description: "Enterprise-grade frontend framework.",                  image_url: "/assets/uploads/angular_1775502503321.jpg",       icon: null, category: "Frontend", name_color: "#DD0031", category_color: "#DD0031", is_visible: true, sort_order: 2  },
-  { id: "t-3",  name: ".NET",        description: "Microsoft's cross-platform development framework.",     image_url: "/assets/uploads/dotnet_1775502315420.png",        icon: null, category: "Backend",  name_color: "#512BD4", category_color: "#512BD4", is_visible: true, sort_order: 3  },
-  { id: "t-4",  name: "Node.js",     description: "JavaScript runtime for server-side development.",      image_url: "/assets/uploads/nodejs_1775502250190.png",        icon: null, category: "Backend",  name_color: "#339933", category_color: "#339933", is_visible: true, sort_order: 4  },
-  { id: "t-5",  name: "Flutter",     description: "Google's UI toolkit for cross-platform apps.",         image_url: "/assets/uploads/flutter_1775583342881.png",       icon: null, category: "Mobile",   name_color: "#02569B", category_color: "#02569B", is_visible: true, sort_order: 5  },
-  { id: "t-6",  name: "SQL Server",  description: "Microsoft's enterprise relational database.",          image_url: "/assets/uploads/sqlserveer_1775502198881.png",    icon: null, category: "Database", name_color: "#CC2927", category_color: "#CC2927", is_visible: true, sort_order: 6  },
-  { id: "t-7",  name: "AWS",         description: "Amazon Web Services cloud platform.",                  image_url: "/assets/uploads/aws_1775582917804.png",           icon: null, category: "Cloud",    name_color: "#FF9900", category_color: "#FF9900", is_visible: true, sort_order: 7  },
-  { id: "t-8",  name: "Docker",      description: "Container platform for consistent deployments.",       image_url: "/assets/uploads/docker_1775502515684.png",        icon: null, category: "DevOps",   name_color: "#2496ED", category_color: "#2496ED", is_visible: true, sort_order: 8  },
-  { id: "t-9",  name: "Python",      description: "Versatile language for AI, data, and automation.",     image_url: "/assets/uploads/python_1775502424673.png",        icon: null, category: "Language", name_color: "#3776AB", category_color: "#3776AB", is_visible: true, sort_order: 9  },
-  { id: "t-10", name: "Firebase",    description: "Google's app development platform.",                   image_url: "/assets/uploads/firebase_1775502230531.png",      icon: null, category: "Cloud",    name_color: "#FFCA28", category_color: "#FFCA28", is_visible: true, sort_order: 10 },
-  { id: "t-11", name: "Git",         description: "Distributed version control system.",                  image_url: "/assets/uploads/git_1775583311815.png",           icon: null, category: "DevOps",   name_color: "#F05032", category_color: "#F05032", is_visible: true, sort_order: 11 },
-  { id: "t-12", name: "Cordova",     description: "Build mobile apps with HTML, CSS & JS.",               image_url: "/assets/uploads/cordova_1775502486041.png",       icon: null, category: "Mobile",   name_color: "#E8E8E8", category_color: "#E8E8E8", is_visible: true, sort_order: 12 },
+  { id: "t-1", name: "React", description: "Modern UI library for building interactive interfaces.", image_url: "/assets/uploads/React_1775583324344.png", icon: null, category: "Frontend", name_color: "#61DAFB", category_color: "#61DAFB", is_visible: true, sort_order: 1 },
+  { id: "t-2", name: "Angular", description: "Enterprise-grade frontend framework.", image_url: "/assets/uploads/angular_1775502503321.jpg", icon: null, category: "Frontend", name_color: "#DD0031", category_color: "#DD0031", is_visible: true, sort_order: 2 },
+  { id: "t-3", name: ".NET", description: "Microsoft's cross-platform development framework.", image_url: "/assets/uploads/dotnet_1775502315420.png", icon: null, category: "Backend", name_color: "#512BD4", category_color: "#512BD4", is_visible: true, sort_order: 3 },
+  { id: "t-4", name: "Node.js", description: "JavaScript runtime for server-side development.", image_url: "/assets/uploads/nodejs_1775502250190.png", icon: null, category: "Backend", name_color: "#339933", category_color: "#339933", is_visible: true, sort_order: 4 },
+  { id: "t-5", name: "Flutter", description: "Google's UI toolkit for cross-platform apps.", image_url: "/assets/uploads/flutter_1775583342881.png", icon: null, category: "Mobile", name_color: "#02569B", category_color: "#02569B", is_visible: true, sort_order: 5 },
+  { id: "t-6", name: "SQL Server", description: "Microsoft's enterprise relational database.", image_url: "/assets/uploads/sqlserveer_1775502198881.png", icon: null, category: "Database", name_color: "#CC2927", category_color: "#CC2927", is_visible: true, sort_order: 6 },
+  { id: "t-7", name: "AWS", description: "Amazon Web Services cloud platform.", image_url: "/assets/uploads/aws_1775582917804.png", icon: null, category: "Cloud", name_color: "#FF9900", category_color: "#FF9900", is_visible: true, sort_order: 7 },
+  { id: "t-8", name: "Docker", description: "Container platform for consistent deployments.", image_url: "/assets/uploads/docker_1775502515684.png", icon: null, category: "DevOps", name_color: "#2496ED", category_color: "#2496ED", is_visible: true, sort_order: 8 },
+  { id: "t-9", name: "Python", description: "Versatile language for AI, data, and automation.", image_url: "/assets/uploads/python_1775502424673.png", icon: null, category: "Language", name_color: "#3776AB", category_color: "#3776AB", is_visible: true, sort_order: 9 },
+  { id: "t-10", name: "Firebase", description: "Google's app development platform.", image_url: "/assets/uploads/firebase_1775502230531.png", icon: null, category: "Cloud", name_color: "#FFCA28", category_color: "#FFCA28", is_visible: true, sort_order: 10 },
+  { id: "t-11", name: "Git", description: "Distributed version control system.", image_url: "/assets/uploads/git_1775583311815.png", icon: null, category: "DevOps", name_color: "#F05032", category_color: "#F05032", is_visible: true, sort_order: 11 },
+  { id: "t-12", name: "Cordova", description: "Build mobile apps with HTML, CSS & JS.", image_url: "/assets/uploads/cordova_1775502486041.png", icon: null, category: "Mobile", name_color: "#E8E8E8", category_color: "#E8E8E8", is_visible: true, sort_order: 12 },
 ];
 
 const SEED_HERO_STATS = [
-  { id: "hs-1", count: "300", suffix: "+", label: "Projects Delivered",  color: "gradient",  is_visible: true, sort_order: 1 },
-  { id: "hs-2", count: "15",  suffix: "+", label: "Years Experience",    color: "#60a5fa",   is_visible: true, sort_order: 2 },
-  { id: "hs-3", count: "50",  suffix: "+", label: "Expert Team",         color: "#a78bfa",   is_visible: true, sort_order: 3 },
-  { id: "hs-4", count: "98",  suffix: "%", label: "Client Satisfaction", color: "#34d399",   is_visible: true, sort_order: 4 },
+  { id: "hs-1", count: "300", suffix: "+", label: "Projects Delivered", color: "gradient", is_visible: true, sort_order: 1 },
+  { id: "hs-2", count: "15", suffix: "+", label: "Years Experience", color: "#60a5fa", is_visible: true, sort_order: 2 },
+  { id: "hs-3", count: "50", suffix: "+", label: "Expert Team", color: "#a78bfa", is_visible: true, sort_order: 3 },
+  { id: "hs-4", count: "98", suffix: "%", label: "Client Satisfaction", color: "#34d399", is_visible: true, sort_order: 4 },
 ];
 
 const SEED_TESTIMONIALS = [
-  { id: "tm-1", name: "Ahmed Rasheed",  company: "Maldives Tourism",  message: "Systems Solutions transformed our digital infrastructure. Their ERP solution streamlined our operations significantly.", avatar_url: "/assets/uploads/Two_business_profess_1775325092342.png", rating: 5, is_visible: true },
-  { id: "tm-2", name: "Fatima Ibrahim", company: "Island Beverages",  message: "The HR-Metrics platform has revolutionized how we manage our workforce. Exceptional support team.", avatar_url: "/assets/uploads/UI_UX_Developer_futu_1775325119749.png", rating: 5, is_visible: true },
-  { id: "tm-3", name: "Dorji Tshering", company: "RCSC Bhutan",       message: "Outstanding web development services. They delivered beyond our expectations on time and within budget.", avatar_url: "/assets/uploads/Futuristic_neon_high_1775325102963.png", rating: 5, is_visible: true },
+  { id: "tm-1", name: "Ahmed Rasheed", company: "Maldives Tourism", message: "Systems Solutions transformed our digital infrastructure. Their ERP solution streamlined our operations significantly.", avatar_url: "/assets/uploads/Two_business_profess_1775325092342.png", rating: 5, is_visible: true },
+  { id: "tm-2", name: "Fatima Ibrahim", company: "Island Beverages", message: "The HR-Metrics platform has revolutionized how we manage our workforce. Exceptional support team.", avatar_url: "/assets/uploads/UI_UX_Developer_futu_1775325119749.png", rating: 5, is_visible: true },
+  { id: "tm-3", name: "Dorji Tshering", company: "RCSC Bhutan", message: "Outstanding web development services. They delivered beyond our expectations on time and within budget.", avatar_url: "/assets/uploads/Futuristic_neon_high_1775325102963.png", rating: 5, is_visible: true },
 ];
 
 // ── Query key builders (must match useDbQuery exactly) ────────────────────────

@@ -974,27 +974,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {config.multi && (
             <div className="mb-6 space-y-4">
-              <div className="flex items-center justify-between bg-secondary/5 p-3 rounded-xl border border-secondary/20">
-                <div>
-                  <p className="text-[0.625rem] font-black text-secondary uppercase tracking-widest">Gallery Content</p>
-                  <p className="text-xs text-muted-foreground">{currentAssets.length} images active</p>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => setViewMode(viewMode === "manage" ? "pick" : "manage")}
-                    className="px-4 py-2 bg-muted text-foreground rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-muted/80 transition-all border border-border"
-                  >
-                    {viewMode === "manage" ? <><LucideIcons.Search size={16} /> Browse Server</> : <><LucideIcons.LayoutGrid size={16} /> Manage Gallery</>}
-                  </button>
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-xs font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm"
-                  >
-                    <LucideIcons.Plus size={16} /> Upload New
-                  </button>
-                </div>
-              </div>
-              
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-b border-border pb-6">
                 {currentAssets.map((asset, idx) => (
                   <div key={asset + idx} className="group relative aspect-video rounded-xl overflow-hidden border border-border/50 bg-muted/20 shadow-sm">
@@ -1055,7 +1035,6 @@ const PickerModal = ({ config, onClose, onSelect }: {
             </div>
           )}
 
-          {(viewMode === "pick" || !config.multi) && (
             <>
               <p className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-4">Browse All Assets</p>
               {config.type === "image" ? (
@@ -1063,11 +1042,17 @@ const PickerModal = ({ config, onClose, onSelect }: {
                   section={config.section} 
                   onSelect={(v) => {
                     if (config.multi) {
-                      const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
-                      syncAssets(next);
+                      if (Array.isArray(v)) {
+                         const next = [...selected, ...v.filter(url => !selected.includes(url))];
+                         syncAssets(next);
+                      } else {
+                         const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
+                         syncAssets(next);
+                      }
                     } else {
-                      setManualValue(v);
-                      setSelected([v]);
+                      const val = Array.isArray(v) ? v[0] : v;
+                      setManualValue(val);
+                      setSelected([val]);
                     }
                   }} 
                   search={search} 
@@ -1082,7 +1067,6 @@ const PickerModal = ({ config, onClose, onSelect }: {
                 <LinkPicker onSelect={(v) => { setManualValue(v); }} search={search} />
               )}
             </>
-          )}
         </div>
 
         {!config.multi ? (
@@ -1116,7 +1100,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
 
 const ImageGrid = ({ section, onSelect, search, multi, selected }: { 
   section: string; 
-  onSelect: (v: string) => void; 
+  onSelect: (v: string | string[]) => void; 
   search: string;
   multi?: boolean;
   selected?: string[];
@@ -1130,36 +1114,47 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
   }, [selected]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("path", `${folder}/${file.name}`);
+    const newUrls: string[] = [];
 
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      
-      toast.success("Image uploaded successfully");
-      setUploadedUrl(json.data.publicUrl);
-      onSelect(json.data.publicUrl); // Auto select uploaded image
-    } catch (err: any) {
-      toast.error(`Upload failed: ${err.message}`);
-    } finally {
-      setUploading(false);
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("path", `${folder}/${file.name}`);
+
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        newUrls.push(json.data.publicUrl);
+      } catch (err: any) {
+        toast.error(`Upload failed for ${file.name}: ${err.message}`);
+      }
+    }
+    
+    setUploading(false);
+    
+    if (newUrls.length > 0) {
+      toast.success(`${newUrls.length} image(s) uploaded successfully`);
+      if (multi) {
+        onSelect(newUrls);
+      } else {
+        setUploadedUrl(newUrls[newUrls.length - 1]);
+        onSelect(newUrls[newUrls.length - 1]);
+      }
     }
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <label className="group relative aspect-video flex flex-col items-center justify-center border-2 border-dashed border-border/60 rounded-xl hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all min-h-[120px]">
-        <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
+        <input type="file" className="hidden" accept="image/*" multiple={multi} onChange={handleUpload} disabled={uploading} />
         {uploading ? (
           <LoadingSpinner size={24} />
         ) : (
@@ -1170,7 +1165,7 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
         )}
       </label>
 
-      {uploadedUrl ? (
+      {uploadedUrl && !multi ? (
         <div 
           onClick={() => onSelect(uploadedUrl)}
           className="group relative aspect-video bg-muted rounded-xl overflow-hidden border border-secondary ring-2 ring-secondary/50 ring-inset cursor-pointer min-h-[120px]"
