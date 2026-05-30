@@ -41,22 +41,7 @@ const ContactSection = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const toLocalISO = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  const nowDate = new Date();
-  const nowLocal = toLocalISO(nowDate);
-
-  const normalizeAppointmentDate = (value: string) => {
-    if (!value || !value.trim()) return "";
-    const candidate = value.trim();
-    const parsed = new Date(candidate);
-    if (Number.isNaN(parsed.getTime())) return "";
-    // If the input doesn't have a timezone indicator, it's already in local time from our picker.
-    // We want to keep it as a local-looking string for the DB or convert to ISO correctly.
-    // For consistency with AdminDashboard, we convert to full ISO with Z.
-    return parsed.toISOString();
-  };
-
-  const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", service: "", message: "", date1: "", date2: "", website: "" });
+  const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", service: "", message: "", website: "" });
   const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
 
   useEffect(() => {
@@ -92,7 +77,7 @@ const ContactSection = () => {
           is_read: 0,
           status: "new",
           website: form.website || null,
-          message: `${form.message.trim()}${form.service ? `\nService: ${form.service}` : ""}${form.date1 ? `\nPreferred Date 1: ${form.date1}` : ""}${form.date2 ? `\nPreferred Date 2: ${form.date2}` : ""}`,
+          message: `${form.message.trim()}${form.service ? `\nService: ${form.service}` : ""}`,
         })
       });
       const json = await resp.json();
@@ -103,12 +88,6 @@ const ContactSection = () => {
         const contactId = contactData.id;
         const apptTitle = form.service ? `Inquiry: ${form.service}` : "General Inquiry";
         const apptDesc = form.message.slice(0, 100) + (form.message.length > 100 ? "..." : "");
-        const date1 = normalizeAppointmentDate(form.date1);
-        const date2 = normalizeAppointmentDate(form.date2);
-
-        // Always create an entry for the calendar on the day of submission if no dates are picked
-        // OR if Date 1 is picked, use that.
-        const effectiveDate1 = date1 || new Date().toISOString();
 
         await fetch("/api/db/appointments", {
           method: "POST",
@@ -119,30 +98,12 @@ const ContactSection = () => {
             reference_id: contactId,
             name: form.name.trim(),
             email: form.email.trim(),
-            title: apptTitle + (date1 ? " (Choice 1)" : ""),
+            title: apptTitle,
             description: apptDesc,
-            appointment_date: effectiveDate1,
+            appointment_date: new Date().toISOString(),
             created_at: new Date().toISOString()
           })
         });
-
-        if (date2) {
-          await fetch("/api/db/appointments", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: crypto.randomUUID(),
-              reference_type: "contact",
-              reference_id: contactId + "_2",
-              name: form.name.trim(),
-              email: form.email.trim(),
-              title: apptTitle + " (Choice 2)",
-              description: apptDesc,
-              appointment_date: date2,
-              created_at: new Date().toISOString()
-            })
-          });
-        }
       }
 
       setLoading(false);
@@ -158,6 +119,7 @@ const ContactSection = () => {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
+    const isPaste = (e.nativeEvent as InputEvent).inputType === 'insertFromPaste' || Math.abs(val.length - form.phone.length) > 1;
     
     // Auto-detect pasted ISD code (e.g., +91 or 0091)
     if (val.startsWith("+") || val.startsWith("00")) {
@@ -168,12 +130,28 @@ const ContactSection = () => {
       
       if (matchedCountry) {
         setSelectedCountry(matchedCountry);
-        // Remove the dial code and trim spaces
-        val = normalizedVal.replace(/\s+/g, '').slice(matchedCountry.dial.length);
+        // Remove the dial code and trim spaces only if it's a paste or has a space
+        if (isPaste || val.includes(' ')) {
+          val = normalizedVal.replace(/\s+/g, '').slice(matchedCountry.dial.length);
+        }
       }
     }
     
     update("phone", val);
+  };
+
+  const handlePhoneBlur = () => {
+    let val = form.phone;
+    if (val.startsWith("+") || val.startsWith("00")) {
+      const normalizedVal = val.startsWith("00") ? "+" + val.slice(2) : val;
+      const sortedCountries = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length);
+      const matchedCountry = sortedCountries.find(c => normalizedVal.replace(/\s+/g, '').startsWith(c.dial));
+      if (matchedCountry) {
+        setSelectedCountry(matchedCountry);
+        val = normalizedVal.replace(/\s+/g, '').slice(matchedCountry.dial.length);
+        update("phone", val.trim());
+      }
+    }
   };
 
   const contactItems = [
@@ -394,7 +372,7 @@ const ContactSection = () => {
                   <EditableText section="contact" field="label_success_message" value={content.label_success_message || "We've received your message and will get back to you within 24 hours."} />
                 </p>
                 <button
-                  onClick={() => { setSubmitted(false); setForm({ name: "", company: "", email: "", phone: "", service: "", message: "", date1: "", date2: "", website: "" }); }}
+                  onClick={() => { setSubmitted(false); setForm({ name: "", company: "", email: "", phone: "", service: "", message: "", website: "" }); }}
                   className="mt-6 text-secondary font-medium text-[0.8125rem] hover:underline"
                 >
                   <EditableText section="contact" field="label_send_another" value={content.label_send_another || "Send Another Message"} />
@@ -457,7 +435,7 @@ const ContactSection = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                        <input type="tel" value={form.phone} onChange={handlePhoneChange}
+                        <input type="tel" value={form.phone} onChange={handlePhoneChange} onBlur={handlePhoneBlur}
                           className={`${inputCls} rounded-l-none flex-1`} placeholder={content.placeholder_phone || "Number"} maxLength={20} />
                       </div>
                     </div>

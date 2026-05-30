@@ -1502,17 +1502,26 @@ export const getCountryByCode = (code: string) => COUNTRIES.find(c => c.code ===
 
 export const detectCountry = async (): Promise<Country> => {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz.includes('Maldives')) return getCountryByCode('MV');
-    if (tz.includes('Calcutta') || tz.includes('India')) return getCountryByCode('IN');
-    if (tz.includes('Colombo')) return getCountryByCode('LK');
-    if (tz.includes('Dubai')) return getCountryByCode('AE');
-    if (tz.includes('London')) return getCountryByCode('GB');
-    if (tz.includes('New_York') || tz.includes('Los_Angeles') || tz.includes('Chicago')) return getCountryByCode('US');
-    if (tz.includes('Singapore')) return getCountryByCode('SG');
-
+    // Try to get country code via IP API
+    const res = await fetch("https://ipapi.co/json/");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.country_code) {
+        return getCountryByCode(data.country_code);
+      }
+    }
   } catch (e) {
-    // Silent fail
+    // Fallback to timezone if API fails
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz.includes('Maldives') || tz.includes('Indian/Maldives')) return getCountryByCode('MV');
+      if (tz.includes('Calcutta') || tz.includes('India')) return getCountryByCode('IN');
+      if (tz.includes('Colombo')) return getCountryByCode('LK');
+      if (tz.includes('Dubai')) return getCountryByCode('AE');
+      if (tz.includes('London')) return getCountryByCode('GB');
+      if (tz.includes('New_York') || tz.includes('Los_Angeles') || tz.includes('Chicago')) return getCountryByCode('US');
+      if (tz.includes('Singapore')) return getCountryByCode('SG');
+    } catch (e2) {}
   }
   return COUNTRIES[0];
 };
