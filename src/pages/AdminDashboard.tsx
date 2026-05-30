@@ -109,6 +109,8 @@ interface SiteSettings {
   accent_color: string; global_view: string; card_style: string;
   bot_api_url: string; bot_api_token: string;
   hr_email: string;
+  google_analytics_id: string;
+  microsoft_clarity_id: string;
   social_count?: string;
   [key: string]: any;
 }
@@ -2160,6 +2162,20 @@ const AdminDashboard = () => {
                                 <input type="email" value={siteSettings.contact_email}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, contact_email: e.target.value }))}
                                   placeholder="info@solutions.com.mv"
+                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                              </div>
+                              <div>
+                                <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Google Analytics Measurement ID</label>
+                                <input type="text" value={siteSettings.google_analytics_id || ""}
+                                  onChange={(e) => setSiteSettings(p => ({ ...p, google_analytics_id: e.target.value }))}
+                                  placeholder="G-XXXXXXXXXX"
+                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                              </div>
+                              <div>
+                                <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Microsoft Webmetrics Project ID</label>
+                                <input type="text" value={siteSettings.microsoft_clarity_id || ""}
+                                  onChange={(e) => setSiteSettings(p => ({ ...p, microsoft_clarity_id: e.target.value }))}
+                                  placeholder="YOUR_PROJECT_ID"
                                   className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
                               </div>
                             </div>
