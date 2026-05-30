@@ -101,17 +101,26 @@ interface SiteSettings {
   site_name: string; site_logo: string; whatsapp_number: string; viber_number: string;
   contact_email: string; contact_from_email: string;
   smtp_host: string; smtp_port: string; smtp_user: string; smtp_pass: string;
-  ai_model: string; demo_url: string; db_connection: string;
+  demo_url: string; db_connection: string;
   social_linkedin: string; social_twitter: string; social_facebook: string; social_instagram: string;
   landline: string; enable_cinematic: boolean; cinematic_asset: string;
   font_size: string; theme: string; font_style: string; enable_animations: boolean;
-  gemini_api_key: string; openai_api_key: string; system_prompt: string;
   accent_color: string; global_view: string; card_style: string;
-  bot_api_url: string; bot_api_token: string;
   hr_email: string;
   google_analytics_id: string;
   microsoft_clarity_id: string;
   social_count?: string;
+  chatbot_enabled: string;
+  chatbot_script_url: string;
+  chatbot_api_key: string;
+  chatbot_title: string;
+  chatbot_subtitle: string;
+  chatbot_accent: string;
+  chatbot_accent2: string;
+  chatbot_bot_bubble: string;
+  chatbot_user_color: string;
+  chatbot_position: string;
+  chatbot_btn_size: string;
   [key: string]: any;
 }
 
@@ -1246,7 +1255,6 @@ const AdminDashboard = () => {
     contact_email: "info@solutions.com.mv",
     contact_from_email: "devteam.bss@gmail.com",
     hr_email: "", smtp_host: "", smtp_port: "", smtp_user: "", smtp_pass: "",
-    bot_api_url: "", bot_api_token: "", ai_model: "gemini-1.5-flash",
     demo_url: "https://demo.hrmetrics.mv/", db_connection: "sqlite://server/app.db",
     social_linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
     social_twitter: "https://x.com/bsspl_india",
@@ -1255,8 +1263,18 @@ const AdminDashboard = () => {
     landline: "+91-452 238 7388", enable_cinematic: false,
     cinematic_asset: "/assets/uploads/modern_hero_glass_1775323942548.webp",
     font_size: "medium", theme: "light", font_style: "'Inter', sans-serif",
-    enable_animations: true, gemini_api_key: "", openai_api_key: "",
-    system_prompt: "", accent_color: "#3b82f6", global_view: "grid", card_style: "glass",
+    enable_animations: true, accent_color: "#3b82f6", global_view: "grid", card_style: "glass",
+    chatbot_enabled: "true",
+    chatbot_script_url: "https://koya.hrmetrics.in/embed.js",
+    chatbot_api_key: "",
+    chatbot_title: "HR Assistant",
+    chatbot_subtitle: "AI Assistant",
+    chatbot_accent: "#7c3aed",
+    chatbot_accent2: "#0498e9",
+    chatbot_bot_bubble: "#ffffff",
+    chatbot_user_color: "#ffffff",
+    chatbot_position: "right",
+    chatbot_btn_size: "32",
   });
 
   const [uxDraft, setUxDraft] = useState<any>({
@@ -2144,7 +2162,7 @@ const AdminDashboard = () => {
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">WhatsApp Business</label>
-                                  <input value={siteSettings.whatsapp_number}
+                                  <input value={siteSettings.whatsapp_number || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, whatsapp_number: e.target.value }))}
                                     placeholder="960xxxxxxx"
                                     className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
@@ -2159,7 +2177,7 @@ const AdminDashboard = () => {
                               </div>
                               <div>
                                 <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Primary Contact Inbox</label>
-                                <input type="email" value={siteSettings.contact_email}
+                                <input type="email" value={siteSettings.contact_email || ""}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, contact_email: e.target.value }))}
                                   placeholder="info@solutions.com.mv"
                                   className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
@@ -2185,13 +2203,13 @@ const AdminDashboard = () => {
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">From Email Alias</label>
-                                  <input type="email" value={siteSettings.contact_from_email}
+                                  <input type="email" value={siteSettings.contact_from_email || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, contact_from_email: e.target.value }))}
                                     className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none" />
                                 </div>
                                 <div>
                                   <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Internal HR Node</label>
-                                  <input type="email" value={siteSettings.hr_email}
+                                  <input type="email" value={siteSettings.hr_email || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, hr_email: e.target.value }))}
                                     className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none" />
                                 </div>
@@ -2204,86 +2222,127 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="grid grid-cols-5 gap-2">
                                   <div className="col-span-3">
-                                    <input value={siteSettings.smtp_host} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_host: e.target.value }))} placeholder="Host" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                    <input value={siteSettings.smtp_host || ""} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_host: e.target.value }))} placeholder="Host" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
                                   </div>
                                   <div className="col-span-2">
-                                    <input value={siteSettings.smtp_port} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_port: e.target.value }))} placeholder="Port" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                    <input value={siteSettings.smtp_port || ""} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_port: e.target.value }))} placeholder="Port" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
                                   </div>
                                 </div>
-                                <input value={siteSettings.smtp_user} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_user: e.target.value }))} placeholder="Username" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
-                                <input type="password" value={siteSettings.smtp_pass} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_pass: e.target.value }))} placeholder="Password" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                <input value={siteSettings.smtp_user || ""} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_user: e.target.value }))} placeholder="Username" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                <input type="password" value={siteSettings.smtp_pass || ""} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_pass: e.target.value }))} placeholder="Password" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* --- AI & BOT --- */}
+                        {/* --- AI & CHAT BOT --- */}
                         <div className="space-y-4">
                           <h3 className="text-[0.6875rem] font-bold text-secondary uppercase tracking-widest border-b border-border/50 pb-1">AI & Chat Bot</h3>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">AI Model</label>
-                              <input value={siteSettings.ai_model}
-                                onChange={(e) => setSiteSettings(p => ({ ...p, ai_model: e.target.value }))}
-                                placeholder="gemini-1.5-flash"
-                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none" />
+                          <div className="p-4 bg-muted/30 rounded-2xl border border-border/50 space-y-4">
+                            {/* Toggle + Status */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shadow-inner transition-colors ${siteSettings.chatbot_enabled === "true" ? "bg-emerald-500/10 border-emerald-500/20" : "bg-muted border-border/40"}`}>
+                                  <Bot size={16} className={siteSettings.chatbot_enabled === "true" ? "text-emerald-500" : "text-muted-foreground"} />
+                                </div>
+                                <div>
+                                  <span className="text-[0.6875rem] font-bold text-foreground block">Chatbot Widget</span>
+                                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest">
+                                    {siteSettings.chatbot_enabled === "true" ? "Active on live site" : "Hidden from visitors"}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSiteSettings(p => ({ ...p, chatbot_enabled: p.chatbot_enabled === "true" ? "false" : "true" }))}
+                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${siteSettings.chatbot_enabled === "true" ? "bg-emerald-500" : "bg-border"}`}
+                              >
+                                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${siteSettings.chatbot_enabled === "true" ? "translate-x-5" : "translate-x-0"}`} />
+                              </button>
                             </div>
-                            <div>
-                              <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">API Choice</label>
-                              <select
-                                value={siteSettings.gemini_api_key ? "gemini" : "openai"}
-                                onChange={(e) => {
-                                  // Simple visual toggle for now, doesn't force a switch if keys are missing
-                                  const val = e.target.value;
-                                  if (val === "openai" && !siteSettings.openai_api_key) {
-                                    toast.error("Please provide OpenAI API key first.");
-                                  } else if (val === "gemini" && !siteSettings.gemini_api_key) {
-                                    toast.error("Please provide Google Gemini API key first.");
-                                  }
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none">
-                                <option value="gemini">Google Gemini</option>
-                                <option value="openai">OpenAI</option>
-                              </select>
+
+                            {/* Configuration fields */}
+                            <div className={`space-y-3 transition-opacity ${siteSettings.chatbot_enabled === "true" ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
+                              {/* Script URL + API Key */}
+                              <div>
+                                <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Embed Script URL *</label>
+                                <input value={siteSettings.chatbot_script_url || ""}
+                                  onChange={(e) => setSiteSettings(p => ({ ...p, chatbot_script_url: e.target.value }))}
+                                  placeholder="https://koya.hrmetrics.in/embed.js"
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none font-mono" />
+                              </div>
+                              <div>
+                                <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">API Key *</label>
+                                <input type="password" value={siteSettings.chatbot_api_key || ""}
+                                  onChange={(e) => setSiteSettings(p => ({ ...p, chatbot_api_key: e.target.value }))}
+                                  placeholder="RPa_VSKsaYv1l..."
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none font-mono" />
+                              </div>
+
+                              {/* Title / Subtitle */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Chat Title</label>
+                                  <input value={siteSettings.chatbot_title || ""}
+                                    onChange={(e) => setSiteSettings(p => ({ ...p, chatbot_title: e.target.value }))}
+                                    placeholder="HR Assistant"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                </div>
+                                <div>
+                                  <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Subtitle</label>
+                                  <input value={siteSettings.chatbot_subtitle || ""}
+                                    onChange={(e) => setSiteSettings(p => ({ ...p, chatbot_subtitle: e.target.value }))}
+                                    placeholder="AI Assistant"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                </div>
+                              </div>
+
+                              {/* Colors */}
+                              <div>
+                                <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase">Theme Colors</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {[
+                                    { key: "chatbot_accent", label: "Accent", fallback: "#7c3aed" },
+                                    { key: "chatbot_accent2", label: "Accent 2", fallback: "#0498e9" },
+                                    { key: "chatbot_bot_bubble", label: "Bot Bubble", fallback: "#ffffff" },
+                                    { key: "chatbot_user_color", label: "User Color", fallback: "#ffffff" },
+                                  ].map(c => (
+                                    <div key={c.key} className="flex flex-col items-center gap-1">
+                                      <input type="color" value={siteSettings[c.key] || c.fallback}
+                                        onChange={(e) => setSiteSettings(p => ({ ...p, [c.key]: e.target.value }))}
+                                        className="w-7 h-7 rounded-lg bg-background border border-border cursor-pointer p-0.5" />
+                                      <span className="text-[7px] font-bold text-muted-foreground uppercase tracking-wider">{c.label}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Position + Button Size */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Position</label>
+                                  <div className="flex gap-1 p-0.5 bg-background border border-border rounded-lg">
+                                    {["left", "right"].map(pos => (
+                                      <button key={pos} type="button"
+                                        onClick={() => setSiteSettings(p => ({ ...p, chatbot_position: pos }))}
+                                        className={`flex-1 py-1 rounded-md text-[0.625rem] font-bold uppercase transition-all ${
+                                          (siteSettings.chatbot_position || "right") === pos
+                                            ? "bg-secondary text-secondary-foreground shadow-sm"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                      >{pos}</button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Button Size (px)</label>
+                                  <input type="number" value={siteSettings.chatbot_btn_size || "32"}
+                                    onChange={(e) => setSiteSettings(p => ({ ...p, chatbot_btn_size: e.target.value }))}
+                                    min="24" max="64"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">Google Gemini API Key</label>
-                            <input type="password" value={siteSettings.gemini_api_key || ""}
-                              onChange={(e) => setSiteSettings(p => ({ ...p, gemini_api_key: e.target.value }))}
-                              placeholder="AIzaSy..."
-                              className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none" />
-                          </div>
-                          <div>
-                            <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">OpenAI API Key (Alternative)</label>
-                            <input type="password" value={siteSettings.openai_api_key || ""}
-                              onChange={(e) => setSiteSettings(p => ({ ...p, openai_api_key: e.target.value }))}
-                              placeholder="sk-..."
-                              className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">Bot API Endpoint URL</label>
-                              <input value={siteSettings.bot_api_url || ""}
-                                onChange={(e) => setSiteSettings(p => ({ ...p, bot_api_url: e.target.value }))}
-                                placeholder="https://api.custombot.com"
-                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none" />
-                            </div>
-                            <div>
-                              <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">External Bot API Token</label>
-                              <input type="password" value={siteSettings.bot_api_token || ""}
-                                onChange={(e) => setSiteSettings(p => ({ ...p, bot_api_token: e.target.value }))}
-                                placeholder="Token key..."
-                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none" />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-[0.6875rem] font-medium text-muted-foreground mb-1 block">AI System Persona / Prompt</label>
-                            <textarea value={siteSettings.system_prompt || ""}
-                              onChange={(e) => setSiteSettings(p => ({ ...p, system_prompt: e.target.value }))}
-                              placeholder="You are a helpful assistant for BSS..."
-                              rows={3}
-                              className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm outline-none resize-none" />
                           </div>
                         </div>
 

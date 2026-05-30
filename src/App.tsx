@@ -65,7 +65,92 @@ const TrackingScripts = () => {
         document.head.appendChild(inlineScript);
       }
     }
-  }, [settings.google_analytics_id, settings.microsoft_clarity_id]);
+    // AskKoya Chatbot
+    const koyaEnabled = settings.chatbot_enabled === "true" && !!settings.chatbot_script_url && !!settings.chatbot_api_key;
+
+    if (koyaEnabled) {
+      // Inject button size style
+      let chatStyle = document.getElementById("ak4-btn-style") as HTMLStyleElement;
+      if (!chatStyle) {
+        chatStyle = document.createElement("style");
+        chatStyle.id = "ak4-btn-style";
+        document.head.appendChild(chatStyle);
+      }
+      const btnSize = settings.chatbot_btn_size || "32";
+      chatStyle.textContent = `.ak4-btn { width: ${btnSize}px !important; height: ${btnSize}px !important; z-index: 100 !important; animation: float 4s ease-in-out infinite !important; }`;
+
+      // Inject AskKoyaConfig
+      let configScript = document.getElementById("askkoya-config") as HTMLScriptElement;
+      if (!configScript) {
+        configScript = document.createElement("script");
+        configScript.id = "askkoya-config";
+        document.head.appendChild(configScript);
+      }
+      configScript.textContent = `window.AskKoyaConfig = { name: "", empID: "", domain: "" };`;
+
+      // Inject embed script
+      let embedScript = document.getElementById("askkoya-embed") as HTMLScriptElement;
+      if (!embedScript) {
+        embedScript = document.createElement("script");
+        embedScript.id = "askkoya-embed";
+        embedScript.src = settings.chatbot_script_url;
+        embedScript.setAttribute("data-api-key", settings.chatbot_api_key);
+        embedScript.setAttribute("data-name", "");
+        embedScript.setAttribute("data-emp-id", "");
+        embedScript.setAttribute("data-domain", "");
+        embedScript.setAttribute("data-session-id", "");
+        embedScript.setAttribute("data-title", settings.chatbot_title || "HR Assistant");
+        embedScript.setAttribute("data-subtitle", settings.chatbot_subtitle || "AI Assistant");
+        embedScript.setAttribute("data-accent", settings.chatbot_accent || "#7c3aed");
+        embedScript.setAttribute("data-accent2", settings.chatbot_accent2 || "#0498e9");
+        embedScript.setAttribute("data-bot-bubble", settings.chatbot_bot_bubble || "#ffffff");
+        embedScript.setAttribute("data-user-color", settings.chatbot_user_color || "#ffffff");
+        embedScript.setAttribute("data-position", settings.chatbot_position || "right");
+        embedScript.setAttribute("data-open", "false");
+        embedScript.setAttribute("data-hide-button", "false");
+
+        // On successful load → hide default bot
+        embedScript.onload = () => {
+          window.dispatchEvent(new CustomEvent("ss:koyaBotStatus", { detail: "active" }));
+        };
+        // On failure → show default bot
+        embedScript.onerror = () => {
+          // Clean up failed script
+          embedScript.remove();
+          window.dispatchEvent(new CustomEvent("ss:koyaBotStatus", { detail: "inactive" }));
+        };
+
+        document.body.appendChild(embedScript);
+      } else {
+        // Script already present → koya is active
+        window.dispatchEvent(new CustomEvent("ss:koyaBotStatus", { detail: "active" }));
+      }
+    } else {
+      // Remove chatbot elements when disabled
+      ["ak4-btn-style", "askkoya-config", "askkoya-embed"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      });
+      // Remove any injected chatbot UI elements
+      document.querySelectorAll('[class*="ak4-"]').forEach(el => el.remove());
+      // Signal default bot to show
+      window.dispatchEvent(new CustomEvent("ss:koyaBotStatus", { detail: "inactive" }));
+    }
+  }, [
+    settings.google_analytics_id,
+    settings.microsoft_clarity_id,
+    settings.chatbot_enabled,
+    settings.chatbot_script_url,
+    settings.chatbot_api_key,
+    settings.chatbot_title,
+    settings.chatbot_subtitle,
+    settings.chatbot_accent,
+    settings.chatbot_accent2,
+    settings.chatbot_bot_bubble,
+    settings.chatbot_user_color,
+    settings.chatbot_position,
+    settings.chatbot_btn_size,
+  ]);
 
   return null;
 };
