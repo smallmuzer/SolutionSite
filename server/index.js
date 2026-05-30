@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync } from "fs";
+import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync } from "fs";
 import { db, uuid, DB_PATH } from "./db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -951,6 +951,8 @@ app.post("/api/db/:table", (req, res) => {
       }
     }
 
+    if (table === "site_content" || table === "seo_settings") secCache.lastFetch = 0;
+
     res.json({ data: normalised, error: null });
   } catch (e) {
     res.status(500).json({ data: null, error: { message: e.message } });
@@ -981,6 +983,8 @@ app.patch("/api/db/:table", (req, res) => {
 
     const { sql, vals } = buildSelect(table, filters, "", true);
     const rows = db.prepare(sql).all(...vals).map(r => normaliseRow(table, r));
+    if (table === "site_content" || table === "seo_settings") secCache.lastFetch = 0;
+
     res.json({ data: rows[0] ?? null, error: null });
   } catch (e) {
     res.status(500).json({ data: null, error: { message: e.message } });
@@ -1403,8 +1407,56 @@ function serialiseRow(table, row) {
   return out;
 }
 
+// ── Serve Frontend in Production (Optional standalone mode) ────────────────────
+const DIST_DIR = join(__dirname, "../dist");
+const PUBLIC_DIR = join(__dirname, "../public");
+
+// Always serve uploads from the public directory so uploaded images work
+app.use("/assets", express.static(join(PUBLIC_DIR, "assets")));
+
+if (existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR, { index: false }));
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api")) {
+      return res.status(404).json({ error: "Not found" });
+    }
+    
+    try {
+      let html = readFileSync(join(DIST_DIR, "index.html"), "utf-8");
+      
+      const segments = req.path.split("/").filter(Boolean);
+      const pageKey = segments.length > 0 ? segments[0].toLowerCase() : "home";
+      const seoRow = db.prepare("SELECT * FROM seo_settings WHERE page_key = ?").get(pageKey);
+      
+      if (seoRow) {
+        if (seoRow.title) {
+          html = html.replace(/<title>.*?<\/title>/i, `<title>${seoRow.title}</title>`);
+          html = html.replace(/<\/head>/i, `<meta property="og:title" content="${seoRow.title}">\n<meta name="twitter:title" content="${seoRow.title}">\n</head>`);
+        }
+        if (seoRow.description) {
+          html = html.replace(/<\/head>/i, `<meta name="description" content="${seoRow.description}">\n<meta property="og:description" content="${seoRow.description}">\n<meta name="twitter:description" content="${seoRow.description}">\n</head>`);
+        }
+        if (seoRow.keywords) {
+          html = html.replace(/<\/head>/i, `<meta name="keywords" content="${seoRow.keywords}">\n</head>`);
+        }
+        if (seoRow.og_image) {
+          html = html.replace(/<\/head>/i, `<meta property="og:image" content="${seoRow.og_image}">\n<meta name="twitter:image" content="${seoRow.og_image}">\n<meta name="twitter:card" content="summary_large_image">\n</head>`);
+        }
+      }
+      
+      res.setHeader("Content-Type", "text/html");
+      res.send(html);
+    } catch (e) {
+      res.sendFile(join(DIST_DIR, "index.html"));
+    }
+  });
+}
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`[server] SQLite API running on http://localhost:${PORT}`);
   console.log(`[server] DB file: ${DB_PATH}`);
+  if (existsSync(DIST_DIR)) {
+    console.log(`[server] Serving static frontend from ${DIST_DIR}`);
+  }
 });

@@ -28,7 +28,7 @@ const CookieConsent      = lazy(() => import("@/components/CookieConsent"));
 
 const SkeletonSection = () => (
   <div className="w-full h-64 bg-muted/10 animate-pulse flex items-center justify-center">
-    <LoadingSpinner size={24} />
+    <LoadingSpinner />
   </div>
 );
 
@@ -1156,7 +1156,7 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
       <label className="group relative aspect-video flex flex-col items-center justify-center border-2 border-dashed border-border/60 rounded-xl hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all min-h-[120px]">
         <input type="file" className="hidden" accept="image/*" multiple={multi} onChange={handleUpload} disabled={uploading} />
         {uploading ? (
-          <LoadingSpinner size={24} />
+          <LoadingSpinner />
         ) : (
           <>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>

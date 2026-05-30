@@ -190,7 +190,7 @@ const StaticGlobe = ({ clients, getNavProps }: { clients: ClientLogo[]; getNavPr
   const slotMs = isMobile ? 2200 : 3000;
 
   useEffect(() => {
-    if (clients.length === 0 || slotCount === 0 || slotIndices.length === 0) return;
+    if (clients.length === 0 || slotIndices.length === 0) return;
 
     if (isMobile) {
       const id = setInterval(() => {

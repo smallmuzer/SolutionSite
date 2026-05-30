@@ -14,7 +14,7 @@ const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?
   const trimmed = name.trim();
   if (trimmed.toLowerCase().startsWith("<svg")) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center ${className || ""}`}
         style={{ width: size, height: size }}
         dangerouslySetInnerHTML={{ __html: trimmed }}
@@ -73,7 +73,7 @@ function useDarkMode() {
   return { isDark, toggle };
 }
 
-type Tab = "dashboard" | "inbox" | "website" | "sitehealth" | "settings" | "chat";
+type Tab = "inbox" | "website" | "sitehealth" | "settings" | "chat";
 
 const AVAILABLE_FONTS: { label: string; value: string }[] = [
   { label: "Arial", value: "Arial, Helvetica, sans-serif" },
@@ -161,20 +161,20 @@ const EditableDateInput = ({ type = "date", value, onChange, className, title, p
     const raw = e.target.value;
     setDisplayValue(raw);
     const parsed = parseFromDisplay(raw);
-    
-    const isValidOut = type === "datetime-local" 
+
+    const isValidOut = type === "datetime-local"
       ? /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(parsed)
       : /^\d{4}-\d{2}-\d{2}$/.test(parsed);
-      
+
     if (isValidOut || raw === "") {
       onChange({ target: { value: parsed } });
     }
   };
 
-  const isValidHTMLDate = type === "datetime-local" 
+  const isValidHTMLDate = type === "datetime-local"
     ? /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value || "")
     : /^\d{4}-\d{2}-\d{2}$/.test(value || "");
-    
+
   return (
     <div className={`relative flex items-center p-0 overflow-hidden bg-background border border-border focus-within:ring-1 focus-within:ring-ring ${className}`}>
       <input
@@ -191,8 +191,8 @@ const EditableDateInput = ({ type = "date", value, onChange, className, title, p
           type={type}
           value={isValidHTMLDate ? value : ""}
           onChange={(e) => {
-             onChange(e);
-             setDisplayValue(formatForDisplay(e.target.value));
+            onChange(e);
+            setDisplayValue(formatForDisplay(e.target.value));
           }}
           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
         />
@@ -202,7 +202,7 @@ const EditableDateInput = ({ type = "date", value, onChange, className, title, p
 };
 const SubmissionsCalendar = ({ submissions, applications = [], appointments = [], visible = true, onSubmissionClick, onAppointmentCreated }: { submissions: any[], applications?: any[], appointments?: any[], visible?: boolean, onSubmissionClick: (s: any) => void, onAppointmentCreated?: (created: any) => void }) => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
-  
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
@@ -353,7 +353,7 @@ const SubmissionsCalendar = ({ submissions, applications = [], appointments = []
       setCreateLoading(false);
     }
   };
-  
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -388,71 +388,71 @@ const SubmissionsCalendar = ({ submissions, applications = [], appointments = []
     <>
       <div className={`glass-card flex flex-col items-stretch overflow-hidden ${visible ? "" : "hidden"}`}>
         <div className="flex flex-col gap-2 sm:flex-row justify-between w-full items-center px-3 py-2 border-b border-border/50 bg-muted/20">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={handlePrev} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
-            <ChevronLeft size={16} />
-          </button>
-          <h2 className="text-sm font-heading font-black text-foreground flex items-center gap-1.5">
-            <CalendarIcon size={16} className="text-secondary" /> {monthName}
-          </h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={handlePrev} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
+              <ChevronLeft size={16} />
+            </button>
+            <h2 className="text-sm font-heading font-black text-foreground flex items-center gap-1.5">
+              <CalendarIcon size={16} className="text-secondary" /> {monthName}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={handleNext} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={handleNext} className="p-1.5 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-      <div className="p-4 bg-background">
-        <div className="grid grid-cols-7 border-t border-l border-border/60 rounded-xl overflow-hidden shadow-sm bg-card/30">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-            <div key={d} className="bg-muted/40 p-2 text-center text-[0.65rem] font-bold uppercase text-muted-foreground/80 tracking-widest border-r border-b border-border/60">
-              {d}
-            </div>
-          ))}
-          {days.map((day, idx) => {
-            if (!day) return <div key={`empty-${idx}`} className="bg-muted/5 border-r border-b border-border/60 min-h-[120px]" />;
-            const daySubs = getDaySubs(day);
-            const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-            return (
-              <div key={`day-${day}`} onClick={() => openCreateModalForDate(day)} className="group relative bg-card hover:bg-muted/10 border-r border-b border-border/60 min-h-[120px] sm:min-h-[140px] transition-all p-1 cursor-pointer">
-                <div className="flex justify-end p-1 pb-1">
-                  <span className={`flex items-center justify-center w-6 h-6 text-[0.7rem] font-bold rounded-full transition-colors ${isToday ? 'bg-secondary text-white shadow-md shadow-secondary/20' : 'text-muted-foreground'}`}>
-                    {day}
-                  </span>
-                </div>
-                <div className="space-y-1 max-h-[85px] sm:max-h-[105px] overflow-y-auto custom-scrollbar">
-                  {daySubs.map(s => {
-                    let timeStr = "";
-                    let pd = new Date(s.created_at);
-                    if (s.message) {
-                      const pdLine = s.message.split("\n").find((l: string) => l.startsWith("Preferred Date 1: ") || l.startsWith("Preferred Date: "));
-                      if (pdLine) {
-                         const d = new Date(pdLine.replace(/^Preferred Date(?: 1)?:\s*/i, "").trim());
-                         if (!isNaN(d.getTime())) pd = d;
-                      }
-                    }
-                    if (!isNaN(pd.getTime())) {
-                       timeStr = pd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase();
-                    }
-                    
-                    return (
-                      <button type="button" onClick={(e) => { e.stopPropagation(); onSubmissionClick(s); }} key={s.id} className="w-full flex items-center gap-1.5 text-left px-2 py-1 rounded-[4px] bg-blue-500/10 text-blue-700 border-l-2 border-blue-500/50 hover:brightness-95 active:scale-[0.98] transition-all truncate" title={s.full_name || s.name || s.email}>
-                        <span className="text-[0.6rem] font-bold opacity-70 shrink-0">{timeStr}</span>
-                        <span className="text-[0.65rem] font-bold truncate">{s.full_name || s.name || s.email}</span>
-                      </button>
-                    );
-                  })}
-                  {daySubs.length === 0 && (
-                    <div className="absolute inset-x-0 bottom-0 top-10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
-                      <Plus size={14} className="text-muted-foreground/30" />
-                    </div>
-                  )}
-                </div>
+        <div className="p-4 bg-background">
+          <div className="grid grid-cols-7 border-t border-l border-border/60 rounded-xl overflow-hidden shadow-sm bg-card/30">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+              <div key={d} className="bg-muted/40 p-2 text-center text-[0.65rem] font-bold uppercase text-muted-foreground/80 tracking-widest border-r border-b border-border/60">
+                {d}
               </div>
-            );
-          })}
+            ))}
+            {days.map((day, idx) => {
+              if (!day) return <div key={`empty-${idx}`} className="bg-muted/5 border-r border-b border-border/60 min-h-[120px]" />;
+              const daySubs = getDaySubs(day);
+              const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+              return (
+                <div key={`day-${day}`} onClick={() => openCreateModalForDate(day)} className="group relative bg-card hover:bg-muted/10 border-r border-b border-border/60 min-h-[120px] sm:min-h-[140px] transition-all p-1 cursor-pointer">
+                  <div className="flex justify-end p-1 pb-1">
+                    <span className={`flex items-center justify-center w-6 h-6 text-[0.7rem] font-bold rounded-full transition-colors ${isToday ? 'bg-secondary text-white shadow-md shadow-secondary/20' : 'text-muted-foreground'}`}>
+                      {day}
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-[85px] sm:max-h-[105px] overflow-y-auto custom-scrollbar">
+                    {daySubs.map(s => {
+                      let timeStr = "";
+                      let pd = new Date(s.created_at);
+                      if (s.message) {
+                        const pdLine = s.message.split("\n").find((l: string) => l.startsWith("Preferred Date 1: ") || l.startsWith("Preferred Date: "));
+                        if (pdLine) {
+                          const d = new Date(pdLine.replace(/^Preferred Date(?: 1)?:\s*/i, "").trim());
+                          if (!isNaN(d.getTime())) pd = d;
+                        }
+                      }
+                      if (!isNaN(pd.getTime())) {
+                        timeStr = pd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase();
+                      }
+
+                      return (
+                        <button type="button" onClick={(e) => { e.stopPropagation(); onSubmissionClick(s); }} key={s.id} className="w-full flex items-center gap-1.5 text-left px-2 py-1 rounded-[4px] bg-blue-500/10 text-blue-700 border-l-2 border-blue-500/50 hover:brightness-95 active:scale-[0.98] transition-all truncate" title={s.full_name || s.name || s.email}>
+                          <span className="text-[0.6rem] font-bold opacity-70 shrink-0">{timeStr}</span>
+                          <span className="text-[0.65rem] font-bold truncate">{s.full_name || s.name || s.email}</span>
+                        </button>
+                      );
+                    })}
+                    {daySubs.length === 0 && (
+                      <div className="absolute inset-x-0 bottom-0 top-10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
+                        <Plus size={14} className="text-muted-foreground/30" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
       </div>
       {showCreateModal && (
         <div className="fixed inset-0 z-50 p-4" onClick={() => setShowCreateModal(false)} onPointerMove={handlePopupPointerMove} onPointerUp={handlePopupPointerUp}>
@@ -884,8 +884,8 @@ const AppointmentsCalendar = ({
                         key={a.id || `${day}-${a.title}-${a.email}`}
                         onClick={(e) => { e.stopPropagation(); setSelectedAppt(a); }}
                         className={`w-full text-left flex items-center gap-1.5 px-2 py-1 rounded-[4px] transition-all hover:brightness-95 active:scale-[0.98] border-l-2 truncate ${a.reference_type === 'contact'
-                            ? 'bg-blue-500/10 text-blue-700 border-blue-500/50'
-                            : 'bg-green-500/10 text-green-700 border-green-500/50'
+                          ? 'bg-blue-500/10 text-blue-700 border-blue-500/50'
+                          : 'bg-green-500/10 text-green-700 border-green-500/50'
                           }`}
                       >
                         <span className="text-[0.6rem] font-bold opacity-70 shrink-0">
@@ -1195,7 +1195,7 @@ const AppointmentsCalendar = ({
 const AdminDashboard = () => {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [stats, setStats] = useState({ contacts: 0, appointments: 0, jobs: 0, visitors: 0 });
@@ -1275,6 +1275,8 @@ const AdminDashboard = () => {
     chatbot_user_color: "#ffffff",
     chatbot_position: "right",
     chatbot_btn_size: "32",
+    google_analytics_id: "",
+    microsoft_clarity_id: "",
   });
 
   const [uxDraft, setUxDraft] = useState<any>({
@@ -1696,7 +1698,6 @@ const AdminDashboard = () => {
   }, [appSearch, appStatusFilter, appDateFilter]);
 
   const sideItems: { key: Tab; icon: any; label: string }[] = [
-    { key: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { key: "inbox", icon: MessageSquare, label: "Leads" },
     { key: "chat", icon: BotMessageSquare, label: "Live Chat" },
     { key: "website", icon: FileText, label: "Edit Website" },
@@ -1710,14 +1711,14 @@ const AdminDashboard = () => {
   if (authChecking || loggingOut) return <LoadingSpinner message={loggingOut ? "Signing out..." : "Verifying access..."} />;
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen overflow-hidden bg-background flex">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       <aside className={`fixed inset-y-0 left-0 z-50 bg-card border-r border-border flex flex-col shrink-0 transition-all duration-300 lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "lg:w-16" : "lg:w-64"} w-64`}>
-        <div className={`border-b border-border flex items-center ${collapsed ? "lg:justify-center lg:p-3 p-5" : "justify-between p-5"}`}>
+        <div className={`border-b border-border flex items-center ${collapsed ? "lg:justify-center lg:p-3 p-2" : "justify-between p-2"}`}>
           {!collapsed && <h2 className="font-heading font-black text-foreground text-lg tracking-tight">Admin Panel</h2>}
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 rounded-lg text-muted-foreground hover:bg-muted"><X size={20} /></button>
           <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:flex p-1.5 rounded-lg text-muted-foreground hover:bg-muted">
@@ -1762,363 +1763,312 @@ const AdminDashboard = () => {
           <h2 className="font-heading font-semibold text-foreground text-sm capitalize">{tab === "sitehealth" ? "Site Health" : tab.replace("_", " ")}</h2>
         </header>
 
-        <main className="flex-1 p-4 sm:px-4 sm:py-6 lg:px-2 lg:py-8 overflow-auto">
+        <main className="flex-1 p-4 lg:px-2 lg:py-4 overflow-auto">
           {loading && tab !== "website" && tab !== "sitehealth" && tab !== "settings" ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>
           ) : (
             <>
-              {tab === "dashboard" && (
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Dashboard</h1>
-                    <button onClick={loadData} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted">
-                      <RefreshCw size={14} /> Refresh
-                    </button>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                    {[
-                      { label: "Total Submissions", value: submissions.length, color: "text-secondary" },
-                      { label: "Unread", value: unreadCount, color: "text-destructive" },
-                    ].map((s) => (
-                      <div key={s.label} className="glass-card p-6">
-                        <div className={`text-3xl font-heading font-bold ${s.color}`}>{s.value}</div>
-                        <div className="text-muted-foreground text-sm mt-1">{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="glass-card p-5 mb-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-heading font-semibold text-foreground">Live Website Preview</h3>
-                        <p className="text-muted-foreground text-sm mt-1">View your website as visitors see it</p>
-                      </div>
-                      <a href="/" target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
-                        <Eye size={14} /> View Live Site
-                      </a>
-                    </div>
-                  </div>
-                  <h3 className="font-heading font-semibold text-foreground mb-3">Recent Submissions</h3>
-                  {submissions.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-12">No submissions yet.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {submissions.slice(0, 5).map((s) => (
-                        <div key={s.id} className={`glass-card p-4 ${!s.is_read ? "border-l-4 border-l-secondary" : ""}`}>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="font-semibold text-foreground text-sm">{s.full_name}</span>
-                              <span className="text-muted-foreground text-xs ml-2">{s.email}</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">{formatDate(s.created_at)}</span>
-                          </div>
-                          <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{s.message}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+
 
               {tab === "inbox" && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Leads</h1>
+                  <div className="flex items-center justify-between mb-1">
+                    <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Leads</h1>
                     <button onClick={() => { loadData(); loadApplications(); }} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted">
                       <RefreshCw size={13} /> Refresh
                     </button>
                   </div>
                   {/* CONTACTS */}
                   <div className="space-y-3">
-                      <div className="flex flex-col lg:flex-row gap-2 items-center mb-3 bg-muted/20 p-1.5 rounded-xl border border-border/50 shadow-sm">
-                        <div className="flex-1 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
-                          <input value={subSearch}
-                            onChange={(e) => setSubSearch(e.target.value)}
-                            placeholder="Search submissions..."
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring"
-                          />
-                          <select value={subStatusFilter} onChange={(e) => setSubStatusFilter(e.target.value)}
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring">
-                            <option value="all">All statuses</option>
-                            <option value="read">Read</option>
-                            <option value="unread">Unread</option>
-                            <option value="new">New</option>
-                            <option value="responded">Responded</option>
-                          </select>
-                          <EditableDateInput type="date" value={subDateFilterFrom}
-                            onChange={(e: any) => setSubDateFilterFrom(e.target.value)}
-                            title="From Date"
-                            className="w-full rounded-lg h-[32px]"
-                          />
-                          <EditableDateInput type="date" value={subDateFilterTo}
-                            onChange={(e: any) => setSubDateFilterTo(e.target.value)}
-                            title="To Date"
-                            className="w-full rounded-lg h-[32px]"
-                          />
-                        </div>
-                        <div className="w-full lg:w-auto flex items-center gap-2">
-                          <div className="flex bg-background border border-border rounded-lg p-0.5 shrink-0 h-[32px]">
-                            <button onClick={() => setSubView("list")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>List</button>
-                            <button onClick={() => setSubView("calendar")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "calendar" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>Calendar</button>
-                          </div>
-                          <button onClick={() => {
-                            const headers = ["Name", "Email", "Phone", "Company", "Message", "Date"];
-                            const csvContent = [
-                              headers.join(","),
-                              ...filteredSubmissions.map(s => [
-                                `"${(s.full_name || s.name || '').replace(/"/g, '""')}"`,
-                                `"${(s.email || '').replace(/"/g, '""')}"`,
-                                `"${(s.phone || '').replace(/"/g, '""')}"`,
-                                `"${(s.company_name || '').replace(/"/g, '""')}"`,
-                                `"${(s.message || '').replace(/"/g, '""')}"`,
-                                `"${formatDate(s.created_at)}"`
-                              ].join(","))
-                            ].join("\n");
-                            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement("a");
-                            link.setAttribute("href", url);
-                            link.setAttribute("download", "contact_submissions.csv");
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          }} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
-                            <LucideIcons.Download size={14} /> Export Excel
-                          </button>
-                          <button onClick={() => window.dispatchEvent(new CustomEvent("ss:openNewAppointment"))} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
-                            <LucideIcons.Plus size={14} /> New Appointment
-                          </button>
-                        </div>
+                    <div className="flex flex-col lg:flex-row gap-2 items-center mb-3 bg-muted/20 p-1.5 rounded-xl border border-border/50 shadow-sm">
+                      <div className="flex-1 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
+                        <input value={subSearch}
+                          onChange={(e) => setSubSearch(e.target.value)}
+                          placeholder="Search submissions..."
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <select value={subStatusFilter} onChange={(e) => setSubStatusFilter(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-xs h-[32px] outline-none focus:ring-1 focus:ring-ring">
+                          <option value="all">All statuses</option>
+                          <option value="read">Read</option>
+                          <option value="unread">Unread</option>
+                          <option value="new">New</option>
+                          <option value="responded">Responded</option>
+                        </select>
+                        <EditableDateInput type="date" value={subDateFilterFrom}
+                          onChange={(e: any) => setSubDateFilterFrom(e.target.value)}
+                          title="From Date"
+                          className="w-full rounded-lg h-[32px]"
+                        />
+                        <EditableDateInput type="date" value={subDateFilterTo}
+                          onChange={(e: any) => setSubDateFilterTo(e.target.value)}
+                          title="To Date"
+                          className="w-full rounded-lg h-[32px]"
+                        />
                       </div>
-                      
-                      <SubmissionsCalendar visible={subView === "calendar"} submissions={submissions} applications={applications} appointments={appointments} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
-                      
-                      {subView === "list" && (
-                        <>
-                          {displayedSubmissions.map((s) => {
-                        const isExpanded = collapsedCards[s.id] === true;
-                        const replies = subReplies[s.id] || [];
-                        
-                        let displayMessage = s.message || "";
-                        let service = "";
-                        let prefDate1 = "";
-                        let prefDate2 = "";
+                      <div className="w-full lg:w-auto flex items-center gap-2">
+                        <div className="flex bg-background border border-border rounded-lg p-0.5 shrink-0 h-[32px]">
+                          <button onClick={() => setSubView("list")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>List</button>
+                          <button onClick={() => setSubView("calendar")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "calendar" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>Calendar</button>
+                        </div>
+                        <button onClick={() => {
+                          const headers = ["Name", "Email", "Phone", "Company", "Message", "Date"];
+                          const csvContent = [
+                            headers.join(","),
+                            ...filteredSubmissions.map(s => [
+                              `"${(s.full_name || s.name || '').replace(/"/g, '""')}"`,
+                              `"${(s.email || '').replace(/"/g, '""')}"`,
+                              `"${(s.phone || '').replace(/"/g, '""')}"`,
+                              `"${(s.company_name || '').replace(/"/g, '""')}"`,
+                              `"${(s.message || '').replace(/"/g, '""')}"`,
+                              `"${formatDate(s.created_at)}"`
+                            ].join(","))
+                          ].join("\n");
+                          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.setAttribute("href", url);
+                          link.setAttribute("download", "contact_submissions.csv");
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
+                          <LucideIcons.Download size={14} /> Export Excel
+                        </button>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent("ss:openNewAppointment"))} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
+                          <LucideIcons.Plus size={14} /> New Appointment
+                        </button>
+                      </div>
+                    </div>
 
-                        const lines = displayMessage.split("\n");
-                        const cleanLines = [];
-                        for (const line of lines) {
-                          if (line.startsWith("Service: ")) service = line.replace("Service: ", "");
-                          else if (line.startsWith("Preferred Date 1: ")) prefDate1 = line.replace("Preferred Date 1: ", "");
-                          else if (line.startsWith("Preferred Date 2: ")) prefDate2 = line.replace("Preferred Date 2: ", "");
-                          else cleanLines.push(line);
-                        }
-                        displayMessage = cleanLines.join("\n").trim();
+                    <SubmissionsCalendar visible={subView === "calendar"} submissions={submissions} applications={applications} appointments={appointments} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
 
-                        return (
-                          <div key={s.id} className={`glass-card overflow-hidden transition-all ${!s.is_read ? "border-l-4 border-l-secondary" : ""}`}>
-                            {/* Card Header — always visible */}
-                            <div className="flex justify-between items-center px-5 py-4 cursor-pointer hover:bg-muted/20 transition-colors"
-                              onClick={() => toggleCardCollapse(s.id, "sub")}>
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
-                                <ChevronDown size={16} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                                <div className="min-w-0">
-                                  <span className="font-semibold text-foreground text-sm">{String(s.full_name || s.name || s.email || '—')}</span>
-                                  {s.company_name && <span className="text-muted-foreground text-xs ml-2">({String(s.company_name)})</span>}
-                                  <div className="text-xs text-muted-foreground mt-0.5 truncate">{String(s.email || '')}{s.phone ? ` · ${String(s.phone)}` : ""}</div>
-                                </div>
-                              </div>
-                              
-                              {service ? (
-                                <div className="hidden sm:flex flex-1 justify-center items-center px-4">
-                                  <span className="px-2.5 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-[0.6875rem] font-bold uppercase tracking-wider whitespace-nowrap">
-                                    {service}
-                                  </span>
-                                </div>
-                              ) : <div className="hidden sm:block flex-1" />}
+                    {subView === "list" && (
+                      <>
+                        {displayedSubmissions.map((s) => {
+                          const isExpanded = collapsedCards[s.id] === true;
+                          const replies = subReplies[s.id] || [];
 
-                              <div className="flex items-center gap-2 shrink-0 flex-1 justify-end" onClick={e => e.stopPropagation()}>
-                                <span className="text-xs text-muted-foreground hidden sm:block">{formatDate(s.created_at)}</span>
-                                <button onClick={() => toggleRead(s.id, s.is_read)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={s.is_read ? "Mark unread" : "Mark read"}>
-                                  {s.is_read ? <EyeOff size={14} /> : <Eye size={14} />}
-                                </button>
-                                <button onClick={() => deleteSubmission(s.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive">
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
+                          let displayMessage = s.message || "";
+                          let service = "";
+                          let prefDate1 = "";
+                          let prefDate2 = "";
 
-                            {/* Expanded body */}
-                            {isExpanded && (
-                              <div className="border-t border-border/50 px-5 pb-5">
-                                {/* Original message detailed view */}
+                          const lines = displayMessage.split("\n");
+                          const cleanLines = [];
+                          for (const line of lines) {
+                            if (line.startsWith("Service: ")) service = line.replace("Service: ", "");
+                            else if (line.startsWith("Preferred Date 1: ")) prefDate1 = line.replace("Preferred Date 1: ", "");
+                            else if (line.startsWith("Preferred Date 2: ")) prefDate2 = line.replace("Preferred Date 2: ", "");
+                            else cleanLines.push(line);
+                          }
+                          displayMessage = cleanLines.join("\n").trim();
 
-
-                                {/* Chat View for Messages & Replies */}
-                                <div className="mt-6 space-y-4">
-                                  {/* Client Message Bubble */}
-                                  <div className="flex justify-start">
-                                    <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
-                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{String(s.full_name || s.name || "Client")}</div>
-                                      <div className="whitespace-pre-wrap leading-relaxed">{String(displayMessage)}</div>
-                                      <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
-                                    </div>
+                          return (
+                            <div key={s.id} className={`glass-card overflow-hidden transition-all ${!s.is_read ? "border-l-4 border-l-secondary" : ""}`}>
+                              {/* Card Header — always visible */}
+                              <div className="flex justify-between items-center px-5 py-4 cursor-pointer hover:bg-muted/20 transition-colors"
+                                onClick={() => toggleCardCollapse(s.id, "sub")}>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <ChevronDown size={16} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                  <div className="min-w-0">
+                                    <span className="font-semibold text-foreground text-sm">{String(s.full_name || s.name || s.email || '—')}</span>
+                                    {s.company_name && <span className="text-muted-foreground text-xs ml-2">({String(s.company_name)})</span>}
+                                    <div className="text-xs text-muted-foreground mt-0.5 truncate">{String(s.email || '')}{s.phone ? ` · ${String(s.phone)}` : ""}</div>
                                   </div>
+                                </div>
 
-                                  {/* Admin replies in chat style */}
-                                  {replies.map((r: any) => (
-                                    <div key={r.id} className={`flex ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
-                                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs border shadow-sm ${r.sender === "admin"
-                                        ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
-                                        : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
-                                        }`}>
-                                        <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
-                                        <div className="whitespace-pre-wrap leading-relaxed">{r.message}</div>
-                                        <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
+                                {service ? (
+                                  <div className="hidden sm:flex flex-1 justify-center items-center px-4">
+                                    <span className="px-2.5 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-[0.6875rem] font-bold uppercase tracking-wider whitespace-nowrap">
+                                      {service}
+                                    </span>
+                                  </div>
+                                ) : <div className="hidden sm:block flex-1" />}
+
+                                <div className="flex items-center gap-2 shrink-0 flex-1 justify-end" onClick={e => e.stopPropagation()}>
+                                  <span className="text-xs text-muted-foreground hidden sm:block">{formatDate(s.created_at)}</span>
+                                  <button onClick={() => toggleRead(s.id, s.is_read)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={s.is_read ? "Mark unread" : "Mark read"}>
+                                    {s.is_read ? <EyeOff size={14} /> : <Eye size={14} />}
+                                  </button>
+                                  <button onClick={() => deleteSubmission(s.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive">
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Expanded body */}
+                              {isExpanded && (
+                                <div className="border-t border-border/50 px-5 pb-5">
+                                  {/* Original message detailed view */}
+
+
+                                  {/* Chat View for Messages & Replies */}
+                                  <div className="mt-6 space-y-4">
+                                    {/* Client Message Bubble */}
+                                    <div className="flex justify-start">
+                                      <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
+                                        <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{String(s.full_name || s.name || "Client")}</div>
+                                        <div className="whitespace-pre-wrap leading-relaxed">{String(displayMessage)}</div>
+                                        <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
                                       </div>
                                     </div>
-                                  ))}
-                                </div>
 
-                                {/* Reply input */}
-                                <div className="mt-4 space-y-2">
-                                  <div className="flex gap-2">
-                                    <input
-                                      value={replyTexts[s.id] || ""}
-                                      onChange={(e) => setReplyTexts(p => ({ ...p, [s.id]: e.target.value }))}
-                                      onKeyDown={(e) => { if (e.key === "Enter") sendSubmissionReply(s.id); }}
-                                      placeholder="Type a reply (sends email)..."
-                                      className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
-                                    />
-                                    <button onClick={() => sendSubmissionReply(s.id)}
-                                      disabled={replyingSub === s.id || !replyTexts[s.id]?.trim()}
-                                      className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 shrink-0">
-                                      <Send size={14} /> {replyingSub === s.id ? "Sending..." : "Reply"}
-                                    </button>
+                                    {/* Admin replies in chat style */}
+                                    {replies.map((r: any) => (
+                                      <div key={r.id} className={`flex ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
+                                        <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs border shadow-sm ${r.sender === "admin"
+                                          ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
+                                          : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
+                                          }`}>
+                                          <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
+                                          <div className="whitespace-pre-wrap leading-relaxed">{r.message}</div>
+                                          <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Reply input */}
+                                  <div className="mt-4 space-y-2">
+                                    <div className="flex gap-2">
+                                      <input
+                                        value={replyTexts[s.id] || ""}
+                                        onChange={(e) => setReplyTexts(p => ({ ...p, [s.id]: e.target.value }))}
+                                        onKeyDown={(e) => { if (e.key === "Enter") sendSubmissionReply(s.id); }}
+                                        placeholder="Type a reply (sends email)..."
+                                        className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
+                                      />
+                                      <button onClick={() => sendSubmissionReply(s.id)}
+                                        disabled={replyingSub === s.id || !replyTexts[s.id]?.trim()}
+                                        className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 shrink-0">
+                                        <Send size={14} /> {replyingSub === s.id ? "Sending..." : "Reply"}
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
+                          );
+                        })}
+                        {displayedSubmissions.length === 0 && <p className="text-muted-foreground text-center py-12">No submissions match the selected filters.</p>}
+                        {filteredSubmissions.length > PAGE_SIZE && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-sm text-muted-foreground">
+                            <button onClick={() => setSubPage((prev) => Math.max(1, prev - 1))}
+                              disabled={subPage === 1}
+                              className="px-3 py-2 rounded-lg bg-background border border-border text-sm disabled:opacity-50">
+                              Previous
+                            </button>
+                            <span>Page {subPage} of {totalSubPages}</span>
+                            <button onClick={() => setSubPage((prev) => Math.min(totalSubPages, prev + 1))}
+                              disabled={subPage === totalSubPages}
+                              className="px-3 py-2 rounded-lg bg-background border border-border text-sm disabled:opacity-50">
+                              Next
+                            </button>
                           </div>
-                        );
-                      })}
-                      {displayedSubmissions.length === 0 && <p className="text-muted-foreground text-center py-12">No submissions match the selected filters.</p>}
-                      {filteredSubmissions.length > PAGE_SIZE && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-sm text-muted-foreground">
-                          <button onClick={() => setSubPage((prev) => Math.max(1, prev - 1))}
-                            disabled={subPage === 1}
-                            className="px-3 py-2 rounded-lg bg-background border border-border text-sm disabled:opacity-50">
-                            Previous
-                          </button>
-                          <span>Page {subPage} of {totalSubPages}</span>
-                          <button onClick={() => setSubPage((prev) => Math.min(totalSubPages, prev + 1))}
-                            disabled={subPage === totalSubPages}
-                            className="px-3 py-2 rounded-lg bg-background border border-border text-sm disabled:opacity-50">
-                            Next
-                          </button>
-                        </div>
-                      )}
+                        )}
 
                       </>
-                      )}
-                      
-                      {selectedSubmission && (() => {
-                        const s = selectedSubmission;
-                        const replies = subReplies[s.id] || [];
-                        let displayMessage = s.message || "";
-                        let service = "";
-                        let prefDate1 = "";
-                        let prefDate2 = "";
-                        const lines = displayMessage.split("\n");
-                        const cleanLines = [];
-                        for (const line of lines) {
-                          if (line.startsWith("Service: ")) service = line.replace("Service: ", "");
-                          else if (line.startsWith("Preferred Date 1: ")) prefDate1 = line.replace("Preferred Date 1: ", "");
-                          else if (line.startsWith("Preferred Date 2: ")) prefDate2 = line.replace("Preferred Date 2: ", "");
-                          else cleanLines.push(line);
-                        }
-                        displayMessage = cleanLines.join("\n").trim();
+                    )}
 
-                        return (
-                          <div className="fixed inset-0 z-50 p-4 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedSubmission(null)}>
-                            <div className="absolute w-full max-w-2xl bg-card border border-border rounded-2xl shadow-xl overflow-hidden animate-in duration-150" 
-                                 style={{ top: '50%', left: '50%', transform: `translate(-50%, -50%)` }} 
-                                 onClick={(e) => e.stopPropagation()}>
-                              {/* Header */}
-                              <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
-                                      <User size={10} /> Contact
-                                    </span>
-                                    <h3 className="text-base font-bold text-foreground">{s.full_name || s.name || s.email}</h3>
+                    {selectedSubmission && (() => {
+                      const s = selectedSubmission;
+                      const replies = subReplies[s.id] || [];
+                      let displayMessage = s.message || "";
+                      let service = "";
+                      let prefDate1 = "";
+                      let prefDate2 = "";
+                      const lines = displayMessage.split("\n");
+                      const cleanLines = [];
+                      for (const line of lines) {
+                        if (line.startsWith("Service: ")) service = line.replace("Service: ", "");
+                        else if (line.startsWith("Preferred Date 1: ")) prefDate1 = line.replace("Preferred Date 1: ", "");
+                        else if (line.startsWith("Preferred Date 2: ")) prefDate2 = line.replace("Preferred Date 2: ", "");
+                        else cleanLines.push(line);
+                      }
+                      displayMessage = cleanLines.join("\n").trim();
+
+                      return (
+                        <div className="fixed inset-0 z-50 p-4 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedSubmission(null)}>
+                          <div className="absolute w-full max-w-2xl bg-card border border-border rounded-2xl shadow-xl overflow-hidden animate-in duration-150"
+                            style={{ top: '50%', left: '50%', transform: `translate(-50%, -50%)` }}
+                            onClick={(e) => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
+                                    <User size={10} /> Contact
+                                  </span>
+                                  <h3 className="text-base font-bold text-foreground">{s.full_name || s.name || s.email}</h3>
+                                </div>
+                                <p className="text-[0.65rem] text-muted-foreground">{formatDate(s.created_at)}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => setSelectedSubmission(null)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X size={16} /></button>
+                              </div>
+                            </div>
+
+                            {/* Scrollable body */}
+                            <div className="overflow-y-auto max-h-[75vh] p-5 custom-scrollbar">
+
+
+                              {/* Chat View for Messages & Replies */}
+                              <div className="mt-6 space-y-4">
+                                {/* Client Message Bubble */}
+                                <div className="flex justify-start">
+                                  <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
+                                    <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{s.full_name || s.name || "Client"}</div>
+                                    <div className="whitespace-pre-wrap leading-relaxed">{displayMessage}</div>
+                                    <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
                                   </div>
-                                  <p className="text-[0.65rem] text-muted-foreground">{formatDate(s.created_at)}</p>
                                 </div>
-                                <div className="flex gap-2">
-                                  <button onClick={() => setSelectedSubmission(null)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X size={16} /></button>
-                                </div>
+
+                                {/* Admin replies in chat style */}
+                                {replies.map((r: any) => (
+                                  <div key={r.id} className={`flex ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
+                                    <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs border shadow-sm ${r.sender === "admin"
+                                      ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
+                                      : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
+                                      }`}>
+                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
+                                      <div className="whitespace-pre-wrap leading-relaxed">{r.message}</div>
+                                      <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
 
-                              {/* Scrollable body */}
-                              <div className="overflow-y-auto max-h-[75vh] p-5 custom-scrollbar">
-
-
-                                {/* Chat View for Messages & Replies */}
-                                <div className="mt-6 space-y-4">
-                                  {/* Client Message Bubble */}
-                                  <div className="flex justify-start">
-                                    <div className="max-w-[85%] px-3 py-2 rounded-xl text-xs border bg-muted/50 text-foreground border-border/40 rounded-tl-sm shadow-sm">
-                                      <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{s.full_name || s.name || "Client"}</div>
-                                      <div className="whitespace-pre-wrap leading-relaxed">{displayMessage}</div>
-                                      <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(s.created_at)}</div>
-                                    </div>
-                                  </div>
-
-                                  {/* Admin replies in chat style */}
-                                  {replies.map((r: any) => (
-                                    <div key={r.id} className={`flex ${r.sender === "admin" ? "justify-end" : "justify-start"}`}>
-                                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs border shadow-sm ${r.sender === "admin"
-                                        ? "bg-secondary text-secondary-foreground border-secondary/20 rounded-tr-sm"
-                                        : "bg-muted/50 text-foreground border-border/40 rounded-tl-sm"
-                                        }`}>
-                                        <div className="text-[0.625rem] font-bold uppercase opacity-70 mb-1">{r.sender === "admin" ? "You (Admin)" : r.sender}</div>
-                                        <div className="whitespace-pre-wrap leading-relaxed">{r.message}</div>
-                                        <div className="text-[0.625rem] opacity-50 mt-1.5">{formatDate(r.created_at)}</div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Reply input */}
-                                <div className="mt-4 space-y-2">
-                                  <div className="flex gap-2">
-                                    <input
-                                      value={replyTexts[s.id] || ""}
-                                      onChange={(e) => setReplyTexts(p => ({ ...p, [s.id]: e.target.value }))}
-                                      onKeyDown={(e) => { if (e.key === "Enter") sendSubmissionReply(s.id); }}
-                                      placeholder="Type a reply (sends email)..."
-                                      className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
-                                    />
-                                    <button onClick={() => sendSubmissionReply(s.id)}
-                                      disabled={replyingSub === s.id || !replyTexts[s.id]?.trim()}
-                                      className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 shrink-0">
-                                      <Send size={14} /> {replyingSub === s.id ? "Sending..." : "Reply"}
-                                    </button>
-                                  </div>
+                              {/* Reply input */}
+                              <div className="mt-4 space-y-2">
+                                <div className="flex gap-2">
+                                  <input
+                                    value={replyTexts[s.id] || ""}
+                                    onChange={(e) => setReplyTexts(p => ({ ...p, [s.id]: e.target.value }))}
+                                    onKeyDown={(e) => { if (e.key === "Enter") sendSubmissionReply(s.id); }}
+                                    placeholder="Type a reply (sends email)..."
+                                    className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
+                                  />
+                                  <button onClick={() => sendSubmissionReply(s.id)}
+                                    disabled={replyingSub === s.id || !replyTexts[s.id]?.trim()}
+                                    className="px-4 py-2 bg-secondary text-secondary-foreground rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 shrink-0">
+                                    <Send size={14} /> {replyingSub === s.id ? "Sending..." : "Reply"}
+                                  </button>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        );
-                      })()}
-                    </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
 
               {tab === "website" && <LiveEditor key="live-editor" />}
               {tab === "sitehealth" && (
                 <div>
-                  <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-4">Site Health</h1>
+                  <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-2">Site Health</h1>
                   <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
                     <div className="flex gap-1 bg-muted/40 rounded-xl p-1 shrink-0">
                       <button onClick={() => setSiteHealthSubTab("seo")}
@@ -2140,7 +2090,7 @@ const AdminDashboard = () => {
                 <div className="w-full">
                   <div className="w-full space-y-6">
                     <div className="space-y-2">
-                      <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-1">Site Settings</h1>
+                      <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-1">Site Settings</h1>
                       <p className="text-muted-foreground text-sm">These settings affect the live website for all visitors in real-time.</p>
                     </div>
                     <div className="glass-card w-full p-6 lg:p-8">
@@ -2325,11 +2275,10 @@ const AdminDashboard = () => {
                                     {["left", "right"].map(pos => (
                                       <button key={pos} type="button"
                                         onClick={() => setSiteSettings(p => ({ ...p, chatbot_position: pos }))}
-                                        className={`flex-1 py-1 rounded-md text-[0.625rem] font-bold uppercase transition-all ${
-                                          (siteSettings.chatbot_position || "right") === pos
-                                            ? "bg-secondary text-secondary-foreground shadow-sm"
-                                            : "text-muted-foreground hover:bg-muted"
-                                        }`}
+                                        className={`flex-1 py-1 rounded-md text-[0.625rem] font-bold uppercase transition-all ${(siteSettings.chatbot_position || "right") === pos
+                                          ? "bg-secondary text-secondary-foreground shadow-sm"
+                                          : "text-muted-foreground hover:bg-muted"
+                                          }`}
                                       >{pos}</button>
                                     ))}
                                   </div>
@@ -2375,7 +2324,7 @@ const AdminDashboard = () => {
                                   <Plus size={10} /> Add Link
                                 </button>
                               </div>
-                              
+
                               <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                                 {Array.from({ length: parseInt(siteSettings.social_count || "6", 10) }).map((_, idx) => {
                                   const i = idx + 1;
@@ -2383,16 +2332,16 @@ const AdminDashboard = () => {
                                   const hrefKey = `social_href_${i}`;
                                   const visibleKey = `social_visible_${i}`;
                                   const colorKey = `social_color_${i}`;
-                                  
+
                                   const icon = siteSettings[iconKey] || (
                                     i === 1 ? "Facebook" :
-                                    i === 2 ? "Twitter" :
-                                    i === 3 ? "Linkedin" :
-                                    i === 4 ? "Instagram" :
-                                    i === 5 ? "Viber" : 
-                                    i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                                      i === 2 ? "Twitter" :
+                                        i === 3 ? "Linkedin" :
+                                          i === 4 ? "Instagram" :
+                                            i === 5 ? "Viber" :
+                                              i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
                                   );
-                                  
+
                                   const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
                                   const isWhatsApp = iconName.includes("whatsapp");
                                   const isFacebook = iconName === "facebook";
@@ -2400,29 +2349,29 @@ const AdminDashboard = () => {
                                   const isLinkedin = iconName === "linkedin";
                                   const isInstagram = iconName === "instagram";
                                   const isViber = iconName === "viber";
-                                  
+
                                   const fallbackColor = isFacebook ? "#1877F2" :
                                     isTwitter ? "#1DA1F2" :
-                                    isLinkedin ? "#0A66C2" :
-                                    isInstagram ? "#E4405F" :
-                                    isViber ? "#7360f2" : 
-                                    isWhatsApp ? "#25D366" : "#3b82f6";
-                                    
+                                      isLinkedin ? "#0A66C2" :
+                                        isInstagram ? "#E4405F" :
+                                          isViber ? "#7360f2" :
+                                            isWhatsApp ? "#25D366" : "#3b82f6";
+
                                   const color = siteSettings[colorKey] !== undefined ? siteSettings[colorKey] : fallbackColor;
-                                  
+
                                   const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
                                     isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
-                                    isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                    isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                    isViber ? "viber://chat?number=" : 
-                                    isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
-                                    
+                                      isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                                        isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                          isViber ? "viber://chat?number=" :
+                                            isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
+
                                   let href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : fallbackHref;
                                   if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
                                   if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
-                                  
+
                                   const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
-                                  
+
                                   return (
                                     <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-background p-1.5 pr-2 rounded-lg border border-border/30 hover:border-border/80 transition-colors shadow-sm group/item relative">
                                       {/* Icon Live Preview */}
@@ -2542,10 +2491,10 @@ const AdminDashboard = () => {
                                           </div>
                                         )}
                                       </div>
-                                      
+
                                       {/* URL Input */}
                                       <div className="flex-1 w-full sm:w-auto">
-                                        <input 
+                                        <input
                                           type="text"
                                           value={href}
                                           onChange={(e) => {
@@ -2563,13 +2512,13 @@ const AdminDashboard = () => {
                                           className="w-full px-2 py-1.5 rounded-md bg-muted/50 border border-border/50 text-[10px] outline-none focus:ring-1 focus:ring-secondary/35 font-mono"
                                         />
                                       </div>
-                                      
+
                                       {/* Color Input */}
                                       <div className="flex items-center gap-1 shrink-0 bg-muted/40 px-1 py-1 rounded-md border border-border/50">
                                         <input type="color" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-4 h-4 rounded cursor-pointer p-0 border-0 bg-transparent" title="Icon Color" />
                                         <input type="text" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-12 px-1 py-0.5 bg-transparent text-[9px] outline-none font-mono uppercase text-muted-foreground border-none focus:text-foreground" />
                                       </div>
-                                      
+
                                       {/* Action Buttons */}
                                       <div className="flex items-center gap-1 shrink-0 ml-1">
                                         <button
@@ -2580,56 +2529,56 @@ const AdminDashboard = () => {
                                         >
                                           {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
                                         </button>
-                                        
+
                                         <button
                                           type="button"
                                           onClick={() => {
                                             if (!confirm("Are you sure you want to delete this social link row?")) return;
                                             const count = parseInt(siteSettings.social_count || "6", 10);
                                             const nextSettings = { ...siteSettings };
-                                            
+
                                             const resolvedList = Array.from({ length: count }).map((_, idx) => {
                                               const idxPlus = idx + 1;
                                               const icon = siteSettings[`social_icon_${idxPlus}`] || (
                                                 idxPlus === 1 ? "Facebook" :
-                                                idxPlus === 2 ? "Twitter" :
-                                                idxPlus === 3 ? "Linkedin" :
-                                                idxPlus === 4 ? "Instagram" :
-                                                idxPlus === 5 ? "Viber" : 
-                                                idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                                                  idxPlus === 2 ? "Twitter" :
+                                                    idxPlus === 3 ? "Linkedin" :
+                                                      idxPlus === 4 ? "Instagram" :
+                                                        idxPlus === 5 ? "Viber" :
+                                                          idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
                                               );
-                                                const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
-                                                const isWhatsApp = iconName.includes("whatsapp");
-                                                const isFacebook = iconName === "facebook";
-                                                const isTwitter = iconName === "twitter";
-                                                const isLinkedin = iconName === "linkedin";
-                                                const isInstagram = iconName === "instagram";
-                                                const isViber = iconName === "viber";
-                                                
-                                                const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                                                  isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
+                                              const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                                              const isWhatsApp = iconName.includes("whatsapp");
+                                              const isFacebook = iconName === "facebook";
+                                              const isTwitter = iconName === "twitter";
+                                              const isLinkedin = iconName === "linkedin";
+                                              const isInstagram = iconName === "instagram";
+                                              const isViber = iconName === "viber";
+
+                                              const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+                                                isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
                                                   isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                                  isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                                  isViber ? "viber://chat?number=" : 
-                                                  isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
-                                                  
-                                                const fallbackColor = isFacebook ? "#1877F2" :
-                                                  isTwitter ? "#1DA1F2" :
+                                                    isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                                      isViber ? "viber://chat?number=" :
+                                                        isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
+
+                                              const fallbackColor = isFacebook ? "#1877F2" :
+                                                isTwitter ? "#1DA1F2" :
                                                   isLinkedin ? "#0A66C2" :
-                                                  isInstagram ? "#E4405F" :
-                                                  isViber ? "#7360f2" : 
-                                                  isWhatsApp ? "#25D366" : "#3b82f6";
-                                                  
-                                                let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
-                                                if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
-                                                if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
-                                                
-                                                return {
-                                                  icon,
-                                                  href,
-                                                  visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
-                                                  color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
-                                                };
+                                                    isInstagram ? "#E4405F" :
+                                                      isViber ? "#7360f2" :
+                                                        isWhatsApp ? "#25D366" : "#3b82f6";
+
+                                              let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
+                                              if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
+                                              if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
+
+                                              return {
+                                                icon,
+                                                href,
+                                                visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
+                                                color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
+                                              };
                                             });
 
                                             resolvedList.splice(i - 1, 1);
@@ -2819,7 +2768,7 @@ const AdminDashboard = () => {
                 <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
                   <div className="flex flex-wrap items-center justify-between mb-4 gap-4">
                     <div>
-                      <h1 className="text-3xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Live Chat Sessions</h1>
+                      <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Live Chat Sessions</h1>
                       <p className="text-xs text-muted-foreground mt-0.5">Real-time status of all digital conversations</p>
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto">

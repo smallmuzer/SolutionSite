@@ -174,10 +174,10 @@ const Header = () => {
   return (
     <header
       style={{
-        position: "fixed", 
-        top: 0, 
-        left: 0, 
-        right: 0, 
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
         zIndex: 50,
         transition: "all 0.3s ease",
         background: scrolled ? "hsl(var(--background)/0.85)" : "hsl(var(--background))",
@@ -277,25 +277,25 @@ const Header = () => {
 
           {editor?.isEditMode && (
             <div className="flex items-center gap-1.5 ml-2 border-l border-border/50 pl-2 animate-in slide-in-from-right-2 duration-500">
-               <button 
-                  onClick={editor.onOpenCustomizer}
-                  className="p-1.5 hover:bg-secondary/10 rounded-lg text-muted-foreground hover:text-secondary transition-all group relative"
-                  title="UI Style Settings"
-                >
-                  <Settings size={16} className="group-hover:rotate-90 transition-transform duration-700 ease-in-out" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-secondary rounded-full border-2 border-background animate-bounce" />
-                </button>
+              <button
+                onClick={editor.onOpenCustomizer}
+                className="p-1.5 hover:bg-secondary/10 rounded-lg text-muted-foreground hover:text-secondary transition-all group relative"
+                title="UI Style Settings"
+              >
+                <Settings size={16} className="group-hover:rotate-90 transition-transform duration-700 ease-in-out" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-secondary rounded-full border-2 border-background animate-bounce" />
+              </button>
 
-                {Object.keys(editor.pendingChanges).length > 0 && (
-                  <button 
-                    onClick={editor.handleSaveAll}
-                    className="relative px-3 py-1.5 bg-secondary text-secondary-foreground rounded-full text-[10px] font-black uppercase tracking-wider hover:opacity-90 transition-all shadow-[0_0_20px_rgba(var(--secondary),0.5)] group overflow-hidden"
-                  >
-                    <span className="relative z-10">Save {Object.keys(editor.pendingChanges).length}</span>
-                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                    <div className="absolute inset-0 animate-pulse bg-secondary/50 blur-lg -z-10" />
-                  </button>
-                )}
+              {Object.keys(editor.pendingChanges).length > 0 && (
+                <button
+                  onClick={editor.handleSaveAll}
+                  className="relative px-3 py-1.5 bg-secondary text-secondary-foreground rounded-full text-[10px] font-black uppercase tracking-wider hover:opacity-90 transition-all shadow-[0_0_20px_rgba(var(--secondary),0.5)] group overflow-hidden"
+                >
+                  <span className="relative z-10">Save {Object.keys(editor.pendingChanges).length}</span>
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <div className="absolute inset-0 animate-pulse bg-secondary/50 blur-lg -z-10" />
+                </button>
+              )}
             </div>
           )}
 
@@ -350,8 +350,8 @@ const Header = () => {
                 <div
                   {...getNavProps(() => scrollTo(item.resolvedHref))}
                   className={`w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
-                      ? "text-secondary bg-secondary/10"
-                      : "text-foreground/80 hover:text-foreground hover:bg-muted"
+                    ? "text-secondary bg-secondary/10"
+                    : "text-foreground/80 hover:text-foreground hover:bg-muted"
                     }`}
                 >
                   <EditableText
@@ -371,7 +371,7 @@ const Header = () => {
             {editor?.isEditMode && (
               <div className="mt-4 px-3 flex flex-col gap-2">
                 <div className="h-px bg-border w-full mb-2" />
-                <button 
+                <button
                   onClick={editor.onOpenCustomizer}
                   className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 rounded-xl text-sm font-bold text-foreground"
                 >
@@ -379,7 +379,7 @@ const Header = () => {
                   <Settings size={18} />
                 </button>
                 {Object.keys(editor.pendingChanges).length > 0 && (
-                  <button 
+                  <button
                     onClick={editor.handleSaveAll}
                     className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl font-black uppercase tracking-widest shadow-lg shadow-secondary/20 animate-pulse"
                   >
