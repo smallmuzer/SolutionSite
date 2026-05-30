@@ -442,20 +442,49 @@ try {
 
 const t0 = new Date().toISOString();
 
-function seedIfEmpty(table, rows) {
-  const count = db.prepare(`SELECT COUNT(*) as c FROM ${table}`).get().c;
-  if (count > 0) return;
+function seedData(table, rows, conflictKey = "id", updateCondition = null) {
+  if (!rows || rows.length === 0) return;
   const keys = Object.keys(rows[0]);
   const placeholders = keys.map(() => "?").join(", ");
-  const stmt = db.prepare(`INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`);
+  
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+  
+  let condition = updateCondition;
+  if (!condition) {
+    if (cols.includes("created_at") && cols.includes("updated_at")) {
+      condition = `${table}.updated_at = ${table}.created_at OR ${table}.updated_at IS NULL`;
+    } else if (cols.includes("updated_by")) {
+      condition = `${table}.updated_by IS NULL`;
+    }
+  }
+
+  let sql;
+  if (condition) {
+    const updateSets = keys.filter(k => k !== conflictKey && k !== 'id').map(k => `${k} = excluded.${k}`).join(", ");
+    if (updateSets) {
+      sql = `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders}) ON CONFLICT(${conflictKey}) DO UPDATE SET ${updateSets} WHERE ${condition}`;
+    } else {
+      sql = `INSERT OR IGNORE INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`;
+    }
+  } else {
+    sql = `INSERT OR IGNORE INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`;
+  }
+
+  const stmt = db.prepare(sql);
   const insertMany = db.transaction((items) => {
-    for (const item of items) stmt.run(Object.values(item));
+    let affected = 0;
+    for (const item of items) {
+      const res = stmt.run(Object.values(item));
+      affected += res.changes;
+    }
+    return affected;
   });
-  insertMany(rows);
-  console.log(`[db] Seeded ${rows.length} rows into ${table}`);
+  
+  const changes = insertMany(rows);
+  if (changes > 0) console.log(`[db] Processed ${table}: ${changes} rows affected (inserted/updated)`);
 }
 
-seedIfEmpty("services", [
+seedData("services", [
   { id: "svc-1", title: "Software Development", description: "Custom enterprise software built to your exact specifications â€” scalable, secure, and maintainable.", image_url: "/assets/services/software.png", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "svc-2", title: "Web Development", description: "Modern, responsive websites and web applications using the latest frameworks and best practices.", image_url: "/assets/services/web.png", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "svc-3", title: "Mobile App Development", description: "Native and cross-platform mobile apps for iOS and Android that deliver exceptional user experiences.", image_url: "/assets/services/mobile.png", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
@@ -467,13 +496,13 @@ seedIfEmpty("services", [
   { id: "svc-9", title: "Cloud & Infrastructure", description: "Cloud migration, DevOps pipelines, and managed infrastructure to keep your systems fast and reliable.", image_url: "/assets/services/software.png", is_visible: 1, sort_order: 8, created_at: t0, updated_at: t0 },
 ]);
 
-seedIfEmpty("testimonials", [
+seedData("testimonials", [
   { id: "tst-1", name: "Ahmed Rasheed", company: "Villa Group", message: "Systems Solutions transformed our operations with their ERP system. The team was professional, responsive, and delivered exactly what we needed.", avatar_url: "/assets/testimonials/ahmed.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
   { id: "tst-2", name: "Fatima Zahir", company: "OBLU Resorts", message: "Their web development team built us a stunning booking platform. Traffic and conversions have increased significantly since launch.", avatar_url: "/assets/testimonials/fatima.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
   { id: "tst-3", name: "Dorji Wangchuk", company: "RCSC Bhutan", message: "Excellent consulting services. They understood our requirements perfectly and delivered a robust HR system on time and within budget.", avatar_url: "/assets/testimonials/dorji.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
 ]);
 
-seedIfEmpty("products", [
+seedData("products", [
   { id: "prd-1", name: "BSOL", tagline: "ERP with CRM Combined", description: "Unify your entire business â€” finance, inventory, procurement, sales pipeline, and customer relationships â€” in one powerful platform.", image_url: "/assets/products/bsol.jpg", contact_url: "#contact", is_popular: 0, is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "prd-2", name: "HR-Metrics", tagline: "HR with Task Management", description: "From hiring to payroll, attendance to performance reviews â€” HR-Metrics streamlines every HR workflow while keeping your teams aligned.", image_url: "/assets/products/hr-metrics.jpg", contact_url: "#contact", is_popular: 1, is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "prd-3", name: "GoBoat", tagline: "Complete Boat Management Software", description: "Purpose-built for the marine industry. GoBoat handles vessel scheduling, crew management, maintenance logs, and charter bookings.", image_url: "/assets/products/goboat.jpg", contact_url: "#contact", is_popular: 0, is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
@@ -481,18 +510,18 @@ seedIfEmpty("products", [
   { id: "prd-5", name: "Travel", tagline: "End-to-End Travel Booking Platform", description: "A full-featured travel booking engine for agencies and operators. Manage flights, hotels, packages, visa processing, and customer itineraries.", image_url: "/assets/products/travel.jpg", contact_url: "#contact", is_popular: 0, is_visible: 1, sort_order: 4, created_at: t0, updated_at: t0 },
 ]);
 
-seedIfEmpty("career_jobs", [
+seedData("career_jobs", [
   { id: "job-1", title: "Senior Full Stack Developer", description: "We are looking for an experienced Full Stack Developer proficient in React, Node.js, and cloud technologies to join our growing team.", location: "MalÃ©, Maldives", job_type: "Full-time", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "job-2", title: "UI/UX Designer", description: "Creative designer with strong Figma skills and a portfolio of web/mobile projects. You will work closely with our development team.", location: "MalÃ©, Maldives", job_type: "Full-time", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "job-3", title: "Business Development Executive", description: "Drive growth by identifying new business opportunities, building client relationships, and closing deals across the Maldives and Bhutan.", location: "MalÃ©, Maldives", job_type: "Full-time", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
 ]);
 
-seedIfEmpty("seo_settings", [
+seedData("seo_settings", [
   { id: "seo-1", page_key: "home", title: "Systems Solutions - Leading IT Company in Maldives", description: "Transform your business with cutting-edge technology solutions. Software development, ERP, mobile apps, and IT consulting.", keywords: "IT solutions, Maldives, software development, ERP, web development", og_image: "", updated_at: t0, updated_by: null },
-]);
+], "page_key");
 
 
-seedIfEmpty("client_logos", [
+seedData("client_logos", [
   { id: "cl-0", name: "aaa Hotels & Resorts", logo_url: "/assets/clients/aaa-1.png", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "cl-1", name: "Alia Investments", logo_url: "/assets/clients/Alia.png", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "cl-2", name: "Baglioni Resorts", logo_url: "/assets/clients/Baglioni.jpg", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
@@ -582,16 +611,16 @@ const siteContentSeeds = [
     { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", flag: "🇧🇹", accent: "#10b981", is_visible: true },
   ]}) },
 ];
-for (const seed of siteContentSeeds) {
-  const exists = db.prepare("SELECT id FROM site_content WHERE section_key = ?").get(seed.section_key);
-  if (!exists) {
-    db.prepare("INSERT INTO site_content (id, section_key, content, created_at, updated_at) VALUES (?,?,?,?,?)")
-      .run(randomUUID(), seed.section_key, seed.content, t0, t0);
-    console.log(`[db] Seeded site_content: ${seed.section_key}`);
-  }
-}
+const mappedSiteContentSeeds = siteContentSeeds.map(s => ({
+  id: randomUUID(),
+  section_key: s.section_key,
+  content: s.content,
+  created_at: t0,
+  updated_at: t0
+}));
+seedData("site_content", mappedSiteContentSeeds, "section_key");
 
-seedIfEmpty("technologies", [
+seedData("technologies", [
   { id: "tech-1",  name: ".NET",        description: "Microsoft's powerful framework for building enterprise-grade web, desktop, and cloud applications.",          image_url: "/assets/technologies/dotnet.png",      category: "Backend",  name_color: "#512BD4", category_color: "#512BD4", is_visible: 1, sort_order: 0,  created_at: t0, updated_at: t0 },
   { id: "tech-2",  name: "SQL Server",  description: "Microsoft's relational database management system for secure, scalable data storage and analytics.",       image_url: "/assets/technologies/sqlserver.png",   category: "Database", name_color: "#CC2927", category_color: "#CC2927", is_visible: 1, sort_order: 1,  created_at: t0, updated_at: t0 },
   { id: "tech-3",  name: "Vue.js",      description: "Progressive JavaScript framework for building modern, reactive user interfaces and single-page apps.",      image_url: "/assets/technologies/vuejs.png",       category: "Frontend", name_color: "#4FC08D", category_color: "#4FC08D", is_visible: 1, sort_order: 2,  created_at: t0, updated_at: t0 },
@@ -610,18 +639,18 @@ seedIfEmpty("technologies", [
   { id: "tech-16", name: "AWS",         description: "Amazon Web Services — the world's most comprehensive cloud platform for hosting, storage, and AI services.",  image_url: "/assets/technologies/aws.png",         category: "Cloud",    name_color: "#FF9900", category_color: "#FF9900", is_visible: 1, sort_order: 15, created_at: t0, updated_at: t0 },
 ]);
 
-seedIfEmpty("users", [
+seedData("users", [
   { id: "admin-local", email: "admin@solutions.com.mv", password: "Admin@1234", userrole: "admin", created_at: t0, updated_at: t0 }
 ]);
 
-seedIfEmpty("contact_submissions", [
+seedData("contact_submissions", [
   { id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", name: "Test User", full_name: "Test User", company_name: null, email: "test@example.com", phone: null, message: "This is a test message to verify fallback email logic.", is_read: 0, created_at: "2026-03-27T17:29:59.131Z" },
   { id: "da929a3d-48e1-4a8a-8bc0-42a0a7bce35c", name: "sdfasd", full_name: "sdfasd", company_name: null, email: "prasannaprobite@gmail.com", phone: null, message: "sdfsadf\nService: Mobile App Development\nPreferred Date 1: 2026-03-29T16:16\nPreferred Date 2: 2026-03-29T16:16", is_read: 0, created_at: "2026-03-29T11:10:48.662Z" },
   { id: "9355deea-6986-480f-b0c9-e0d332ceb9ef", name: "sdfasdf", full_name: "sdfasdf", company_name: null, email: "asdfasd@gmail.com", phone: null, message: "sadfasdf\nPreferred Date 1: 2026-03-29T18:02\nPreferred Date 2: 2026-03-29T18:02", is_read: 0, created_at: "2026-03-29T12:43:16.084Z" },
   { id: "db90838e-87c5-4094-bcb2-93f642ee32ca", name: "test", full_name: "test", company_name: null, email: "prasannaprobiz@gmail.com", phone: null, message: "some text \nPreferred Date 1: 2026-03-30T13:05\nPreferred Date 2: 2026-03-31T13:05", is_read: 0, created_at: "2026-03-29T13:06:43.030Z" },
 ]);
 
-seedIfEmpty("submission_replies", [
+seedData("submission_replies", [
   { id: "ee96a078-e457-4c1f-b692-c3f0f078cfb0", submission_id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", sender: "admin", message: "hi", created_at: "2026-03-27T17:31:30.213Z" },
   { id: "ecaadd14-2714-4a65-bd4e-cf0ab62fc8f1", submission_id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", sender: "admin", message: "hi too", created_at: "2026-03-28T18:27:07.307Z" },
   { id: "ece67f7c-39c1-4b32-a4e0-fbc69d19fb4e", submission_id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", sender: "admin", message: "gfafdgsdfgd", created_at: "2026-03-29T08:22:05.414Z" },
@@ -630,12 +659,12 @@ seedIfEmpty("submission_replies", [
   { id: "6cd8e354-84ed-4e44-b815-006ff75df19a", submission_id: "db90838e-87c5-4094-bcb2-93f642ee32ca", sender: "admin", message: "we will contact you", created_at: "2026-03-29T13:07:10.089Z" },
 ]);
 
-seedIfEmpty("job_applications", [
+seedData("job_applications", [
   { id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", applicant_name: "sdfs", email: "prasanna", phone: "8144078979", job_id: "UI/UX Designer", resume_url: null, cover_letter: "rfe ertger ertg ertg er e", status: "applied", created_at: "2026-03-27T18:56:10.208Z", updated_at: "2026-03-29T10:04:09.544Z" },
   { id: "29e0f65a-9ebd-4ad4-af08-9bf3b7caccd1", applicant_name: "bite web", email: "prasannaprobite@gmail.com", phone: "797987987", job_id: "UI/UX Designer", resume_url: null, cover_letter: "sdafsadf", status: "applied", created_at: "2026-03-29T13:08:33.411Z", updated_at: "2026-03-29T14:04:07.455Z" },
 ]);
 
-seedIfEmpty("application_replies", [
+seedData("application_replies", [
   { id: "03aa6664-2843-4269-aed9-025a0ed33379", application_id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", sender: "admin", message: "your interview postponded", created_at: "2026-03-27T18:58:15.177Z" },
   { id: "3ffe66f5-6f12-4556-a339-cafce2c8e6fa", application_id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", sender: "admin", message: "ghjgh", created_at: "2026-03-29T08:22:27.255Z" },
   { id: "2212bd07-6314-4d41-b2e0-fbc83999e4f8", application_id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", sender: "admin", message: "dfsfsd", created_at: "2026-03-29T08:25:09.592Z" },
@@ -644,7 +673,7 @@ seedIfEmpty("application_replies", [
   { id: "38911841-7b02-4e28-8f27-17a2581184fb", application_id: "29e0f65a-9ebd-4ad4-af08-9bf3b7caccd1", sender: "admin", message: "hi today message", created_at: "2026-03-29T14:04:07.455Z" },
 ]);
 
-seedIfEmpty("chat_messages", [
+seedData("chat_messages", [
   { id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", session_id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", ip_address: null, channel: "website", status: "active", created_at: "2026-03-27T12:56:49.634Z", updated_at: "2026-03-27T12:56:49.634Z" },
   { id: "web-1774632662986-gzawmdmea2l", session_id: "web-1774632662986-gzawmdmea2l", ip_address: null, channel: "website", status: "active", created_at: "2026-03-27T17:39:25.660Z", updated_at: "2026-03-27T17:39:25.660Z" },
   { id: "dc079433-4cc6-4383-88b7-3084e6f48f5a", session_id: "dc079433-4cc6-4383-88b7-3084e6f48f5a", ip_address: null, channel: "website", status: "active", created_at: "2026-03-27T18:16:30.535Z", updated_at: "2026-03-27T18:16:30.535Z" },
@@ -671,7 +700,7 @@ seedIfEmpty("chat_messages", [
   { id: "7de47730-fba6-487d-8f8d-9fe98cfcf884", session_id: "7de47730-fba6-487d-8f8d-9fe98cfcf884", ip_address: null, channel: "website", status: "active", created_at: "2026-03-29T15:17:11.113Z", updated_at: "2026-03-29T15:17:11.113Z" },
 ]);
 
-seedIfEmpty("chat_threads", [
+seedData("chat_threads", [
   { id: "93df5303-836b-48ec-af6f-7326156047e0", message_id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", direction: "outbound", content: "hi", sender: null, timestamp: "2026-03-27T12:56:49.634Z", meta: null },
   { id: "e3d52285-c9fa-45b7-8bea-60cb07e9c4ca", message_id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", direction: "bot", content: "Thank you for your message! I understand you're asking about: \"hi\".\n\nOur team will get back to you shortly. For immediate assistance:\n📧 prasannaprobiz@gmail.com\n📱 WhatsApp: 9603011355", sender: null, timestamp: "2026-03-27T12:56:49.636Z", meta: '{"source":"fallback"}' },
   { id: "0748d761-387b-4dd4-abed-c4e935ed6ab7", message_id: "web-1774632662986-gzawmdmea2l", direction: "outbound", content: "ERP Demo- price plan", sender: null, timestamp: "2026-03-27T17:39:25.660Z", meta: null },
