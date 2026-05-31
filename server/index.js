@@ -1418,6 +1418,10 @@ if (existsSync(DIST_DIR)) {
     if (req.path.startsWith("/api")) {
       return res.status(404).json({ error: "Not found" });
     }
+
+    if (req.path.startsWith("/src/") || req.path.startsWith("/node_modules/") || extname(req.path)) {
+      return res.status(404).send("Not found");
+    }
     
     try {
       let html = readFileSync(join(DIST_DIR, "index.html"), "utf-8");

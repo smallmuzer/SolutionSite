@@ -69,13 +69,14 @@ async function fetchWithCacheControl(url: string, options: RequestInit = {}): Pr
 
 export async function dbSelect<T = Row[]>(
   table: string,
-  filters: Record<string, any> = {},
-  opts: { order?: string; asc?: boolean; single?: boolean; noCache?: boolean } = {}
+  filters: Record<string, any> | undefined = {},
+  opts: { order?: string; orderBy?: string; asc?: boolean; single?: boolean; noCache?: boolean } = {}
 ): Promise<ApiResult<T>> {
   try {
     const p = new URLSearchParams();
-    Object.entries(filters).forEach(([k, v]) => p.set(k, String(v)));
-    if (opts.order) { p.set("_order", opts.order); p.set("_asc", String(opts.asc !== false)); }
+    Object.entries(filters || {}).forEach(([k, v]) => p.set(k, String(v)));
+    const order = opts.order ?? opts.orderBy;
+    if (order) { p.set("_order", order); p.set("_asc", String(opts.asc !== false)); }
     if (opts.single) p.set("_single", "1");
 
     const response = await fetchWithCacheControl(`${BASE}/${table}?${p}`);

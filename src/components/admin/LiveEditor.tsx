@@ -43,6 +43,9 @@ const LiveEditor = () => {
     { table: "products",      order: "sort_order" },
 
     { table: "hero_stats",    order: "sort_order" },
+    { table: "global_presence", order: "sort_order" },
+    { table: "our_network",   order: "sort_order" },
+    { table: "career_jobs",   order: "sort_order" },
     { table: "testimonials",  order: "created_at", asc: false },
   ]);
 

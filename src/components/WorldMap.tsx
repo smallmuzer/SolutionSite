@@ -93,7 +93,7 @@ const WorldMap = () => {
   useEffect(() => {
     const load = async () => {
       const [presenceRes, headerRes, clientsRes] = await Promise.all([
-        dbSelect<any>("global_presence", undefined, { orderBy: "sort_order ASC" }),
+        dbSelect<any>("global_presence", undefined, { order: "sort_order", asc: true }),
         dbSelect<any>("site_content", { section_key: "global_presence_header" }, { single: true }),
         dbSelect<any>("client_logos", { is_visible: true }),
       ]);
