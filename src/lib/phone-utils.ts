@@ -1521,7 +1521,9 @@ export const detectCountry = async (): Promise<Country> => {
       if (tz.includes('London')) return getCountryByCode('GB');
       if (tz.includes('New_York') || tz.includes('Los_Angeles') || tz.includes('Chicago')) return getCountryByCode('US');
       if (tz.includes('Singapore')) return getCountryByCode('SG');
-    } catch (e2) {}
+    } catch (e2) {
+      // ignore
+    }
   }
   return COUNTRIES[0];
 };

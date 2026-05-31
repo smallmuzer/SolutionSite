@@ -47,9 +47,9 @@ const TRUSTED_ORIGINS = new Set([
 
 const SAFE_TABLES = new Set([
   "contact_submissions", "job_applications", "services", "testimonials", "career_jobs",
-  "products", "client_logos", "site_content", "seo_settings", "users", "chat_threads",
+  "products", "client_logos", "site_content", "site_settings", "social_links", "seo_settings", "users", "chat_threads",
   "chat_messages", "submission_replies", "application_replies", "appointments", "hero_stats",
-  "technologies"
+  "technologies", "global_presence", "our_network"
 ]);
 
 app.use(cors({ origin: Array.from(TRUSTED_ORIGINS), credentials: true }));
@@ -333,7 +333,7 @@ app.get("/api/auth/session", (req, res) => {
 
 // ── Generic table helpers ─────────────────────────────────────────────────────
 
-const UNIQUE_COLS = { site_content: "section_key", seo_settings: "page_key" };
+const UNIQUE_COLS = { site_content: "section_key", seo_settings: "page_key", site_settings: "id", social_links: "id" };
 
 function now() { return new Date().toISOString(); }
 
@@ -722,6 +722,8 @@ const TABLE_COLS = {
   products: ["id", "name", "tagline", "description", "image_url", "extra_text", "extra_color", "contact_url", "is_popular", "is_visible", "sort_order", "created_at", "updated_at"],
   client_logos: ["id", "name", "logo_url", "is_visible", "sort_order", "created_at", "updated_at"],
   site_content: ["id", "section_key", "content", "created_at", "updated_at"],
+  site_settings: ["id", "site_name", "site_logo", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "theme", "font_style", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],
+  social_links: ["id", "platform", "icon", "url", "color", "is_visible", "sort_order", "created_at", "updated_at"],
   seo_settings: ["id", "page_key", "title", "description", "keywords", "og_image", "updated_at", "updated_by"],
   users: ["id", "email", "password", "userrole", "created_at", "updated_at"],
   chat_messages: ["id", "session_id", "ip_address", "channel", "status", "created_at", "updated_at"],
@@ -731,6 +733,8 @@ const TABLE_COLS = {
   appointments: ["id", "reference_type", "reference_id", "name", "email", "title", "description", "notes", "appointment_date", "created_at"],
   hero_stats: ["id", "count", "suffix", "label", "color", "is_visible", "sort_order", "created_at", "updated_at"],
   technologies: ["id", "name", "description", "image_url", "icon", "category", "name_color", "category_color", "is_visible", "sort_order", "created_at", "updated_at"],
+  global_presence: ["id", "name", "lat", "lng", "clients", "description", "flag", "landmark", "is_visible", "sort_order", "created_at", "updated_at"],
+  our_network: ["id", "name", "subtitle", "desc", "href", "logo_url", "accent", "flag", "is_visible", "sort_order", "created_at", "updated_at"],
 };
 
 function filterCols(table, row) {
@@ -1393,6 +1397,9 @@ function normaliseRow(table, row) {
   if (table === "site_content" && typeof out.content === "string") {
     try { out.content = JSON.parse(out.content); } catch { }
   }
+  if (table === "site_settings" && typeof out.nav_items === "string") {
+    try { out.nav_items = JSON.parse(out.nav_items); } catch { }
+  }
   return out;
 }
 
@@ -1403,6 +1410,9 @@ function serialiseRow(table, row) {
   }
   if (table === "site_content" && out.content && typeof out.content === "object") {
     out.content = JSON.stringify(out.content);
+  }
+  if (table === "site_settings" && out.nav_items && typeof out.nav_items === "object") {
+    out.nav_items = JSON.stringify(out.nav_items);
   }
   return out;
 }
@@ -1416,7 +1426,7 @@ app.use("/assets", express.static(join(PUBLIC_DIR, "assets")));
 
 if (existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR, { index: false }));
-  app.get("*", (req, res) => {
+  app.get(/(.*)/, (req, res) => {
     if (req.path.startsWith("/api")) {
       return res.status(404).json({ error: "Not found" });
     }

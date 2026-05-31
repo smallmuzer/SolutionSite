@@ -3,7 +3,7 @@ import AnimatedSection from "./AnimatedSection";
 import * as LucideIcons from "lucide-react";
 import { MapPin, Mail, Phone, Clock, Send, CheckCircle, Calendar, ChevronLeft, ChevronRight, X, Facebook, Twitter, Linkedin, Instagram, Hash } from "lucide-react";
 import { toast } from "sonner";
-import { useSiteContent, useSiteSettings } from "@/hooks/useSiteContent";
+import { useSiteContent, useSiteSettings, useSocialLinks } from "@/hooks/useSiteContent";
 import { openViber, ViberIcon } from "@/lib/viber";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { COUNTRIES, detectCountry, validatePhone } from "@/lib/phone-utils";
@@ -35,6 +35,7 @@ const DynamicSocialIcon = ({ name, size = 15, className }: { name: string; size?
 const ContactSection = () => {
   const content = useSiteContent("contact");
   const settings = useSiteSettings();
+  const rawSocialLinks = useSocialLinks();
   const editor = useLiveEditor();
   const { data: servicesData } = useDbQuery<{ title: string }[]>("services", editor?.isEditMode ? {} : { is_visible: true }, { order: "sort_order" });
   const services = servicesData || [];
@@ -158,18 +159,18 @@ const ContactSection = () => {
     { icon: MapPin, label: "Office Address", value: content?.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives" },
     { icon: Mail, label: "Email", value: content?.email || "info@solutions.com.mv" },
   ];
-  const inputCls = "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-[0.875rem] focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all";
+  const inputCls = "w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-[0.875rem] focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all";
   const labelCls = "text-[0.75rem] font-medium text-foreground mb-1 block";
 
   return (
-    <section id="contact" className="py-10 section-alt relative overflow-hidden group/item">
+    <section id="contact" className="py-6 section-alt relative overflow-hidden group/item">
       <EditorToolbar section="contact" canHide={false} />
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center mb-14">
+        <AnimatedSection className="text-center mb-6">
           <div id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest inline-block" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
             <EditableText section="contact" field="badge" value={content.badge || "Reach Us"} colorField="badge_color" />
           </div>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-2 mb-2" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
           </h2>
           <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
@@ -177,9 +178,9 @@ const ContactSection = () => {
           </div>
         </AnimatedSection>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
-          <AnimatedSection className="w-full lg:w-[48%] flex flex-col">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
+          <AnimatedSection className="w-full h-full flex flex-col">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
               <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
                 <EditableText section="contact" field="label_office_info" value={content.label_office_info || "Office Information"} />
               </h3>
@@ -194,7 +195,7 @@ const ContactSection = () => {
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="address" value={(() => {
-                        let addr = content.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives";
+                        const addr = content.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives";
                         // If it has 3 lines due to legacy DB state, forcefully convert to 2 lines
                         if (addr.includes('\n')) {
                           const lines = addr.split('\n');
@@ -268,57 +269,17 @@ const ContactSection = () => {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {(() => {
-                      const socialCount = parseInt(settings?.social_count || "6", 10);
-                      const socialList = [];
-                      for (let i = 1; i <= socialCount; i++) {
-                        const iconKey = `social_icon_${i}`;
-                        const hrefKey = `social_href_${i}`;
-                        const visibleKey = `social_visible_${i}`;
-                        const colorKey = `social_color_${i}`;
+                      const socialList = rawSocialLinks.map((link, i) => {
+                        const isVisible = link.is_visible !== 0 && link.is_visible !== false;
+                        return {
+                          index: i + 1,
+                          icon: link.icon,
+                          href: link.url,
+                          isVisible,
+                          color: link.color
+                        };
+                      }).filter(s => s.isVisible || editor?.isEditMode);
 
-                        const icon = settings[iconKey] ?? (
-                          i === 1 ? "Facebook" :
-                            i === 2 ? "Twitter" :
-                              i === 3 ? "Linkedin" :
-                                i === 4 ? "Instagram" :
-                                  i === 5 ? "Viber" :
-                                    i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
-                        );
-
-                        const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
-                        const isWhatsApp = iconName.includes("whatsapp");
-                        const isFacebook = iconName === "facebook";
-                        const isTwitter = iconName === "twitter";
-                        const isLinkedin = iconName === "linkedin";
-                        const isInstagram = iconName === "instagram";
-                        const isViber = iconName === "viber";
-
-                        const fallbackHref = isFacebook ? (settings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                          isTwitter ? (settings.social_twitter || "https://x.com/bsspl_india") :
-                            isLinkedin ? (settings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                              isInstagram ? (settings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                isViber ? "viber://chat?number=" :
-                                  isWhatsApp ? `https://wa.me/${(settings.whatsapp_number || "9603011355").replace("+", "")}` : "#";
-
-                        let href = settings[hrefKey] ?? fallbackHref;
-                        if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
-                        if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
-
-                        const isVisible = settings[visibleKey] !== "false" && settings[visibleKey] !== false;
-
-                        const fallbackColor = isFacebook ? "#1877F2" :
-                          isTwitter ? "#1DA1F2" :
-                            isLinkedin ? "#0A66C2" :
-                              isInstagram ? "#E4405F" :
-                                isViber ? "#7360f2" :
-                                  isWhatsApp ? "#25D366" : "#3b82f6";
-
-                        const color = settings[colorKey] ?? fallbackColor;
-
-                        if (isVisible || editor?.isEditMode) {
-                          socialList.push({ index: i, icon, href, color, isVisible });
-                        }
-                      }
                       return socialList.map((s) => {
                         const dynamicHref = s.href || "#";
                         const iconColor = s.color || "#3b82f6";
@@ -361,9 +322,9 @@ const ContactSection = () => {
             </div>
           </AnimatedSection>
 
-          <AnimatedSection delay={0.2} className="w-full lg:w-[52%] flex flex-col">
+          <AnimatedSection delay={0.2} className="w-full h-full flex flex-col">
             {submitted ? (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-12 text-center flex-1 flex flex-col items-center justify-center min-h-[500px] transition-all duration-300">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-12 text-center flex-1 flex flex-col items-center justify-center h-full min-h-[500px] transition-all duration-300">
                 <CheckCircle size={48} className="text-secondary mx-auto mb-4" />
                 <h3 className="font-heading font-bold text-[1.125rem] text-foreground mb-2">
                   <EditableText section="contact" field="label_thank_you" value={content.label_thank_you || "Thank You!"} />
@@ -379,12 +340,12 @@ const ContactSection = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
+              <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 sm:p-6 flex-1 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
                 <h3 className="font-heading font-semibold text-foreground text-[1rem] mb-4">
                   <EditableText section="contact" field="label_send_message" value={content.label_send_message || "Send a Message"} />
                 </h3>
                 <div className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_name" value={content.label_name || "Full Name *"} />
@@ -402,7 +363,7 @@ const ContactSection = () => {
                         className={inputCls} placeholder={content.placeholder_company || "Your company"} maxLength={100} />
                     </div>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_email" value={content.label_email || "Email *"} />
@@ -417,7 +378,7 @@ const ContactSection = () => {
                         {editor?.isEditMode && <div className="inline-block ml-1 text-[10px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_phone" value={content.placeholder_phone || "Number"} />)</div>}
                       </label>
                       <div className="flex items-stretch">
-                        <div className="relative w-24 shrink-0 h-[42px]">
+                        <div className="relative w-auto shrink-0 h-[38px]">
                           <Select
                             value={selectedCountry.code}
                             onValueChange={(val) => {
@@ -425,7 +386,7 @@ const ContactSection = () => {
                               if (country) setSelectedCountry(country);
                             }}
                           >
-                            <SelectTrigger className={`${inputCls} rounded-r-none border-r-0 px-2 h-full !py-0 [&>svg]:opacity-50 [&>svg]:w-3 [&>svg]:h-3`}>
+                            <SelectTrigger className={`${inputCls} !w-auto min-w-fit rounded-r-none border-r-0 px-2 h-full !py-0 [&>svg]:opacity-50 [&>svg]:w-3 [&>svg]:h-3`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -440,7 +401,7 @@ const ContactSection = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="grid sm:grid-cols-1 gap-4">
+                  <div className="grid sm:grid-cols-1 gap-3">
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_inquiry" value={content.label_inquiry || "Inquiry For *"} />
@@ -468,7 +429,7 @@ const ContactSection = () => {
                     </label>
                     <textarea
                       value={form.message} onChange={(e) => update("message", e.target.value)}
-                      className={`${inputCls} resize-y min-h-[90px]`}
+                      className={`${inputCls} resize-y min-h-[80px]`}
                       placeholder={content.placeholder_message || "Tell us about your project..."} maxLength={1000}
                     />
                   </div>

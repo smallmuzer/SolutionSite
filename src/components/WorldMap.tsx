@@ -83,20 +83,24 @@ const WorldMap = () => {
     newLocs.splice(targetIdx, 0, moved);
     
     setLocations(newLocs);
-    editor?.onUpdate("global_presence", "locations", newLocs);
+    newLocs.forEach((loc, index) => {
+      if ((loc as any).id) {
+        editor?.onUpdate("global_presence", "sort_order", index, (loc as any).id);
+      }
+    });
   };
 
   useEffect(() => {
     const load = async () => {
       const [presenceRes, headerRes, clientsRes] = await Promise.all([
-        dbSelect<any>("site_content", { section_key: "global_presence" }, { single: true }),
+        dbSelect<any>("global_presence", undefined, { orderBy: "sort_order ASC" }),
         dbSelect<any>("site_content", { section_key: "global_presence_header" }, { single: true }),
         dbSelect<any>("client_logos", { is_visible: true }),
       ]);
       let locs: LocationData[] = [...DEFAULT_LOCATIONS];
-      if (presenceRes.data?.content) {
-        const c = presenceRes.data.content as any;
-        if (Array.isArray(c.locations) && c.locations.length > 0) locs = c.locations;
+      if (presenceRes.data && presenceRes.data.length > 0) {
+        locs = presenceRes.data;
+        // array check already done by length > 0
       }
       if (clientsRes.data) {
         for (const cl of clientsRes.data) {

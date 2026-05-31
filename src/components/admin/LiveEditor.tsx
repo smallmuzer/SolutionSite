@@ -71,125 +71,24 @@ const LiveEditor = () => {
     try {
         // Group changes by section and id to minimize requests
         const grouped: Record<string, any> = {};
-        const networkChanges: Record<string, Record<string, any>> = {}; // id -> { field: value }
-        let networkVisibilityChange: boolean | undefined = undefined;
-        const presenceChanges: Record<string, Record<string, any>> = {}; // locationName -> { field: value }
-
         for (const [key, value] of entries) {
             const parts = key.split(':');
-            if (parts[0] === "our_network") {
-                if (parts.length === 3) {
-                    const [_, id, f] = parts;
-                    if (!networkChanges[id]) networkChanges[id] = {};
-                    networkChanges[id][f] = value;
-                } else if (parts.length === 2 && parts[1] === "is_visible") {
-                    networkVisibilityChange = value;
-                }
-            } else if (parts[0] === "global_presence") {
-                if (parts.length === 3) {
-                    const [_, id, f] = parts;
-                    if (!presenceChanges[id]) presenceChanges[id] = {};
-                    presenceChanges[id][f] = value;
-                }
-            } else {
-                if (parts.length === 3) { // section:id:field
-                    const [s, id, f] = parts;
-                    const gKey = `${s}:${id}`;
-                    if (!grouped[gKey]) grouped[gKey] = { section: s, id, data: {} };
-                    grouped[gKey].data[f] = value;
-                } else { // section:field
-                    const [s, f] = parts;
-                    if (!grouped[s]) grouped[s] = { section: s, data: {} };
-                    grouped[s].data[f] = value;
-                }
+            if (parts.length === 3) { // section:id:field
+                const [s, id, f] = parts;
+                const gKey = `${s}:${id}`;
+                if (!grouped[gKey]) grouped[gKey] = { section: s, id, data: {} };
+                grouped[gKey].data[f] = value;
+            } else { // section:field
+                const [s, f] = parts;
+                if (!grouped[s]) grouped[s] = { section: s, data: {} };
+                grouped[s].data[f] = value;
             }
-        }
-
-        // Process our_network changes specially
-        if (Object.keys(networkChanges).length > 0 || networkVisibilityChange !== undefined) {
-            const getResp = await fetch("/api/db/site_content");
-            const getData = await getResp.json();
-            const row = getData.data?.find((r: any) => r.section_key === "our_network");
-            let companies = [];
-            let is_visible = true;
-            if (row) {
-                let parsed = row.content;
-                if (typeof parsed === "string") {
-                    try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-                }
-                companies = Array.isArray(parsed.companies) ? parsed.companies : [];
-                is_visible = parsed.is_visible !== false;
-            }
-            
-            // Apply updates
-            companies = companies.map((c: any) => {
-                const changes = networkChanges[c.id];
-                if (changes) {
-                    return { ...c, ...changes };
-                }
-                return c;
-            });
-
-            if (networkVisibilityChange !== undefined) {
-                is_visible = networkVisibilityChange;
-            }
-
-            // Save back
-            const resp = await fetch("/api/db/site_content", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ section_key: "our_network", content: { companies, is_visible } })
-            });
-            const json = await resp.json();
-            if (json.error) throw new Error(json.error.message);
-        }
-
-        // Process global_presence changes specially
-        if (Object.keys(presenceChanges).length > 0) {
-            const getResp = await fetch("/api/db/site_content");
-            const getData = await getResp.json();
-            const row = getData.data?.find((r: any) => r.section_key === "global_presence");
-            let locations = [];
-            if (row) {
-                let parsed = row.content;
-                if (typeof parsed === "string") {
-                    try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-                }
-                locations = Array.isArray(parsed.locations) ? parsed.locations : [];
-            }
-            if (locations.length === 0) {
-                locations = [
-                    { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
-                    { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
-                    { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
-                ];
-            }
-            
-            // Apply updates
-            locations = locations.map((loc: any) => {
-                const changes = presenceChanges[loc.name];
-                if (changes) {
-                    const nextLoc = { ...loc, ...changes };
-                    if (nextLoc.lat !== undefined) nextLoc.lat = parseFloat(nextLoc.lat) || 0;
-                    if (nextLoc.lng !== undefined) nextLoc.lng = parseFloat(nextLoc.lng) || 0;
-                    return nextLoc;
-                }
-                return loc;
-            });
-
-            // Save back
-            const resp = await fetch("/api/db/site_content", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ section_key: "global_presence", content: { locations } })
-            });
-            const json = await resp.json();
-            if (json.error) throw new Error(json.error.message);
         }
 
         for (const g of Object.values(grouped)) {
             const dbSec = g.section === "clients" ? "client_logos" : g.section;
             let finalData = g.data;
+            if (!finalData || Object.keys(finalData).length === 0) continue;
 
             if (!g.id) {
                 try {
@@ -220,10 +119,10 @@ const LiveEditor = () => {
             if (json.error) throw new Error(json.error.message);
         }
 
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        await queryClient.invalidateQueries();
         setPendingChanges({});
         toast.success("All changes saved successfully", { id: toastId });
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-        queryClient.invalidateQueries();
     } catch (err: any) {
         toast.error(`Failed to save changes: ${err.message}`, { id: toastId });
     }
@@ -243,79 +142,7 @@ const LiveEditor = () => {
   };
 
   const handleDelete = async (section: string, id: string) => {
-    if (section === "global_presence") {
-      if (!confirm("Are you sure you want to delete this location?")) return;
-      try {
-        const getResp = await fetch("/api/db/site_content");
-        const getData = await getResp.json();
-        const row = getData.data?.find((r: any) => r.section_key === "global_presence");
-        let locations = [];
-        if (row) {
-          let parsed = row.content;
-          if (typeof parsed === "string") {
-            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-          }
-          locations = Array.isArray(parsed.locations) ? parsed.locations : [];
-        }
-        if (locations.length === 0) {
-          locations = [
-            { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
-            { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
-            { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
-          ];
-        }
 
-        locations = locations.filter((l: any) => l.name !== id);
-
-        const resp = await fetch("/api/db/site_content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ section_key: "global_presence", content: { locations } })
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-
-        toast.success("Location deleted successfully");
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-      } catch (err: any) {
-        toast.error(`Failed to delete location: ${err.message}`);
-      }
-      return;
-    }
-    if (section === "our_network") {
-      if (!confirm("Are you sure you want to delete this company?")) return;
-      try {
-        const getResp = await fetch("/api/db/site_content");
-        const getData = await getResp.json();
-        const row = getData.data?.find((r: any) => r.section_key === "our_network");
-        let companies = [];
-        let is_visible = true;
-        if (row) {
-          let parsed = row.content;
-          if (typeof parsed === "string") {
-            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-          }
-          companies = Array.isArray(parsed.companies) ? parsed.companies : [];
-          is_visible = parsed.is_visible !== false;
-        }
-
-        companies = companies.filter((c: any) => c.id !== id);
-
-        const resp = await fetch("/api/db/site_content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ section_key: "our_network", content: { companies, is_visible } })
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-
-        toast.success("Company removed from network");
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-      } catch (err: any) {
-        toast.error(`Failed to delete: ${err.message}`);
-      }
-      return;
-    }
     if (!confirm("Are you sure you want to delete this item?")) return;
     try {
         const dbSection = section === "clients" ? "client_logos" : section;
@@ -373,102 +200,12 @@ const LiveEditor = () => {
       handlePickMultiImage("hero", "hero_images");
       return;
     }
-    if (section === "global_presence") {
-      try {
-        const getResp = await fetch("/api/db/site_content");
-        const getData = await getResp.json();
-        const row = getData.data?.find((r: any) => r.section_key === "global_presence");
-        let locations = [];
-        if (row) {
-          let parsed = row.content;
-          if (typeof parsed === "string") {
-            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-          }
-          locations = Array.isArray(parsed.locations) ? parsed.locations : [];
-        }
-        if (locations.length === 0) {
-          locations = [
-            { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
-            { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
-            { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
-          ];
-        }
-
-        const newLoc = {
-          name: `New Location ${locations.length + 1}, Country`,
-          lat: 4.1755,
-          lng: 73.5093,
-          clients: "New Clients details",
-          description: "New location active operations and technical details.",
-          flag: "📍",
-          landmark: "New Landmark",
-          is_visible: true
-        };
-        locations.push(newLoc);
-
-        const resp = await fetch("/api/db/site_content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ section_key: "global_presence", content: { locations } })
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-
-        toast.success("Added new location successfully!");
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-      } catch (err: any) {
-        toast.error(`Failed to add location: ${err.message}`);
-      }
-      return;
-    }
-    if (section === "our_network") {
-      try {
-        const getResp = await fetch("/api/db/site_content");
-        const getData = await getResp.json();
-        const row = getData.data?.find((r: any) => r.section_key === "our_network");
-        let companies = [];
-        let is_visible = true;
-        if (row) {
-          let parsed = row.content;
-          if (typeof parsed === "string") {
-            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-          }
-          companies = Array.isArray(parsed.companies) ? parsed.companies : [];
-          is_visible = parsed.is_visible !== false;
-        }
-
-        const newCompany = {
-          id: Date.now().toString(),
-          name: "New Partner Company",
-          subtitle: "Technology Affiliate",
-          desc: "Brief description of the partner company, services, and strategic alignment.",
-          href: "https://",
-          logo_url: "/assets/clients/oblu.png",
-          accent: "#3b82f6",
-          is_visible: true,
-          flag: "🏢"
-        };
-        companies.push(newCompany);
-
-        const resp = await fetch("/api/db/site_content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ section_key: "our_network", content: { companies, is_visible } })
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-
-        toast.success("Added new company to network!");
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-      } catch (err: any) {
-        toast.error(`Failed to add company: ${err.message}`);
-      }
-      return;
-    }
     try {
         const defaults: any = { is_visible: true, sort_order: 0 };
         if (section === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
         else if (section === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
+        else if (section === "global_presence") { defaults.name = "New Location, Country"; defaults.lat = 4.1755; defaults.lng = 73.5093; defaults.clients = "New Clients details"; defaults.description = "New location active operations and technical details."; defaults.flag = "📍"; defaults.landmark = "New Landmark"; }
+        else if (section === "our_network") { defaults.name = "New Partner Company"; defaults.subtitle = "Technology Affiliate"; defaults.desc = "Brief description of the partner company, services, and strategic alignment."; defaults.href = "https://"; defaults.logo_url = "/assets/clients/oblu.png"; defaults.accent = "#3b82f6"; defaults.flag = "🏢"; }
         else if (section === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
         else if (section === "client_logos") { defaults.name = "New Client"; defaults.logo_url = ""; }
         else if (section === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
@@ -489,52 +226,6 @@ const LiveEditor = () => {
   };
 
   const handleClone = async (section: string, id: string) => {
-    if (section === "global_presence") {
-      try {
-        const getResp = await fetch("/api/db/site_content");
-        const getData = await getResp.json();
-        const row = getData.data?.find((r: any) => r.section_key === "global_presence");
-        let locations = [];
-        if (row) {
-          let parsed = row.content;
-          if (typeof parsed === "string") {
-            try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
-          }
-          locations = Array.isArray(parsed.locations) ? parsed.locations : [];
-        }
-        if (locations.length === 0) {
-          locations = [
-            { name: "Malé, Maldives", lat: 4.1755, lng: 73.5093, clients: "HQ — 40+ clients", description: "Our headquarters serving government and private sector clients across the Maldives.", flag: "🇲🇻", landmark: "🏝️ Overwater Villas" },
-            { name: "Thimphu, Bhutan", lat: 27.4728, lng: 89.6393, clients: "RCSC Bhutan", description: "Supporting the Royal Civil Service Commission with digital transformation.", flag: "🇧🇹", landmark: "🏯 Tiger's Nest" },
-            { name: "Tamilnadu, India", lat: 9.9195, lng: 78.1193, clients: "Regional Support", description: "Our hub for technology development and regional support in Southern India.", flag: "🇮🇳", landmark: "🏛️ Madurai Meenatchi Amman Temple" },
-          ];
-        }
-
-        const itemToClone = locations.find((l: any) => l.name === id);
-        if (!itemToClone) throw new Error("Location not found");
-
-        const clonedName = `${itemToClone.name.split(',')[0]} (Clone), ${itemToClone.name.split(',')[1] || ''}`;
-        const cloned = {
-          ...itemToClone,
-          name: clonedName,
-        };
-        locations.push(cloned);
-
-        const resp = await fetch("/api/db/site_content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ section_key: "global_presence", content: { locations } })
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-
-        toast.success("Cloned location successfully!");
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-      } catch (err: any) {
-        toast.error(`Failed to clone location: ${err.message}`);
-      }
-      return;
-    }
     try {
         const getResp = await fetch(`/api/db/${section}?id=${id}&_single=1`);
         const getData = await getResp.json();
@@ -629,6 +320,23 @@ const LiveEditor = () => {
             </Suspense>
         </div>
       </div>
+
+      {Object.keys(pendingChanges).length > 0 && (
+        <div className="fixed bottom-6 right-6 z-[9999] flex gap-3 animate-in fade-in slide-in-from-bottom-5">
+            <button
+                onClick={handleDiscard}
+                className="px-4 py-2.5 bg-background text-foreground border border-border/80 rounded-xl font-bold text-sm shadow-xl hover:bg-muted transition-all active:scale-95"
+            >
+                Discard
+            </button>
+            <button
+                onClick={handleSaveAll}
+                className="px-5 py-2.5 bg-secondary text-secondary-foreground rounded-xl font-bold text-sm shadow-xl shadow-secondary/20 flex items-center gap-2 hover:opacity-90 hover:scale-105 transition-all active:scale-95"
+            >
+                <LucideIcons.Save size={16} /> Save Changes ({Object.keys(pendingChanges).length})
+            </button>
+        </div>
+      )}
       {pickerConfig && (
         <PickerModal 
           config={pickerConfig} 

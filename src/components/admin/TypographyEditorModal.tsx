@@ -15,10 +15,14 @@ interface TypographyEditorModalProps {
   section: string;
   field: string;
   initialValue: string;
+  originalValue: string;
   id?: string;
   targetStyles?: Record<string, string>;
   onClose: () => void;
   onSave: (section: string, field: string, value: string, id?: string) => void;
+  handleSaveAll?: () => void;
+  handleDiscard?: () => void;
+  pendingChangesCount?: number;
 }
 
 interface ActiveStyles {
@@ -137,7 +141,8 @@ export function parseInlineStyles(html: string): { styles: ActiveStyles; innerHt
 }
 
 export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
-  isOpen, section, field, initialValue, id, targetStyles, onClose, onSave
+  isOpen, section, field, initialValue, originalValue, id, targetStyles, onClose, onSave,
+  handleSaveAll, handleDiscard, pendingChangesCount = 0
 }) => {
   const [editorHtml, setEditorHtml] = useState("");
   const [activeStyles, setActiveStyles] = useState<ActiveStyles>({ ...DEFAULT_STYLES });
@@ -734,7 +739,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           position: "absolute",
           left: `${position.x}px`,
           top: `${position.y}px`,
-          width: "800px",
+          width: "720px",
           maxHeight: "85vh",
         }}
         className="flex flex-col rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl pointer-events-auto transition-all overflow-hidden"
@@ -1186,19 +1191,12 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={handleRevert}
-                  className="px-2 py-1 border border-border/80 bg-background hover:bg-muted text-[10px] font-bold whitespace-nowrap rounded-lg transition-all shadow-sm active:scale-95 text-foreground/80 hover:text-foreground"
-                >
-                  Discard Changes
-                </button>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
-                  className="px-2.5 py-1 bg-secondary text-secondary-foreground hover:scale-[1.02] active:scale-95 text-[10px] font-bold whitespace-nowrap rounded-lg shadow-sm border border-secondary/20 flex items-center gap-1 transition-all"
+                  className={`px-4 py-1.5 active:scale-95 text-[11px] font-bold whitespace-nowrap rounded-lg shadow-sm border flex items-center transition-all ${pendingChangesCount > 0 ? "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20" : "bg-secondary text-secondary-foreground border-secondary/20 hover:scale-[1.02]"}`}
                 >
-                  <Save size={11} />
-                  <span>Apply & Save</span>
+                  {pendingChangesCount > 0 ? "Apply" : "Apply & Close"}
                 </button>
               </div>
             </div>

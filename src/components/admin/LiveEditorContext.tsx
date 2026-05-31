@@ -32,7 +32,7 @@ interface LiveEditorContextType {
   handleSaveAll: () => void;
   handleDiscard: () => void;
   pendingChanges: Record<string, any>;
-  openTypographyEditor: (section: string, field: string, currentValue: string, id?: string, targetStyles?: Record<string, string>, colorField?: string) => void;
+  openTypographyEditor: (section: string, field: string, currentValue: string, originalValue: string, id?: string, targetStyles?: Record<string, string>, colorField?: string) => void;
 }
 
 const LiveEditorContext = createContext<LiveEditorContextType | null>(null);
@@ -68,6 +68,7 @@ export const LiveEditorProvider: React.FC<{
       section: string;
       field: string;
       value: string;
+      originalValue: string;
       id?: string;
       targetStyles?: Record<string, string>;
       colorField?: string;
@@ -76,14 +77,16 @@ export const LiveEditorProvider: React.FC<{
       section: "",
       field: "",
       value: "",
+      originalValue: "",
     });
 
-    const openTypographyEditor = (section: string, field: string, value: string, id?: string, targetStyles?: Record<string, string>, colorField?: string) => {
+    const openTypographyEditor = (section: string, field: string, value: string, originalValue: string, id?: string, targetStyles?: Record<string, string>, colorField?: string) => {
       setTypoState({
         isOpen: true,
         section,
         field,
         value,
+        originalValue,
         id,
         targetStyles,
         colorField,
@@ -120,6 +123,7 @@ export const LiveEditorProvider: React.FC<{
             section={typoState.section}
             field={typoState.field}
             initialValue={typoState.value}
+            originalValue={typoState.originalValue}
             id={typoState.id}
             targetStyles={typoState.targetStyles}
             onClose={() => setTypoState(prev => ({ ...prev, isOpen: false }))}
@@ -133,6 +137,9 @@ export const LiveEditorProvider: React.FC<{
                 onUpdate(sec, typoState.colorField, newColor, itemId);
               }
             }}
+            handleSaveAll={handleSaveAll}
+            handleDiscard={handleDiscard}
+            pendingChangesCount={Object.keys(pendingChanges || {}).length}
           />
         </div>
       </LiveEditorContext.Provider>
@@ -324,7 +331,7 @@ export const EditableText: React.FC<{
                     marginLeft: comp.marginLeft
                   };
                 }
-                editor.openTypographyEditor(section, field, displayValue, id, targetStyles, colorField);
+                editor.openTypographyEditor(section, field, displayValue, value, id, targetStyles, colorField);
               }}
               className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer [@media(hover:none)]:hidden"
               title="Edit Text Style"

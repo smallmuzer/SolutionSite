@@ -35,6 +35,7 @@ import LiveEditor from "@/components/admin/LiveEditor";
 import { useUndoAction } from "@/hooks/useUndoAction";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { applySettings, saveThemePref, saveUserSettings, getUserSettings } from "@/hooks/useSiteSettings";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formatDate = (value: string | Date): string => {
   const d = new Date(value);
@@ -1195,6 +1196,7 @@ const AppointmentsCalendar = ({
 const AdminDashboard = () => {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -1314,9 +1316,21 @@ const AdminDashboard = () => {
   }, [dbFetch]);
 
   const loadSettings = useCallback(async () => {
-    const { data } = await dbFetch("site_content", { query: { section_key: "settings", _single: "1" } });
-    if (data?.content) {
-      const c = data.content as any;
+    const { data: settingsData } = await dbFetch("site_settings", { query: { id: "settings", _single: "1" } });
+    const { data: socialData } = await dbFetch("social_links", { query: { _order: "sort_order", _asc: "true" } });
+
+    if (settingsData) {
+      const c = { ...settingsData };
+      if (socialData && Array.isArray(socialData)) {
+        c.social_count = socialData.length.toString();
+        socialData.forEach((link: any, i: number) => {
+          c[`social_icon_${i + 1}`] = link.icon;
+          c[`social_href_${i + 1}`] = link.url;
+          c[`social_color_${i + 1}`] = link.color;
+          c[`social_visible_${i + 1}`] = link.is_visible ? "true" : "false";
+        });
+      }
+
       setSiteSettings((prev) => ({ ...prev, ...c }));
 
       // 1. Get User Overrides from LocalStorage first
@@ -1473,23 +1487,72 @@ const AdminDashboard = () => {
   const saveSettings = async () => {
     setSavingSettings(true);
 
-    // Save UX + all settings to DB as global defaults for all visitors
     const finalSettings = { ...siteSettings, ...uxDraft };
     setSiteSettings(finalSettings);
 
     saveUserSettings(uxDraft);
 
-    await dbFetch("site_content", {
+    const settingsToSave = { ...finalSettings };
+    const socialKeys = Object.keys(settingsToSave).filter(k => k.startsWith('social_'));
+    socialKeys.forEach(k => delete settingsToSave[k]);
+    settingsToSave.id = "settings";
+
+    // Ensure nav_items is passed correctly
+    if (typeof settingsToSave.nav_items === 'object') {
+      settingsToSave.nav_items = JSON.stringify(settingsToSave.nav_items);
+    }
+
+    const res = await dbFetch("site_settings", {
       method: "POST",
-      body: { section_key: "settings", content: finalSettings }
+      body: settingsToSave
     });
 
-    // Notify all components that DB settings changed
-    // applySettings will merge cookie on top, so user prefs are preserved
+    if (res.error) {
+      setSavingSettings(false);
+      toast.error(`Failed to save settings: ${res.error.message}`);
+      return;
+    }
+
+    const socialCount = parseInt(finalSettings.social_count || "6", 10);
+    for (let i = 1; i <= socialCount; i++) {
+      const slRes = await dbFetch("social_links", {
+        method: "POST",
+        body: {
+          id: `sl-${i}`,
+          platform: finalSettings[`social_icon_${i}`] || 'Unknown',
+          icon: finalSettings[`social_icon_${i}`] || 'Globe',
+          url: finalSettings[`social_href_${i}`] || '',
+          color: finalSettings[`social_color_${i}`] || '#000000',
+          is_visible: finalSettings[`social_visible_${i}`] === "false" ? 0 : 1,
+          sort_order: i - 1
+        }
+      });
+      
+      if (slRes.error) {
+        toast.error(`Failed to save social link ${i}: ${slRes.error.message}`);
+      }
+    }
+
+    try {
+      const { data: currentLinks } = await dbFetch("social_links", {});
+      if (currentLinks && Array.isArray(currentLinks)) {
+        for (const link of currentLinks) {
+          const num = parseInt(link.id.replace('sl-', ''), 10);
+          if (num > socialCount) {
+            await fetch(`/api/db/social_links?id=${link.id}`, { method: 'DELETE' });
+          }
+        }
+      }
+    } catch { }
+
     window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+    window.dispatchEvent(new CustomEvent("ss:siteSettings"));
+
+    // Ensure all data is re-fetched and UI is synced before clearing loading state
+    await queryClient.invalidateQueries();
 
     setSavingSettings(false);
-    toast.success("Settings saved! User cookie preferences are preserved.");
+    toast.success("Settings saved successfully!");
   };
 
   // Sync uxDraft.theme when sidebar sun/moon toggle is used
@@ -2088,8 +2151,8 @@ const AdminDashboard = () => {
 
               {tab === "settings" && (
                 <div className="w-full">
-                  <div className="w-full space-y-6">
-                    <div className="space-y-2">
+                  <div className="w-full space-y-2">
+                    <div className="">
                       <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-1">Site Settings</h1>
                       <p className="text-muted-foreground text-sm">These settings affect the live website for all visitors in real-time.</p>
                     </div>
@@ -2325,7 +2388,7 @@ const AdminDashboard = () => {
                                 </button>
                               </div>
 
-                              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                              <div className="space-y-3 pr-2">
                                 {Array.from({ length: parseInt(siteSettings.social_count || "6", 10) }).map((_, idx) => {
                                   const i = idx + 1;
                                   const iconKey = `social_icon_${i}`;
@@ -2359,16 +2422,7 @@ const AdminDashboard = () => {
 
                                   const color = siteSettings[colorKey] !== undefined ? siteSettings[colorKey] : fallbackColor;
 
-                                  const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                                    isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
-                                      isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                        isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                          isViber ? "viber://chat?number=" :
-                                            isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
-
-                                  let href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : fallbackHref;
-                                  if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
-                                  if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
+                                  let href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : "";
 
                                   const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
 

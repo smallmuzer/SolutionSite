@@ -70,7 +70,7 @@ const AboutSection = () => {
   const editor = useLiveEditor();
 
   const resolveImg = (imgKey: string) => {
-    const v = content[imgKey];
+    const v = editor?.pendingChanges[`about:${imgKey}`] ?? content[imgKey];
     return v && v.trim() ? v.trim() : "";
   };
 

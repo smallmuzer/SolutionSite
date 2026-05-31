@@ -53,18 +53,17 @@ const StatItem = ({ count, label, color, suffix, isVisible, inView, id }: {
 const HeroSection = () => {
   const editor = useLiveEditor();
   const content = useSiteContent("hero");
-  const rawImages = (content as any)?.images || (content as any)?.hero_images || "";
+  const rawImages = editor?.pendingChanges["hero:images"] ?? editor?.pendingChanges["hero:hero_images"] ?? ((content as any)?.images || (content as any)?.hero_images || "");
   const dbSlides = typeof rawImages === "string"
     ? rawImages.split(",").map((s: string) => s.trim()).filter(Boolean)
     : Array.isArray(rawImages) ? rawImages : [];
-  const heroImg = (content as any)?.hero_image;
+  const heroImg = editor?.pendingChanges["hero:hero_image"] ?? (content as any)?.hero_image;
   const allSlides = (() => {
-    let imgs = [...dbSlides];
-    if (heroImg?.trim()) {
-      imgs = imgs.filter(u => u !== heroImg.trim());
-      imgs.unshift(heroImg.trim());
-    }
-    return imgs;
+    // If the user has explicitly selected images (dbSlides), show ONLY those selected images.
+    if (dbSlides.length > 0) return dbSlides;
+    // Otherwise fallback to the legacy single hero_image if available.
+    if (heroImg?.trim()) return [heroImg.trim()];
+    return [];
   })();
   const [isDark, setIsDark] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);

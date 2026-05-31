@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GlobalViewProvider } from "./components/ui-customizer-context";
 import { useContentSync, useSiteSettings } from "@/hooks/useSiteContent";
 import { useEffect } from "react";
-import { seedQueryCache } from "@/lib/seedCache";
 import { queryClient } from "@/lib/queryClient";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -16,9 +15,6 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ApplicationStatus = lazy(() => import("./pages/ApplicationStatus"));
 
-// Pre-populate cache with seed/fallback data synchronously before first render.
-// Components render instantly with this data; API responses replace it in background.
-seedQueryCache(queryClient);
 
 const RouteFallback = () => <div className="min-h-screen bg-background" />;
 
@@ -50,7 +46,7 @@ const TrackingScripts = () => {
 
     // Microsoft Clarity
     if (settings.microsoft_clarity_id) {
-      let script = document.getElementById("clarity-script");
+      const script = document.getElementById("clarity-script");
       if (!script) {
         const inlineScript = document.createElement("script");
         inlineScript.id = "clarity-script";

@@ -3,7 +3,7 @@ import { Facebook, Twitter, Linkedin, Instagram, ExternalLink, Globe, PhoneCall,
 import * as LucideIcons from "lucide-react";
 import { toast } from "sonner";
 import { openViber, ViberIcon, VIBER_COLOR } from "@/lib/viber";
-import { useSiteContent, useNetworkCompanies, useSiteSettings } from "@/hooks/useSiteContent";
+import { useSiteContent, useNetworkCompanies, useSiteSettings, useSocialLinks } from "@/hooks/useSiteContent";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation, hasEmbeddedColor } from "./admin/LiveEditorContext";
 
@@ -80,7 +80,12 @@ const Footer = () => {
   const isNetworkVisibleDraft = editor?.pendingChanges["our_network:is_visible"] ?? associatedContent.is_visible;
   const isNetworkVisible = isNetworkVisibleDraft !== false;
 
-  const rawCompanies = associatedContent.companies || [
+  const { data: rawCompaniesData } = useDbQuery<{ id: string; name: string; subtitle: string; desc: string; href?: string; logo_url?: string; flag?: string; accent?: string; is_visible?: boolean }[]>(
+    "our_network",
+    editor?.isEditMode ? {} : { is_visible: true },
+    { order: "sort_order" }
+  );
+  const rawCompanies = rawCompaniesData || [
     { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", logo_url: "/logo.png", accent: "#3b82f6", is_visible: true },
     { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", logo_url: "/assets/uploads/bhutan_partner.png", accent: "#10b981", is_visible: true },
   ];
@@ -91,6 +96,25 @@ const Footer = () => {
         const isCoVisibleDraft = editor?.pendingChanges[`our_network:${c.id}:is_visible`] ?? c.is_visible;
         return isCoVisibleDraft !== false;
       });
+
+  const handleNetworkMove = (id: string, direction: "up" | "down" | "left" | "right") => {
+    if (!editor?.isEditMode) return;
+    const idx = associated.findIndex(c => c.id === id);
+    if (idx === -1) return;
+    const step = (direction === "left" || direction === "up") ? -1 : 1;
+    const targetIdx = Math.max(0, Math.min(associated.length - 1, idx + step));
+    if (targetIdx === idx) return;
+
+    const newItems = [...associated];
+    const [moved] = newItems.splice(idx, 1);
+    newItems.splice(targetIdx, 0, moved);
+
+    newItems.forEach((item, index) => {
+      if (item.id) {
+        editor.onUpdate("our_network", "sort_order", index, item.id);
+      }
+    });
+  };
 
   const settings = useSiteSettings();
   // Load logo + site name from settings (already in useSiteSettings)
@@ -112,59 +136,17 @@ const Footer = () => {
     editor?.onUpdate("footer", "hidden_links", next.join(","));
   };
   const footerBgImage = editor?.pendingChanges["footer:bg_image_url"] ?? content.bg_image_url ?? "";
-  // Support dynamic social links list
-  const socialCount = parseInt(settings.social_count || "6", 10);
-  const socialList = [];
-  for (let i = 1; i <= socialCount; i++) {
-    const iconKey = `social_icon_${i}`;
-    const hrefKey = `social_href_${i}`;
-    const visibleKey = `social_visible_${i}`;
-    
-    const colorKey = `social_color_${i}`;
-    
-    const icon = editor?.pendingChanges[`settings:${iconKey}`] ?? settings[iconKey] ?? (
-      i === 1 ? "Facebook" :
-      i === 2 ? "Twitter" :
-      i === 3 ? "Linkedin" :
-      i === 4 ? "Instagram" :
-      i === 5 ? "Viber" : 
-      i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
-    );
-    
-    const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
-    const isWhatsApp = iconName.includes("whatsapp");
-    const isFacebook = iconName === "facebook";
-    const isTwitter = iconName === "twitter";
-    const isLinkedin = iconName === "linkedin";
-    const isInstagram = iconName === "instagram";
-    const isViber = iconName === "viber";
-    
-    const fallbackHref = isFacebook ? (settings.social_facebook || contact.facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-      isTwitter ? (settings.social_twitter || contact.twitter || "https://x.com/bsspl_india") :
-      isLinkedin ? (settings.social_linkedin || contact.linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-      isInstagram ? (settings.social_instagram || contact.instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-      isViber ? "viber://chat?number=" : 
-      isWhatsApp ? `https://wa.me/${(settings.whatsapp_number || "9603011355").replace("+", "")}` : "#";
-
-    let href = editor?.pendingChanges[`settings:${hrefKey}`] ?? settings[hrefKey] ?? fallbackHref;
-    // Sanitize bad DB state where icon changed but URL remained the default for a different app
-    if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
-    if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
-    
-    const visibleVal = editor?.pendingChanges[`settings:${visibleKey}`] ?? settings[visibleKey];
-    const isVisible = visibleVal !== false && visibleVal !== "false";
-    
-    const fallbackColor = isFacebook ? "#1877F2" :
-      isTwitter ? "#1DA1F2" :
-      isLinkedin ? "#0A66C2" :
-      isInstagram ? "#E4405F" :
-      isViber ? "#7360f2" : 
-      isWhatsApp ? "#25D366" : "#3b82f6";
-      
-    const color = editor?.pendingChanges[`settings:${colorKey}`] ?? settings[colorKey] ?? fallbackColor;
-    
-    socialList.push({ index: i, icon, href, isVisible, color });
-  }
+  const rawSocialLinks = useSocialLinks();
+  const socialList = rawSocialLinks.map((link, i) => {
+    const isVisible = link.is_visible !== 0 && link.is_visible !== false;
+    return {
+      index: i + 1,
+      icon: link.icon,
+      href: link.url,
+      isVisible,
+      color: link.color
+    };
+  });
 
   return (
     <footer>
@@ -225,6 +207,9 @@ const Footer = () => {
                         className="-top-4 right-2 scale-75"
                         group="item"
                         canClone={false}
+                        canMove={true}
+                        moveDirections={["left", "right"]}
+                        onMove={(dir) => handleNetworkMove(co.id || "", dir)}
                       />
                       {!isVisible && editor?.isEditMode && (
                         <div className="absolute top-2 left-2 bg-amber-500/90 text-white rounded-full p-1 shadow-md flex items-center gap-1.5 z-20 text-[8px] font-bold px-2 pointer-events-none uppercase tracking-widest border border-amber-400/20">

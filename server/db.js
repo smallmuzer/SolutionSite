@@ -68,6 +68,56 @@ db.exec(`
     updated_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS site_settings (
+    id TEXT PRIMARY KEY,
+    site_name TEXT NOT NULL DEFAULT '',
+    site_logo TEXT NOT NULL DEFAULT '/logo.png',
+    whatsapp_number TEXT DEFAULT '',
+    viber_number TEXT DEFAULT '',
+    contact_email TEXT DEFAULT '',
+    contact_phone TEXT DEFAULT '',
+    google_analytics_id TEXT DEFAULT '',
+    microsoft_clarity_id TEXT DEFAULT '',
+    contact_from_email TEXT DEFAULT '',
+    hr_email TEXT DEFAULT '',
+    smtp_host TEXT DEFAULT '',
+    smtp_port TEXT DEFAULT '',
+    smtp_user TEXT DEFAULT '',
+    smtp_pass TEXT DEFAULT '',
+    chatbot_enabled TEXT DEFAULT 'false',
+    chatbot_script_url TEXT DEFAULT '',
+    chatbot_api_key TEXT DEFAULT '',
+    chatbot_title TEXT DEFAULT '',
+    chatbot_subtitle TEXT DEFAULT '',
+    chatbot_accent TEXT DEFAULT '',
+    chatbot_accent2 TEXT DEFAULT '',
+    chatbot_bot_bubble TEXT DEFAULT '',
+    chatbot_user_color TEXT DEFAULT '',
+    chatbot_position TEXT DEFAULT '',
+    chatbot_btn_size TEXT DEFAULT '',
+    theme TEXT DEFAULT 'light',
+    font_style TEXT DEFAULT '',
+    font_size TEXT DEFAULT '',
+    card_style TEXT DEFAULT '',
+    accent_color TEXT DEFAULT '',
+    global_view TEXT DEFAULT '',
+    nav_items TEXT DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS social_links (
+    id TEXT PRIMARY KEY,
+    platform TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    url TEXT NOT NULL,
+    color TEXT NOT NULL,
+    is_visible INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS client_logos (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -206,6 +256,36 @@ db.exec(`
     category TEXT NOT NULL DEFAULT 'General',
     name_color TEXT NOT NULL DEFAULT '#3178C6',
     category_color TEXT NOT NULL DEFAULT '#3178C6',
+    is_visible INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS global_presence (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    lat REAL NOT NULL DEFAULT 0,
+    lng REAL NOT NULL DEFAULT 0,
+    clients TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    flag TEXT NOT NULL DEFAULT '',
+    landmark TEXT NOT NULL DEFAULT '',
+    is_visible INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS our_network (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    subtitle TEXT NOT NULL DEFAULT '',
+    desc TEXT NOT NULL DEFAULT '',
+    href TEXT NOT NULL DEFAULT '',
+    logo_url TEXT NOT NULL DEFAULT '',
+    accent TEXT NOT NULL DEFAULT '',
+    flag TEXT NOT NULL DEFAULT '',
     is_visible INTEGER NOT NULL DEFAULT 1,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
@@ -436,11 +516,58 @@ try {
     console.log('[db] Seeded/fixed hero_stats: 3 rows.');
   }
 
+  // Migrate global_presence JSON to global_presence table
+  const presenceCount = db.prepare("SELECT COUNT(*) as c FROM global_presence").get().c;
+  if (presenceCount === 0) {
+    const row = db.prepare("SELECT content FROM site_content WHERE section_key = 'global_presence'").get();
+    if (row && row.content) {
+      try {
+        const parsed = JSON.parse(row.content);
+        if (parsed.locations && Array.isArray(parsed.locations)) {
+          const insertLoc = db.prepare("INSERT INTO global_presence (id, name, lat, lng, clients, description, flag, landmark, is_visible, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          db.transaction(() => {
+            parsed.locations.forEach((loc, idx) => {
+              const locId = 'loc-' + Date.now() + '-' + idx;
+              insertLoc.run(locId, loc.name || '', loc.lat || 0, loc.lng || 0, loc.clients || '', loc.description || '', loc.flag || '', loc.landmark || '', loc.is_visible !== false ? 1 : 0, idx, new Date().toISOString(), new Date().toISOString());
+            });
+          })();
+        }
+      } catch (e) { console.error("Failed to migrate global_presence", e); }
+    }
+  }
+
+  // Migrate our_network JSON to our_network table
+  const networkCount = db.prepare("SELECT COUNT(*) as c FROM our_network").get().c;
+  if (networkCount === 0) {
+    const row = db.prepare("SELECT content FROM site_content WHERE section_key = 'our_network'").get();
+    if (row && row.content) {
+      try {
+        const parsed = JSON.parse(row.content);
+        if (parsed.companies && Array.isArray(parsed.companies)) {
+          const insertNet = db.prepare("INSERT INTO our_network (id, name, subtitle, desc, href, logo_url, accent, flag, is_visible, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          db.transaction(() => {
+            parsed.companies.forEach((comp, idx) => {
+              const compId = comp.id || 'comp-' + Date.now() + '-' + idx;
+              insertNet.run(compId, comp.name || '', comp.subtitle || '', comp.desc || '', comp.href || '', comp.logo_url || '', comp.accent || '', comp.flag || '', comp.is_visible !== false ? 1 : 0, idx, new Date().toISOString(), new Date().toISOString());
+            });
+          })();
+        }
+      } catch (e) { console.error("Failed to migrate our_network", e); }
+    }
+  }
+
+
+
 } catch (e) { console.error("[db] Migration error:", e.message); }
 
 // â”€â”€ Seed data (only if tables are empty) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const t0 = new Date().toISOString();
+
+function seedIfEmpty(table, rows) {
+  const count = db.prepare(`SELECT COUNT(*) as c FROM ${table}`).get().c;
+  if (count === 0) seedData(table, rows, "id", "1=0");
+}
 
 function seedData(table, rows, conflictKey = "id", updateCondition = null) {
   if (!rows || rows.length === 0) return;
@@ -458,17 +585,7 @@ function seedData(table, rows, conflictKey = "id", updateCondition = null) {
     }
   }
 
-  let sql;
-  if (condition) {
-    const updateSets = keys.filter(k => k !== conflictKey && k !== 'id').map(k => `${k} = excluded.${k}`).join(", ");
-    if (updateSets) {
-      sql = `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders}) ON CONFLICT(${conflictKey}) DO UPDATE SET ${updateSets} WHERE ${condition}`;
-    } else {
-      sql = `INSERT OR IGNORE INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`;
-    }
-  } else {
-    sql = `INSERT OR IGNORE INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`;
-  }
+  const sql = `INSERT OR IGNORE INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`;
 
   const stmt = db.prepare(sql);
   const insertMany = db.transaction((items) => {
@@ -600,16 +717,87 @@ try {
   }
 } catch (e) { console.error('[db] settings patch error:', e.message); }
 
-// Seed missing site_content rows
+const siteSettingsSeeds = [
+  { id: "settings", 
+    site_name: "Systems Solutions",
+    site_logo: "/logo.png",
+    contact_email: "info@solutions.com.mv",
+    contact_phone: "+960 301-1355",
+    nav_items: JSON.stringify([
+      { label: 'Home',         href: '#home' },
+      { label: 'About',        href: '#about' },
+      { label: 'Services',     href: '#services' },
+      { label: 'Products',     href: '#products' },
+      { label: 'Portfolio',    href: '#portfolio' },
+      { label: 'Technologies', href: '#technologies' },
+      { label: 'Careers',      href: '#careers' },
+      { label: 'Contact',      href: '#contact' },
+    ]),
+    created_at: t0, updated_at: t0 }
+];
+seedData("site_settings", siteSettingsSeeds, "id");
+
+const socialLinksSeeds = [
+  { id: "sl-1", platform: "Facebook", icon: "Facebook", url: "https://www.facebook.com/brilliantsystemssolutions/", color: "#1877F2", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
+  { id: "sl-2", platform: "Twitter", icon: "Twitter", url: "https://x.com/bsspl_india", color: "#1DA1F2", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
+  { id: "sl-3", platform: "LinkedIn", icon: "Linkedin", url: "https://in.linkedin.com/company/brilliantsystemssolutions", color: "#0A66C2", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
+  { id: "sl-4", platform: "Instagram", icon: "Instagram", url: "https://www.instagram.com/brilliantsystemssolutions", color: "#E4405F", is_visible: 1, sort_order: 3, created_at: t0, updated_at: t0 },
+  { id: "sl-5", platform: "Viber", icon: "Viber", url: "viber://chat?number=", color: "#7360f2", is_visible: 1, sort_order: 4, created_at: t0, updated_at: t0 },
+  { id: "sl-6", platform: "WhatsApp", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`, url: "https://wa.me/9603011355", color: "#25D366", is_visible: 1, sort_order: 5, created_at: t0, updated_at: t0 }
+];
+seedData("social_links", socialLinksSeeds, "id");
+
 const siteContentSeeds = [
+  { section_key: "hero", content: JSON.stringify({
+    title: "Leading IT Solutions Company in Maldives",
+    subtitle: "Transform your business with cutting-edge technology solutions.",
+    cta_text: "Get Started",
+    badge: "Maldives' Leading IT Solutions Partner",
+    hero_images: "/assets/uploads/whiteland5.jpg,/assets/uploads/Maldives.png",
+    hero_image: "/assets/uploads/modern_hero_glass_1775323942548.webp"
+  }) },
+  { section_key: "about", content: JSON.stringify({
+    title: "Driving Digital Transformation",
+    description: "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!",
+    vision: "Our journey began out of the passion for a unique position in the industry.",
+    card_mission: "Deliver innovative technology solutions that transform businesses.",
+    card_team: "Expert developers, designers, and consultants dedicated to your success.",
+    card_quality: "Every solution we build meets the highest standards of performance.",
+    card_global: "Serving clients across Maldives, Bhutan, and beyond.",
+    card_mission_image: "/assets/uploads/white_designer_1775410426535.png",
+    card_team_image: "/assets/uploads/white_dev_1775409804566.png",
+    card_quality_image: "/assets/uploads/white_business_1775409832581.png",
+    card_global_image: "/assets/uploads/CloudInfra_1775027818619.png"
+  }) },
+  { section_key: "contact", content: JSON.stringify({
+    title: "Get In Touch",
+    subtitle: "Ready to transform your business? Contact us today.",
+    address: "Alia Building, 7th Floor\\nGandhakoalhi Magu\\nMalé, Maldives",
+    email: "info@solutions.com.mv",
+    phone: "+960 301-1355",
+    landline: "+91-452 238 7388",
+    hours: "Sun–Thu: 9AM–6PM\\nSat: 9AM–1PM",
+    facebook: "https://www.facebook.com/brilliantsystemssolutions/",
+    twitter: "https://x.com/bsspl_india",
+    linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
+    instagram: "https://www.instagram.com/brilliantsystemssolutions"
+  }) },
+  { section_key: "footer", content: JSON.stringify({
+    copyright: `© 2026 Systems Solutions Pvt Ltd. All rights reserved.`,
+    tagline: "Leading IT consulting and software development company delivering cutting-edge technology solutions.",
+    facebook: "https://www.facebook.com/brilliantsystemssolutions/",
+    twitter: "https://x.com/bsspl_india",
+    linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
+    instagram: "https://www.instagram.com/brilliantsystemssolutions"
+  }) },
+  { section_key: "clients", content: JSON.stringify({
+    badge: "Our Clients", title: "Trusted by", highlight: "Industry Leaders",
+    description: "We're proud to have served over 300+ successful projects for leading companies across the Maldives and beyond."
+  }) },
   { section_key: "services",     content: JSON.stringify({ title: "Services & Solutions We Deliver", subtitle: "Team up with the perfect digital partner for all your technical needs to achieve your business goals, reduce costs and accelerate growth." }) },
   { section_key: "testimonials", content: JSON.stringify({ badge: "Testimonials", title: "What Our", highlight: "Clients Say" }) },
   { section_key: "careers",      content: JSON.stringify({ badge: "Careers", title: "Join Our", highlight: "Team", description: "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide." }) },
   { section_key: "technologies",  content: JSON.stringify({ badge: "Our Stack", title: "Technologies", highlight: "We Use", description: "We leverage cutting-edge technologies to build robust, scalable, and future-proof solutions for our clients." }) },
-  { section_key: "our_network",  content: JSON.stringify({ companies: [
-    { id: "1", name: "Brilliant Systems Solutions", subtitle: "Private Limited", desc: "Our sister company delivering innovative IT solutions across the Maldives.", href: "https://bsyssolutions.com", flag: "🇲🇻", accent: "#3b82f6", is_visible: true },
-    { id: "2", name: "BSS Bhutan", subtitle: "Technology Partner", desc: "Expanding world-class digital solutions across the Kingdom of Bhutan.", href: "#", flag: "🇧🇹", accent: "#10b981", is_visible: true },
-  ]}) },
 ];
 const mappedSiteContentSeeds = siteContentSeeds.map(s => ({
   id: randomUUID(),
@@ -639,18 +827,18 @@ seedData("technologies", [
   { id: "tech-16", name: "AWS",         description: "Amazon Web Services — the world's most comprehensive cloud platform for hosting, storage, and AI services.",  image_url: "/assets/technologies/aws.png",         category: "Cloud",    name_color: "#FF9900", category_color: "#FF9900", is_visible: 1, sort_order: 15, created_at: t0, updated_at: t0 },
 ]);
 
-seedData("users", [
+seedIfEmpty("users", [
   { id: "admin-local", email: "admin@solutions.com.mv", password: "Admin@1234", userrole: "admin", created_at: t0, updated_at: t0 }
 ]);
 
-seedData("contact_submissions", [
+seedIfEmpty("contact_submissions", [
   { id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", name: "Test User", full_name: "Test User", company_name: null, email: "test@example.com", phone: null, message: "This is a test message to verify fallback email logic.", is_read: 0, created_at: "2026-03-27T17:29:59.131Z" },
   { id: "da929a3d-48e1-4a8a-8bc0-42a0a7bce35c", name: "sdfasd", full_name: "sdfasd", company_name: null, email: "prasannaprobite@gmail.com", phone: null, message: "sdfsadf\nService: Mobile App Development\nPreferred Date 1: 2026-03-29T16:16\nPreferred Date 2: 2026-03-29T16:16", is_read: 0, created_at: "2026-03-29T11:10:48.662Z" },
   { id: "9355deea-6986-480f-b0c9-e0d332ceb9ef", name: "sdfasdf", full_name: "sdfasdf", company_name: null, email: "asdfasd@gmail.com", phone: null, message: "sadfasdf\nPreferred Date 1: 2026-03-29T18:02\nPreferred Date 2: 2026-03-29T18:02", is_read: 0, created_at: "2026-03-29T12:43:16.084Z" },
   { id: "db90838e-87c5-4094-bcb2-93f642ee32ca", name: "test", full_name: "test", company_name: null, email: "prasannaprobiz@gmail.com", phone: null, message: "some text \nPreferred Date 1: 2026-03-30T13:05\nPreferred Date 2: 2026-03-31T13:05", is_read: 0, created_at: "2026-03-29T13:06:43.030Z" },
 ]);
 
-seedData("submission_replies", [
+seedIfEmpty("submission_replies", [
   { id: "ee96a078-e457-4c1f-b692-c3f0f078cfb0", submission_id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", sender: "admin", message: "hi", created_at: "2026-03-27T17:31:30.213Z" },
   { id: "ecaadd14-2714-4a65-bd4e-cf0ab62fc8f1", submission_id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", sender: "admin", message: "hi too", created_at: "2026-03-28T18:27:07.307Z" },
   { id: "ece67f7c-39c1-4b32-a4e0-fbc69d19fb4e", submission_id: "76ef6c3f-9a27-4f53-9b1f-b45a93679dad", sender: "admin", message: "gfafdgsdfgd", created_at: "2026-03-29T08:22:05.414Z" },
@@ -659,12 +847,12 @@ seedData("submission_replies", [
   { id: "6cd8e354-84ed-4e44-b815-006ff75df19a", submission_id: "db90838e-87c5-4094-bcb2-93f642ee32ca", sender: "admin", message: "we will contact you", created_at: "2026-03-29T13:07:10.089Z" },
 ]);
 
-seedData("job_applications", [
+seedIfEmpty("job_applications", [
   { id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", applicant_name: "sdfs", email: "prasanna", phone: "8144078979", job_id: "UI/UX Designer", resume_url: null, cover_letter: "rfe ertger ertg ertg er e", status: "applied", created_at: "2026-03-27T18:56:10.208Z", updated_at: "2026-03-29T10:04:09.544Z" },
   { id: "29e0f65a-9ebd-4ad4-af08-9bf3b7caccd1", applicant_name: "bite web", email: "prasannaprobite@gmail.com", phone: "797987987", job_id: "UI/UX Designer", resume_url: null, cover_letter: "sdafsadf", status: "applied", created_at: "2026-03-29T13:08:33.411Z", updated_at: "2026-03-29T14:04:07.455Z" },
 ]);
 
-seedData("application_replies", [
+seedIfEmpty("application_replies", [
   { id: "03aa6664-2843-4269-aed9-025a0ed33379", application_id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", sender: "admin", message: "your interview postponded", created_at: "2026-03-27T18:58:15.177Z" },
   { id: "3ffe66f5-6f12-4556-a339-cafce2c8e6fa", application_id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", sender: "admin", message: "ghjgh", created_at: "2026-03-29T08:22:27.255Z" },
   { id: "2212bd07-6314-4d41-b2e0-fbc83999e4f8", application_id: "77fa2ecb-4142-40d0-a85b-7eb7d986472c", sender: "admin", message: "dfsfsd", created_at: "2026-03-29T08:25:09.592Z" },
@@ -673,7 +861,7 @@ seedData("application_replies", [
   { id: "38911841-7b02-4e28-8f27-17a2581184fb", application_id: "29e0f65a-9ebd-4ad4-af08-9bf3b7caccd1", sender: "admin", message: "hi today message", created_at: "2026-03-29T14:04:07.455Z" },
 ]);
 
-seedData("chat_messages", [
+seedIfEmpty("chat_messages", [
   { id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", session_id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", ip_address: null, channel: "website", status: "active", created_at: "2026-03-27T12:56:49.634Z", updated_at: "2026-03-27T12:56:49.634Z" },
   { id: "web-1774632662986-gzawmdmea2l", session_id: "web-1774632662986-gzawmdmea2l", ip_address: null, channel: "website", status: "active", created_at: "2026-03-27T17:39:25.660Z", updated_at: "2026-03-27T17:39:25.660Z" },
   { id: "dc079433-4cc6-4383-88b7-3084e6f48f5a", session_id: "dc079433-4cc6-4383-88b7-3084e6f48f5a", ip_address: null, channel: "website", status: "active", created_at: "2026-03-27T18:16:30.535Z", updated_at: "2026-03-27T18:16:30.535Z" },
@@ -700,7 +888,7 @@ seedData("chat_messages", [
   { id: "7de47730-fba6-487d-8f8d-9fe98cfcf884", session_id: "7de47730-fba6-487d-8f8d-9fe98cfcf884", ip_address: null, channel: "website", status: "active", created_at: "2026-03-29T15:17:11.113Z", updated_at: "2026-03-29T15:17:11.113Z" },
 ]);
 
-seedData("chat_threads", [
+seedIfEmpty("chat_threads", [
   { id: "93df5303-836b-48ec-af6f-7326156047e0", message_id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", direction: "outbound", content: "hi", sender: null, timestamp: "2026-03-27T12:56:49.634Z", meta: null },
   { id: "e3d52285-c9fa-45b7-8bea-60cb07e9c4ca", message_id: "51c04f28-ff6e-44a3-8c9f-adc330bb306a", direction: "bot", content: "Thank you for your message! I understand you're asking about: \"hi\".\n\nOur team will get back to you shortly. For immediate assistance:\n📧 prasannaprobiz@gmail.com\n📱 WhatsApp: 9603011355", sender: null, timestamp: "2026-03-27T12:56:49.636Z", meta: '{"source":"fallback"}' },
   { id: "0748d761-387b-4dd4-abed-c4e935ed6ab7", message_id: "web-1774632662986-gzawmdmea2l", direction: "outbound", content: "ERP Demo- price plan", sender: null, timestamp: "2026-03-27T17:39:25.660Z", meta: null },
