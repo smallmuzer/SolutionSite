@@ -270,8 +270,8 @@ let botMode = "bot"; // "bot" | "human"
 
 function getSettings() {
   try {
-    const row = db.prepare("SELECT content FROM site_content WHERE section_key = 'settings'").get();
-    return { ...DEFAULT_SETTINGS, ...(row ? JSON.parse(row.content) : {}) };
+    const row = db.prepare("SELECT * FROM site_settings WHERE id = 'settings'").get();
+    return { ...DEFAULT_SETTINGS, ...(row || {}) };
   } catch (e) {
     console.error("[settings] failed to load settings", e);
     return { ...DEFAULT_SETTINGS };
@@ -569,7 +569,7 @@ async function generateBotReply(messages, settings) {
 
 // ── Email helpers ────────────────────────────────────────────────────────────
 
-function createTransport(settings) {
+function createTransport(settings, silent = false) {
   const host = settings.smtp_host || process.env.SMTP_HOST || "";
   const port = Number(settings.smtp_port || process.env.SMTP_PORT || 465);
   const user = settings.smtp_user || process.env.SMTP_USER || "";
@@ -577,13 +577,17 @@ function createTransport(settings) {
   const secure = port === 465;
 
   if (!host || !user || !pass) {
-    console.log(`[email] SMTP not configured - host: ${!!host}, user: ${!!user}, pass: ${!!pass}`);
-    appendLog("email.transport", { host: !!host, user: !!user, pass: !!pass, reason: "missing_credentials" });
+    if (!silent) {
+      console.log(`[email] SMTP not configured - host: ${!!host}, user: ${!!user}, pass: ${!!pass}`);
+      appendLog("email.transport", { host: !!host, user: !!user, pass: !!pass, reason: "missing_credentials" });
+    }
     return null;
   }
 
-  console.log(`[email] Creating transport: ${host}:${port} (SSL: ${secure}) as ${user}`);
-  appendLog("email.transport", { host, port, secure, user });
+  if (!silent) {
+    console.log(`[email] Creating transport: ${host}:${port} (SSL: ${secure}) as ${user}`);
+    appendLog("email.transport", { host, port, secure, user });
+  }
 
   return nodemailer.createTransport({
     host, port, secure,
@@ -613,7 +617,7 @@ function sendFallbackEmail({ subject, body, settings }) {
   return { queued: true };
 }
 
-async function sendEmailNow({ to, subject, text, html, settings }) {
+async function sendEmailNow({ to, subject, text, html, settings, replyTo }) {
   const transport = createTransport(settings);
   if (!transport) {
     console.warn(`[email] Cannot send email - SMTP not configured. To: ${to}, Subject: ${subject}`);
@@ -623,9 +627,10 @@ async function sendEmailNow({ to, subject, text, html, settings }) {
   
   try {
     const from = settings.smtp_user || settings.contact_from_email || "devteam.bss@gmail.com";
-    console.log(`[email] Sending to ${to} from ${from} (Subject: ${subject})`);
-    await transport.sendMail({ from, to, subject, text, ...(html ? { html } : {}) });
-    appendLog("email.sent", { to, from, subject });
+    console.log(`[email] Sending to ${to} from ${from} (Subject: ${subject})...`);
+    await transport.sendMail({ from, to, subject, text, ...(html ? { html } : {}), ...(replyTo ? { replyTo } : {}) });
+    console.log(`[email] Successfully sent email to ${to}!`);
+    appendLog("email.sent", { to, from, subject, replyTo });
     return { ok: true };
   } catch (e) {
     console.error("[email] Failed to send email", e);
@@ -841,6 +846,7 @@ app.post("/api/db/:table", (req, res) => {
         sendEmailNow({
           to: hrTo,
           subject: `📩 New Contact: ${normalised.full_name || normalised.name || normalised.email}`,
+          replyTo: normalised.email,
           html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px">
             <h2 style="color:#3b82f6">New Contact Form Submission</h2>
             <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -892,6 +898,7 @@ app.post("/api/db/:table", (req, res) => {
         sendEmailNow({
           to: hrTo,
           subject: `💼 New Application: ${normalised.applicant_name} → ${normalised.job_id || "General"}`,
+          replyTo: normalised.email,
           html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px">
             <h2 style="color:#3b82f6">New Job Application</h2>
             <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -933,26 +940,7 @@ app.post("/api/db/:table", (req, res) => {
         settings,
       });
 
-      const adminTo = settings.hr_email || settings.contact_email;
-      if (adminTo) {
-        sendEmailNow({
-          to: adminTo,
-          subject: `📅 New Appointment Created | ${siteName}`,
-          html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px">
-            <h2 style="color:#3b82f6;margin-bottom:8px">New appointment created</h2>
-            <table style="width:100%;border-collapse:collapse;font-size:14px">
-              <tr><td style="padding:6px 0;color:#6b7280;width:130px">Name</td><td style="padding:6px 0;color:#111827;font-weight:600">${normalised.name}</td></tr>
-              <tr><td style="padding:6px 0;color:#6b7280">Email</td><td style="padding:6px 0;color:#111827">${normalised.email}</td></tr>
-              <tr><td style="padding:6px 0;color:#6b7280">Date</td><td style="padding:6px 0;color:#111827">${new Date(normalised.appointment_date).toLocaleString()}</td></tr>
-              <tr><td style="padding:6px 0;color:#6b7280">Title</td><td style="padding:6px 0;color:#111827">${normalised.title || "Appointment"}</td></tr>
-              <tr><td style="padding:6px 0;color:#6b7280">Reference</td><td style="padding:6px 0;color:#111827">${normalised.reference_type || "manual"}</td></tr>
-            </table>
-            ${normalised.description ? `<div style="background:#f9fafb;border-left:4px solid #3b82f6;padding:12px 16px;margin:16px 0;border-radius:4px"><p style="margin:0;color:#374151;font-size:14px"><strong>Description:</strong><br>${normalised.description.replace(/\n/g, "<br>")}</p></div>` : ""}
-          </div>`,
-          text: `New appointment created\n\nName: ${normalised.name}\nEmail: ${normalised.email}\nDate: ${new Date(normalised.appointment_date).toLocaleString()}\nTitle: ${normalised.title || "Appointment"}\nReference: ${normalised.reference_type || "manual"}\n\n${normalised.description ? `Description:\n${normalised.description}\n\n` : ""}`,
-          settings,
-        });
-      }
+
     }
 
     if (table === "site_content" || table === "seo_settings") secCache.lastFetch = 0;
@@ -1312,7 +1300,7 @@ app.get("/api/health/integrations", async (_req, res) => {
     results.bot = "invalid_url";
   }
   // Email health
-  const transport = createTransport(settings);
+  const transport = createTransport(settings, true);
   if (transport) {
     try {
       await transport.verify();

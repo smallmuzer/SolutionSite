@@ -51,8 +51,8 @@ const ContactSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      toast.error("Please fill in all required fields.");
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim() || !form.service) {
+      toast.error("Please fill in all required fields, including your inquiry type.");
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -85,27 +85,6 @@ const ContactSection = () => {
       const contactData = json.data;
       if (json.error) throw new Error(json.error.message);
 
-      if (contactData) {
-        const contactId = contactData.id;
-        const apptTitle = form.service ? `Inquiry: ${form.service}` : "General Inquiry";
-        const apptDesc = form.message.slice(0, 100) + (form.message.length > 100 ? "..." : "");
-
-        await fetch("/api/db/appointments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: crypto.randomUUID(),
-            reference_type: "contact",
-            reference_id: contactId,
-            name: form.name.trim(),
-            email: form.email.trim(),
-            title: apptTitle,
-            description: apptDesc,
-            appointment_date: new Date().toISOString(),
-            created_at: new Date().toISOString()
-          })
-        });
-      }
 
       setLoading(false);
       setSubmitted(true);
