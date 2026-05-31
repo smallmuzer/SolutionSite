@@ -1543,7 +1543,10 @@ const AdminDashboard = () => {
           }
         }
       }
-    } catch { }
+    } catch (error) {
+      // Ignore delete cleanup failures; non-critical for saving settings.
+      console.error("Failed cleaning up social links:", error);
+    }
 
     window.dispatchEvent(new CustomEvent("ss:contentSaved"));
     window.dispatchEvent(new CustomEvent("ss:siteSettings"));
@@ -2422,7 +2425,7 @@ const AdminDashboard = () => {
 
                                   const color = siteSettings[colorKey] !== undefined ? siteSettings[colorKey] : fallbackColor;
 
-                                  let href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : "";
+                                  const href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : "";
 
                                   const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
 
