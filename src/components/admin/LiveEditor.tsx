@@ -595,9 +595,9 @@ const PickerModal = ({ config, onClose, onSelect }: {
   
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <div className="w-full max-w-2xl bg-card border border-border shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[80vh]">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h3 className="font-bold uppercase tracking-widest text-sm flex items-center gap-2">
+      <div className="w-full max-w-xl bg-card border border-border/60 shadow-xl rounded-xl overflow-hidden flex flex-col max-h-[80vh]">
+        <div className="p-3 border-b border-border/50 flex items-center justify-between">
+          <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2">
             {config.type === "image" ? (
               <><LucideIcons.Image size={18} /> Pick Image</>
             ) : config.type === "icon" ? (
@@ -613,7 +613,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
           </button>
         </div>
         
-        <div className="p-4 border-b border-border bg-muted/20 space-y-3">
+        <div className="p-3 border-b border-border/50 bg-muted/10 space-y-2">
           {config.type !== "image" && (
             <div className="flex gap-2">
               <input 
@@ -622,20 +622,20 @@ const PickerModal = ({ config, onClose, onSelect }: {
                 placeholder={`Search ${config.type}s...`}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="flex-1 bg-background border border-border rounded-xl px-4 py-2 outline-none focus:border-secondary transition-all text-sm"
+                className="flex-1 bg-background border border-border/60 rounded-lg px-3 py-1.5 outline-none focus:border-secondary transition-all text-xs"
               />
             </div>
           )}
           
-          <div className="space-y-1.5">
-            <p className="text-[0.625rem] font-bold text-muted-foreground uppercase tracking-widest px-1">Manual {config.type === "icon" ? "SVG Code" : config.type === "color" ? "HEX Color" : "Asset Path"}</p>
+          <div className="space-y-1">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1">Manual {config.type === "icon" ? "SVG Code" : config.type === "color" ? "HEX Color" : "Asset Path"}</p>
             <div className="flex gap-2">
               {config.type === "icon" ? (
                 <textarea 
                   value={manualValue}
                   onChange={e => setManualValue(e.target.value)}
                   placeholder="Paste <svg> code here..."
-                  className="flex-1 bg-background border border-border rounded-xl px-4 py-2 outline-none focus:border-secondary transition-all text-xs font-mono min-h-[80px]"
+                  className="flex-1 bg-background border border-border/60 rounded-lg px-3 py-1.5 outline-none focus:border-secondary transition-all text-[11px] font-mono min-h-[60px]"
                 />
               ) : config.type === "color" ? (
                 <div className="flex-1 flex gap-2">
@@ -650,20 +650,20 @@ const PickerModal = ({ config, onClose, onSelect }: {
                     value={manualValue}
                     onChange={e => setManualValue(e.target.value)}
                     placeholder="#3b82f6"
-                    className="flex-1 bg-background border border-border rounded-xl px-4 py-2 outline-none focus:border-secondary transition-all text-xs font-mono"
+                    className="flex-1 bg-background border border-border/60 rounded-lg px-3 py-1.5 outline-none focus:border-secondary transition-all text-xs font-mono"
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col gap-2">
+                <div className="flex-1 flex flex-col gap-1.5">
                   <input 
                     type="text" 
                     value={manualValue}
                     onChange={e => handleManualPathChange(e.target.value)}
                     placeholder={config.type === "image" ? (config.multi ? "Enter comma separated paths: /img1.jpg, /img2.jpg" : "/assets/uploads/image.jpg") : "Target Link"}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 outline-none focus:border-secondary transition-all text-xs font-mono shadow-inner"
+                    className="w-full bg-background border border-border/60 rounded-lg px-3 py-1.5 outline-none focus:border-secondary transition-all text-xs font-mono shadow-inner"
                   />
                   {config.multi && (
-                    <p className="text-[10px] text-muted-foreground px-1 italic">Type or paste multiple image URLs separated by commas to update the list below.</p>
+                    <p className="text-[9px] text-muted-foreground px-1 italic">Type or paste multiple image URLs separated by commas to update the list below.</p>
                   )}
                 </div>
               )}
@@ -679,31 +679,31 @@ const PickerModal = ({ config, onClose, onSelect }: {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
           {config.multi && (
-            <div className="mb-6 space-y-4">
+            <div className="mb-4 space-y-3">
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-b border-border pb-6">
+              <div className="flex flex-wrap gap-2 border-b border-border/50 pb-4">
                 {currentAssets.map((asset, idx) => (
-                  <div key={asset + idx} className="group relative aspect-video rounded-xl overflow-hidden border border-border/50 bg-muted/20 shadow-sm">
-                    <img src={asset} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-black uppercase rounded-sm shadow-sm backdrop-blur-sm">Live</div>
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                  <div key={asset + idx} className="group relative h-[100px] w-fit min-w-[100px] max-w-[180px] rounded-lg overflow-hidden border border-border/40 bg-muted/10 shadow-sm flex items-center justify-center">
+                    <img src={asset} alt="" className="h-full w-auto object-contain bg-black/5" />
+                    <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">Live</div>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                       <button 
                         onClick={() => window.open(asset, "_blank")}
-                        className="p-1.5 bg-blue-500 text-white rounded-lg hover:scale-110 transition-transform" 
+                        className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform" 
                         title="View Full Image"
                       >
-                        <LucideIcons.Eye size={12} />
+                        <LucideIcons.Eye size={10} />
                       </button>
                       <button 
                         onClick={() => {
                           syncAssets(currentAssets.filter((_, i) => i !== idx));
                         }}
-                        className="p-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all" 
+                        className="p-1 bg-white/20 text-white rounded hover:bg-white/30 transition-all" 
                         title="Remove from selection"
                       >
-                        <LucideIcons.X size={12} />
+                        <LucideIcons.X size={10} />
                       </button>
                       <button 
                         onClick={() => {
@@ -713,10 +713,10 @@ const PickerModal = ({ config, onClose, onSelect }: {
                             syncAssets(next);
                           }
                         }}
-                        className="p-1.5 bg-secondary text-secondary-foreground rounded-lg hover:scale-110 transition-transform" 
+                        className="p-1 bg-secondary text-secondary-foreground rounded hover:scale-110 transition-transform" 
                         title="Move Up"
                       >
-                        <LucideIcons.ChevronLeft size={12} />
+                        <LucideIcons.ChevronLeft size={10} />
                       </button>
                       <button 
                         onClick={() => {
@@ -726,17 +726,17 @@ const PickerModal = ({ config, onClose, onSelect }: {
                             syncAssets(next);
                           }
                         }}
-                        className="p-1.5 bg-secondary text-secondary-foreground rounded-lg hover:scale-110 transition-transform" 
+                        className="p-1 bg-secondary text-secondary-foreground rounded hover:scale-110 transition-transform" 
                         title="Move Down"
                       >
-                        <LucideIcons.ChevronRight size={12} />
+                        <LucideIcons.ChevronRight size={10} />
                       </button>
                     </div>
                   </div>
                 ))}
                 {currentAssets.length === 0 && (
-                  <div className="col-span-full py-8 text-center border-2 border-dashed border-border rounded-xl">
-                    <p className="text-sm text-muted-foreground">No images in gallery yet. Upload or browse to add some.</p>
+                  <div className="col-span-full py-6 text-center border border-dashed border-border/60 rounded-lg">
+                    <p className="text-[10px] text-muted-foreground">No images in gallery yet. Upload or browse to add some.</p>
                   </div>
                 )}
               </div>
@@ -744,7 +744,9 @@ const PickerModal = ({ config, onClose, onSelect }: {
           )}
 
             <>
-              <p className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-4">Browse All Assets</p>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-3">
+                {config.type === "image" ? "Upload & Preview" : "Browse All Assets"}
+              </p>
               {config.type === "image" ? (
                 <ImageGrid 
                   section={config.section} 
@@ -778,23 +780,23 @@ const PickerModal = ({ config, onClose, onSelect }: {
         </div>
 
         {!config.multi ? (
-          <div className="p-4 border-t border-border flex items-center justify-between bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground">{manualValue ? "Selection ready" : "No selection"}</span>
+          <div className="p-3 border-t border-border/50 flex items-center justify-between bg-muted/10">
+            <span className="text-[10px] font-medium text-muted-foreground">{manualValue ? "Selection ready" : "No selection"}</span>
             <button 
               onClick={() => onSelect(manualValue)}
               disabled={!manualValue}
-              className="px-6 py-2 bg-secondary text-secondary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md active:scale-95 disabled:opacity-50"
+              className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
               Apply Changes
             </button>
           </div>
         ) : (
-          <div className="p-4 border-t border-border flex items-center justify-between bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground">{selected.length} items selected</span>
+          <div className="p-3 border-t border-border/50 flex items-center justify-between bg-muted/10">
+            <span className="text-[10px] font-medium text-muted-foreground">{selected.length} items selected</span>
             <button 
               onClick={() => onSelect(selected)}
               disabled={selected.length === 0}
-              className="px-6 py-2 bg-secondary text-secondary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md active:scale-95 disabled:opacity-50"
+              className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
               Save Selection
             </button>
@@ -860,15 +862,15 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <label className="group relative aspect-video flex flex-col items-center justify-center border-2 border-dashed border-border/60 rounded-xl hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all min-h-[120px]">
+    <div className="grid grid-cols-2 gap-3 items-center">
+      <label className="group relative h-[120px] w-full flex flex-col items-center justify-center border border-dashed border-border/80 bg-muted/5 rounded-xl hover:border-secondary hover:bg-secondary/10 cursor-pointer transition-all shadow-sm">
         <input type="file" className="hidden" accept="image/*" multiple={multi} onChange={handleUpload} disabled={uploading} />
         {uploading ? (
           <LoadingSpinner />
         ) : (
           <>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground group-hover:text-secondary transition-colors">Upload New Image</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/70 group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 group-hover:text-secondary transition-colors text-center px-2">Upload Image</span>
           </>
         )}
       </label>
@@ -876,24 +878,24 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
       {uploadedUrl && !multi ? (
         <div 
           onClick={() => onSelect(uploadedUrl)}
-          className="group relative aspect-video bg-muted rounded-xl overflow-hidden border border-secondary ring-2 ring-secondary/50 ring-inset cursor-pointer min-h-[120px]"
+          className="group relative h-[120px] w-full bg-muted/20 rounded-xl overflow-hidden border border-secondary/30 ring-2 ring-secondary/50 ring-offset-2 ring-offset-background cursor-pointer flex items-center justify-center shadow-md transition-all hover:ring-secondary"
         >
-          <img src={uploadedUrl} alt="Uploaded Image" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+          <img src={uploadedUrl} alt="Uploaded Image" className="h-full w-auto max-w-full object-contain transition-transform group-hover:scale-105" />
           
-          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-black uppercase rounded-sm shadow-sm backdrop-blur-sm">
+          <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">
             Selected
           </div>
           
-          <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+          <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 window.open(uploadedUrl, "_blank");
               }}
-              className="p-1.5 bg-blue-500 text-white rounded-lg hover:scale-110 transition-transform" 
+              className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform" 
               title="View Full Image"
             >
-              <LucideIcons.Eye size={14} />
+              <LucideIcons.Eye size={12} />
             </button>
             <button 
               onClick={(e) => {
@@ -901,21 +903,18 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
                 setUploadedUrl(null);
                 onSelect("");
               }}
-              className="p-1.5 bg-destructive text-white rounded-lg hover:scale-110 transition-transform" 
+              className="p-1 bg-destructive text-white rounded hover:scale-110 transition-transform" 
               title="Clear Image Selection"
             >
-              <LucideIcons.Trash2 size={14} />
+              <LucideIcons.Trash2 size={12} />
             </button>
           </div>
           
-          <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-black/60 backdrop-blur-sm truncate">
-            <p className="text-[0.625rem] text-white font-medium truncate font-mono">{uploadedUrl}</p>
-          </div>
+          <div className="absolute inset-0 rounded-xl pointer-events-none" />
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/40 rounded-xl bg-muted/5 min-h-[120px]">
-          <LucideIcons.Image size={24} className="text-muted-foreground/40 mb-1" />
-          <span className="text-[0.6875rem] font-bold text-muted-foreground/60 uppercase tracking-wider">No Image Selected</span>
+        <div className="flex flex-col items-center justify-center px-4 border border-dashed border-border/40 rounded-xl bg-muted/5 h-[120px] shadow-inner w-full">
+          <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider text-center">No Image Selected</span>
         </div>
       )}
     </div>
@@ -943,18 +942,18 @@ const LinkPicker = ({ onSelect, search }: { onSelect: (v: string) => void; searc
   const filtered = PRESETS.filter(p => p.label.toLowerCase().includes(search.toLowerCase()) || p.value.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
       {filtered.map(p => (
         <button 
           key={p.value}
           onClick={() => onSelect(p.value)}
-          className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-blue-500/10 hover:border-blue-500 transition-all group text-left"
+          className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-muted/10 hover:bg-blue-500/10 hover:border-blue-500 transition-all group text-left shadow-sm"
         >
           <div>
-            <p className="text-[0.8125rem] font-bold text-foreground">{p.label}</p>
-            <p className="text-[0.625rem] text-muted-foreground font-mono">{p.value}</p>
+            <p className="text-[11px] font-bold text-foreground">{p.label}</p>
+            <p className="text-[9px] text-muted-foreground font-mono mt-0.5">{p.value}</p>
           </div>
-          <LucideIcons.ChevronRight size={14} className="text-muted-foreground group-hover:text-blue-500" />
+          <LucideIcons.ChevronRight size={12} className="text-muted-foreground group-hover:text-blue-500" />
         </button>
       ))}
     </div>
@@ -965,17 +964,17 @@ const IconGrid = ({ onSelect, search }: { onSelect: (v: string) => void; search:
   const filtered = ALL_ICONS.filter(i => i.toLowerCase().includes(search.toLowerCase()));
   
   return (
-    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
       {filtered.map(name => (
         <button 
           key={name}
           onClick={() => onSelect(name)}
-          className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-secondary/10 hover:border-secondary transition-all group"
+          className="flex flex-col items-center justify-center p-2 rounded-lg border border-border/40 bg-muted/10 hover:bg-secondary/10 hover:border-secondary transition-all group shadow-sm"
         >
-          <div className="text-muted-foreground group-hover:text-secondary mb-2 transition-colors">
-            <LucideIcon name={name} size={24} />
+          <div className="text-muted-foreground group-hover:text-secondary mb-1 transition-colors">
+            <LucideIcon name={name} size={18} />
           </div>
-          <span className="text-[0.625rem] font-bold text-muted-foreground truncate w-full text-center">{name}</span>
+          <span className="text-[9px] font-bold text-muted-foreground truncate w-full text-center">{name}</span>
         </button>
       ))}
     </div>

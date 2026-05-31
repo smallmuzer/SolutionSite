@@ -640,11 +640,11 @@ const ClientsSection = () => {
         </AnimatedSection>
         <AnimatedSection>
           {effectiveShowAll ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ paddingTop: isEdit ? 16 : 0 }}>
+            <div className="flex flex-wrap justify-center gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ paddingTop: isEdit ? 16 : 0 }}>
               {clients.map((client) => (
-                <ClientCard
-                  key={client.id}
-                  client={client}
+                <div key={client.id} className="w-[calc(33.333%-10.66px)] sm:w-[calc(25%-12px)] md:w-[calc(20%-16px)] lg:w-[calc(16.666%-16.66px)]">
+                  <ClientCard
+                    client={client}
                   getNavProps={getNavProps}
                   flexible={true}
                   onMove={isEdit ? (dir) => handleMove(client.id, dir) : undefined}
@@ -652,7 +652,8 @@ const ClientsSection = () => {
                   onDragStart={isEdit ? handleDragStart : undefined}
                   onDragOver={isEdit ? handleDragOver : undefined}
                   onDrop={isEdit ? handleDrop : undefined}
-                />
+                  />
+                </div>
               ))}
             </div>
           ) : (

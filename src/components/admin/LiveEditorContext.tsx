@@ -160,6 +160,7 @@ export const EditableText: React.FC<{
   extraControls?: React.ReactNode;
   toolbarClassName?: string;
   toolbarVisibilityClassName?: string;
+  style?: React.CSSProperties;
 }> = ({
   section,
   field,
@@ -173,7 +174,8 @@ export const EditableText: React.FC<{
   hideColorPicker = false,
   extraControls,
   toolbarClassName = "top-0 right-0",
-  toolbarVisibilityClassName = "opacity-0 group-hover/edit:opacity-100"
+  toolbarVisibilityClassName = "opacity-0 group-hover/edit:opacity-100",
+  style = {}
 }) => {
     const editor = useLiveEditor();
     const [isEditing, setIsEditing] = useState(false);
@@ -238,8 +240,9 @@ export const EditableText: React.FC<{
           style={isEditing ? {
             background: 'rgba(var(--background), 0.1)',
             WebkitTextFillColor: 'initial',
-            WebkitBackgroundClip: 'border-box'
-          } : (finalColor ? { color: finalColor } : undefined)}
+            WebkitBackgroundClip: 'border-box',
+            ...style
+          } : { ...(finalColor ? { color: finalColor } : {}), ...style }}
           contentEditable
           spellCheck={false}
           suppressContentEditableWarning

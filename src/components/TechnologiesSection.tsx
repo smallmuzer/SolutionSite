@@ -170,14 +170,14 @@ const TechnologiesSection = () => {
         </AnimatedSection>
 
         {view === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
             {techs.map((tech, i) => {
               const logoSrc = tech.image_url?.trim() || LOCAL_LOGOS[tech.name] || null;
               const nameColor = tech.name_color || "#3178C6";
               const catColor = tech.category_color || nameColor;
               const CatIcon = CATEGORY_ICONS[tech.category] || Layers;
               return (
-                <AnimatedSection key={tech.id} delay={i * 0.04}>
+                <AnimatedSection key={tech.id} delay={i * 0.04} className="w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-10.66px)] lg:w-[calc(25%-12px)] xl:w-[calc(20%-12.8px)]">
                   <div 
                     className={`relative group/item cursor-pointer h-full transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''} ${!tech.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`} 
                     {...getNavProps(scrollToContact)}

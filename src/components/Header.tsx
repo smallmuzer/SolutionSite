@@ -62,16 +62,19 @@ const Header = () => {
   const logoPath = settings.site_logo || null;
   const siteName = settings.site_name || "Systems Solutions";
   const pendingHiddenNavItems = editor?.pendingChanges?.["settings:nav_hidden_items"];
-  const hiddenNavItemsValue = String(pendingHiddenNavItems ?? (settings as any).nav_hidden_items ?? "");
+  const settingsContent = useSiteContent("settings");
+  const hiddenNavItemsValue = String(pendingHiddenNavItems ?? settingsContent.nav_hidden_items ?? (settings as any).nav_hidden_items ?? "");
   const hiddenNavItems = useMemo(
     () => hiddenNavItemsValue.split(",").filter(Boolean),
     [hiddenNavItemsValue]
   );
   const navItems = DEFAULT_NAV.map(item => {
     const key = `nav_link_${item.href.replace('#', '')}`;
+    const pendingKey = `settings:${key}`;
+    const pendingVal = editor?.pendingChanges?.[pendingKey];
     return {
       ...item,
-      resolvedHref: (settings as any)[key] || item.href
+      resolvedHref: pendingVal ?? settingsContent[key] ?? (settings as any)[key] ?? item.href
     };
   }).filter(item => {
     return editor?.isEditMode || !hiddenNavItems.includes(item.href);
@@ -130,8 +133,14 @@ const Header = () => {
       try {
         const el = document.querySelector(href);
         if (el) {
-          const y = el.getBoundingClientRect().top + window.scrollY - 70;
-          window.scrollTo({ top: y, behavior: "smooth" });
+          const adminScroll = document.getElementById("admin-main-scroll");
+          if (adminScroll) {
+            const y = el.getBoundingClientRect().top + adminScroll.scrollTop - adminScroll.getBoundingClientRect().top - 70;
+            adminScroll.scrollTo({ top: y, behavior: "smooth" });
+          } else {
+            const y = el.getBoundingClientRect().top + window.scrollY - 70;
+            window.scrollTo({ top: y, behavior: "smooth" });
+          }
         }
       } catch (e) {
         console.error("Invalid scroll target:", href);
@@ -200,7 +209,13 @@ const Header = () => {
               canClone={false}
             />
           )}
-          <a href="#home" className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink">
+          {/* Fix: Use a div instead of an 'a' tag in edit mode to prevent contentEditable and click event conflicts */}
+          {(() => {
+            const Wrapper = editor?.isEditMode ? "div" : "a";
+            const target = settings.site_url || "#home";
+            const props = editor?.isEditMode ? getNavProps(() => scrollTo(target)) : { href: target };
+            return (
+              <Wrapper {...props} className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink cursor-pointer">
             <img
               src={resolvedLogo}
               alt={siteName}
@@ -208,29 +223,76 @@ const Header = () => {
               style={{ width: "clamp(34px, 8vw, 40px)", height: "clamp(34px, 8vw, 40px)", borderRadius: 10, objectFit: "contain" }}
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
             />
-            <div className="flex items-center gap-1 sm:gap-1.5 leading-none overflow-hidden select-none whitespace-nowrap min-w-0 max-w-[calc(100vw-7rem)] sm:max-w-none">
+            <div 
+              className="flex items-center gap-1 sm:gap-1.5 leading-none overflow-visible select-none whitespace-nowrap min-w-0 max-w-[calc(100vw-7rem)] sm:max-w-none transition-opacity"
+              style={{ 
+                opacity: (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? (editor?.isEditMode ? 0.4 : 0) : 1,
+                display: !editor?.isEditMode && settings.site_name_visible === "false" ? "none" : "flex"
+              }}
+            >
               <span
-                className="font-heading font-bold text-base sm:text-xl leading-tight truncate"
+                className="font-heading font-bold text-base sm:text-xl leading-tight"
                 style={{
                   color: isDark ? "#f1f5f9" : "#0f172a",
                   textShadow: "none",
                 }}
               >
-                <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0]} />
+                <EditableText 
+                  section="settings" 
+                  field="site_name_part1" 
+                  value={siteName.split(" ")[0]}
+                  linkField="site_url"
+                  toolbarClassName="-top-6 left-0"
+                  extraControls={
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const current = (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true");
+                        editor?.onUpdate("settings", "site_name_visible", current === "false" ? "true" : "false");
+                      }}
+                      className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+                      title="Toggle visibility"
+                    >
+                      {(editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? <EyeOff size={12} /> : <Eye size={12} />}
+                    </button>
+                  }
+                />
               </span>
-              <span
-                className="font-heading font-bold text-base sm:text-xl leading-tight truncate"
-                style={{
-                  background: "linear-gradient(90deg,#60a5fa,#818cf8)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  textShadow: "none",
-                }}
-              >
-                <EditableText section="settings" field="site_name_part2" value={siteName.split(" ").slice(1).join(" ") || "Solutions"} />
+              <span className="font-heading font-bold text-base sm:text-xl leading-tight pl-1">
+                <EditableText 
+                  section="settings" 
+                  field="site_name_part2" 
+                  value={siteName.split(" ").slice(1).join(" ") || "Solutions"} 
+                  style={{
+                    background: "linear-gradient(90deg,#60a5fa,#818cf8)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent"
+                  }}
+                  linkField="site_url"
+                  toolbarClassName="-top-6 left-0"
+                  extraControls={
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const current = (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true");
+                        editor?.onUpdate("settings", "site_name_visible", current === "false" ? "true" : "false");
+                      }}
+                      className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+                      title="Toggle visibility"
+                    >
+                      {(editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? <EyeOff size={12} /> : <Eye size={12} />}
+                    </button>
+                  }
+                />
               </span>
             </div>
-          </a>
+              </Wrapper>
+            );
+          })()}
         </div>
 
         {/* Desktop Nav */}

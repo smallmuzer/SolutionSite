@@ -159,7 +159,7 @@ const AppContent = () => {
       <TrackingScripts />
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner duration={2500} />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Suspense fallback={<RouteFallback />}>
             <Routes>

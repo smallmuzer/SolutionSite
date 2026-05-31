@@ -772,7 +772,7 @@ const siteContentSeeds = [
   { section_key: "contact", content: JSON.stringify({
     title: "Get In Touch",
     subtitle: "Ready to transform your business? Contact us today.",
-    address: "Alia Building, 7th Floor\\nGandhakoalhi Magu\\nMalé, Maldives",
+    address: "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives",
     email: "info@solutions.com.mv",
     phone: "+960 301-1355",
     landline: "+91-452 238 7388",

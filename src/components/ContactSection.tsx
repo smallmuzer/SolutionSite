@@ -195,8 +195,8 @@ const ContactSection = () => {
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
                       <EditableText section="contact" field="address" value={(() => {
-                        const addr = content.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives";
-                        // If it has 3 lines due to legacy DB state, forcefully convert to 2 lines
+                        let addr = String(content.address || "Alia Building, 7th Floor, Gandhakoalhi Magu\nMalé, Maldives");
+                        addr = addr.replace(/\\n/g, '\n');
                         if (addr.includes('\n')) {
                           const lines = addr.split('\n');
                           if (lines.length >= 3) {
@@ -256,7 +256,7 @@ const ContactSection = () => {
                       <EditableText section="contact" field="label_hours" value={content.label_hours || "Business Hours"} />
                     </div>
                     <div className="text-muted-foreground text-[12.5px] whitespace-pre-line mt-0.5">
-                      <EditableText section="contact" field="hours" value={content.hours || "Sunday - Thursday: 09:00 - 17:00\nFriday - Saturday: Closed"} />
+                      <EditableText section="contact" field="hours" value={String(content.hours || "Sunday - Thursday: 09:00 - 17:00\nFriday - Saturday: Closed").replace(/\\n/g, '\n')} />
                     </div>
                   </div>
                 </div>
