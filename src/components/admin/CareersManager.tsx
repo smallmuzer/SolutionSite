@@ -168,7 +168,7 @@ const CareersManager = () => {
     });
     if (res.error) { toast.error("Failed to add."); }
     else if (res.data) {
-      setJobs(prev => [...prev, res.data]);
+      setJobs(prev => [...prev, res.data as CareerJob]);
       setNewForm({ ...emptyForm });
       setAdding(false);
       toast.success("Job added!");

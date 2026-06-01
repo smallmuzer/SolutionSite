@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Menu, X, Sun, Moon, ShieldCheck, Settings, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { useNavigate } from "react-router-dom";
 
 const DEFAULT_NAV = [
   { label: "Who We Are", href: "#about" },
@@ -46,6 +47,7 @@ function useDarkMode() {
 import { useSiteContent, useSiteSettingsData as useSiteSettings } from "@/hooks/useSiteContent";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileVisible, setMobileVisible] = useState(false);
@@ -129,23 +131,28 @@ const Header = () => {
       window.open(href, "_blank", "noopener,noreferrer");
       return;
     }
-    setTimeout(() => {
-      try {
-        const el = document.querySelector(href);
-        if (el) {
-          const adminScroll = document.getElementById("admin-main-scroll");
-          if (adminScroll) {
-            const y = el.getBoundingClientRect().top + adminScroll.scrollTop - adminScroll.getBoundingClientRect().top - 70;
-            adminScroll.scrollTo({ top: y, behavior: "smooth" });
-          } else {
-            const y = el.getBoundingClientRect().top + window.scrollY - 70;
-            window.scrollTo({ top: y, behavior: "smooth" });
+
+    if (href.startsWith("#")) {
+      setTimeout(() => {
+        try {
+          const el = document.querySelector(href);
+          if (el) {
+            const adminScroll = document.getElementById("admin-main-scroll");
+            if (adminScroll) {
+              const y = el.getBoundingClientRect().top + adminScroll.scrollTop - adminScroll.getBoundingClientRect().top - 70;
+              adminScroll.scrollTo({ top: y, behavior: "smooth" });
+            } else {
+              const y = el.getBoundingClientRect().top + window.scrollY - 70;
+              window.scrollTo({ top: y, behavior: "smooth" });
+            }
           }
+        } catch (e) {
+          console.error("Invalid scroll target:", href);
         }
-      } catch (e) {
-        console.error("Invalid scroll target:", href);
-      }
-    }, 50);
+      }, 50);
+    } else {
+      navigate(href);
+    }
   };
 
   const navBtn = (active: boolean) =>

@@ -229,7 +229,7 @@ const TechnologiesManager = () => {
     });
     if (res.error) toast.error("Failed to add.");
     else if (res.data) {
-      setTechs(prev => [...prev, res.data]);
+      setTechs(prev => [...prev, res.data as Technology]);
       setNewForm({ ...emptyForm });
       setAdding(false);
       toast.success("Technology added!");

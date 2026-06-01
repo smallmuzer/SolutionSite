@@ -223,7 +223,16 @@ export const EditableText: React.FC<{
       }
       if (finalColor && !parsedStyles.textColor) inlineStyle.color = finalColor;
 
-      return <Tag className={className} style={Object.keys(inlineStyle).length > 0 ? inlineStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
+      const mergedStyle = { ...style, ...inlineStyle };
+      // If the user specifically set a text color in the Typography Editor, 
+      // we must remove any background gradient text-clip so the custom color shows!
+      if (inlineStyle.color) {
+        delete mergedStyle.WebkitTextFillColor;
+        delete mergedStyle.WebkitBackgroundClip;
+        delete mergedStyle.background;
+        delete mergedStyle.backgroundImage;
+      }
+      return <Tag className={className} style={Object.keys(mergedStyle).length > 0 ? mergedStyle : undefined} dangerouslySetInnerHTML={{ __html: hasStyles ? innerHtml : displayValue }} />;
     }
 
     const handleBlur = () => {
@@ -369,6 +378,7 @@ export const useLiveEditorNavigation = () => {
         if (isEdit) {
           e.preventDefault();
           e.stopPropagation();
+          handler();
           return;
         }
         handler();

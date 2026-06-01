@@ -210,10 +210,12 @@ const ServicesSection = () => {
           </div>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <span>
-              <EditableText section="services" field="title" value={content.title || "Solutions"} colorField="title_color" />{" "}
-              <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
-                  <EditableText section="services" field="highlight" value={content.highlight || "We Deliver"} colorField="highlight_color" />
-              </span>
+              <EditableText section="services" field="title" value={content.title || "Services & Solutions"} colorField="title_color" />{" "}
+              {(content.highlight !== undefined ? content.highlight : "We Deliver") && (
+                <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
+                    <EditableText section="services" field="highlight" value={content.highlight !== undefined ? content.highlight : "We Deliver"} colorField="highlight_color" />
+                </span>
+              )}
             </span>
             <SectionHeaderToolbar section="services" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>

@@ -93,7 +93,7 @@ const ServicesManager = () => {
       image_url: newForm.image_url || null, icon: newForm.icon || null, sort_order: maxOrder,
     });
     if (res.error) { toast.error("Failed to add."); }
-    else if (res.data) { setServices(prev => [...prev, res.data]); setNewForm({ title: "", description: "", image_url: "", icon: "" }); setAdding(false); toast.success("Service added!"); }
+    else if (res.data) { setServices(prev => [...prev, res.data as Service]); setNewForm({ title: "", description: "", image_url: "", icon: "" }); setAdding(false); toast.success("Service added!"); }
     setSaving(false);
   };
 

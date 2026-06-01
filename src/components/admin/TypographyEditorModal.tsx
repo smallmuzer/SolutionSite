@@ -199,7 +199,9 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
         if (!styles.textTransform || styles.textTransform === "none") styles.textTransform = targetStyles.textTransform !== "none" ? targetStyles.textTransform : "";
         if (!styles.textAlign || styles.textAlign === "start") styles.textAlign = targetStyles.textAlign !== "start" ? targetStyles.textAlign : "";
         if (!styles.textColor) styles.textColor = rgbToHex(targetStyles.textColor || "");
-        if (!styles.bgColor) styles.bgColor = rgbToHex(targetStyles.bgColor || "");
+        // Do NOT populate bgColor from targetStyles because it pulls the computed DOM background (e.g. #ffffff)
+        // and hardcodes it inline, ruining dark mode and transparent headers.
+        // styles.bgColor = rgbToHex(targetStyles.bgColor || "");
 
         // Margins and paddings if empty (sometimes getComputedStyle returns 0px)
         if (!styles.paddingTop) styles.paddingTop = targetStyles.paddingTop || "";

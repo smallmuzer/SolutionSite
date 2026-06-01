@@ -928,14 +928,13 @@ const ALL_ICONS = ["Database", "Users", "Anchor", "Building2", "Plane", "Star", 
 
 const LinkPicker = ({ onSelect, search }: { onSelect: (v: string) => void; search: string }) => {
   const PRESETS = [
-    { label: "Home / Top", value: "#" },
-    { label: "Hero Section", value: "#hero" },
+    { label: "Home / Top", value: "#home" },
     { label: "About Us", value: "#about" },
     { label: "Services", value: "#services" },
     { label: "Products", value: "#products" },
-    { label: "Our Clients", value: "#clients" },
+    { label: "Our Clients", value: "#portfolio" },
     { label: "Testimonials", value: "#testimonials" },
-    { label: "Network Map", value: "#map" },
+    { label: "Global Presence", value: "#global-reach" },
     { label: "Technologies", value: "#technologies" },
     { label: "Careers", value: "#careers" },
     { label: "Contact Us", value: "#contact" },
