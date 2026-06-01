@@ -77,10 +77,26 @@ $webConfig = @"
           <match url="^api/(.*)$" />
           <action type="Rewrite" url="http://localhost:$BackendPort/api/{R:1}" />
         </rule>
-        <rule name="Static Files" stopProcessing="true">
-          <match url="^(assets|logo\.png|.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)).*$" />
-          <action type="None" />
+        <!-- Rewrite root URL to dist/index.html -->
+        <rule name="Root Rewrite" stopProcessing="true">
+          <match url="^$" />
+          <action type="Rewrite" url="/dist/index.html" />
         </rule>
+        <!-- Route uploads to the persistent public folder so they survive deployments -->
+        <rule name="Uploads Proxy" stopProcessing="true">
+          <match url="^assets/uploads/(.*)$" />
+          <action type="Rewrite" url="/public/assets/uploads/{R:1}" />
+        </rule>
+        
+        <!-- Rewrite static assets to dist folder -->
+        <rule name="Static Assets" stopProcessing="true">
+          <match url="^(assets|logo\.png|.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)).*$" />
+          <conditions>
+            <add input="{REQUEST_URI}" pattern="^/(dist|public)/" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/dist/{R:0}" />
+        </rule>
+        <!-- Fallback for SPA routing -->
         <rule name="Static SPA" stopProcessing="true">
           <match url="^(.*)$" />
           <conditions>
@@ -92,6 +108,7 @@ $webConfig = @"
       </rules>
     </rewrite>
     <staticContent>
+      <remove fileExtension=".json" />
       <mimeMap fileExtension=".json" mimeType="application/json" />
     </staticContent>
     <httpErrors existingResponse="PassThrough" />

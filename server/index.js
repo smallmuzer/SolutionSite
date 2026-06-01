@@ -43,6 +43,8 @@ const TRUSTED_ORIGINS = new Set([
   "http://127.0.0.1:4001",
   "http://syssolution",
   "https://syssolution",
+  "http://systemsolution",
+  "https://systemsolution",
 ]);
 
 const SAFE_TABLES = new Set([
@@ -1008,11 +1010,8 @@ app.delete("/api/db/:table", (req, res) => {
 // ── File upload ───────────────────────────────────────────────────────────────
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file" });
-  // Build public URL from actual saved path relative to public/
-  const relPath = req.file.path
-    .replace(join(__dirname, "../public"), "")
-    .replace(/\\/g, "/");
-  const publicUrl = relPath.startsWith("/") ? relPath : `/${relPath}`;
+  // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
+  const publicUrl = `/assets/uploads/${req.file.filename}`;
   res.json({ data: { publicUrl }, error: null });
 });
 
