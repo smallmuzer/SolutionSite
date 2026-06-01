@@ -21,8 +21,8 @@ const PORT = 4001;
 
 const CACHE_CONTROL_NO_CACHE = "no-cache, no-store, must-revalidate, private, max-age=0";
 const CACHE_CONTROL_PUBLIC = "public, max-age=0, must-revalidate, no-cache";
- 
- 
+
+
 
 function setNoCache(res) {
   res.setHeader("Cache-Control", CACHE_CONTROL_NO_CACHE);
@@ -45,6 +45,10 @@ const TRUSTED_ORIGINS = new Set([
   "https://syssolution",
   "http://systemsolution",
   "https://systemsolution",
+  "http://test.solutions.com.mv",
+  "https://test.solutions.com.mv",
+  "https://koya.hrmetrics.in",
+  "https://hrmetrics.in"
 ]);
 
 const SAFE_TABLES = new Set([
@@ -232,11 +236,11 @@ app.delete("/api/assets", (req, res) => {
   try {
     const { filename } = req.query;
     if (!filename) return res.status(400).json({ error: "filename required" });
-    
+
     // Safety check: only allow deleting from uploads folder
     const safeName = basename(String(filename));
     const filePath = join(UPLOADS_DIR, safeName);
-    
+
     if (existsSync(filePath)) {
       unlinkSync(filePath);
       res.json({ data: { success: true }, error: null });
@@ -604,7 +608,7 @@ function sendFallbackEmail({ subject, body, settings }) {
     appendLog("email.skipped", { subject, reason: "smtp_not_configured" });
     return { queued: false, reason: "SMTP not configured" };
   }
-  
+
   appendLog("email.queue", { subject, to: settings.hr_email });
   try {
     transport.sendMail({
@@ -626,7 +630,7 @@ async function sendEmailNow({ to, subject, text, html, settings, replyTo }) {
     appendLog("email.skipped", { to, subject, reason: "smtp_not_configured" });
     return { ok: false, error: "SMTP not configured" };
   }
-  
+
   try {
     const from = settings.smtp_user || settings.contact_from_email || "devteam.bss@gmail.com";
     console.log(`[email] Sending to ${to} from ${from} (Subject: ${subject})...`);
@@ -1334,7 +1338,7 @@ app.get("/api/events", (req, res) => {
     if (res.writableEnded) return;
     try {
       res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const chatHandler = (data) => send("chat", data);
@@ -1350,7 +1354,7 @@ app.get("/api/events", (req, res) => {
   // Heartbeat every 25s to keep proxy and browser connections alive
   const heartbeat = setInterval(() => {
     if (!res.writableEnded) {
-      try { res.write(": heartbeat\n\n"); } catch (_) {}
+      try { res.write(": heartbeat\n\n"); } catch (_) { }
     } else {
       clearInterval(heartbeat);
     }
@@ -1412,23 +1416,27 @@ const PUBLIC_DIR = join(__dirname, "../public");
 app.use("/assets", express.static(join(PUBLIC_DIR, "assets")));
 
 if (existsSync(DIST_DIR)) {
+  // Explicitly mount dist/assets to /assets as a fallback for Vite builds
+  app.use("/assets", express.static(join(DIST_DIR, "assets")));
   app.use(express.static(DIST_DIR, { index: false }));
+  
   app.get(/(.*)/, (req, res) => {
     if (req.path.startsWith("/api")) {
       return res.status(404).json({ error: "Not found" });
     }
 
     if (req.path.startsWith("/src/") || req.path.startsWith("/node_modules/") || extname(req.path)) {
-      return res.status(404).send("Not found");
+      // Fix MIME type corruption error: explicitly set content-type to text/plain for 404s
+      return res.status(404).type("text/plain").send("Not found");
     }
-    
+
     try {
       let html = readFileSync(join(DIST_DIR, "index.html"), "utf-8");
-      
+
       const segments = req.path.split("/").filter(Boolean);
       const pageKey = segments.length > 0 ? segments[0].toLowerCase() : "home";
       const seoRow = db.prepare("SELECT * FROM seo_settings WHERE page_key = ?").get(pageKey);
-      
+
       if (seoRow) {
         if (seoRow.title) {
           html = html.replace(/<title>.*?<\/title>/i, `<title>${seoRow.title}</title>`);
@@ -1444,7 +1452,7 @@ if (existsSync(DIST_DIR)) {
           html = html.replace(/<\/head>/i, `<meta property="og:image" content="${seoRow.og_image}">\n<meta name="twitter:image" content="${seoRow.og_image}">\n<meta name="twitter:card" content="summary_large_image">\n</head>`);
         }
       }
-      
+
       res.setHeader("Content-Type", "text/html");
       res.send(html);
     } catch (e) {
