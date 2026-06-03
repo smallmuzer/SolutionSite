@@ -161,6 +161,7 @@ export const EditableText: React.FC<{
   toolbarClassName?: string;
   toolbarVisibilityClassName?: string;
   style?: React.CSSProperties;
+  onDoubleClick?: (e: React.MouseEvent) => void;
 }> = ({
   section,
   field,
@@ -175,7 +176,8 @@ export const EditableText: React.FC<{
   extraControls,
   toolbarClassName = "top-0 right-0",
   toolbarVisibilityClassName = "opacity-0 group-hover/edit:opacity-100",
-  style = {}
+  style = {},
+  onDoubleClick
 }) => {
     const editor = useLiveEditor();
     const [isEditing, setIsEditing] = useState(false);
@@ -258,6 +260,12 @@ export const EditableText: React.FC<{
           onFocus={() => setIsEditing(true)}
           onBlur={handleBlur}
           onInput={(e) => setLocalValue(e.currentTarget.innerHTML || "")}
+          onDoubleClick={onDoubleClick ? (e) => {
+            // Blur the contentEditable and clear text selection before navigating
+            (e.currentTarget as HTMLElement).blur();
+            window.getSelection()?.removeAllRanges();
+            onDoubleClick(e);
+          } : undefined}
           dangerouslySetInnerHTML={{ __html: displayValue }}
         />
 
@@ -282,7 +290,7 @@ export const EditableText: React.FC<{
                     const bg = window.getComputedStyle(currentElem).backgroundColor;
                     const rgbaMatch = bg.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([0-9.]+)\)/);
                     const alpha = rgbaMatch ? parseFloat(rgbaMatch[1]) : 1;
-                    
+
                     if (bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent' && alpha > 0.2) {
                       realBg = bg;
                       break;
@@ -298,7 +306,7 @@ export const EditableText: React.FC<{
                     target.closest('.gradient-text') !== null ||
                     comp.getPropertyValue('background-clip') === 'text' ||
                     comp.getPropertyValue('-webkit-background-clip') === 'text';
-                  
+
                   if (isGradientText && colorValue) {
                     // Use the database color value instead of the transparent computed color
                     detectedColor = colorValue;

@@ -1527,7 +1527,7 @@ const AdminDashboard = () => {
           sort_order: i - 1
         }
       });
-      
+
       if (slRes.error) {
         toast.error(`Failed to save social link ${i}: ${slRes.error.message}`);
       }
@@ -2173,7 +2173,7 @@ const AdminDashboard = () => {
                                 <input value={siteSettings.site_name}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, site_name: e.target.value }))}
                                   placeholder="e.g. Systems Solutions"
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-foreground text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all shadow-sm" />
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-foreground text-[0.6875rem] focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all shadow-sm" />
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
@@ -2181,14 +2181,14 @@ const AdminDashboard = () => {
                                   <input value={siteSettings.whatsapp_number || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, whatsapp_number: e.target.value }))}
                                     placeholder="960xxxxxxx"
-                                    className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
                                 </div>
                                 <div>
                                   <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Viber Channel</label>
                                   <input value={siteSettings.viber_number || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, viber_number: e.target.value }))}
                                     placeholder="948xxxxxxx"
-                                    className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
                                 </div>
                               </div>
                               <div>
@@ -2196,21 +2196,21 @@ const AdminDashboard = () => {
                                 <input type="email" value={siteSettings.contact_email || ""}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, contact_email: e.target.value }))}
                                   placeholder="info@solutions.com.mv"
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
                               </div>
                               <div>
                                 <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Google Analytics Measurement ID</label>
                                 <input type="text" value={siteSettings.google_analytics_id || ""}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, google_analytics_id: e.target.value }))}
                                   placeholder="G-XXXXXXXXXX"
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
                               </div>
                               <div>
                                 <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Microsoft Webmetrics Project ID</label>
                                 <input type="text" value={siteSettings.microsoft_clarity_id || ""}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, microsoft_clarity_id: e.target.value }))}
                                   placeholder="YOUR_PROJECT_ID"
-                                  className="w-full px-3 py-2 rounded-xl bg-background border border-border/60 text-sm outline-none focus:border-secondary" />
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
                               </div>
                             </div>
 
@@ -2221,13 +2221,13 @@ const AdminDashboard = () => {
                                   <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">From Email Alias</label>
                                   <input type="email" value={siteSettings.contact_from_email || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, contact_from_email: e.target.value }))}
-                                    className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none" />
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
                                 </div>
                                 <div>
                                   <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase">Internal HR Node</label>
                                   <input type="email" value={siteSettings.hr_email || ""}
                                     onChange={(e) => setSiteSettings(p => ({ ...p, hr_email: e.target.value }))}
-                                    className="w-full px-3 py-1.5 rounded-lg bg-background border border-border/60 text-sm outline-none" />
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
                                 </div>
                               </div>
 
@@ -2361,442 +2361,451 @@ const AdminDashboard = () => {
                           </div>
                         </div>
 
-                        {/* --- RESOURCES & LINKS --- */}
-                        <div className="col-span-full mt-4 pt-8 border-t border-border/50">
-                          <h3 className="text-[0.6875rem] font-bold text-secondary uppercase tracking-widest border-b border-border/50 pb-1 mb-6">Resources & Social Links</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Manage Social Links Section */}
-                            <div className="space-y-4 col-span-full bg-muted/20 p-5 rounded-2xl border border-border/50">
-                              <div className="flex items-center justify-between border-b border-border/50 pb-2 mb-4">
-                                <div>
-                                  <span className="text-[0.6875rem] font-bold text-foreground uppercase tracking-wider block">Manage Social Links</span>
-                                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest block mt-0.5">Configure icon brands, individual target links, and toggle visibility on the live site</span>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const nextCount = parseInt(siteSettings.social_count || "6", 10) + 1;
-                                    setSiteSettings(p => ({
-                                      ...p,
-                                      social_count: nextCount.toString(),
-                                      [`social_icon_${nextCount}`]: "Globe",
-                                      [`social_href_${nextCount}`]: "",
-                                      [`social_visible_${nextCount}`]: "true"
-                                    }));
-                                    toast.success("New social media row added! Set its brand and URL.");
-                                  }}
-                                  className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 text-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all hover:scale-105"
-                                >
-                                  <Plus size={10} /> Add Link
-                                </button>
+                      </div> {/* End Top Grid */}
+
+                      {/* --- COMBINED RESOURCES & PREFERENCES --- */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8 pt-8 border-t border-border/50">
+                        {/* --- RESOURCES & LINKS (Left Half) --- */}
+                        <div className="flex flex-col h-full lg:col-span-9">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border/50 pb-1">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
+                                <Globe size={20} />
                               </div>
+                              <div>
+                                <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Resources & Social Links</h3>
+                                <p className="text-[0.625rem] text-muted-foreground font-medium uppercase tracking-widest opacity-60 mt-0.5">Manage external integrations and routing</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-4 bg-muted/20 p-5 rounded-2xl border border-border/50 flex-1">
+                            <div className="flex items-center justify-between border-b border-border/50 pb-2 mb-4">
+                              <div>
+                                <span className="text-[0.6875rem] font-bold text-foreground uppercase tracking-wider block">Manage Social Links</span>
+                                <span className="text-[9px] text-muted-foreground uppercase tracking-widest block mt-0.5">Configure icon brands, individual target links, and toggle visibility on the live site</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextCount = parseInt(siteSettings.social_count || "6", 10) + 1;
+                                  setSiteSettings(p => ({
+                                    ...p,
+                                    social_count: nextCount.toString(),
+                                    [`social_icon_${nextCount}`]: "Globe",
+                                    [`social_href_${nextCount}`]: "",
+                                    [`social_visible_${nextCount}`]: "true"
+                                  }));
+                                  toast.success("New social media row added! Set its brand and URL.");
+                                }}
+                                className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 text-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all hover:scale-105"
+                              >
+                                <Plus size={10} /> Add Link
+                              </button>
+                            </div>
 
-                              <div className="space-y-3 pr-2">
-                                {Array.from({ length: parseInt(siteSettings.social_count || "6", 10) }).map((_, idx) => {
-                                  const i = idx + 1;
-                                  const iconKey = `social_icon_${i}`;
-                                  const hrefKey = `social_href_${i}`;
-                                  const visibleKey = `social_visible_${i}`;
-                                  const colorKey = `social_color_${i}`;
+                            <div className="space-y-3 pr-2">
+                              {Array.from({ length: parseInt(siteSettings.social_count || "6", 10) }).map((_, idx) => {
+                                const i = idx + 1;
+                                const iconKey = `social_icon_${i}`;
+                                const hrefKey = `social_href_${i}`;
+                                const visibleKey = `social_visible_${i}`;
+                                const colorKey = `social_color_${i}`;
 
-                                  const icon = siteSettings[iconKey] || (
-                                    i === 1 ? "Facebook" :
-                                      i === 2 ? "Twitter" :
-                                        i === 3 ? "Linkedin" :
-                                          i === 4 ? "Instagram" :
-                                            i === 5 ? "Viber" :
-                                              i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
-                                  );
+                                const icon = siteSettings[iconKey] || (
+                                  i === 1 ? "Facebook" :
+                                    i === 2 ? "Twitter" :
+                                      i === 3 ? "Linkedin" :
+                                        i === 4 ? "Instagram" :
+                                          i === 5 ? "Viber" :
+                                            i === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                                );
 
-                                  const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
-                                  const isWhatsApp = iconName.includes("whatsapp");
-                                  const isFacebook = iconName === "facebook";
-                                  const isTwitter = iconName === "twitter";
-                                  const isLinkedin = iconName === "linkedin";
-                                  const isInstagram = iconName === "instagram";
-                                  const isViber = iconName === "viber";
+                                const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                                const isWhatsApp = iconName.includes("whatsapp");
+                                const isFacebook = iconName === "facebook";
+                                const isTwitter = iconName === "twitter";
+                                const isLinkedin = iconName === "linkedin";
+                                const isInstagram = iconName === "instagram";
+                                const isViber = iconName === "viber";
 
-                                  const fallbackColor = isFacebook ? "#1877F2" :
-                                    isTwitter ? "#1DA1F2" :
-                                      isLinkedin ? "#0A66C2" :
-                                        isInstagram ? "#E4405F" :
-                                          isViber ? "#7360f2" :
-                                            isWhatsApp ? "#25D366" : "#3b82f6";
+                                const fallbackColor = isFacebook ? "#1877F2" :
+                                  isTwitter ? "#1DA1F2" :
+                                    isLinkedin ? "#0A66C2" :
+                                      isInstagram ? "#E4405F" :
+                                        isViber ? "#7360f2" :
+                                          isWhatsApp ? "#25D366" : "#3b82f6";
 
-                                  const color = siteSettings[colorKey] !== undefined ? siteSettings[colorKey] : fallbackColor;
+                                const color = siteSettings[colorKey] !== undefined ? siteSettings[colorKey] : fallbackColor;
 
-                                  const href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : "";
+                                const href = siteSettings[hrefKey] !== undefined ? siteSettings[hrefKey] : "";
 
-                                  const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
+                                const isVisible = siteSettings[visibleKey] !== "false" && siteSettings[visibleKey] !== false;
 
-                                  return (
-                                    <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-background p-1.5 pr-2 rounded-lg border border-border/30 hover:border-border/80 transition-colors shadow-sm group/item relative">
-                                      {/* Icon Live Preview */}
-                                      <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 border" style={{ backgroundColor: `${color}1A`, color: color, borderColor: `${color}33` }} title="Live Icon Preview">
-                                        <DynamicSocialIcon name={icon} size={14} />
-                                      </div>
+                                return (
+                                  <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-background p-1.5 pr-2 rounded-lg border border-border/30 hover:border-border/80 transition-colors shadow-sm group/item relative">
+                                    {/* Icon Live Preview */}
+                                    <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 border" style={{ backgroundColor: `${color}1A`, color: color, borderColor: `${color}33` }} title="Live Icon Preview">
+                                      <DynamicSocialIcon name={icon} size={14} />
+                                    </div>
 
-                                      {/* Icon / SVG Code Input */}
-                                      <div className="relative shrink-0 w-full sm:w-[130px]">
-                                        <div className="flex items-center gap-1">
-                                          <input
-                                            type="text"
-                                            value={icon}
-                                            onChange={(e) => setSiteSettings(p => ({ ...p, [iconKey]: e.target.value }))}
-                                            placeholder="Icon"
-                                            className="w-full px-2 py-1.5 rounded-md bg-muted/50 border border-border/50 text-[10px] outline-none focus:ring-1 focus:ring-secondary/35 font-mono"
-                                          />
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setActivePickerIdx(activePickerIdx === i ? null : i);
-                                              setPickerSearch("");
-                                            }}
-                                            className={`px-1.5 py-1.5 bg-secondary/10 hover:bg-secondary border border-secondary/20 text-secondary hover:text-white rounded-md text-[9px] font-bold flex items-center justify-center transition-all ${activePickerIdx === i ? 'bg-secondary text-white' : ''}`}
-                                            title="Choose Icon"
-                                          >
-                                            <Search size={11} />
-                                          </button>
-                                        </div>
-
-                                        {activePickerIdx === i && (
-                                          <div className="absolute left-0 sm:w-[320px] bg-popover border border-border rounded-xl p-3 shadow-2xl z-50 mt-1" style={{ top: '100%' }}>
-                                            <div className="flex items-center justify-between mb-2 border-b border-border pb-1.5">
-                                              <span className="text-[9px] font-black text-foreground uppercase tracking-wider">Choose Brand Graphic</span>
-                                              <button
-                                                type="button"
-                                                onClick={() => setActivePickerIdx(null)}
-                                                className="text-muted-foreground hover:text-destructive transition-colors"
-                                              >
-                                                <X size={12} />
-                                              </button>
-                                            </div>
-
-                                            {/* Section 1: Popular Brand Presets */}
-                                            <div className="mb-3">
-                                              <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1.5">Popular Presets</span>
-                                              <div className="grid grid-cols-5 gap-1">
-                                                {[
-                                                  { name: "Facebook", value: "Facebook" },
-                                                  { name: "Twitter", value: "Twitter" },
-                                                  { name: "LinkedIn", value: "Linkedin" },
-                                                  { name: "Instagram", value: "Instagram" },
-                                                  { name: "YouTube", value: "Youtube" },
-                                                  { name: "GitHub", value: "Github" },
-                                                  { name: "Viber", value: "Viber" },
-                                                  { name: "Website", value: "Globe" },
-                                                  { name: "Email", value: "Mail" },
-                                                  { name: "WhatsApp", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` },
-                                                  { name: "Telegram", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-telegram"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>` },
-                                                  { name: "TikTok", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tiktok"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>` },
-                                                  { name: "Discord", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-discord"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M7.5 16.5c2 1.5 7 1.5 9 0M12 2a10 10 0 0 0-10 10c0 4.4 2.8 8.1 6.8 9.4l.2-1.4c-.6-.2-1.2-.5-1.8-.9l1-1.6c.6.4 1.3.7 2 .8M12 22a10 10 0 0 0 10-10c0-4.4-2.8-8.1-6.8-9.4l-.2 1.4c.6.2 1.2.5 1.8.9l-1 1.6c-.6-.4-1.3-.7-2-.8"/></svg>` },
-                                                  { name: "Snapchat", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snapchat"><path d="M12 3c-1.2 0-2.4.5-3.2 1.3C8 5.1 7.5 6.3 7.5 7.5c0 1.2-.5 2.4-1.3 3.2-.8.8-2 1.3-3.2 1.3H2.5l.8 1.6c.4.8.8 1.6.8 2.4 0 .8-.4 1.6-.8 2.4l-.8 1.6h.5c1.2 0 2.4-.5 3.2-1.3.8-.8 1.3-2 1.3-3.2V15c0-1.2.5-2.4 1.3-3.2.8-.8 2-1.3 3.2-1.3s2.4.5 3.2 1.3c.8.8 1.3 2 1.3 3.2v.5c0 1.2.5 2.4 1.3 3.2.8-.8 2-1.3 3.2-1.3h.5l-.8-1.6c-.4-.8-.8-1.6-.8-2.4 0-.8.4-1.6.8-2.4l.8-1.6h-.5c-1.2 0-2.4-.5-3.2-1.3-.8-.8-1.3-2-1.3-3.2 0-1.2-.5-2.4-1.3-3.2-.8-.8-2-1.3-3.2-1.3z"/></svg>` },
-                                                  { name: "Phone", value: "Phone" }
-                                                ].map(bp => (
-                                                  <button
-                                                    key={bp.name}
-                                                    type="button"
-                                                    onClick={() => {
-                                                      setSiteSettings(p => ({ ...p, [iconKey]: bp.value }));
-                                                      setActivePickerIdx(null);
-                                                    }}
-                                                    className="p-1 rounded bg-muted/40 hover:bg-secondary/20 hover:text-secondary border border-border/20 flex flex-col items-center justify-center gap-0.5 transition-all group"
-                                                    title={bp.name}
-                                                  >
-                                                    <div className="text-foreground group-hover:text-secondary">
-                                                      <DynamicSocialIcon name={bp.value} size={12} />
-                                                    </div>
-                                                  </button>
-                                                ))}
-                                              </div>
-                                            </div>
-
-                                            {/* Section 2: Full Catalog Search */}
-                                            <div>
-                                              <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1">Search 1000+ Icons</span>
-                                              <input
-                                                type="text"
-                                                value={pickerSearch}
-                                                onChange={(e) => setPickerSearch(e.target.value)}
-                                                placeholder="Type to search (e.g. globe)..."
-                                                className="w-full px-2 py-1 bg-muted border border-border text-[10px] rounded-md mb-2 outline-none focus:ring-1 focus:ring-secondary/35 text-foreground"
-                                              />
-                                              <div className="grid grid-cols-8 gap-1 max-h-[100px] overflow-y-auto custom-scrollbar p-0.5">
-                                                {Object.keys(LucideIcons)
-                                                  .filter(k => /^[A-Z]/.test(k) && k !== "Icon" && k !== "createLucideIcon")
-                                                  .filter(name => name.toLowerCase().includes(pickerSearch.toLowerCase()))
-                                                  .slice(0, 40)
-                                                  .map(iconName => {
-                                                    const IconComp = (LucideIcons as any)[iconName];
-                                                    return (
-                                                      <button
-                                                        key={iconName}
-                                                        type="button"
-                                                        onClick={() => {
-                                                          setSiteSettings(p => ({ ...p, [iconKey]: iconName }));
-                                                          setActivePickerIdx(null);
-                                                        }}
-                                                        className={`p-1 rounded bg-muted/30 hover:bg-secondary/20 hover:text-secondary flex items-center justify-center border border-border/10 transition-all ${icon === iconName ? 'bg-secondary/20 text-secondary border-secondary/30 font-bold' : 'text-muted-foreground'}`}
-                                                        title={iconName}
-                                                      >
-                                                        <IconComp size={12} />
-                                                      </button>
-                                                    );
-                                                  })}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-
-                                      {/* URL Input */}
-                                      <div className="flex-1 w-full sm:w-auto">
+                                    {/* Icon / SVG Code Input */}
+                                    <div className="relative shrink-0 w-full sm:w-[130px]">
+                                      <div className="flex items-center gap-1">
                                         <input
                                           type="text"
-                                          value={href}
-                                          onChange={(e) => {
-                                            const val = e.target.value;
-                                            setSiteSettings(p => {
-                                              const next = { ...p, [hrefKey]: val };
-                                              if (i === 1) next.social_facebook = val;
-                                              else if (i === 2) next.social_twitter = val;
-                                              else if (i === 3) next.social_linkedin = val;
-                                              else if (i === 4) next.social_instagram = val;
-                                              return next;
-                                            });
-                                          }}
-                                          placeholder="URL (https://...)"
+                                          value={icon}
+                                          onChange={(e) => setSiteSettings(p => ({ ...p, [iconKey]: e.target.value }))}
+                                          placeholder="Icon"
                                           className="w-full px-2 py-1.5 rounded-md bg-muted/50 border border-border/50 text-[10px] outline-none focus:ring-1 focus:ring-secondary/35 font-mono"
                                         />
-                                      </div>
-
-                                      {/* Color Input */}
-                                      <div className="flex items-center gap-1 shrink-0 bg-muted/40 px-1 py-1 rounded-md border border-border/50">
-                                        <input type="color" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-4 h-4 rounded cursor-pointer p-0 border-0 bg-transparent" title="Icon Color" />
-                                        <input type="text" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-12 px-1 py-0.5 bg-transparent text-[9px] outline-none font-mono uppercase text-muted-foreground border-none focus:text-foreground" />
-                                      </div>
-
-                                      {/* Action Buttons */}
-                                      <div className="flex items-center gap-1 shrink-0 ml-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => setSiteSettings(p => ({ ...p, [visibleKey]: isVisible ? "false" : "true" }))}
-                                          className={`p-1.5 rounded-md hover:scale-105 active:scale-95 transition-all border ${isVisible ? 'bg-secondary/10 text-secondary border-secondary/20' : 'bg-muted text-muted-foreground border-border/40 opacity-70 hover:opacity-100'}`}
-                                          title={isVisible ? "Visible on site" : "Hidden on site"}
-                                        >
-                                          {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
-                                        </button>
-
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            if (!confirm("Are you sure you want to delete this social link row?")) return;
-                                            const count = parseInt(siteSettings.social_count || "6", 10);
-                                            const nextSettings = { ...siteSettings };
-
-                                            const resolvedList = Array.from({ length: count }).map((_, idx) => {
-                                              const idxPlus = idx + 1;
-                                              const icon = siteSettings[`social_icon_${idxPlus}`] || (
-                                                idxPlus === 1 ? "Facebook" :
-                                                  idxPlus === 2 ? "Twitter" :
-                                                    idxPlus === 3 ? "Linkedin" :
-                                                      idxPlus === 4 ? "Instagram" :
-                                                        idxPlus === 5 ? "Viber" :
-                                                          idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
-                                              );
-                                              const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
-                                              const isWhatsApp = iconName.includes("whatsapp");
-                                              const isFacebook = iconName === "facebook";
-                                              const isTwitter = iconName === "twitter";
-                                              const isLinkedin = iconName === "linkedin";
-                                              const isInstagram = iconName === "instagram";
-                                              const isViber = iconName === "viber";
-
-                                              const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                                                isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
-                                                  isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                                    isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                                      isViber ? "viber://chat?number=" :
-                                                        isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
-
-                                              const fallbackColor = isFacebook ? "#1877F2" :
-                                                isTwitter ? "#1DA1F2" :
-                                                  isLinkedin ? "#0A66C2" :
-                                                    isInstagram ? "#E4405F" :
-                                                      isViber ? "#7360f2" :
-                                                        isWhatsApp ? "#25D366" : "#3b82f6";
-
-                                              let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
-                                              if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
-                                              if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
-
-                                              return {
-                                                icon,
-                                                href,
-                                                visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
-                                                color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
-                                              };
-                                            });
-
-                                            resolvedList.splice(i - 1, 1);
-
-                                            for (let j = 1; j <= count; j++) {
-                                              delete nextSettings[`social_icon_${j}`];
-                                              delete nextSettings[`social_href_${j}`];
-                                              delete nextSettings[`social_visible_${j}`];
-                                              delete nextSettings[`social_color_${j}`];
-                                            }
-
-                                            resolvedList.forEach((item, idx) => {
-                                              const idxPlus = idx + 1;
-                                              nextSettings[`social_icon_${idxPlus}`] = item.icon;
-                                              nextSettings[`social_href_${idxPlus}`] = item.href;
-                                              nextSettings[`social_visible_${idxPlus}`] = item.visible ? "true" : "false";
-                                              nextSettings[`social_color_${idxPlus}`] = item.color;
-                                            });
-
-                                            nextSettings.social_count = Math.max(0, count - 1).toString();
-                                            setSiteSettings(nextSettings);
-                                            toast.success("Social link removed successfully!");
+                                            setActivePickerIdx(activePickerIdx === i ? null : i);
+                                            setPickerSearch("");
                                           }}
-                                          className="p-1.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 hover:scale-105 active:scale-95 transition-all"
-                                          title="Delete Social Link"
+                                          className={`px-1.5 py-1.5 bg-secondary/10 hover:bg-secondary border border-secondary/20 text-secondary hover:text-white rounded-md text-[9px] font-bold flex items-center justify-center transition-all ${activePickerIdx === i ? 'bg-secondary text-white' : ''}`}
+                                          title="Choose Icon"
                                         >
-                                          <Trash2 size={12} />
+                                          <Search size={11} />
                                         </button>
                                       </div>
+
+                                      {activePickerIdx === i && (
+                                        <div className="absolute left-0 sm:w-[320px] bg-popover border border-border rounded-xl p-3 shadow-2xl z-50 mt-1" style={{ top: '100%' }}>
+                                          <div className="flex items-center justify-between mb-2 border-b border-border pb-1.5">
+                                            <span className="text-[9px] font-black text-foreground uppercase tracking-wider">Choose Brand Graphic</span>
+                                            <button
+                                              type="button"
+                                              onClick={() => setActivePickerIdx(null)}
+                                              className="text-muted-foreground hover:text-destructive transition-colors"
+                                            >
+                                              <X size={12} />
+                                            </button>
+                                          </div>
+
+                                          {/* Section 1: Popular Brand Presets */}
+                                          <div className="mb-3">
+                                            <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1.5">Popular Presets</span>
+                                            <div className="grid grid-cols-5 gap-1">
+                                              {[
+                                                { name: "Facebook", value: "Facebook" },
+                                                { name: "Twitter", value: "Twitter" },
+                                                { name: "LinkedIn", value: "Linkedin" },
+                                                { name: "Instagram", value: "Instagram" },
+                                                { name: "YouTube", value: "Youtube" },
+                                                { name: "GitHub", value: "Github" },
+                                                { name: "Viber", value: "Viber" },
+                                                { name: "Website", value: "Globe" },
+                                                { name: "Email", value: "Mail" },
+                                                { name: "WhatsApp", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` },
+                                                { name: "Telegram", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-telegram"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>` },
+                                                { name: "TikTok", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tiktok"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>` },
+                                                { name: "Discord", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-discord"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M7.5 16.5c2 1.5 7 1.5 9 0M12 2a10 10 0 0 0-10 10c0 4.4 2.8 8.1 6.8 9.4l.2-1.4c-.6-.2-1.2-.5-1.8-.9l1-1.6c.6.4 1.3.7 2 .8M12 22a10 10 0 0 0 10-10c0-4.4-2.8-8.1-6.8-9.4l-.2 1.4c.6.2 1.2.5 1.8.9l-1 1.6c-.6-.4-1.3-.7-2-.8"/></svg>` },
+                                                { name: "Snapchat", value: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-snapchat"><path d="M12 3c-1.2 0-2.4.5-3.2 1.3C8 5.1 7.5 6.3 7.5 7.5c0 1.2-.5 2.4-1.3 3.2-.8.8-2 1.3-3.2 1.3H2.5l.8 1.6c.4.8.8 1.6.8 2.4 0 .8-.4 1.6-.8 2.4l-.8 1.6h.5c1.2 0 2.4-.5 3.2-1.3.8-.8 1.3-2 1.3-3.2V15c0-1.2.5-2.4 1.3-3.2.8-.8 2-1.3 3.2-1.3s2.4.5 3.2 1.3c.8.8 1.3 2 1.3 3.2v.5c0 1.2.5 2.4 1.3 3.2.8-.8 2-1.3 3.2-1.3h.5l-.8-1.6c-.4-.8-.8-1.6-.8-2.4 0-.8.4-1.6.8-2.4l.8-1.6h-.5c-1.2 0-2.4-.5-3.2-1.3-.8-.8-1.3-2-1.3-3.2 0-1.2-.5-2.4-1.3-3.2-.8-.8-2-1.3-3.2-1.3z"/></svg>` },
+                                                { name: "Phone", value: "Phone" }
+                                              ].map(bp => (
+                                                <button
+                                                  key={bp.name}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setSiteSettings(p => ({ ...p, [iconKey]: bp.value }));
+                                                    setActivePickerIdx(null);
+                                                  }}
+                                                  className="p-1 rounded bg-muted/40 hover:bg-secondary/20 hover:text-secondary border border-border/20 flex flex-col items-center justify-center gap-0.5 transition-all group"
+                                                  title={bp.name}
+                                                >
+                                                  <div className="text-foreground group-hover:text-secondary">
+                                                    <DynamicSocialIcon name={bp.value} size={12} />
+                                                  </div>
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+
+                                          {/* Section 2: Full Catalog Search */}
+                                          <div>
+                                            <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1">Search 1000+ Icons</span>
+                                            <input
+                                              type="text"
+                                              value={pickerSearch}
+                                              onChange={(e) => setPickerSearch(e.target.value)}
+                                              placeholder="Type to search (e.g. globe)..."
+                                              className="w-full px-2 py-1 bg-muted border border-border text-[10px] rounded-md mb-2 outline-none focus:ring-1 focus:ring-secondary/35 text-foreground"
+                                            />
+                                            <div className="grid grid-cols-8 gap-1 max-h-[100px] overflow-y-auto custom-scrollbar p-0.5">
+                                              {Object.keys(LucideIcons)
+                                                .filter(k => /^[A-Z]/.test(k) && k !== "Icon" && k !== "createLucideIcon")
+                                                .filter(name => name.toLowerCase().includes(pickerSearch.toLowerCase()))
+                                                .slice(0, 40)
+                                                .map(iconName => {
+                                                  const IconComp = (LucideIcons as any)[iconName];
+                                                  return (
+                                                    <button
+                                                      key={iconName}
+                                                      type="button"
+                                                      onClick={() => {
+                                                        setSiteSettings(p => ({ ...p, [iconKey]: iconName }));
+                                                        setActivePickerIdx(null);
+                                                      }}
+                                                      className={`p-1 rounded bg-muted/30 hover:bg-secondary/20 hover:text-secondary flex items-center justify-center border border-border/10 transition-all ${icon === iconName ? 'bg-secondary/20 text-secondary border-secondary/30 font-bold' : 'text-muted-foreground'}`}
+                                                      title={iconName}
+                                                    >
+                                                      <IconComp size={12} />
+                                                    </button>
+                                                  );
+                                                })}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
 
-                            {/* Accent Color only */}
-                          </div>
-                        </div>
-                      </div> {/* End Grid */}
+                                    {/* URL Input */}
+                                    <div className="flex-1 w-full sm:w-auto">
+                                      <input
+                                        type="text"
+                                        value={href}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          setSiteSettings(p => {
+                                            const next = { ...p, [hrefKey]: val };
+                                            if (i === 1) next.social_facebook = val;
+                                            else if (i === 2) next.social_twitter = val;
+                                            else if (i === 3) next.social_linkedin = val;
+                                            else if (i === 4) next.social_instagram = val;
+                                            return next;
+                                          });
+                                        }}
+                                        placeholder="URL (https://...)"
+                                        className="w-full px-2 py-1.5 rounded-md bg-muted/50 border border-border/50 text-[10px] outline-none focus:ring-1 focus:ring-secondary/35 font-mono"
+                                      />
+                                    </div>
 
-                      {/* --- USER EXPERIENCE (Hierarchical) --- */}
-                      <div className="mt-8 pt-8 border-t border-border/50 space-y-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
-                              <Settings size={20} />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Admin & Portal Preference</h3>
-                              <p className="text-[0.625rem] text-muted-foreground font-medium uppercase tracking-widest opacity-60 mt-0.5">Control your workspace and site-wide defaults</p>
-                            </div>
-                          </div>
-                        </div>
+                                    {/* Color Input */}
+                                    <div className="flex items-center gap-1 shrink-0 bg-muted/40 px-1 py-1 rounded-md border border-border/50">
+                                      <input type="color" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-4 h-4 rounded cursor-pointer p-0 border-0 bg-transparent" title="Icon Color" />
+                                      <input type="text" value={color} onChange={(e) => setSiteSettings(p => ({ ...p, [colorKey]: e.target.value }))} className="w-12 px-1 py-0.5 bg-transparent text-[9px] outline-none font-mono uppercase text-muted-foreground border-none focus:text-foreground" />
+                                    </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 bg-muted/20 p-5 rounded-3xl border border-border/40">
-                          {/* Theme */}
-                          <div>
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Visual Theme</label>
-                            <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
-                              {["light", "dark"].map(t => (
-                                <button key={t} onClick={() => {
-                                  const theme = t;
-                                  setUxDraft((p: any) => ({ ...p, theme }));
-                                  setSiteSettings(p => ({ ...p, theme }));
-                                  // Apply DOM + persist immediately
-                                  if (theme === "dark") document.documentElement.classList.add("dark");
-                                  else document.documentElement.classList.remove("dark");
-                                  saveThemePref(theme);
-                                  try {
-                                    const prefs = getUserSettings() || {};
-                                    prefs.theme = theme as any;
-                                    saveUserSettings(prefs);
-                                  } catch { /* ignore */ }
-                                  window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
-                                }}
-                                  className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${uxDraft.theme === t ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                                  {t}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-1 shrink-0 ml-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => setSiteSettings(p => ({ ...p, [visibleKey]: isVisible ? "false" : "true" }))}
+                                        className={`p-1.5 rounded-md hover:scale-105 active:scale-95 transition-all border ${isVisible ? 'bg-secondary/10 text-secondary border-secondary/20' : 'bg-muted text-muted-foreground border-border/40 opacity-70 hover:opacity-100'}`}
+                                        title={isVisible ? "Visible on site" : "Hidden on site"}
+                                      >
+                                        {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
+                                      </button>
 
-                          {/* Font Family */}
-                          <div className="xl:col-span-1">
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Typography</label>
-                            <select value={uxDraft.font_style} onChange={(e) => setUxDraft(p => ({ ...p, font_style: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-xl bg-background border border-border text-xs outline-none focus:ring-2 focus:ring-secondary/20">
-                              {AVAILABLE_FONTS.map(f => (
-                                <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
-                              ))}
-                            </select>
-                          </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (!confirm("Are you sure you want to delete this social link row?")) return;
+                                          const count = parseInt(siteSettings.social_count || "6", 10);
+                                          const nextSettings = { ...siteSettings };
 
-                          {/* Text Size */}
-                          <div>
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Text Size</label>
-                            <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
-                              {["xs", "sm", "md", "lg", "xl"].map((size, i) => {
-                                const vals = ["x-small", "small", "medium", "large", "x-large"];
-                                return (
-                                  <button key={size} onClick={() => setUxDraft(p => ({ ...p, font_size: vals[i] }))}
-                                    className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase tracking-tighter transition-all ${uxDraft.font_size === vals[i] ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                                    {size}
-                                  </button>
+                                          const resolvedList = Array.from({ length: count }).map((_, idx) => {
+                                            const idxPlus = idx + 1;
+                                            const icon = siteSettings[`social_icon_${idxPlus}`] || (
+                                              idxPlus === 1 ? "Facebook" :
+                                                idxPlus === 2 ? "Twitter" :
+                                                  idxPlus === 3 ? "Linkedin" :
+                                                    idxPlus === 4 ? "Instagram" :
+                                                      idxPlus === 5 ? "Viber" :
+                                                        idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                                            );
+                                            const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                                            const isWhatsApp = iconName.includes("whatsapp");
+                                            const isFacebook = iconName === "facebook";
+                                            const isTwitter = iconName === "twitter";
+                                            const isLinkedin = iconName === "linkedin";
+                                            const isInstagram = iconName === "instagram";
+                                            const isViber = iconName === "viber";
+
+                                            const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
+                                              isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
+                                                isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
+                                                  isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
+                                                    isViber ? "viber://chat?number=" :
+                                                      isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
+
+                                            const fallbackColor = isFacebook ? "#1877F2" :
+                                              isTwitter ? "#1DA1F2" :
+                                                isLinkedin ? "#0A66C2" :
+                                                  isInstagram ? "#E4405F" :
+                                                    isViber ? "#7360f2" :
+                                                      isWhatsApp ? "#25D366" : "#3b82f6";
+
+                                            let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
+                                            if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
+                                            if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
+
+                                            return {
+                                              icon,
+                                              href,
+                                              visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
+                                              color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
+                                            };
+                                          });
+
+                                          resolvedList.splice(i - 1, 1);
+
+                                          for (let j = 1; j <= count; j++) {
+                                            delete nextSettings[`social_icon_${j}`];
+                                            delete nextSettings[`social_href_${j}`];
+                                            delete nextSettings[`social_visible_${j}`];
+                                            delete nextSettings[`social_color_${j}`];
+                                          }
+
+                                          resolvedList.forEach((item, idx) => {
+                                            const idxPlus = idx + 1;
+                                            nextSettings[`social_icon_${idxPlus}`] = item.icon;
+                                            nextSettings[`social_href_${idxPlus}`] = item.href;
+                                            nextSettings[`social_visible_${idxPlus}`] = item.visible ? "true" : "false";
+                                            nextSettings[`social_color_${idxPlus}`] = item.color;
+                                          });
+
+                                          nextSettings.social_count = Math.max(0, count - 1).toString();
+                                          setSiteSettings(nextSettings);
+                                          toast.success("Social link removed successfully!");
+                                        }}
+                                        className="p-1.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 hover:scale-105 active:scale-95 transition-all"
+                                        title="Delete Social Link"
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
                                 );
                               })}
                             </div>
                           </div>
 
-                          {/* Image/Icon Mode */}
-                          <div>
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Display Mode</label>
-                            <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
-                              <button onClick={() => setUxDraft(p => ({ ...p, card_style: "icon" }))}
-                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "icon" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
-                                  }`}>
-                                <Type size={10} /> Icon
-                              </button>
-                              <button onClick={() => setUxDraft(p => ({ ...p, card_style: "image" }))}
-                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "image" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
-                                  }`}>
-                                <Image size={10} /> Image
-                              </button>
-                            </div>
-                          </div>
+                          {/* Accent Color only */}
+                        </div>
 
-                          {/* Brand Accent */}
-                          <div>
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Brand Accent</label>
-                            <div className="flex items-center gap-2">
-                              <input type="color" value={uxDraft.accent_color} onChange={(e) => setUxDraft(p => ({ ...p, accent_color: e.target.value }))}
-                                className="w-8 h-8 rounded-lg bg-background border border-border cursor-pointer p-0.5" />
-                              <div className="flex gap-1 flex-wrap">
-                                {["#3b82f6", "#2db8a0", "#8b5cf6", "#f43f5e", "#f59e0b", "#10b981"].map(c => (
-                                  <button key={c} onClick={() => setUxDraft(p => ({ ...p, accent_color: c }))}
-                                    className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${uxDraft.accent_color === c ? 'border-foreground shadow-md' : 'border-transparent'}`}
-                                    style={{ background: c }} />
-                                ))}
+                        {/* --- USER EXPERIENCE (Hierarchical) (Right Half) --- */}
+                        <div className="flex flex-col h-full lg:col-span-3">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border/50 pb-1">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
+                                <Settings size={20} />
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Admin & Portal Preference</h3>
+                                <p className="text-[0.625rem] text-muted-foreground font-medium uppercase tracking-widest opacity-60 mt-0.5">Control your workspace </p>
                               </div>
                             </div>
                           </div>
 
-                          {/* View Strategy */}
-                          <div>
-                            <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">View Layout</label>
-                            <div className="flex gap-1">
-                              <button onClick={() => setUxDraft(p => ({ ...p, global_view: "grid" }))}
-                                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "grid" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
-                                <LayoutGrid size={11} /> Grid
-                              </button>
-                              <button onClick={() => setUxDraft(p => ({ ...p, global_view: "list" }))}
-                                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "list" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
-                                <List size={11} /> List
-                              </button>
+                          <div className="grid grid-cols-1 gap-4 bg-muted/20 p-5 rounded-2xl border border-border/50 flex-1">
+                            {/* Theme */}
+                            <div>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Visual Theme</label>
+                              <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
+                                {["light", "dark"].map(t => (
+                                  <button key={t} onClick={() => {
+                                    const theme = t;
+                                    setUxDraft((p: any) => ({ ...p, theme }));
+                                    setSiteSettings(p => ({ ...p, theme }));
+                                    // Apply DOM + persist immediately
+                                    if (theme === "dark") document.documentElement.classList.add("dark");
+                                    else document.documentElement.classList.remove("dark");
+                                    saveThemePref(theme);
+                                    try {
+                                      const prefs = getUserSettings() || {};
+                                      prefs.theme = theme as any;
+                                      saveUserSettings(prefs);
+                                    } catch { /* ignore */ }
+                                    window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
+                                  }}
+                                    className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${uxDraft.theme === t ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
+                                    {t}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
+
+                            {/* Font Family */}
+                            <div className="xl:col-span-1">
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Typography</label>
+                              <select value={uxDraft.font_style} onChange={(e) => setUxDraft(p => ({ ...p, font_style: e.target.value }))}
+                                className="w-full px-3 py-2 rounded-xl bg-background border border-border text-xs outline-none focus:ring-2 focus:ring-secondary/20">
+                                {AVAILABLE_FONTS.map(f => (
+                                  <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Text Size */}
+                            <div>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Text Size</label>
+                              <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
+                                {["xs", "sm", "md", "lg", "xl"].map((size, i) => {
+                                  const vals = ["x-small", "small", "medium", "large", "x-large"];
+                                  return (
+                                    <button key={size} onClick={() => setUxDraft(p => ({ ...p, font_size: vals[i] }))}
+                                      className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase tracking-tighter transition-all ${uxDraft.font_size === vals[i] ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
+                                      {size}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Image/Icon Mode */}
+                            <div>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Display Mode</label>
+                              <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
+                                <button onClick={() => setUxDraft(p => ({ ...p, card_style: "icon" }))}
+                                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "icon" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
+                                    }`}>
+                                  <Type size={10} /> Icon
+                                </button>
+                                <button onClick={() => setUxDraft(p => ({ ...p, card_style: "image" }))}
+                                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "image" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
+                                    }`}>
+                                  <Image size={10} /> Image
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Brand Accent */}
+                            <div>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Brand Accent</label>
+                              <div className="flex items-center gap-2">
+                                <input type="color" value={uxDraft.accent_color} onChange={(e) => setUxDraft(p => ({ ...p, accent_color: e.target.value }))}
+                                  className="w-8 h-8 rounded-lg bg-background border border-border cursor-pointer p-0.5" />
+                                <div className="flex gap-1 flex-wrap">
+                                  {["#3b82f6", "#2db8a0", "#8b5cf6", "#f43f5e", "#f59e0b", "#10b981"].map(c => (
+                                    <button key={c} onClick={() => setUxDraft(p => ({ ...p, accent_color: c }))}
+                                      className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${uxDraft.accent_color === c ? 'border-foreground shadow-md' : 'border-transparent'}`}
+                                      style={{ background: c }} />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* View Strategy */}
+                            <div>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">View Layout</label>
+                              <div className="flex gap-1">
+                                <button onClick={() => setUxDraft(p => ({ ...p, global_view: "grid" }))}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "grid" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                                  <LayoutGrid size={11} /> Grid
+                                </button>
+                                <button onClick={() => setUxDraft(p => ({ ...p, global_view: "list" }))}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "list" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                                  <List size={11} /> List
+                                </button>
+                              </div>
+                            </div>
+
                           </div>
-
-
                         </div>
                       </div>
-
                       <div className="flex justify-center gap-3 mt-8">
                         <button onClick={() => {
                           const defaults = {

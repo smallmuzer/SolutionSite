@@ -137,10 +137,25 @@ const Header = () => {
         try {
           const el = document.querySelector(href);
           if (el) {
-            const adminScroll = document.getElementById("admin-main-scroll");
-            if (adminScroll) {
-              const y = el.getBoundingClientRect().top + adminScroll.scrollTop - adminScroll.getBoundingClientRect().top - 70;
-              adminScroll.scrollTo({ top: y, behavior: "smooth" });
+            // Try named scroll container first, then find the nearest scrollable ancestor
+            let scrollContainer: Element | null = document.getElementById("admin-main-scroll");
+            if (!scrollContainer && editor?.isEditMode) {
+              // Walk up from the target element to find the scrollable parent (overflow-auto on <main>)
+              let parent = el.parentElement;
+              while (parent && parent !== document.documentElement) {
+                const style = window.getComputedStyle(parent);
+                if ((style.overflow === "auto" || style.overflow === "scroll" ||
+                     style.overflowY === "auto" || style.overflowY === "scroll") &&
+                    parent.scrollHeight > parent.clientHeight) {
+                  scrollContainer = parent;
+                  break;
+                }
+                parent = parent.parentElement;
+              }
+            }
+            if (scrollContainer) {
+              const y = el.getBoundingClientRect().top + scrollContainer.scrollTop - scrollContainer.getBoundingClientRect().top - 70;
+              scrollContainer.scrollTo({ top: y, behavior: "smooth" });
             } else {
               const y = el.getBoundingClientRect().top + window.scrollY - 70;
               window.scrollTo({ top: y, behavior: "smooth" });
@@ -310,7 +325,23 @@ const Header = () => {
               onPointerDown={() => editor?.setActiveElementId(`header-nav:${item.href}`)}
               className={`relative group/item inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
             >
-              <div {...getNavProps(() => scrollTo(item.resolvedHref))} className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}>
+              <div 
+                onClick={(e) => {
+                  if (editor?.isEditMode) {
+                    e.preventDefault();
+                  } else {
+                    scrollTo(item.resolvedHref);
+                  }
+                }}
+                onDoubleClick={(e) => {
+                  if (editor?.isEditMode) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    scrollTo(item.resolvedHref);
+                  }
+                }}
+                className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}
+              >
                 <EditableText
                   section="settings"
                   field={`nav_label_${item.href.replace('#', '')}`}
@@ -319,6 +350,13 @@ const Header = () => {
                   toolbarClassName="-top-3 -right-3"
                   toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0 group-hover/item:opacity-100"}
                   extraControls={renderNavVisibilityToggle(item.href, false, true)}
+                  onDoubleClick={(e) => {
+                    if (editor?.isEditMode) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      scrollTo(item.resolvedHref);
+                    }
+                  }}
                 />
                 <span
                   className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full"
@@ -417,7 +455,20 @@ const Header = () => {
                 className={`relative group/item block ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
               >
                 <div
-                  {...getNavProps(() => scrollTo(item.resolvedHref))}
+                  onClick={(e) => {
+                    if (editor?.isEditMode) {
+                      e.preventDefault();
+                    } else {
+                      scrollTo(item.resolvedHref);
+                    }
+                  }}
+                  onDoubleClick={(e) => {
+                    if (editor?.isEditMode) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      scrollTo(item.resolvedHref);
+                    }
+                  }}
                   className={`w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
                     ? "text-secondary bg-secondary/10"
                     : "text-foreground/80 hover:text-foreground hover:bg-muted"
@@ -431,6 +482,13 @@ const Header = () => {
                     toolbarClassName="-top-2 right-0"
                     toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0"}
                     extraControls={renderNavVisibilityToggle(item.href, true, true)}
+                    onDoubleClick={(e) => {
+                      if (editor?.isEditMode) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        scrollTo(item.resolvedHref);
+                      }
+                    }}
                   />
                   {activeSection === item.resolvedHref && <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />}
                 </div>
