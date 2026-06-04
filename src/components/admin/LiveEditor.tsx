@@ -433,49 +433,9 @@ const PickerModal = ({ config, onClose, onSelect }: {
         ? `/api/db/${table}?id=${config.id}&_single=1`
         : `/api/db/site_content?section_key=${config.section}&_single=1`;
       
-      if (config.section === "our_network") {
-        url = `/api/db/site_content?section_key=our_network&_single=1`;
-      }
-      if (config.section === "global_presence") {
-        url = `/api/db/site_content?section_key=global_presence&_single=1`;
-      }
-      
       fetch(url)
         .then(r => r.json())
         .then(json => {
-          if (config.section === "our_network") {
-            let companies = [];
-            if (json.data && json.data.content) {
-              let contentObj = json.data.content;
-              if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
-              }
-              companies = Array.isArray(contentObj.companies) ? contentObj.companies : [];
-            }
-            const co = companies.find((c: any) => c.id === config.id);
-            if (co && co[config.field]) {
-              setManualValue(co[config.field]);
-              setSelected(co[config.field] ? [co[config.field]] : []);
-            }
-            return;
-          }
-          if (config.section === "global_presence") {
-            let locations = [];
-            if (json.data && json.data.content) {
-              let contentObj = json.data.content;
-              if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
-              }
-              locations = Array.isArray(contentObj.locations) ? contentObj.locations : [];
-            }
-            const loc = locations.find((l: any) => l.name === config.id);
-            if (loc && loc[config.field]) {
-              setManualValue(loc[config.field]);
-              setSelected(loc[config.field] ? [loc[config.field]] : []);
-            }
-            return;
-          }
-
           if (json.data) {
             let val;
             if (!config.id && json.data.content) {
@@ -522,57 +482,9 @@ const PickerModal = ({ config, onClose, onSelect }: {
         ? `/api/db/${table}?id=${config.id}&_single=1`
         : `/api/db/site_content?section_key=${config.section}&_single=1`;
 
-      if (config.section === "our_network") {
-        url = `/api/db/site_content?section_key=our_network&_single=1`;
-      }
-      if (config.section === "global_presence") {
-        url = `/api/db/site_content?section_key=global_presence&_single=1`;
-      }
-
       fetch(url)
         .then(r => r.json())
         .then(json => {
-          if (config.section === "our_network") {
-            let companies = [];
-            if (json.data && json.data.content) {
-              let contentObj = json.data.content;
-              if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
-              }
-              companies = Array.isArray(contentObj.companies) ? contentObj.companies : [];
-            }
-            const co = companies.find((c: any) => c.id === config.id);
-            if (co && co[config.field]) {
-              const val = co[config.field];
-              const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
-              setCurrentAssets(assets);
-              setSelected(assets);
-              setManualValue(val);
-              if (assets.length === 0) setViewMode("pick");
-            }
-            return;
-          }
-          if (config.section === "global_presence") {
-            let locations = [];
-            if (json.data && json.data.content) {
-              let contentObj = json.data.content;
-              if (typeof contentObj === "string") {
-                try { contentObj = JSON.parse(contentObj); } catch { /* ignore */ }
-              }
-              locations = Array.isArray(contentObj.locations) ? contentObj.locations : [];
-            }
-            const loc = locations.find((l: any) => l.name === config.id);
-            if (loc && loc[config.field]) {
-              const val = loc[config.field];
-              const assets = typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
-              setCurrentAssets(assets);
-              setSelected(assets);
-              setManualValue(val);
-              if (assets.length === 0) setViewMode("pick");
-            }
-            return;
-          }
-
           if (json.data) {
             let val;
             if (!config.id && json.data.content) {
