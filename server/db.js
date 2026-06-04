@@ -406,6 +406,9 @@ try {
   if (!appCols.includes("status")) db.exec("ALTER TABLE job_applications ADD COLUMN status TEXT NOT NULL DEFAULT 'new';");
   const apptCols = db.prepare("PRAGMA table_info(appointments)").all().map(c => c.name);
   if (!apptCols.includes("notes")) db.exec("ALTER TABLE appointments ADD COLUMN notes TEXT;");
+  
+  const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+  if (!userCols.includes("is_active")) db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;");
 
   // Cleanup Duplicate Client Logos
   const logos = db.prepare("SELECT name, COUNT(*) as c FROM client_logos GROUP BY name HAVING c > 1").all();

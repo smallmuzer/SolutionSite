@@ -132,15 +132,22 @@ function isTrustedOrigin(origin) {
   if (!origin) return false;
   try {
     const url = new URL(origin);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
     return TRUSTED_ORIGINS.has(url.origin);
   } catch {
     return false;
   }
 }
 
+
 app.use((req, res, next) => {
   const mutatingMethods = ["POST", "PATCH", "PUT", "DELETE"];
   if (!mutatingMethods.includes(req.method) || req.path.startsWith("/api/webhook") || req.path.startsWith("/api/health")) {
+    return next();
+  }
+
+  // Auth endpoints use password-based authentication, not session cookies — exempt from CSRF
+  if (req.path.startsWith("/api/auth/")) {
     return next();
   }
 
@@ -157,6 +164,7 @@ app.use((req, res, next) => {
     } catch { }
   }
 
+  console.log(`[csrf] Blocked ${req.method} ${req.path} from origin: "${origin}", referer: "${referer}"`);
   res.status(403).json({ data: null, error: { message: "CSRF protection: untrusted origin" } });
 });
 
@@ -296,17 +304,26 @@ function emitEvent(event, data) {
 }
 
 app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body;
+  const email = (req.body.email || "").trim().toLowerCase();
+  const password = (req.body.password || "").trim();
 
   try {
-    const user = db.prepare("SELECT id, email, password, userrole FROM users WHERE email = ?").get(email);
-    const passwordValid = user && typeof user.password === "string" && typeof password === "string" &&
-      user.password.length === password.length &&
-      crypto.timingSafeEqual(Buffer.from(user.password), Buffer.from(password));
-    if (passwordValid) {
-      const token = uuid();
-      SESSIONS.set(token, { id: user.id, email: user.email, userrole: user.userrole });
-      return res.json({ data: { session: { access_token: token, user: { id: user.id, email: user.email, userrole: user.userrole } } }, error: null });
+    const user = db.prepare("SELECT id, email, password, userrole, is_active FROM users WHERE LOWER(email) = ?").get(email);
+    
+    if (user) {
+      const dbPassword = user.password || "";
+      const passwordValid = typeof dbPassword === "string" && typeof password === "string" &&
+        dbPassword.length === password.length &&
+        crypto.timingSafeEqual(Buffer.from(dbPassword), Buffer.from(password));
+        
+      if (passwordValid) {
+        if (user.is_active === 0) {
+          return res.status(403).json({ data: null, error: { message: "Account is disabled. Please contact an administrator." } });
+        }
+        const token = uuid();
+        SESSIONS.set(token, { id: user.id, email: user.email, userrole: user.userrole });
+        return res.json({ data: { session: { access_token: token, user: { id: user.id, email: user.email, userrole: user.userrole } } }, error: null });
+      }
     }
   } catch (e) {
     console.error("[auth] Login error:", e);
@@ -681,8 +698,11 @@ app.get("/api/db/batch", (req, res) => {
 // SELECT
 app.get("/api/db/:table", (req, res) => {
   try {
-    const { table } = req.params;
-    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: "Invalid table" } });
+    let { table } = req.params;
+    // Fallback: strip any accidental query strings or whitespace
+    table = table.split("?")[0].trim();
+
+    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: `Invalid table: ${table}` } });
     const filters = [];
     const allowedCols = TABLE_COLS[table] || [];
 
@@ -736,7 +756,7 @@ const TABLE_COLS = {
   site_settings: ["id", "site_name", "site_logo", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "theme", "font_style", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],
   social_links: ["id", "platform", "icon", "url", "color", "is_visible", "sort_order", "created_at", "updated_at"],
   seo_settings: ["id", "page_key", "title", "description", "keywords", "og_image", "updated_at", "updated_by"],
-  users: ["id", "email", "password", "userrole", "created_at", "updated_at"],
+  users: ["id", "email", "password", "userrole", "is_active", "created_at", "updated_at"],
   chat_messages: ["id", "session_id", "ip_address", "channel", "status", "created_at", "updated_at"],
   chat_threads: ["id", "message_id", "direction", "content", "sender", "timestamp", "meta"],
   submission_replies: ["id", "submission_id", "sender", "message", "created_at"],
@@ -757,7 +777,10 @@ function filterCols(table, row) {
 // INSERT
 app.post("/api/db/:table", (req, res) => {
   try {
-    const { table } = req.params;
+    let { table } = req.params;
+    table = table.split("?")[0].trim();
+    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: `Invalid table: ${table}` } });
+
     const input = req.body;
     const uCol = UNIQUE_COLS[table];
     const row = {
@@ -960,8 +983,9 @@ app.post("/api/db/:table", (req, res) => {
 // UPDATE
 app.patch("/api/db/:table", (req, res) => {
   try {
-    const { table } = req.params;
-    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: "Invalid table" } });
+    let { table } = req.params;
+    table = table.split("?")[0].trim();
+    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: `Invalid table: ${table}` } });
     const allowedCols = TABLE_COLS[table] || [];
     const filters = [];
     for (const [k, v] of Object.entries(req.query)) {
@@ -992,8 +1016,9 @@ app.patch("/api/db/:table", (req, res) => {
 // DELETE
 app.delete("/api/db/:table", (req, res) => {
   try {
-    const { table } = req.params;
-    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: "Invalid table" } });
+    let { table } = req.params;
+    table = table.split("?")[0].trim();
+    if (!SAFE_TABLES.has(table)) return res.status(400).json({ data: null, error: { message: `Invalid table: ${table}` } });
     const allowedCols = TABLE_COLS[table] || [];
     const filters = [];
     for (const [k, v] of Object.entries(req.query)) {
@@ -1419,7 +1444,7 @@ if (existsSync(DIST_DIR)) {
   // Explicitly mount dist/assets to /assets as a fallback for Vite builds
   app.use("/assets", express.static(join(DIST_DIR, "assets")));
   app.use(express.static(DIST_DIR, { index: false }));
-  
+
   app.get(/(.*)/, (req, res) => {
     if (req.path.startsWith("/api")) {
       return res.status(404).json({ error: "Not found" });

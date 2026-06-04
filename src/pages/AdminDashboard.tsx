@@ -35,6 +35,7 @@ import LiveEditor from "@/components/admin/LiveEditor";
 import { useUndoAction } from "@/hooks/useUndoAction";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { applySettings, saveThemePref, saveUserSettings, getUserSettings } from "@/hooks/useSiteSettings";
+import { UsersManagerCard } from "@/components/admin/UsersManagerCard";
 import { useQueryClient } from "@tanstack/react-query";
 
 const formatDate = (value: string | Date): string => {
@@ -1248,6 +1249,7 @@ const AdminDashboard = () => {
   const { executeWithUndo } = useUndoAction();
   const [activePickerIdx, setActivePickerIdx] = useState<number | null>(null);
   const [pickerSearch, setPickerSearch] = useState("");
+  const [usersDraft, setUsersDraft] = useState<any[]>([]);
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_name: "Systems Solutions",
@@ -1318,6 +1320,11 @@ const AdminDashboard = () => {
   const loadSettings = useCallback(async () => {
     const { data: settingsData } = await dbFetch("site_settings", { query: { id: "settings", _single: "1" } });
     const { data: socialData } = await dbFetch("social_links", { query: { _order: "sort_order", _asc: "true" } });
+    const { data: usersData } = await dbFetch("users", {});
+
+    if (usersData && Array.isArray(usersData)) {
+      setUsersDraft(usersData);
+    }
 
     if (settingsData) {
       const c = { ...settingsData };
@@ -1546,6 +1553,32 @@ const AdminDashboard = () => {
     } catch (error) {
       // Ignore delete cleanup failures; non-critical for saving settings.
       console.error("Failed cleaning up social links:", error);
+    }
+    // --- Save Users ---
+    try {
+      for (const u of usersDraft) {
+        if (u._deleted) {
+          if (!u._isNew) {
+            await dbFetch("users", { method: "DELETE", query: { id: u.id } });
+          }
+        } else if (u._isNew || u._updated) {
+          const body: any = { id: u.id, email: u.email, userrole: u.userrole, is_active: u.is_active };
+          if (u.password !== undefined && u.password !== "") body.password = u.password;
+          await dbFetch("users", {
+            method: u._isNew ? "POST" : "PATCH",
+            query: u._isNew ? undefined : { id: u.id },
+            body
+          });
+        }
+      }
+      // Re-fetch clean users
+      const { data: newUsersData } = await dbFetch("users", {});
+      if (newUsersData) setUsersDraft(newUsersData);
+    } catch (err) {
+      console.error("Failed to save users:", err);
+      toast.error("Some users could not be saved.");
+    } finally {
+      setSavingSettings(false);
     }
 
     window.dispatchEvent(new CustomEvent("ss:contentSaved"));
@@ -2806,6 +2839,9 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                       </div>
+
+                      <UsersManagerCard usersDraft={usersDraft} setUsersDraft={setUsersDraft} />
+
                       <div className="flex justify-center gap-3 mt-8">
                         <button onClick={() => {
                           const defaults = {
