@@ -90,10 +90,12 @@ const LiveEditor = () => {
 
         for (const g of Object.values(grouped)) {
             const dbSec = g.section === "clients" ? "client_logos" : g.section;
+            const entityTables = new Set(["client_logos", "services", "technologies", "products", "hero_stats", "global_presence", "our_network", "career_jobs", "testimonials", "social_links"]);
+            const isEntity = entityTables.has(dbSec) && g.id;
             let finalData = g.data;
             if (!finalData || Object.keys(finalData).length === 0) continue;
 
-            if (!g.id) {
+            if (!isEntity) {
                 try {
                     const getResp = await fetch(`/api/db/site_content?section_key=${g.section}&_single=1`);
                     const getData = await getResp.json();
@@ -109,9 +111,9 @@ const LiveEditor = () => {
                 }
             }
 
-            const endpoint = g.id ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
-            const method = g.id ? "PATCH" : "POST";
-            const body = g.id ? finalData : { section_key: g.section, content: finalData };
+            const endpoint = isEntity ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
+            const method = isEntity ? "PATCH" : "POST";
+            const body = isEntity ? finalData : { section_key: g.section, content: finalData };
 
             const resp = await fetch(endpoint, {
                 method,

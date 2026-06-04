@@ -110,7 +110,7 @@ const AboutSection = () => {
 
   const saveOrder = (newItems: typeof initialCardData) => {
     const orderKeys = newItems.map(c => c.key);
-    editor?.onUpdate("about", "card_order", JSON.stringify(orderKeys), "about");
+    editor?.onUpdate("about", "card_order", JSON.stringify(orderKeys));
   };
 
   const handleDrop = (e: React.DragEvent, targetKey: string) => {
