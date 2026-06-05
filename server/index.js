@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync } from "fs";
+import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync, writeFileSync } from "fs";
 import { db, uuid, DB_PATH } from "./db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -62,7 +62,15 @@ const SAFE_TABLES = new Set([
   "technologies", "global_presence", "our_network"
 ]);
 
-app.use(cors({ origin: Array.from(TRUSTED_ORIGINS), credentials: true }));
+app.use(cors({ 
+  origin: function (origin, callback) {
+    if (!origin || isTrustedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  }, 
+  credentials: true 
+}));
 app.use(express.json({ limit: "30mb" }));
 
 app.use((req, res, next) => {
@@ -137,10 +145,19 @@ function isTrustedOrigin(origin) {
   try {
     const url = new URL(origin);
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
-    return TRUSTED_ORIGINS.has(url.origin);
-  } catch {
+    if (TRUSTED_ORIGINS.has(url.origin)) return true;
+    
+    // Check dynamic site_url
+    const stmt = db.prepare("SELECT site_url FROM site_settings WHERE id = 'settings'");
+    const settings = stmt.get();
+    if (settings && settings.site_url) {
+      const dbUrl = new URL(settings.site_url);
+      if (url.origin === dbUrl.origin) return true;
+    }
+  } catch (e) {
     return false;
   }
+  return false;
 }
 
 
@@ -757,7 +774,7 @@ const TABLE_COLS = {
   products: ["id", "name", "tagline", "description", "image_url", "extra_text", "extra_color", "contact_url", "is_popular", "is_visible", "sort_order", "created_at", "updated_at"],
   client_logos: ["id", "name", "logo_url", "is_visible", "sort_order", "created_at", "updated_at"],
   site_content: ["id", "section_key", "content", "created_at", "updated_at"],
-  site_settings: ["id", "site_name", "site_logo", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "theme", "font_style", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],
+  site_settings: ["id", "site_name", "site_url", "site_logo", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "theme", "font_style", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],
   social_links: ["id", "platform", "icon", "url", "color", "is_visible", "sort_order", "created_at", "updated_at"],
   seo_settings: ["id", "page_key", "title", "description", "keywords", "og_image", "updated_at", "updated_by"],
   users: ["id", "email", "password", "userrole", "is_active", "created_at", "updated_at"],
@@ -776,6 +793,28 @@ function filterCols(table, row) {
   const allowed = TABLE_COLS[table];
   if (!allowed) return row;
   return Object.fromEntries(Object.entries(row).filter(([k]) => allowed.includes(k)));
+}
+
+function updateIndexHtml(settings) {
+  try {
+    const indexPath = join(DIST_DIR, "index.html");
+    const rootIndexPath = join(__dirname, "..", "index.html");
+    
+    const siteUrl = settings.site_url ? settings.site_url.replace(/\/$/, "") : "http://beta.solutions.com.mv";
+    const logoUrl = settings.site_logo || "/logo.png";
+    const ogImageUrl = logoUrl.startsWith("http") ? logoUrl : `${siteUrl}${logoUrl}`;
+
+    [indexPath, rootIndexPath].forEach(p => {
+      if (existsSync(p)) {
+        let html = readFileSync(p, "utf8");
+        html = html.replace(/<meta property="og:image" content="[^"]*"\s*\/>/i, `<meta property="og:image" content="${ogImageUrl}" />`);
+        html = html.replace(/<meta name="twitter:image" content="[^"]*"\s*\/>/i, `<meta name="twitter:image" content="${ogImageUrl}" />`);
+        writeFileSync(p, html);
+      }
+    });
+  } catch (e) {
+    console.error("[updateIndexHtml] Error:", e);
+  }
 }
 
 // INSERT
@@ -838,6 +877,7 @@ app.post("/api/db/:table", (req, res) => {
         const sets = Object.keys(dbRow).filter(k => k !== "id").map(k => `${k} = ?`).join(", ");
         db.prepare(`UPDATE ${table} SET ${sets} WHERE id = ?`).run(...Object.keys(dbRow).filter(k => k !== "id").map(k => dbRow[k]), existing.id);
         const updated = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(existing.id);
+        if (table === "site_settings") updateIndexHtml(updated);
         return res.json({ data: normaliseRow(table, updated), error: null });
       }
     }
@@ -845,6 +885,7 @@ app.post("/api/db/:table", (req, res) => {
     const keys = Object.keys(dbRow);
     db.prepare(`INSERT INTO ${table} (${keys.join(", ")}) VALUES (${keys.map(() => "?").join(", ")})`).run(...keys.map(k => dbRow[k]));
     const inserted = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(dbRow.id);
+    if (table === "site_settings") updateIndexHtml(inserted);
     const normalised = normaliseRow(table, inserted);
 
     // Hooks for specific tables

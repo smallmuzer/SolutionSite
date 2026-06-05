@@ -39,8 +39,10 @@ export function UsersManagerCard({ usersDraft, setUsersDraft }) {
   };
 
   const handleSaveInline = () => {
-    if (!editForm.email) {
-      toast.error("Email is required.");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailToSave = (editForm.email || "").trim();
+    if (!emailToSave || !emailRegex.test(emailToSave)) {
+      toast.error("A valid email address is required.");
       return;
     }
     
@@ -54,7 +56,7 @@ export function UsersManagerCard({ usersDraft, setUsersDraft }) {
       if (u.id === editingId) {
         return {
           ...u,
-          email: editForm.email,
+          email: emailToSave,
           password: editForm.password ? editForm.password : u.password,
           userrole: editForm.userrole,
           is_active: editForm.is_active,

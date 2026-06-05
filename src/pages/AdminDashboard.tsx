@@ -100,7 +100,7 @@ const AVAILABLE_FONTS: { label: string; value: string }[] = [
 ];
 
 interface SiteSettings {
-  site_name: string; site_logo: string; whatsapp_number: string; viber_number: string;
+  site_name: string; site_url: string; site_logo: string; whatsapp_number: string; viber_number: string;
   contact_email: string; contact_from_email: string;
   smtp_host: string; smtp_port: string; smtp_user: string; smtp_pass: string;
   demo_url: string; db_connection: string;
@@ -1253,6 +1253,7 @@ const AdminDashboard = () => {
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_name: "Systems Solutions",
+    site_url: "http://beta.solutions.com.mv",
     site_logo: "/assets/uploads/Logo.png",
     whatsapp_number: "9603011355",
     viber_number: "9489477144",
@@ -2206,6 +2207,13 @@ const AdminDashboard = () => {
                                 <input value={siteSettings.site_name}
                                   onChange={(e) => setSiteSettings(p => ({ ...p, site_name: e.target.value }))}
                                   placeholder="e.g. Systems Solutions"
+                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-foreground text-[0.6875rem] focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all shadow-sm" />
+                              </div>
+                              <div>
+                                <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Site URL (For Meta Tags & CORS)</label>
+                                <input value={siteSettings.site_url || ""}
+                                  onChange={(e) => setSiteSettings(p => ({ ...p, site_url: e.target.value }))}
+                                  placeholder="e.g. http://beta.solutions.com.mv"
                                   className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-foreground text-[0.6875rem] focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all shadow-sm" />
                               </div>
                               <div className="grid grid-cols-2 gap-3">

@@ -71,6 +71,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS site_settings (
     id TEXT PRIMARY KEY,
     site_name TEXT NOT NULL DEFAULT '',
+    site_url TEXT DEFAULT '',
     site_logo TEXT NOT NULL DEFAULT '/logo.png',
     whatsapp_number TEXT DEFAULT '',
     viber_number TEXT DEFAULT '',
@@ -296,6 +297,11 @@ db.exec(`
 try {
   // Drop user_roles table if it exists
   db.exec("DROP TABLE IF EXISTS user_roles;");
+
+  const settingsCols = db.prepare("PRAGMA table_info(site_settings)").all().map(c => c.name);
+  if (!settingsCols.includes("site_url")) {
+    db.exec("ALTER TABLE site_settings ADD COLUMN site_url TEXT DEFAULT '';");
+  }
 
   const testCols = db.prepare("PRAGMA table_info(testimonials)").all().map(c => c.name);
   if (!testCols.includes("sort_order")) {
@@ -723,6 +729,7 @@ try {
 const siteSettingsSeeds = [
   { id: "settings", 
     site_name: "Systems Solutions",
+    site_url: "http://beta.solutions.com.mv",
     site_logo: "/logo.png",
     contact_email: "info@solutions.com.mv",
     contact_phone: "+960 301-1355",
