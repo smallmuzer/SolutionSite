@@ -17,7 +17,7 @@ app.set("etag", false);
 app.disable("x-powered-by");
 app.disable("etag");
 const server = createServer(app);
-const PORT = 4001;
+const PORT = process.env.PORT || 4001;
 
 const CACHE_CONTROL_NO_CACHE = "no-cache, no-store, must-revalidate, private, max-age=0";
 const CACHE_CONTROL_PUBLIC = "public, max-age=0, must-revalidate, no-cache";
@@ -47,6 +47,10 @@ const TRUSTED_ORIGINS = new Set([
   "https://systemsolution",
   "http://test.solutions.com.mv",
   "https://test.solutions.com.mv",
+  "http://beta.solutions.com.mv",
+  "https://beta.solutions.com.mv",
+  "http://solutions.com.mv",
+  "https://solutions.com.mv",
   "https://koya.hrmetrics.in",
   "https://hrmetrics.in"
 ]);
@@ -309,13 +313,13 @@ app.post("/api/auth/login", (req, res) => {
 
   try {
     const user = db.prepare("SELECT id, email, password, userrole, is_active FROM users WHERE LOWER(email) = ?").get(email);
-    
+
     if (user) {
       const dbPassword = user.password || "";
       const passwordValid = typeof dbPassword === "string" && typeof password === "string" &&
         dbPassword.length === password.length &&
         crypto.timingSafeEqual(Buffer.from(dbPassword), Buffer.from(password));
-        
+
       if (passwordValid) {
         if (user.is_active === 0) {
           return res.status(403).json({ data: null, error: { message: "Account is disabled. Please contact an administrator." } });

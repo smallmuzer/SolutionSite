@@ -38,7 +38,9 @@ const TrackingScripts = () => {
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${settings.google_analytics_id}');
+          gtag('config', '${settings.google_analytics_id}', {
+            cookie_domain: window.location.hostname
+          });
         `;
         document.head.appendChild(inlineScript);
       }
