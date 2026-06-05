@@ -14,6 +14,7 @@ export function hasEmbeddedColor(value: string): boolean {
 
 interface LiveEditorContextType {
   isEditMode: boolean;
+  userRole?: string;
   activeElementId: string | null;
   setActiveElementId: (id: string | null) => void;
   onUpdate: (section: string, field: string, value: any, id?: string) => void;
@@ -59,8 +60,9 @@ export const LiveEditorProvider: React.FC<{
   handleSaveAll: any;
   handleDiscard: any;
   pendingChanges: Record<string, any>;
+  userRole?: string;
 }> = ({
-  children, onUpdate, onHide, onDelete, onAdd, onClone, onSave, onPickImage, onPickMultiImage, onPickIcon, onPickLink, onPickColor, onOpenCustomizer, handleSaveAll, handleDiscard, pendingChanges
+  children, onUpdate, onHide, onDelete, onAdd, onClone, onSave, onPickImage, onPickMultiImage, onPickIcon, onPickLink, onPickColor, onOpenCustomizer, handleSaveAll, handleDiscard, pendingChanges, userRole
 }) => {
     const [activeElementId, setActiveElementId] = useState<string | null>(null);
     const [typoState, setTypoState] = useState<{
@@ -96,6 +98,7 @@ export const LiveEditorProvider: React.FC<{
     return (
       <LiveEditorContext.Provider value={{
         isEditMode: true,
+        userRole,
         activeElementId,
         setActiveElementId,
         onUpdate,
@@ -126,6 +129,7 @@ export const LiveEditorProvider: React.FC<{
             originalValue={typoState.originalValue}
             id={typoState.id}
             targetStyles={typoState.targetStyles}
+            userRole={userRole}
             onClose={() => setTypoState(prev => ({ ...prev, isOpen: false }))}
             onSave={(sec, fld, val, itemId) => {
               onUpdate(sec, fld, val, itemId);
@@ -254,7 +258,7 @@ export const EditableText: React.FC<{
             WebkitBackgroundClip: 'border-box',
             ...style
           } : { ...(finalColor ? { color: finalColor } : {}), ...style }}
-          contentEditable
+          contentEditable={editor?.userRole !== "viewer"}
           spellCheck={false}
           suppressContentEditableWarning
           onFocus={() => setIsEditing(true)}
@@ -385,8 +389,7 @@ export const useLiveEditorNavigation = () => {
       onClick: (e: React.MouseEvent) => {
         if (isEdit) {
           e.preventDefault();
-          e.stopPropagation();
-          handler();
+          // Do not call handler on single click in edit mode to allow text selection/editing
           return;
         }
         handler();

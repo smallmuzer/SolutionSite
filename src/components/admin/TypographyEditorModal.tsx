@@ -23,6 +23,7 @@ interface TypographyEditorModalProps {
   handleSaveAll?: () => void;
   handleDiscard?: () => void;
   pendingChangesCount?: number;
+  userRole?: string;
 }
 
 interface ActiveStyles {
@@ -142,7 +143,7 @@ export function parseInlineStyles(html: string): { styles: ActiveStyles; innerHt
 
 export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   isOpen, section, field, initialValue, originalValue, id, targetStyles, onClose, onSave,
-  handleSaveAll, handleDiscard, pendingChangesCount = 0
+  handleSaveAll, handleDiscard, pendingChangesCount = 0, userRole
 }) => {
   const [editorHtml, setEditorHtml] = useState("");
   const [activeStyles, setActiveStyles] = useState<ActiveStyles>({ ...DEFAULT_STYLES });
@@ -1196,7 +1197,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
-                  className={`px-4 py-1.5 active:scale-95 text-[11px] font-bold whitespace-nowrap rounded-lg shadow-sm border flex items-center transition-all ${pendingChangesCount > 0 ? "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20" : "bg-secondary text-secondary-foreground border-secondary/20 hover:scale-[1.02]"}`}
+                  disabled={userRole === "viewer"}
+                  className={`px-4 py-1.5 active:scale-95 text-[11px] font-bold whitespace-nowrap rounded-lg shadow-sm border flex items-center transition-all ${userRole === "viewer" ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border/50" : pendingChangesCount > 0 ? "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20" : "bg-secondary text-secondary-foreground border-secondary/20 hover:scale-[1.02]"}`}
                 >
                   {pendingChangesCount > 0 ? "Apply" : "Apply & Close"}
                 </button>

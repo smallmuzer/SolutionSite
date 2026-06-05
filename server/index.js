@@ -365,7 +365,7 @@ app.get("/api/auth/session", (req, res) => {
   if (user) {
     // Re-verify user still exists and is still admin in DB
     try {
-      const dbUser = db.prepare("SELECT id, email, userrole FROM users WHERE id = ? AND userrole = 'admin'").get(user.id);
+      const dbUser = db.prepare("SELECT id, email, userrole FROM users WHERE id = ?").get(user.id);
       if (dbUser) {
         return res.json({ data: { session: { access_token: token, user: { id: dbUser.id, email: dbUser.email, userrole: dbUser.userrole } } }, error: null });
       }

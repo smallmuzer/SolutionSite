@@ -10,7 +10,7 @@ import { toast } from "sonner";
 // OR just do it internally and save immediately? Wait, the prompt specifically says:
 // "When the "Save All Changes" button is clicked, all user-related changes should be validated and saved to the database"
 
-export function UsersManagerCard({ usersDraft, setUsersDraft }) {
+export function UsersManagerCard({ usersDraft, setUsersDraft, userRole }: { usersDraft: any[], setUsersDraft: any, userRole?: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   
@@ -99,12 +99,13 @@ export function UsersManagerCard({ usersDraft, setUsersDraft }) {
             <p className="text-[0.625rem] text-muted-foreground font-medium uppercase tracking-widest opacity-60 mt-0.5">Manage administrators and permissions</p>
           </div>
         </div>
-        <button
-          onClick={handleAdd}
-          className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 text-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
-        >
-          <Plus size={10} /> Add User
-        </button>
+          <button
+            disabled={userRole === "viewer"}
+            onClick={handleAdd}
+            className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 text-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500/10 disabled:hover:text-emerald-500"
+          >
+            <Plus size={10} /> Add User
+          </button>
       </div>
 
       <div className="bg-muted/20 rounded-2xl border border-border/50 overflow-hidden">
@@ -211,14 +212,14 @@ export function UsersManagerCard({ usersDraft, setUsersDraft }) {
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleEdit(u)} className="p-1.5 rounded hover:bg-secondary/10 text-secondary transition-colors" title="Edit">
-                              <Edit2 size={14} />
-                            </button>
-                            <button onClick={() => handleDelete(u.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors" title="Delete">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
+                            <div className="flex items-center justify-end gap-2">
+                              <button disabled={userRole === "viewer"} onClick={() => handleEdit(u)} className="p-1.5 rounded hover:bg-secondary/10 text-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Edit">
+                                <Edit2 size={14} />
+                              </button>
+                              <button disabled={userRole === "viewer"} onClick={() => handleDelete(u.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Delete">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                         )}
                       </td>
                     </tr>

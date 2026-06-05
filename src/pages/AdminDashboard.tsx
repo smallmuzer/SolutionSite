@@ -202,7 +202,7 @@ const EditableDateInput = ({ type = "date", value, onChange, className, title, p
     </div>
   );
 };
-const SubmissionsCalendar = ({ submissions, applications = [], appointments = [], visible = true, onSubmissionClick, onAppointmentCreated }: { submissions: any[], applications?: any[], appointments?: any[], visible?: boolean, onSubmissionClick: (s: any) => void, onAppointmentCreated?: (created: any) => void }) => {
+const SubmissionsCalendar = ({ submissions, applications = [], appointments = [], visible = true, userRole = "", onSubmissionClick, onAppointmentCreated }: { submissions: any[], applications?: any[], appointments?: any[], visible?: boolean, userRole?: string, onSubmissionClick: (s: any) => void, onAppointmentCreated?: (created: any) => void }) => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -848,7 +848,7 @@ const AppointmentsCalendar = ({
           </h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => setShowCreateModal(true)} className="inline-flex items-center gap-2 rounded-2xl border border-border/80 bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition hover:bg-secondary/15">
+          <button disabled={userRole === "viewer"} onClick={() => setShowCreateModal(true)} className="inline-flex items-center gap-2 rounded-2xl border border-border/80 bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition hover:bg-secondary/15 disabled:opacity-50 disabled:cursor-not-allowed">
             <Plus size={16} /> New Appointment
           </button>
           <button onClick={handleNext} className="p-2 bg-background border border-border shadow-sm hover:bg-muted text-foreground rounded-lg transition-colors flex items-center justify-center">
@@ -1051,8 +1051,8 @@ const AppointmentsCalendar = ({
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground">Notes</p>
                   {hasExistingNote && (
-                    <button type="button" onClick={deleteAppointmentNote} disabled={apptSaving}
-                      className="text-[0.625rem] text-destructive hover:underline disabled:opacity-50">
+                    <button type="button" onClick={deleteAppointmentNote} disabled={apptSaving || userRole === "viewer"}
+                      className="text-[0.625rem] text-destructive hover:underline disabled:opacity-50 disabled:cursor-not-allowed">
                       Delete
                     </button>
                   )}
@@ -1069,7 +1069,7 @@ const AppointmentsCalendar = ({
 
             {/* Footer actions */}
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border bg-muted/20">
-              <button type="button"
+              <button type="button" disabled={userRole === "viewer"}
                 onClick={async () => {
                   if (!confirm("Delete this appointment?")) return;
                   const url = new URL(`/api/db/appointments`, window.location.origin);
@@ -1079,7 +1079,7 @@ const AppointmentsCalendar = ({
                   closeModal();
                   toast.success("Appointment deleted.");
                 }}
-                className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-colors flex items-center gap-1.5">
+                className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Trash2 size={13} /> Delete
               </button>
               <div className="flex items-center gap-2">
@@ -1242,6 +1242,7 @@ const AdminDashboard = () => {
   const PAGE_SIZE = 10;
   const [savingSettings, setSavingSettings] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
+  const [userRole, setUserRole] = useState<string>("viewer");
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [activeChannel, setActiveChannel] = useState<"website" | "whatsapp" | "viber">("website");
@@ -1291,6 +1292,12 @@ const AdminDashboard = () => {
 
   const dbFetch = useCallback(async (table: string, options: { method?: string; body?: any; query?: Record<string, string> } = {}) => {
     try {
+      const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(options.method?.toUpperCase() || "");
+      if (isMutation && userRole === "viewer") {
+        toast.error("Viewers are not permitted to modify data.");
+        return { data: null, error: { message: "Permission denied." } };
+      }
+
       const url = new URL(`/api/db/${table}`, window.location.origin);
       if (options.query) {
         Object.entries(options.query).forEach(([key, value]) => {
@@ -1309,7 +1316,7 @@ const AdminDashboard = () => {
     } catch (e: any) {
       return { data: null, error: { message: e.message } };
     }
-  }, []);
+  }, [userRole]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -1478,8 +1485,10 @@ const AdminDashboard = () => {
   const checkAuth = useCallback(async () => {
     const { data: { session } } = await auth.getSession();
     if (!session) { navigate("/admin/login", { replace: true }); return; }
-    const rolesRes = await fetch(`/api/db/users?id=${session.user.id}&userrole=admin&_single=1`).then(r => r.json());
+    const rolesRes = await fetch(`/api/db/users?id=${session.user.id}&_single=1`).then(r => r.json());
     if (!rolesRes.data) { navigate("/admin/login", { replace: true }); return; }
+    const role = rolesRes.data.userrole || "viewer";
+    setUserRole(role);
     setAuthChecking(false);
     startSSE();
     loadData();
@@ -1493,6 +1502,10 @@ const AdminDashboard = () => {
   useEffect(() => { checkAuth(); }, [checkAuth]);
 
   const saveSettings = async () => {
+    if (userRole === "viewer") {
+      toast.error("Viewers do not have permission to modify settings.");
+      return;
+    }
     setSavingSettings(true);
 
     const finalSettings = { ...siteSettings, ...uxDraft };
@@ -1911,7 +1924,7 @@ const AdminDashboard = () => {
                           <button onClick={() => setSubView("list")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>List</button>
                           <button onClick={() => setSubView("calendar")} className={`px-2.5 py-1 rounded text-[0.65rem] font-semibold transition-colors ${subView === "calendar" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"}`}>Calendar</button>
                         </div>
-                        <button onClick={() => {
+                        <button disabled={userRole === "viewer"} onClick={() => {
                           const headers = ["Name", "Email", "Phone", "Company", "Message", "Date"];
                           const csvContent = [
                             headers.join(","),
@@ -1932,16 +1945,16 @@ const AdminDashboard = () => {
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
-                        }} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
+                        }} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                           <LucideIcons.Download size={14} /> Export Excel
                         </button>
-                        <button onClick={() => window.dispatchEvent(new CustomEvent("ss:openNewAppointment"))} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm">
+                        <button disabled={userRole === "viewer"} onClick={() => window.dispatchEvent(new CustomEvent("ss:openNewAppointment"))} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5 shrink-0 h-[32px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                           <LucideIcons.Plus size={14} /> New Appointment
                         </button>
                       </div>
                     </div>
 
-                    <SubmissionsCalendar visible={subView === "calendar"} submissions={submissions} applications={applications} appointments={appointments} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
+                    <SubmissionsCalendar visible={subView === "calendar"} submissions={submissions} applications={applications} appointments={appointments} userRole={userRole} onAppointmentCreated={(created) => setAppointments((prev) => [...prev, created].sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime()))} onSubmissionClick={(s) => { setSelectedSubmission(s); loadSubmissionReplies(s.id); }} />
 
                     {subView === "list" && (
                       <>
@@ -1991,7 +2004,7 @@ const AdminDashboard = () => {
                                   <button onClick={() => toggleRead(s.id, s.is_read)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={s.is_read ? "Mark unread" : "Mark read"}>
                                     {s.is_read ? <EyeOff size={14} /> : <Eye size={14} />}
                                   </button>
-                                  <button onClick={() => deleteSubmission(s.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive">
+                                  <button disabled={userRole === "viewer"} onClick={() => deleteSubmission(s.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive disabled:opacity-50 disabled:cursor-not-allowed">
                                     <Trash2 size={14} />
                                   </button>
                                 </div>
@@ -2165,7 +2178,7 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {tab === "website" && <LiveEditor key="live-editor" />}
+              {tab === "website" && <LiveEditor key="live-editor" userRole={userRole} />}
               {tab === "sitehealth" && (
                 <div>
                   <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-2">Site Health</h1>
@@ -2181,13 +2194,13 @@ const AdminDashboard = () => {
                       </button>
                     </div>
                   </div>
-                  {siteHealthSubTab === "seo" && <SEOManager key="seo-manager" />}
-                  {siteHealthSubTab === "security" && <SecurityPanel key="security-panel" />}
+                  {siteHealthSubTab === "seo" && <div className={userRole === "viewer" ? "pointer-events-none opacity-80" : ""}><SEOManager key="seo-manager" /></div>}
+                  {siteHealthSubTab === "security" && <div className={userRole === "viewer" ? "pointer-events-none opacity-80" : ""}><SecurityPanel key="security-panel" /></div>}
                 </div>
               )}
 
               {tab === "settings" && (
-                <div className="w-full">
+                <div className={`w-full ${userRole === "viewer" ? "pointer-events-none opacity-80" : ""}`}>
                   <div className="w-full space-y-2">
                     <div className="">
                       <h1 className="text-2xl font-heading font-black tracking-tight text-foreground bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent mb-1">Site Settings</h1>
@@ -2427,18 +2440,15 @@ const AdminDashboard = () => {
                               </div>
                               <button
                                 type="button"
+                                disabled={userRole === "viewer"}
                                 onClick={() => {
-                                  const nextCount = parseInt(siteSettings.social_count || "6", 10) + 1;
-                                  setSiteSettings(p => ({
-                                    ...p,
-                                    social_count: nextCount.toString(),
-                                    [`social_icon_${nextCount}`]: "Globe",
-                                    [`social_href_${nextCount}`]: "",
-                                    [`social_visible_${nextCount}`]: "true"
-                                  }));
-                                  toast.success("New social media row added! Set its brand and URL.");
+                                  const count = parseInt(siteSettings.social_count || "6", 10);
+                                  const nextSettings = { ...siteSettings };
+                                  nextSettings.social_count = (count + 1).toString();
+                                  nextSettings[`social_visible_${count + 1}`] = "true";
+                                  setSiteSettings(nextSettings);
                                 }}
-                                className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 text-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all hover:scale-105"
+                                className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 text-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500/10 disabled:hover:text-emerald-500"
                               >
                                 <Plus size={10} /> Add Link
                               </button>
@@ -2640,83 +2650,78 @@ const AdminDashboard = () => {
                                         {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
                                       </button>
 
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (!confirm("Are you sure you want to delete this social link row?")) return;
-                                          const count = parseInt(siteSettings.social_count || "6", 10);
-                                          const nextSettings = { ...siteSettings };
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          disabled={userRole === "viewer"}
+                                          onClick={() => {
+                                            if (!confirm("Are you sure you want to delete this social link row?")) return;
+                                            const count = parseInt(siteSettings.social_count || "6", 10);
+                                            const nextSettings = { ...siteSettings };
 
-                                          const resolvedList = Array.from({ length: count }).map((_, idx) => {
-                                            const idxPlus = idx + 1;
-                                            const icon = siteSettings[`social_icon_${idxPlus}`] || (
-                                              idxPlus === 1 ? "Facebook" :
-                                                idxPlus === 2 ? "Twitter" :
-                                                  idxPlus === 3 ? "Linkedin" :
-                                                    idxPlus === 4 ? "Instagram" :
-                                                      idxPlus === 5 ? "Viber" :
-                                                        idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
-                                            );
-                                            const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
-                                            const isWhatsApp = iconName.includes("whatsapp");
-                                            const isFacebook = iconName === "facebook";
-                                            const isTwitter = iconName === "twitter";
-                                            const isLinkedin = iconName === "linkedin";
-                                            const isInstagram = iconName === "instagram";
-                                            const isViber = iconName === "viber";
+                                            const resolvedList = Array.from({ length: count }).map((_, idx) => {
+                                              const idxPlus = idx + 1;
+                                              const icon = siteSettings[`social_icon_${idxPlus}`] || (
+                                                idxPlus === 1 ? "Facebook" :
+                                                  idxPlus === 2 ? "Twitter" :
+                                                    idxPlus === 3 ? "Linkedin" :
+                                                      idxPlus === 4 ? "Instagram" :
+                                                        idxPlus === 5 ? "Viber" :
+                                                          idxPlus === 6 ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` : "Globe"
+                                              );
+                                              const iconName = typeof icon === 'string' ? icon.toLowerCase() : "";
+                                              const isWhatsApp = iconName.includes("whatsapp");
+                                              const isViber = iconName.includes("viber");
 
-                                            const fallbackHref = isFacebook ? (siteSettings.social_facebook || "https://www.facebook.com/brilliantsystemssolutions/") :
-                                              isTwitter ? (siteSettings.social_twitter || "https://x.com/bsspl_india") :
-                                                isLinkedin ? (siteSettings.social_linkedin || "https://in.linkedin.com/company/brilliantsystemssolutions") :
-                                                  isInstagram ? (siteSettings.social_instagram || "https://www.instagram.com/brilliantsystemssolutions") :
-                                                    isViber ? "viber://chat?number=" :
-                                                      isWhatsApp ? `https://wa.me/${(siteSettings.whatsapp_number || "9603011355").replace("+", "")}` : "";
+                                              const fallbackColor = iconName.includes("facebook") ? "#1877f2" :
+                                                iconName.includes("twitter") ? "#1da1f2" :
+                                                  iconName.includes("linkedin") ? "#0a66c2" :
+                                                    iconName.includes("instagram") ? "#e1306c" :
+                                                      isViber ? "#7360f2" :
+                                                        isWhatsApp ? "#25D366" : "#3b82f6";
 
-                                            const fallbackColor = isFacebook ? "#1877F2" :
-                                              isTwitter ? "#1DA1F2" :
-                                                isLinkedin ? "#0A66C2" :
-                                                  isInstagram ? "#E4405F" :
-                                                    isViber ? "#7360f2" :
-                                                      isWhatsApp ? "#25D366" : "#3b82f6";
+                                              const fallbackHref = isWhatsApp ? "https://wa.me/" :
+                                                isViber ? "viber://chat?number=" : "#";
 
-                                            let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
-                                            if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
-                                            if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
+                                              let href = siteSettings[`social_href_${idxPlus}`] || fallbackHref;
+                                              if (isWhatsApp && href.startsWith("viber://")) href = fallbackHref;
+                                              if (isViber && href.startsWith("https://wa.me/")) href = fallbackHref;
 
-                                            return {
-                                              icon,
-                                              href,
-                                              visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
-                                              color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
-                                            };
-                                          });
+                                              return {
+                                                icon,
+                                                href,
+                                                visible: siteSettings[`social_visible_${idxPlus}`] !== "false" && siteSettings[`social_visible_${idxPlus}`] !== false,
+                                                color: siteSettings[`social_color_${idxPlus}`] || fallbackColor
+                                              };
+                                            });
 
-                                          resolvedList.splice(i - 1, 1);
+                                            resolvedList.splice(i - 1, 1);
 
-                                          for (let j = 1; j <= count; j++) {
-                                            delete nextSettings[`social_icon_${j}`];
-                                            delete nextSettings[`social_href_${j}`];
-                                            delete nextSettings[`social_visible_${j}`];
-                                            delete nextSettings[`social_color_${j}`];
-                                          }
+                                            for (let j = 1; j <= count; j++) {
+                                              delete nextSettings[`social_icon_${j}`];
+                                              delete nextSettings[`social_href_${j}`];
+                                              delete nextSettings[`social_visible_${j}`];
+                                              delete nextSettings[`social_color_${j}`];
+                                            }
 
-                                          resolvedList.forEach((item, idx) => {
-                                            const idxPlus = idx + 1;
-                                            nextSettings[`social_icon_${idxPlus}`] = item.icon;
-                                            nextSettings[`social_href_${idxPlus}`] = item.href;
-                                            nextSettings[`social_visible_${idxPlus}`] = item.visible ? "true" : "false";
-                                            nextSettings[`social_color_${idxPlus}`] = item.color;
-                                          });
+                                            resolvedList.forEach((item, idx) => {
+                                              const idxPlus = idx + 1;
+                                              nextSettings[`social_icon_${idxPlus}`] = item.icon;
+                                              nextSettings[`social_href_${idxPlus}`] = item.href;
+                                              nextSettings[`social_visible_${idxPlus}`] = item.visible ? "true" : "false";
+                                              nextSettings[`social_color_${idxPlus}`] = item.color;
+                                            });
 
-                                          nextSettings.social_count = Math.max(0, count - 1).toString();
-                                          setSiteSettings(nextSettings);
-                                          toast.success("Social link removed successfully!");
-                                        }}
-                                        className="p-1.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 hover:scale-105 active:scale-95 transition-all"
-                                        title="Delete Social Link"
-                                      >
-                                        <Trash2 size={12} />
-                                      </button>
+                                            nextSettings.social_count = Math.max(0, count - 1).toString();
+                                            setSiteSettings(nextSettings);
+                                            toast.success("Social link removed successfully!");
+                                          }}
+                                          className="p-1.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+                                          title="Delete Social Link"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -2848,7 +2853,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      <UsersManagerCard usersDraft={usersDraft} setUsersDraft={setUsersDraft} />
+                      <UsersManagerCard usersDraft={usersDraft} setUsersDraft={setUsersDraft} userRole={userRole} />
 
                       <div className="flex justify-center gap-3 mt-8">
                         <button onClick={() => {
@@ -2974,22 +2979,8 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
                               <div className="shrink-0 flex items-center gap-2 ml-2">
-                                {!isClosed && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      fetch("/api/chat/close", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ session_id: session.sid })
-                                      }).then(() => loadChatHistory());
-                                    }}
-                                    className="px-2 py-1 rounded-lg text-[0.625rem] font-bold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                                  >
-                                    Close
-                                  </button>
-                                )}
                                 <button
+                                  disabled={userRole === "viewer"}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (!confirm("Delete this chat session?")) return;
@@ -2998,7 +2989,7 @@ const AdminDashboard = () => {
                                       dbFetch("chat_threads", { method: "DELETE", query: { message_id: session.sid } }),
                                     ]).then(() => loadChatHistory());
                                   }}
-                                  className="px-2 py-1 rounded-lg text-[0.625rem] font-bold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                                  className="px-2 py-1 rounded-lg text-[0.625rem] font-bold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   title="Delete session"
                                 >
                                   <Trash2 size={12} />

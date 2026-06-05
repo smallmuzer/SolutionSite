@@ -6,9 +6,9 @@ import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
-async function isAdmin(userId: string): Promise<boolean> {
+async function hasAccess(userId: string): Promise<boolean> {
   try {
-    const res = await fetch(`/api/db/users?id=${userId}&userrole=admin&_single=1`);
+    const res = await fetch(`/api/db/users?id=${userId}&_single=1`);
     const json = await res.json();
     return !!json.data;
   } catch { return false; }
@@ -24,7 +24,7 @@ const AdminLogin = () => {
 
   useEffect(() => {
     auth.getSession().then(async ({ data: { session } }) => {
-      if (session && await isAdmin(session.user.id)) {
+      if (session && await hasAccess(session.user.id)) {
         navigate("/admin", { replace: true });
         return;
       }
@@ -38,13 +38,13 @@ const AdminLogin = () => {
     setLoading(true);
     const { data, error } = await auth.signInWithPassword({ email, password });
     if (error || !data.user) { setLoading(false); toast.error("Invalid credentials."); return; }
-    if (!await isAdmin(data.user.id)) {
+    if (!await hasAccess(data.user.id)) {
       await auth.signOut();
       setLoading(false);
       toast.error("You do not have admin access.");
       return;
     }
-    toast.success("Welcome back, admin!");
+    toast.success("Welcome back!");
     navigate("/admin", { replace: true });
   };
 
@@ -55,7 +55,7 @@ const AdminLogin = () => {
       <div className="glass-card p-8 sm:p-10 w-full max-w-md">
         <div className="text-center mb-8">
           <img src={logo} alt="Systems Solutions" className="h-12 w-12 mx-auto mb-4" />
-          <h1 className="font-heading font-bold text-2xl text-foreground">Admin Login</h1>
+          <h1 className="font-heading font-bold text-2xl text-foreground">Login</h1>
           <p className="text-muted-foreground text-sm mt-1">Sign in to manage your website</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-5">

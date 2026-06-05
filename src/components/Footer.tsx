@@ -356,7 +356,7 @@ const Footer = () => {
                   </span>
                 </div>
               </div>
-              <div className="text-sm leading-relaxed mb-5 relative" style={{ color: "#64748b" }}>
+              <div className="text-sm leading-relaxed mb-5 relative" style={{ color: "#94a3b8" }}>
                 <EditableText section="footer" field="tagline" value={content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."} />
               </div>
               <div className="flex flex-wrap items-center gap-2.5 relative">
@@ -423,9 +423,9 @@ const Footer = () => {
                           {(!isLinkVisible || !isGloballyVisible) && editor?.isEditMode && (
                             <span className="text-amber-500 shrink-0" title={!isGloballyVisible ? "Service hidden globally" : "Link Hidden"}><EyeOff size={11} /></span>
                           )}
-                          <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
+                          <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#94a3b8" }}
                             onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
-                            onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
+                            onMouseLeave={e => ((e.target as HTMLElement).style.color = "#94a3b8")}
                           >{s.title}</a>
                         </div>
                       </li>
@@ -470,9 +470,9 @@ const Footer = () => {
                         {!isLinkVisible && editor?.isEditMode && (
                           <span className="text-amber-500 shrink-0" title="Link Hidden"><EyeOff size={11} /></span>
                         )}
-                        <a href={s.href} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#64748b" }}
+                        <a href={s.href} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#94a3b8" }}
                           onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
-                          onMouseLeave={e => ((e.target as HTMLElement).style.color = "#64748b")}
+                          onMouseLeave={e => ((e.target as HTMLElement).style.color = "#94a3b8")}
                         >{s.label}</a>
                       </div>
                     </li>
@@ -491,7 +491,7 @@ const Footer = () => {
                   </button>
                 )}
               </h4>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-8 gap-y-10 text-sm" style={{ color: "#64748b" }}>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-8 gap-y-10 text-sm" style={{ color: "#94a3b8" }}>
                 {addressIds.map((id, index) => {
                   const isId1 = id === "1";
                   const isId2 = id === "2";
@@ -565,7 +565,7 @@ const Footer = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-xs relative"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.07)", color: "#475569", paddingTop: "1.5rem" }}>
+            style={{ borderTop: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8", paddingTop: "1.5rem" }}>
             <span>
               <EditableText section="footer" field="copyright" value={content.copyright || `© ${new Date().getFullYear()} Systems Solutions Pvt Ltd. All rights reserved.`} />
             </span>

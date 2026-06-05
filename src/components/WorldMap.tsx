@@ -67,8 +67,8 @@ const WorldMap = () => {
   const [header, setHeader] = useState({ badge: "Global Presence", title: "Our", highlight: "Reach", description: "Serving clients across Maldives, Bhutan, and beyond." });
   const detailTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleMove = (name: string, direction: "up" | "down" | "left" | "right") => {
-    const idx = locations.findIndex(l => l.name === name);
+  const handleMove = (id: string, direction: "up" | "down" | "left" | "right") => {
+    const idx = locations.findIndex(l => ((l as any).id || l.name) === id);
     if (idx === -1) return;
 
     let step = 0;
@@ -81,7 +81,7 @@ const WorldMap = () => {
     const newLocs = [...locations];
     const [moved] = newLocs.splice(idx, 1);
     newLocs.splice(targetIdx, 0, moved);
-    
+
     setLocations(newLocs);
     newLocs.forEach((loc, index) => {
       if ((loc as any).id) {
@@ -146,7 +146,7 @@ const WorldMap = () => {
   const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => l.name === loc.name) === idx);
 
   return (
-        <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
+    <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-10">
@@ -166,8 +166,8 @@ const WorldMap = () => {
         </AnimatedSection>
 
         <AnimatedSection>
-          <div className="max-w-5xl mx-auto">
-            <div className="flex flex-wrap justify-center gap-8 lg:gap-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className={`flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-12 snap-x snap-mandatory scroll-smooth custom-scrollbar ${uniqueLocations.length === 1 ? "justify-center" : uniqueLocations.length === 2 ? "sm:justify-center" : uniqueLocations.length === 3 ? "md:justify-center lg:justify-center" : ""}`}>
               {uniqueLocations.map((loc) => {
                 const isActive = activeLocation?.name === loc.name;
                 return (
@@ -175,7 +175,7 @@ const WorldMap = () => {
                     key={loc.name}
                     onPointerDown={() => editor?.setActiveElementId(`toolbar:global_presence:${loc.name}`)}
                     {...getNavProps(() => handleLocationClick(loc))}
-                    className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 w-full sm:w-[calc(50%-1rem)] lg:w-[28%] max-w-sm flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
+                    className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 shrink-0 snap-start w-[85vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
                     style={{
                       border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
                       background: isActive
@@ -187,26 +187,26 @@ const WorldMap = () => {
                       minHeight: 100,
                     }}
                   >
-                    <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove(loc.name, dir)} />
+                    <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
                       <div className="flex items-center gap-2.5">
                         <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
                           {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
-                            <img 
-                              src={loc.flag} 
-                              alt="flag" 
-                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity" 
+                            <img
+                              src={loc.flag}
+                              alt="flag"
+                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
                               onDoubleClick={(e) => {
                                 if (editor?.isEditMode) {
                                   e.stopPropagation();
-                                  editor.onPickImage("global_presence", "flag", loc.name);
+                                  editor.onPickImage("global_presence", "flag", (loc as any).id || loc.name);
                                 }
                               }}
                             />
                           ) : (
-                            <EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} />
+                            <EditableText section="global_presence" field="flag" id={(loc as any).id || loc.name} value={loc.flag} />
                           )}
                         </span>
-                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={loc.name} value={loc.name.split(",")[0]} /></h3>
+                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
                       </div>
                       <button
                         className={`shrink-0 p-2 rounded-full transition-all duration-300 shadow-sm animate-glow ${isActive ? "bg-secondary text-white scale-110" : "bg-secondary/70 text-white hover:bg-secondary hover:scale-110"}`}
@@ -217,10 +217,10 @@ const WorldMap = () => {
                       </button>
                     </div>
                     <div className="text-muted-foreground text-[0.8125rem] leading-relaxed line-clamp-2 mb-2 flex-1">
-                      <EditableText section="global_reach_locations" field="clients" id={loc.name} value={loc.clients} />
+                      <EditableText section="global_reach_locations" field="clients" id={(loc as any).id || loc.name} value={loc.clients} />
                     </div>
                     <div className="text-[0.6875rem] text-secondary/90 font-semibold flex items-center gap-1.5 mt-auto pt-2 border-t border-border/40">
-                      <Building2 size={12} /> <EditableText section="global_reach_locations" field="landmark" id={loc.name} value={loc.landmark} />
+                      <Building2 size={12} /> <EditableText section="global_reach_locations" field="landmark" id={(loc as any).id || loc.name} value={loc.landmark} />
                     </div>
 
                     {/* Admin-only: lat/lng coordinate editor */}
@@ -228,11 +228,11 @@ const WorldMap = () => {
                       <div className="mt-3 pt-2 border-t border-dashed border-secondary/20 text-[0.65rem] font-mono text-muted-foreground space-y-1">
                         <div className="flex items-center gap-1.5">
                           <span className="text-secondary/70 font-bold shrink-0">Lat:</span>
-                          <EditableText section="global_presence" field="lat" id={loc.name} value={String(loc.lat)} />
+                          <EditableText section="global_presence" field="lat" id={(loc as any).id || loc.name} value={String(loc.lat)} />
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-secondary/70 font-bold shrink-0">Lng:</span>
-                          <EditableText section="global_presence" field="lng" id={loc.name} value={String(loc.lng)} />
+                          <EditableText section="global_presence" field="lng" id={(loc as any).id || loc.name} value={String(loc.lng)} />
                         </div>
                       </div>
                     )}
@@ -302,22 +302,22 @@ const WorldMap = () => {
                       <Popup>
                         <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
                           {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
-                            <img 
-                              src={loc.flag} 
-                              alt="flag" 
-                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity" 
+                            <img
+                              src={loc.flag}
+                              alt="flag"
+                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
                               onDoubleClick={(e) => {
                                 if (editor?.isEditMode) {
                                   e.stopPropagation();
-                                  editor.onPickImage("global_presence", "flag", loc.name);
+                                  editor.onPickImage("global_presence", "flag", (loc as any).id || loc.name);
                                 }
                               }}
                             />
                           ) : (
-                            <EditableText section="global_presence" field="flag" id={loc.name} value={loc.flag} />
+                            <EditableText section="global_presence" field="flag" id={(loc as any).id || loc.name} value={loc.flag} />
                           )}
                         </span>
-                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={loc.name} value={loc.name.split(",")[0]} /></h3>
+                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
                       </Popup>
                     </Marker>
                   ))}

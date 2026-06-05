@@ -32,7 +32,7 @@ const SkeletonSection = () => (
   </div>
 );
 
-const LiveEditor = () => {
+const LiveEditor = ({ userRole }: { userRole?: string }) => {
   const { data: settings } = useSiteSettings();
   const queryClient = useQueryClient();
   
@@ -64,6 +64,10 @@ const LiveEditor = () => {
   };
 
   const handleSaveAll = async () => {
+    if (userRole === "viewer") {
+      toast.error("Viewers are not permitted to modify data.");
+      return;
+    }
     const entries = Object.entries(pendingChanges);
     if (entries.length === 0) {
       toast.info("No changes to save");
@@ -95,6 +99,28 @@ const LiveEditor = () => {
             let finalData = g.data;
             if (!finalData || Object.keys(finalData).length === 0) continue;
 
+            if (isEntity) {
+                if (finalData._delete) {
+                    if (!g.id.startsWith("temp_")) {
+                        await fetch(`/api/db/${dbSec}?id=${g.id}`, { method: "DELETE" });
+                    }
+                    continue;
+                }
+
+                if (finalData._clone) {
+                    const cloneData = { ...finalData._clone };
+                    Object.keys(finalData).forEach(k => {
+                        if (k !== '_clone') cloneData[k] = finalData[k];
+                    });
+                    await fetch(`/api/db/${dbSec}`, { 
+                        method: "POST", 
+                        headers: { "Content-Type": "application/json" }, 
+                        body: JSON.stringify(cloneData) 
+                    });
+                    continue;
+                }
+            }
+            
             if (!isEntity) {
                 try {
                     const getResp = await fetch(`/api/db/site_content?section_key=${g.section}&_single=1`);
@@ -147,54 +173,20 @@ const LiveEditor = () => {
   };
 
   const handleDelete = async (section: string, id: string) => {
-
-    if (!confirm("Are you sure you want to delete this item?")) return;
+    if (!confirm("Are you sure you want to mark this item for deletion? It will be removed when you click 'Save All Changes'.")) return;
     try {
-        const dbSection = section === "clients" ? "client_logos" : section;
-        // Fetch the item first to see if it has associated images
-        const getResp = await fetch(`/api/db/${dbSection}?id=${id}&_single=1`);
-        const getData = await getResp.json();
-        const item = getData.data;
-
-        // Delete from DB
-        const resp = await fetch(`/api/db/${dbSection}?id=${id}`, {
-            method: "DELETE"
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-
-        // If deletion was successful, try to delete associated images if they are in /assets/uploads/
-        if (item) {
-          const imageFields = ["image_url", "logo_url", "avatar_url", "hero_image"];
-          for (const field of imageFields) {
-            const url = item[field];
-            if (url && typeof url === "string" && url.includes("/assets/uploads/")) {
-              const filename = url.split("/").pop();
-              if (filename) {
-                await fetch(`/api/assets?filename=${filename}`, { method: "DELETE" }).catch(() => {});
-              }
-            }
-          }
-          // Handle multi-image fields (like hero_images)
-          const multiImageFields = ["hero_images", "images"];
-          for (const field of multiImageFields) {
-            const urls = item[field];
-            if (urls && typeof urls === "string") {
-              const paths = urls.split(",").map(u => u.trim());
-              for (const path of paths) {
-                if (path.includes("/assets/uploads/")) {
-                  const filename = path.split("/").pop();
-                  if (filename) {
-                    await fetch(`/api/assets?filename=${filename}`, { method: "DELETE" }).catch(() => {});
-                  }
-                }
-              }
-            }
-          }
+        if (id.startsWith("temp_")) {
+            setPendingChanges(prev => {
+                const next = { ...prev };
+                Object.keys(next).forEach(k => {
+                   if (k.startsWith(`${section}:${id}:`)) delete next[k];
+                });
+                return next;
+            });
+        } else {
+            setPendingChanges(prev => ({ ...prev, [`${section}:${id}:_delete`]: true }));
         }
-
-        toast.success(`Deleted from ${section} and cleaned up assets`);
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        toast.success(`Item queued for deletion. Click 'Save All Changes' to apply.`);
     } catch (err: any) {
         toast.error(`Failed to delete: ${err.message}`);
     }
@@ -216,15 +208,9 @@ const LiveEditor = () => {
         else if (section === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
         else { defaults.title = "New Item"; defaults.name = "New Item"; }
 
-        const resp = await fetch(`/api/db/${section}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(defaults)
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-        toast.success(`Added new item to ${section}`);
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        const newId = `temp_${Date.now()}`;
+        setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: defaults }));
+        toast.success(`Added new item to ${section} (Draft). Click 'Save All Changes' to apply.`);
     } catch (err: any) {
         toast.error(`Failed to add: ${err.message}`);
     }
@@ -232,26 +218,33 @@ const LiveEditor = () => {
 
   const handleClone = async (section: string, id: string) => {
     try {
-        const getResp = await fetch(`/api/db/${section}?id=${id}&_single=1`);
-        const getData = await getResp.json();
-        if (getData.error) throw new Error(getData.error.message);
+        const dbSection = section === "clients" ? "client_logos" : section;
+        let itemToClone;
+        if (id.startsWith("temp_")) {
+            itemToClone = { ...pendingChanges[`${section}:${id}:_clone`] };
+            for (const [k, v] of Object.entries(pendingChanges)) {
+                if (k.startsWith(`${section}:${id}:`) && !k.endsWith(":_clone") && !k.endsWith(":_delete")) {
+                    const field = k.split(":")[2];
+                    if (field) itemToClone[field] = v;
+                }
+            }
+        } else {
+            const getResp = await fetch(`/api/db/${dbSection}?id=${id}&_single=1`);
+            const getData = await getResp.json();
+            if (getData.error) throw new Error(getData.error.message);
+            itemToClone = getData.data;
+        }
 
-        const newItem = { ...getData.data };
+        const newItem = { ...itemToClone };
         delete newItem.id;
         delete newItem.created_at;
         newItem.sort_order = (newItem.sort_order || 0) + 1;
         if (newItem.title) newItem.title += " (Clone)";
         if (newItem.name) newItem.name += " (Clone)";
 
-        const resp = await fetch(`/api/db/${section}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newItem)
-        });
-        const json = await resp.json();
-        if (json.error) throw new Error(json.error.message);
-        toast.success(`Cloned item in ${section}`);
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        const newId = `temp_${Date.now()}`;
+        setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: newItem }));
+        toast.success(`Cloned item in ${section} (Draft). Click 'Save All Changes' to apply.`);
     } catch (err: any) {
         toast.error(`Failed to clone: ${err.message}`);
     }
@@ -287,6 +280,7 @@ const LiveEditor = () => {
 
   return (
     <LiveEditorProvider 
+        userRole={userRole}
         onUpdate={handleUpdate}
         onHide={handleHide}
         onDelete={handleDelete}
@@ -334,9 +328,10 @@ const LiveEditor = () => {
             >
                 Discard
             </button>
-            <button
+            <button 
                 onClick={handleSaveAll}
-                className="px-5 py-2.5 bg-secondary text-secondary-foreground rounded-xl font-bold text-sm shadow-xl shadow-secondary/20 flex items-center gap-2 hover:opacity-90 hover:scale-105 transition-all active:scale-95"
+                disabled={userRole === "viewer"}
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2 transition-all ${userRole === "viewer" ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed" : "bg-secondary text-secondary-foreground shadow-secondary/20 hover:opacity-90 hover:scale-105 active:scale-95"}`}
             >
                 <LucideIcons.Save size={16} /> Save Changes ({Object.keys(pendingChanges).length})
             </button>
@@ -701,8 +696,8 @@ const PickerModal = ({ config, onClose, onSelect }: {
             <span className="text-[10px] font-medium text-muted-foreground">{manualValue ? "Selection ready" : "No selection"}</span>
             <button 
               onClick={() => onSelect(manualValue)}
-              disabled={!manualValue}
-              className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              disabled={!manualValue || editor?.userRole === "viewer"}
+              className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply Changes
             </button>
@@ -712,8 +707,8 @@ const PickerModal = ({ config, onClose, onSelect }: {
             <span className="text-[10px] font-medium text-muted-foreground">{selected.length} items selected</span>
             <button 
               onClick={() => onSelect(selected)}
-              disabled={selected.length === 0}
-              className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              disabled={selected.length === 0 || editor?.userRole === "viewer"}
+              className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save Selection
             </button>

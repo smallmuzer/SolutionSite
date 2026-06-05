@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { dbSelect, dbInsert, dbUpdate, dbDelete, dbBatch } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import { useLiveEditor } from "@/components/admin/LiveEditorContext";
 
 const DEFAULT_STALE_TIME = 30 * 60 * 1000; // 30 minutes
 const DEFAULT_GC_TIME = 60 * 60 * 1000;    // 60 minutes
@@ -34,8 +36,9 @@ export function useDbQuery<T = unknown[]>(
 
   // Include ALL selection options in the query key to prevent cache collisions
   const queryKey = [table, "list", filters, { order, asc, single }];
-
-  return useQuery({
+  
+  const editor = useLiveEditor();
+  const query = useQuery({
     queryKey,
     queryFn: async () => {
       const result = await dbSelect<T>(table, filters, { order, asc, single });
@@ -49,6 +52,56 @@ export function useDbQuery<T = unknown[]>(
     refetchOnWindowFocus,
     retry: 0,
   });
+
+  const finalData = useMemo(() => {
+    if (editor?.isEditMode && Array.isArray(query.data)) {
+        const section = table === "client_logos" ? "clients" : table;
+        const pending = editor.pendingChanges || {};
+
+        let modifiedData = query.data.filter(item => {
+            if ((item as any).id && pending[`${section}:${(item as any).id}:_delete`]) {
+                return false;
+            }
+            return true;
+        });
+
+        const addedIds = new Set();
+        const additions = [];
+        
+        for (const [key, val] of Object.entries(pending)) {
+            if (key.startsWith(`${section}:temp_`) && key.endsWith(":_clone")) {
+                const tempId = key.split(":")[1];
+                if (!addedIds.has(tempId)) {
+                    addedIds.add(tempId);
+                    const newItem = { ...(val as any), id: tempId };
+                    for (const [k, v] of Object.entries(pending)) {
+                        if (k.startsWith(`${section}:${tempId}:`) && !k.endsWith(":_clone") && !k.endsWith(":_delete")) {
+                            const field = k.split(":")[2];
+                            if (field) newItem[field] = v;
+                        }
+                    }
+                    if (!pending[`${section}:${tempId}:_delete`]) {
+                        additions.push(newItem);
+                    }
+                }
+            }
+        }
+
+        if (additions.length > 0) {
+            modifiedData = [...modifiedData, ...additions];
+            modifiedData.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        }
+
+        return modifiedData;
+    }
+    return query.data;
+  }, [editor?.isEditMode, editor?.pendingChanges, query.data, table]);
+
+  if (editor?.isEditMode && Array.isArray(query.data)) {
+      return { ...query, data: finalData as T };
+  }
+
+  return query;
 }
 
 // ── Batch hook: one API call, populates individual table caches ──────────────────
