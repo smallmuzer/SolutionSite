@@ -558,6 +558,7 @@ const AppointmentsCalendar = ({
   appointments,
   submissions = [],
   applications = [],
+  userRole = "viewer",
   onAppointmentUpdated,
   onAppointmentCreated,
   onAppointmentDeleted,
@@ -565,6 +566,7 @@ const AppointmentsCalendar = ({
   appointments: any[];
   submissions?: any[];
   applications?: any[];
+  userRole?: string;
   onAppointmentUpdated?: (updated: any) => void;
   onAppointmentCreated?: (created: any) => void;
   onAppointmentDeleted?: (id: string) => void;
