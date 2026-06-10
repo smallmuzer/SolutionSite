@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Menu, X, Sun, Moon, ShieldCheck, Settings, Eye, EyeOff } from "lucide-react";
-import logo from "@/assets/logo.png";
+const DEFAULT_LOGO = "/logo.png";
 import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 import { useNavigate } from "react-router-dom";
 
@@ -72,11 +72,15 @@ const Header = () => {
   );
   const navItems = DEFAULT_NAV.map(item => {
     const key = `nav_link_${item.href.replace('#', '')}`;
+    const labelKey = `nav_label_${item.href.replace('#', '')}`;
     const pendingKey = `settings:${key}`;
+    const pendingLabelKey = `settings:${labelKey}`;
     const pendingVal = editor?.pendingChanges?.[pendingKey];
+    const pendingLabelVal = editor?.pendingChanges?.[pendingLabelKey];
     return {
       ...item,
-      resolvedHref: pendingVal ?? settingsContent[key] ?? (settings as any)[key] ?? item.href
+      resolvedHref: pendingVal ?? settingsContent[key] ?? (settings as any)[key] ?? item.href,
+      resolvedLabel: pendingLabelVal ?? settingsContent[labelKey] ?? (settings as any)[labelKey] ?? item.label
     };
   }).filter(item => {
     return editor?.isEditMode || !hiddenNavItems.includes(item.href);
@@ -145,8 +149,8 @@ const Header = () => {
               while (parent && parent !== document.documentElement) {
                 const style = window.getComputedStyle(parent);
                 if ((style.overflow === "auto" || style.overflow === "scroll" ||
-                     style.overflowY === "auto" || style.overflowY === "scroll") &&
-                    parent.scrollHeight > parent.clientHeight) {
+                  style.overflowY === "auto" || style.overflowY === "scroll") &&
+                  parent.scrollHeight > parent.clientHeight) {
                   scrollContainer = parent;
                   break;
                 }
@@ -171,7 +175,7 @@ const Header = () => {
   };
 
   const navBtn = (active: boolean) =>
-    `px-3 py-1.5 rounded-lg text-[14px] font-semibold transition-colors relative whitespace-nowrap ${active ? "text-secondary bg-secondary/10" : "text-foreground hover:text-secondary hover:bg-muted"
+    `nav-btn-wrapper px-3 py-1.5 rounded-lg text-[14px] font-semibold transition-colors relative whitespace-nowrap ${active ? "nav-btn-active text-secondary bg-secondary/10" : "text-foreground hover:text-secondary hover:bg-muted"
     }`;
 
   const iconBtn = "p-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors";
@@ -200,7 +204,7 @@ const Header = () => {
   const activeNavToolbar = (href: string) => editor?.activeElementId === `header-nav:${href}`;
 
   // Resolve logo: prefer DB path, fallback to bundled asset
-  const resolvedLogo = logoPath && logoPath !== "src/assets/logo.png" ? logoPath : logo;
+  const resolvedLogo = logoPath && logoPath !== "src/assets/logo.png" ? logoPath : DEFAULT_LOGO;
 
   return (
     <header
@@ -238,80 +242,80 @@ const Header = () => {
             const props = editor?.isEditMode ? getNavProps(() => scrollTo(target)) : { href: target };
             return (
               <Wrapper {...props} className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink cursor-pointer">
-            <img
-              src={resolvedLogo}
-              alt={siteName}
-              className="shrink-0"
-              style={{ width: "clamp(34px, 8vw, 40px)", height: "clamp(34px, 8vw, 40px)", borderRadius: 10, objectFit: "contain" }}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = logo; }}
-            />
-            <div 
-              className="flex items-center gap-1 sm:gap-1.5 leading-none overflow-visible select-none whitespace-nowrap min-w-0 max-w-[calc(100vw-7rem)] sm:max-w-none transition-opacity"
-              style={{ 
-                opacity: (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? (editor?.isEditMode ? 0.4 : 0) : 1,
-                display: !editor?.isEditMode && settings.site_name_visible === "false" ? "none" : "flex"
-              }}
-            >
-              <span
-                className="font-heading font-bold text-base sm:text-xl leading-tight"
-                style={{
-                  color: isDark ? "#f1f5f9" : "#0f172a",
-                  textShadow: "none",
-                }}
-              >
-                <EditableText 
-                  section="settings" 
-                  field="site_name_part1" 
-                  value={siteName.split(" ")[0]}
-                  linkField="site_url"
-                  toolbarClassName="-top-6 left-0"
-                  extraControls={
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const current = (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true");
-                        editor?.onUpdate("settings", "site_name_visible", current === "false" ? "true" : "false");
-                      }}
-                      className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
-                      title="Toggle visibility"
-                    >
-                      {(editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? <EyeOff size={12} /> : <Eye size={12} />}
-                    </button>
-                  }
+                <img
+                  src={resolvedLogo}
+                  alt={siteName}
+                  className="shrink-0 mix-blend-multiply dark:mix-blend-screen dark:invert dark:hue-rotate-180"
+                  style={{ width: "clamp(34px, 8vw, 40px)", height: "clamp(34px, 8vw, 40px)", objectFit: "contain" }}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_LOGO; }}
                 />
-              </span>
-              <span className="font-heading font-bold text-base sm:text-xl leading-tight pl-1">
-                <EditableText 
-                  section="settings" 
-                  field="site_name_part2" 
-                  value={siteName.split(" ").slice(1).join(" ") || "Solutions"} 
+                <div
+                  className="flex items-center gap-1 sm:gap-1.5 leading-none overflow-visible select-none whitespace-nowrap min-w-0 max-w-[calc(100vw-7rem)] sm:max-w-none transition-opacity"
                   style={{
-                    background: "linear-gradient(90deg,#60a5fa,#818cf8)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent"
+                    opacity: (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? (editor?.isEditMode ? 0.4 : 0) : 1,
+                    display: !editor?.isEditMode && settings.site_name_visible === "false" ? "none" : "flex"
                   }}
-                  linkField="site_url"
-                  toolbarClassName="-top-6 left-0"
-                  extraControls={
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const current = (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true");
-                        editor?.onUpdate("settings", "site_name_visible", current === "false" ? "true" : "false");
+                >
+                  <span
+                    className="font-heading font-bold text-base sm:text-xl leading-tight"
+                    style={{
+                      color: isDark ? "#f1f5f9" : "#0f172a",
+                      textShadow: "none",
+                    }}
+                  >
+                    <EditableText
+                      section="settings"
+                      field="site_name_part1"
+                      value={siteName.split(" ")[0]}
+                      linkField="site_url"
+                      toolbarClassName="-top-6 left-0"
+                      extraControls={
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const current = (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true");
+                            editor?.onUpdate("settings", "site_name_visible", current === "false" ? "true" : "false");
+                          }}
+                          className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+                          title="Toggle visibility"
+                        >
+                          {(editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
+                      }
+                    />
+                  </span>
+                  <span className="font-heading font-bold text-base sm:text-xl leading-tight pl-1">
+                    <EditableText
+                      section="settings"
+                      field="site_name_part2"
+                      value={siteName.split(" ").slice(1).join(" ") || "Solutions"}
+                      style={{
+                        background: "linear-gradient(90deg,#60a5fa,#818cf8)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent"
                       }}
-                      className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
-                      title="Toggle visibility"
-                    >
-                      {(editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? <EyeOff size={12} /> : <Eye size={12} />}
-                    </button>
-                  }
-                />
-              </span>
-            </div>
+                      linkField="site_url"
+                      toolbarClassName="-top-6 left-0"
+                      extraControls={
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const current = (editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true");
+                            editor?.onUpdate("settings", "site_name_visible", current === "false" ? "true" : "false");
+                          }}
+                          className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+                          title="Toggle visibility"
+                        >
+                          {(editor?.pendingChanges?.["settings:site_name_visible"] ?? settings.site_name_visible ?? "true") === "false" ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
+                      }
+                    />
+                  </span>
+                </div>
               </Wrapper>
             );
           })()}
@@ -325,7 +329,7 @@ const Header = () => {
               onPointerDown={() => editor?.setActiveElementId(`header-nav:${item.href}`)}
               className={`relative group/item inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
             >
-              <div 
+              <div
                 onClick={(e) => {
                   if (editor?.isEditMode) {
                     e.preventDefault();
@@ -346,7 +350,7 @@ const Header = () => {
                   section="settings"
                   field={`nav_label_${item.href.replace('#', '')}`}
                   linkField={`nav_link_${item.href.replace('#', '')}`}
-                  value={item.label}
+                  value={item.resolvedLabel}
                   toolbarClassName="-top-3 -right-3"
                   toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0 group-hover/item:opacity-100"}
                   extraControls={renderNavVisibilityToggle(item.href, false, true)}
@@ -469,8 +473,8 @@ const Header = () => {
                       scrollTo(item.resolvedHref);
                     }
                   }}
-                  className={`w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
-                    ? "text-secondary bg-secondary/10"
+                  className={`nav-btn-wrapper w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
+                    ? "nav-btn-active text-secondary bg-secondary/10"
                     : "text-foreground/80 hover:text-foreground hover:bg-muted"
                     }`}
                 >
@@ -478,8 +482,8 @@ const Header = () => {
                     section="settings"
                     field={`nav_label_${item.href.replace('#', '')}`}
                     linkField={`nav_link_${item.href.replace('#', '')}`}
-                    value={item.label}
-                    toolbarClassName="-top-2 right-0"
+                    value={item.resolvedLabel}
+                    toolbarClassName="-top-3 right-8"
                     toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0"}
                     extraControls={renderNavVisibilityToggle(item.href, true, true)}
                     onDoubleClick={(e) => {

@@ -190,31 +190,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     if (isOpen) {
       const { styles, innerHtml } = parseInlineStyles(initialValue);
 
-      // Merge targetStyles if properties are empty/default
-      if (targetStyles) {
-        if (!styles.fontFamily) styles.fontFamily = targetStyles.fontFamily?.replace(/['"]/g, "") || "";
-        if (!styles.fontSize) styles.fontSize = targetStyles.fontSize || "";
-        if (!styles.fontWeight) styles.fontWeight = targetStyles.fontWeight || "";
-        if (!styles.lineHeight) styles.lineHeight = targetStyles.lineHeight || "";
-        if (!styles.letterSpacing) styles.letterSpacing = targetStyles.letterSpacing || "";
-        if (!styles.textTransform || styles.textTransform === "none") styles.textTransform = targetStyles.textTransform !== "none" ? targetStyles.textTransform : "";
-        if (!styles.textAlign || styles.textAlign === "start") styles.textAlign = targetStyles.textAlign !== "start" ? targetStyles.textAlign : "";
-        if (!styles.textColor) styles.textColor = rgbToHex(targetStyles.textColor || "");
-        // Do NOT populate bgColor from targetStyles because it pulls the computed DOM background (e.g. #ffffff)
-        // and hardcodes it inline, ruining dark mode and transparent headers.
-        // styles.bgColor = rgbToHex(targetStyles.bgColor || "");
-
-        // Margins and paddings if empty (sometimes getComputedStyle returns 0px)
-        if (!styles.paddingTop) styles.paddingTop = targetStyles.paddingTop || "";
-        if (!styles.paddingRight) styles.paddingRight = targetStyles.paddingRight || "";
-        if (!styles.paddingBottom) styles.paddingBottom = targetStyles.paddingBottom || "";
-        if (!styles.paddingLeft) styles.paddingLeft = targetStyles.paddingLeft || "";
-
-        if (!styles.marginTop) styles.marginTop = targetStyles.marginTop || "";
-        if (!styles.marginRight) styles.marginRight = targetStyles.marginRight || "";
-        if (!styles.marginBottom) styles.marginBottom = targetStyles.marginBottom || "";
-        if (!styles.marginLeft) styles.marginLeft = targetStyles.marginLeft || "";
-      }
+      // Removed: Do not merge targetStyles into styles to prevent hardcoding inherited styles (like computed colors).
 
       setActiveStyles(styles);
       setEditorHtml(innerHtml);
@@ -862,7 +838,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Line Height</label>
                     <input
                       type="text"
-                      placeholder="e.g. 1.5, 24px"
+                      placeholder={targetStyles?.lineHeight || "e.g. 1.5, 24px"}
                       value={activeStyles.lineHeight}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, lineHeight: e.target.value }))}
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
@@ -872,7 +848,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Letter Space</label>
                     <input
                       type="text"
-                      placeholder="e.g. -0.5px"
+                      placeholder={targetStyles?.letterSpacing || "e.g. -0.5px"}
                       value={activeStyles.letterSpacing}
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, letterSpacing: e.target.value }))}
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
@@ -918,13 +894,13 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     <div className="flex gap-1 items-center">
                       <input
                         type="color"
-                        value={activeStyles.textColor || "#000000"}
+                        value={activeStyles.textColor || rgbToHex(targetStyles?.textColor || "") || "#000000"}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
                         className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
                       />
                       <input
                         type="text"
-                        placeholder="Hex/RGB"
+                        placeholder={rgbToHex(targetStyles?.textColor || "") || "Hex/RGB"}
                         value={activeStyles.textColor}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
                         className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
@@ -936,13 +912,13 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     <div className="flex gap-1 items-center">
                       <input
                         type="color"
-                        value={activeStyles.bgColor || "#ffffff"}
+                        value={activeStyles.bgColor || rgbToHex(targetStyles?.bgColor || "") || "#ffffff"}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
                         className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
                       />
                       <input
                         type="text"
-                        placeholder="Hex/RGB"
+                        placeholder={rgbToHex(targetStyles?.bgColor || "") || "Hex/RGB"}
                         value={activeStyles.bgColor}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
                         className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
@@ -970,7 +946,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                         <div key={dir}>
                           <input
                             type="text"
-                            placeholder="0"
+                            placeholder={String(targetStyles?.[key] || "0").replace(/px$/, '')}
                             value={String(activeStyles[key] || "").replace(/px$/, '')}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -996,7 +972,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                         <div key={dir}>
                           <input
                             type="text"
-                            placeholder="0"
+                            placeholder={String(targetStyles?.[key] || "0").replace(/px$/, '')}
                             value={String(activeStyles[key] || "").replace(/px$/, '')}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -1080,28 +1056,28 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 
               {viewMode === "visual" ? (
 
-                <div className="flex-1 overflow-y-auto relative bg-background/50 p-4">
+                <div className="flex-1 overflow-y-auto relative p-4" style={{ backgroundColor: targetStyles?.bgColor || 'rgba(var(--background), 0.5)' }}>
                   {previewMode ? (
                     /* Preview Mode */
                     <div
                       style={{
-                        fontFamily: activeStyles.fontFamily,
-                        fontSize: activeStyles.fontSize,
-                        fontWeight: activeStyles.fontWeight,
-                        lineHeight: activeStyles.lineHeight,
-                        letterSpacing: activeStyles.letterSpacing,
-                        textTransform: activeStyles.textTransform as any,
-                        textAlign: activeStyles.textAlign as any,
-                        color: activeStyles.textColor,
+                        fontFamily: activeStyles.fontFamily || targetStyles?.fontFamily,
+                        fontSize: activeStyles.fontSize || targetStyles?.fontSize,
+                        fontWeight: activeStyles.fontWeight || targetStyles?.fontWeight,
+                        lineHeight: activeStyles.lineHeight || targetStyles?.lineHeight,
+                        letterSpacing: activeStyles.letterSpacing || targetStyles?.letterSpacing,
+                        textTransform: (activeStyles.textTransform || targetStyles?.textTransform) as any,
+                        textAlign: (activeStyles.textAlign || targetStyles?.textAlign) as any,
+                        color: activeStyles.textColor || targetStyles?.textColor,
                         backgroundColor: activeStyles.bgColor,
-                        paddingTop: activeStyles.paddingTop,
-                        paddingRight: activeStyles.paddingRight,
-                        paddingBottom: activeStyles.paddingBottom,
-                        paddingLeft: activeStyles.paddingLeft,
-                        marginTop: activeStyles.marginTop,
-                        marginRight: activeStyles.marginRight,
-                        marginBottom: activeStyles.marginBottom,
-                        marginLeft: activeStyles.marginLeft,
+                        paddingTop: activeStyles.paddingTop || targetStyles?.paddingTop,
+                        paddingRight: activeStyles.paddingRight || targetStyles?.paddingRight,
+                        paddingBottom: activeStyles.paddingBottom || targetStyles?.paddingBottom,
+                        paddingLeft: activeStyles.paddingLeft || targetStyles?.paddingLeft,
+                        marginTop: activeStyles.marginTop || targetStyles?.marginTop,
+                        marginRight: activeStyles.marginRight || targetStyles?.marginRight,
+                        marginBottom: activeStyles.marginBottom || targetStyles?.marginBottom,
+                        marginLeft: activeStyles.marginLeft || targetStyles?.marginLeft,
                       }}
                       className="prose dark:prose-invert max-w-none break-words"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(editorHtml) }}
@@ -1114,23 +1090,23 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       contentEditable
                       suppressContentEditableWarning
                       style={{
-                        fontFamily: activeStyles.fontFamily,
-                        fontSize: activeStyles.fontSize,
-                        fontWeight: activeStyles.fontWeight,
-                        lineHeight: activeStyles.lineHeight,
-                        letterSpacing: activeStyles.letterSpacing,
-                        textTransform: activeStyles.textTransform as any,
-                        textAlign: activeStyles.textAlign as any,
-                        color: activeStyles.textColor,
+                        fontFamily: activeStyles.fontFamily || targetStyles?.fontFamily,
+                        fontSize: activeStyles.fontSize || targetStyles?.fontSize,
+                        fontWeight: activeStyles.fontWeight || targetStyles?.fontWeight,
+                        lineHeight: activeStyles.lineHeight || targetStyles?.lineHeight,
+                        letterSpacing: activeStyles.letterSpacing || targetStyles?.letterSpacing,
+                        textTransform: (activeStyles.textTransform || targetStyles?.textTransform) as any,
+                        textAlign: (activeStyles.textAlign || targetStyles?.textAlign) as any,
+                        color: activeStyles.textColor || targetStyles?.textColor,
                         backgroundColor: activeStyles.bgColor || "transparent",
-                        paddingTop: activeStyles.paddingTop,
-                        paddingRight: activeStyles.paddingRight,
-                        paddingBottom: activeStyles.paddingBottom,
-                        paddingLeft: activeStyles.paddingLeft,
-                        marginTop: activeStyles.marginTop,
-                        marginRight: activeStyles.marginRight,
-                        marginBottom: activeStyles.marginBottom,
-                        marginLeft: activeStyles.marginLeft,
+                        paddingTop: activeStyles.paddingTop || targetStyles?.paddingTop,
+                        paddingRight: activeStyles.paddingRight || targetStyles?.paddingRight,
+                        paddingBottom: activeStyles.paddingBottom || targetStyles?.paddingBottom,
+                        paddingLeft: activeStyles.paddingLeft || targetStyles?.paddingLeft,
+                        marginTop: activeStyles.marginTop || targetStyles?.marginTop,
+                        marginRight: activeStyles.marginRight || targetStyles?.marginRight,
+                        marginBottom: activeStyles.marginBottom || targetStyles?.marginBottom,
+                        marginLeft: activeStyles.marginLeft || targetStyles?.marginLeft,
                       }}
                       onInput={() => {
                         syncEditorState();
@@ -1210,3 +1186,4 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     </div>
   );
 };
+

@@ -42,7 +42,7 @@ const ContactSection = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", service: "", message: "", website: "" });
+  const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", service: "", designation: "", message: "", website: "" });
   const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
 
   useEffect(() => {
@@ -51,8 +51,8 @@ const ContactSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim() || !form.service) {
-      toast.error("Please fill in all required fields, including your inquiry type.");
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim() || !form.service || !form.designation.trim() || !form.phone.trim()) {
+      toast.error("Please fill in all required fields");
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -78,7 +78,7 @@ const ContactSection = () => {
           is_read: 0,
           status: "new",
           website: form.website || null,
-          message: `${form.message.trim()}${form.service ? `\nService: ${form.service}` : ""}`,
+          message: `${form.message.trim()}\nDesignation: ${form.designation.trim()}${form.service ? `\nService: ${form.service}` : ""}`,
         })
       });
       const json = await resp.json();
@@ -100,14 +100,14 @@ const ContactSection = () => {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     const isPaste = (e.nativeEvent as InputEvent).inputType === 'insertFromPaste' || Math.abs(val.length - form.phone.length) > 1;
-    
+
     // Auto-detect pasted ISD code (e.g., +91 or 0091)
     if (val.startsWith("+") || val.startsWith("00")) {
       const normalizedVal = val.startsWith("00") ? "+" + val.slice(2) : val;
       // Check longest dial codes first to avoid partial matches (e.g. +1 vs +1242)
       const sortedCountries = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length);
       const matchedCountry = sortedCountries.find(c => normalizedVal.replace(/\s+/g, '').startsWith(c.dial));
-      
+
       if (matchedCountry) {
         setSelectedCountry(matchedCountry);
         // Remove the dial code and trim spaces only if it's a paste or has a space
@@ -116,7 +116,7 @@ const ContactSection = () => {
         }
       }
     }
-    
+
     update("phone", val);
   };
 
@@ -306,7 +306,7 @@ const ContactSection = () => {
                   <EditableText section="contact" field="label_success_message" value={content.label_success_message || "We've received your message and will get back to you within 24 hours."} />
                 </p>
                 <button
-                  onClick={() => { setSubmitted(false); setForm({ name: "", company: "", email: "", phone: "", service: "", message: "", website: "" }); }}
+                  onClick={() => { setSubmitted(false); setForm({ name: "", company: "", email: "", phone: "", service: "", designation: "", message: "", website: "" }); }}
                   className="mt-5 text-secondary font-medium text-[0.8125rem] hover:underline"
                 >
                   <EditableText section="contact" field="label_send_another" value={content.label_send_another || "Send Another Message"} />
@@ -347,7 +347,7 @@ const ContactSection = () => {
                     </div>
                     <div>
                       <label className={labelCls}>
-                        <EditableText section="contact" field="label_phone" value={content.label_phone || "Phone"} />
+                        <EditableText section="contact" field="label_phone" value={content.label_phone || "Phone *"} />
                         {editor?.isEditMode && <div className="inline-block ml-1 text-[9px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_phone" value={content.placeholder_phone || "Number"} />)</div>}
                       </label>
                       <div className="flex items-stretch">
@@ -374,7 +374,7 @@ const ContactSection = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="grid sm:grid-cols-1 gap-2.5">
+                  <div className="grid sm:grid-cols-2 gap-2.5">
                     <div>
                       <label className={labelCls}>
                         <EditableText section="contact" field="label_inquiry" value={content.label_inquiry || "Inquiry For *"} />
@@ -392,6 +392,14 @@ const ContactSection = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                    </div>
+                    <div>
+                      <label className={labelCls}>
+                        <EditableText section="contact" field="label_designation" value={content.label_designation || "Designation *"} />
+                        {editor?.isEditMode && <div className="inline-block ml-1 text-[9px] text-secondary/50 italic">(PH: <EditableText section="contact" field="placeholder_designation" value={content.placeholder_designation || "Your designation"} />)</div>}
+                      </label>
+                      <input type="text" value={form.designation} onChange={(e) => update("designation", e.target.value)}
+                        className={inputCls} placeholder={content.placeholder_designation || "Your designation"} maxLength={100} />
                     </div>
                   </div>
 

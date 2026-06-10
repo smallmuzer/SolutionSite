@@ -933,3 +933,4 @@ const LucideIcon = ({ name, size }: { name: string; size: number }) => {
 };
 
 export default LiveEditor;
+

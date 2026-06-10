@@ -735,3 +735,11 @@ body.cinematic-mode .hero-parallax::after {
   outline: 1px dashed rgba(115, 96, 242, 0.3);
   outline-offset: 4px;
 }
+
+/* Ensure nav items and other active elements can override child inline typography styles */
+.nav-btn-wrapper:hover span[style],
+.nav-btn-active span[style],
+.nav-btn-wrapper:hover [style],
+.nav-btn-active [style] {
+  color: hsl(var(--secondary)) !important;
+}

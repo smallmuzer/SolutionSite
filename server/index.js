@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync, writeFileSync } from "fs";
+import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync, writeFileSync, copyFileSync } from "fs";
 import { db, uuid, DB_PATH } from "./db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -62,14 +62,14 @@ const SAFE_TABLES = new Set([
   "technologies", "global_presence", "our_network"
 ]);
 
-app.use(cors({ 
+app.use(cors({
   origin: function (origin, callback) {
     if (!origin || isTrustedOrigin(origin)) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
-  }, 
-  credentials: true 
+  },
+  credentials: true
 }));
 app.use(express.json({ limit: "30mb" }));
 
@@ -146,7 +146,7 @@ function isTrustedOrigin(origin) {
     const url = new URL(origin);
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
     if (TRUSTED_ORIGINS.has(url.origin)) return true;
-    
+
     // Check dynamic site_url
     const stmt = db.prepare("SELECT site_url FROM site_settings WHERE id = 'settings'");
     const settings = stmt.get();
@@ -795,11 +795,44 @@ function filterCols(table, row) {
   return Object.fromEntries(Object.entries(row).filter(([k]) => allowed.includes(k)));
 }
 
+/**
+ * Copies the site logo to public/logo.png and public/favicon.png
+ * so that the favicon and default logo always stay in sync.
+ */
+function syncLogoAndFavicon(logoPath) {
+  try {
+    if (!logoPath) return;
+    // PUBLIC_ASSETS = public/assets, so go up one level for public/
+    const publicRoot = join(PUBLIC_ASSETS, "..");
+    // logoPath is a public URL like "/assets/uploads/MyLogo.png"
+    // Resolve to filesystem path
+    let srcFile;
+    if (logoPath.startsWith("/assets/")) {
+      srcFile = join(publicRoot, logoPath);
+    } else if (logoPath.startsWith("/")) {
+      srcFile = join(publicRoot, logoPath);
+    } else {
+      return; // Can't resolve, skip
+    }
+    if (!existsSync(srcFile)) {
+      console.warn(`[syncLogoAndFavicon] Source file not found: ${srcFile}`);
+      return;
+    }
+    const destLogo = join(publicRoot, "logo.png");
+    const destFavicon = join(publicRoot, "favicon.ico");
+    copyFileSync(srcFile, destLogo);
+    copyFileSync(srcFile, destFavicon);
+    console.log(`[syncLogoAndFavicon] Copied ${srcFile} → logo.png + favicon.ico`);
+  } catch (e) {
+    console.error("[syncLogoAndFavicon] Error:", e);
+  }
+}
+
 function updateIndexHtml(settings) {
   try {
     const indexPath = join(DIST_DIR, "index.html");
     const rootIndexPath = join(__dirname, "..", "index.html");
-    
+
     const siteUrl = settings.site_url ? settings.site_url.replace(/\/$/, "") : "http://beta.solutions.com.mv";
     const logoUrl = settings.site_logo || "/logo.png";
     const ogImageUrl = logoUrl.startsWith("http") ? logoUrl : `${siteUrl}${logoUrl}`;
@@ -812,6 +845,9 @@ function updateIndexHtml(settings) {
         writeFileSync(p, html);
       }
     });
+
+    // Sync logo & favicon whenever settings are updated
+    syncLogoAndFavicon(settings.site_logo);
   } catch (e) {
     console.error("[updateIndexHtml] Error:", e);
   }
@@ -1019,6 +1055,24 @@ app.post("/api/db/:table", (req, res) => {
 
     if (table === "site_content" || table === "seo_settings") secCache.lastFetch = 0;
 
+    // When settings section content is saved with a site_logo, sync to logo.png + favicon.png
+    // and also propagate to the site_settings table
+    if (table === "site_content" && normalised.section_key === "settings") {
+      let contentObj = normalised.content;
+      if (typeof contentObj === "string") {
+        try { contentObj = JSON.parse(contentObj); } catch { contentObj = {}; }
+      }
+      if (contentObj && contentObj.site_logo) {
+        // Update site_settings table with the new logo path
+        try {
+          db.prepare("UPDATE site_settings SET site_logo = ?, updated_at = ? WHERE id = (SELECT id FROM site_settings LIMIT 1)").run(contentObj.site_logo, now());
+        } catch (e) {
+          console.error("[site_logo sync] Failed to update site_settings:", e);
+        }
+        syncLogoAndFavicon(contentObj.site_logo);
+      }
+    }
+
     res.json({ data: normalised, error: null });
   } catch (e) {
     res.status(500).json({ data: null, error: { message: e.message } });
@@ -1051,6 +1105,7 @@ app.patch("/api/db/:table", (req, res) => {
     const { sql, vals } = buildSelect(table, filters, "", true);
     const rows = db.prepare(sql).all(...vals).map(r => normaliseRow(table, r));
     if (table === "site_content" || table === "seo_settings") secCache.lastFetch = 0;
+    if (table === "site_settings" && rows[0]) updateIndexHtml(rows[0]);
 
     res.json({ data: rows[0] ?? null, error: null });
   } catch (e) {
@@ -1086,6 +1141,10 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file" });
   // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
   const publicUrl = `/assets/uploads/${req.file.filename}`;
+
+  // Removed: We no longer eagerly sync files with "logo" in their name.
+  // The logo sync happens safely in `updateIndexHtml` when `site_settings` is actually updated in the database.
+
   res.json({ data: { publicUrl }, error: null });
 });
 

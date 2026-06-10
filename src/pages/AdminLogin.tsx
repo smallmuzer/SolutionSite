@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "@/lib/api";
 import { toast } from "sonner";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
-import logo from "@/assets/logo.png";
+const logo = "/logo.png";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 async function hasAccess(userId: string): Promise<boolean> {

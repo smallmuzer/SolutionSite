@@ -22,9 +22,9 @@ export default defineConfig(() => ({
       name: "local-assets-cache-control",
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          const isStatic = req.url?.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css|js|woff|woff2)$/) || 
-                           req.url?.startsWith("/assets/") || 
-                           req.url?.startsWith("/node_modules/");
+          const isStatic = req.url?.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css|js|woff|woff2)$/) ||
+            req.url?.startsWith("/assets/") ||
+            req.url?.startsWith("/node_modules/");
 
           if (isStatic) {
             delete req.headers["if-none-match"];

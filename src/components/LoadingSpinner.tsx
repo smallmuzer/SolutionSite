@@ -1,4 +1,4 @@
-import logo from "@/assets/logo.png";
+const DEFAULT_LOGO = "/logo.png";
 
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6">
@@ -7,7 +7,7 @@ const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
         className="w-16 h-16 rounded-full border-4 border-muted border-t-secondary"
         style={{ animation: "spin 1.2s linear infinite" }}
       />
-      <img src={logo} alt="" className="w-8 h-8 absolute" />
+      <img src={DEFAULT_LOGO} alt="" className="w-8 h-8 absolute mix-blend-multiply dark:mix-blend-screen dark:invert dark:hue-rotate-180" />
     </div>
     <p className="text-muted-foreground text-sm font-medium" style={{ animation: "fadeIn 0.4s ease 0.2s both" }}>
       {message}

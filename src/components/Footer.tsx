@@ -337,10 +337,12 @@ const Footer = () => {
             <div className="sm:col-span-2 lg:col-span-3">
               <div className="flex items-center gap-2.5 mb-4">
                 {logoPath ? (
-                  <img src={logoPath} alt={siteName}
-                    style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", flexShrink: 0 }}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                  />
+                  <div className="flex items-center justify-center rounded-full shrink-0 shadow-sm" style={{ width: 33, height: 36, backgroundColor: "none" }}>
+                    <img src={logoPath} alt={siteName}
+                      className="w-full h-full object-contain"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                  </div>
                 ) : (
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg,#3b82f6,#6366f1)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <span style={{ color: "#fff", fontWeight: 900, fontSize: 16 }}>S</span>
