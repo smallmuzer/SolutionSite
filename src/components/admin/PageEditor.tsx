@@ -701,7 +701,7 @@ const PageEditor = () => {
                   <label className="shrink-0 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-xs font-medium cursor-pointer hover:bg-secondary/20 flex items-center gap-1.5 transition-all shadow-sm active:scale-95">
                     <Plus size={14} />
                     Upload Multiple
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => {
+                    <input type="file" accept="image/*,.jpg,.jpeg,.png,.svg,.webp,.ico" multiple className="hidden" onChange={async (e) => {
                       const files = e.target.files; if (!files?.length) return;
                       const uploadedUrls: string[] = [];
                       for (let i = 0; i < files.length; i++) {

@@ -12,19 +12,19 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import * as LucideIcons from "lucide-react";
 
 // Lazy load sections
-const AboutSection       = lazy(() => import("@/components/AboutSection"));
-const ServicesSection    = lazy(() => import("@/components/ServicesSection"));
-const ProductsSection    = lazy(() => import("@/components/ProductsSection"));
-const ClientsSection     = lazy(() => import("@/components/ClientsSection"));
-const WorldMap           = lazy(() => import("@/components/WorldMap"));
-const TestimonialsSection= lazy(() => import("@/components/TestimonialsSection"));
+const AboutSection = lazy(() => import("@/components/AboutSection"));
+const ServicesSection = lazy(() => import("@/components/ServicesSection"));
+const ProductsSection = lazy(() => import("@/components/ProductsSection"));
+const ClientsSection = lazy(() => import("@/components/ClientsSection"));
+const WorldMap = lazy(() => import("@/components/WorldMap"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 
 const TechnologiesSection = lazy(() => import("@/components/TechnologiesSection"));
-const ContactSection     = lazy(() => import("@/components/ContactSection"));
-const Footer             = lazy(() => import("@/components/Footer"));
-const WhatsAppButton     = lazy(() => import("@/components/WhatsAppButton"));
-const ScrollToTop        = lazy(() => import("@/components/ScrollToTop"));
-const CookieConsent      = lazy(() => import("@/components/CookieConsent"));
+const ContactSection = lazy(() => import("@/components/ContactSection"));
+const Footer = lazy(() => import("@/components/Footer"));
+const WhatsAppButton = lazy(() => import("@/components/WhatsAppButton"));
+const ScrollToTop = lazy(() => import("@/components/ScrollToTop"));
+const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
 const SkeletonSection = () => (
   <div className="w-full h-64 bg-muted/10 animate-pulse flex items-center justify-center">
@@ -35,28 +35,28 @@ const SkeletonSection = () => (
 const LiveEditor = ({ userRole }: { userRole?: string }) => {
   const { data: settings } = useSiteSettings();
   const queryClient = useQueryClient();
-  
-  useBatchQuery([
-    { table: "client_logos",  order: "sort_order" },
-    { table: "services",      order: "sort_order" },
-    { table: "technologies",  order: "sort_order" },
-    { table: "products",      order: "sort_order" },
 
-    { table: "hero_stats",    order: "sort_order" },
+  useBatchQuery([
+    { table: "client_logos", order: "sort_order" },
+    { table: "services", order: "sort_order" },
+    { table: "technologies", order: "sort_order" },
+    { table: "products", order: "sort_order" },
+
+    { table: "hero_stats", order: "sort_order" },
     { table: "global_presence", order: "sort_order" },
-    { table: "our_network",   order: "sort_order" },
-    { table: "career_jobs",   order: "sort_order" },
-    { table: "testimonials",  order: "created_at", asc: false },
+    { table: "our_network", order: "sort_order" },
+    { table: "career_jobs", order: "sort_order" },
+    { table: "testimonials", order: "created_at", asc: false },
   ]);
 
   const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});
   const [pickerConfig, setPickerConfig] = useState<{
-  type: "image" | "icon" | "link" | "color";
-  section: string;
-  field: string;
-  id?: string;
-  multi?: boolean;
-} | null>(null);
+    type: "image" | "icon" | "link" | "color";
+    section: string;
+    field: string;
+    id?: string;
+    multi?: boolean;
+  } | null>(null);
 
   const handleUpdate = (section: string, field: string, value: any, id?: string) => {
     const key = id ? `${section}:${id}:${field}` : `${section}:${field}`;
@@ -76,93 +76,143 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
 
     const toastId = toast.loading("Saving all changes...");
     try {
-        // Group changes by section and id to minimize requests
-        const grouped: Record<string, any> = {};
-        for (const [key, value] of entries) {
-            const parts = key.split(':');
-            if (parts.length === 3) { // section:id:field
-                const [s, id, f] = parts;
-                const gKey = `${s}:${id}`;
-                if (!grouped[gKey]) grouped[gKey] = { section: s, id, data: {} };
-                grouped[gKey].data[f] = value;
-            } else { // section:field
-                const [s, f] = parts;
-                if (!grouped[s]) grouped[s] = { section: s, data: {} };
-                grouped[s].data[f] = value;
-            }
+      // Group changes by section and id to minimize requests
+      const grouped: Record<string, any> = {};
+      for (const [key, value] of entries) {
+        const parts = key.split(':');
+        if (parts.length === 3) { // section:id:field
+          const [s, id, f] = parts;
+          const gKey = `${s}:${id}`;
+          if (!grouped[gKey]) grouped[gKey] = { section: s, id, data: {} };
+          grouped[gKey].data[f] = value;
+        } else { // section:field
+          const [s, f] = parts;
+          if (!grouped[s]) grouped[s] = { section: s, data: {} };
+          grouped[s].data[f] = value;
         }
+      }
 
-        for (const g of Object.values(grouped)) {
-            const dbSec = g.section === "clients" ? "client_logos" : g.section;
-            const entityTables = new Set(["client_logos", "services", "technologies", "products", "hero_stats", "global_presence", "our_network", "career_jobs", "testimonials", "social_links"]);
-            const isEntity = entityTables.has(dbSec) && g.id;
-            let finalData = g.data;
-            if (!finalData || Object.keys(finalData).length === 0) continue;
+      for (const g of Object.values(grouped)) {
+        const dbSec = g.section === "clients" ? "client_logos" : g.section;
+        const entityTables = new Set(["client_logos", "services", "technologies", "products", "hero_stats", "global_presence", "our_network", "career_jobs", "testimonials", "social_links"]);
+        const isEntity = entityTables.has(dbSec) && g.id;
+        let finalData = g.data;
+        if (!finalData || Object.keys(finalData).length === 0) continue;
 
-            if (isEntity) {
-                if (finalData._delete) {
-                    if (!g.id.startsWith("temp_")) {
-                        await fetch(`/api/db/${dbSec}?id=${g.id}`, { method: "DELETE" });
-                    }
-                    continue;
-                }
-
-                if (finalData._clone) {
-                    const cloneData = { ...finalData._clone };
-                    Object.keys(finalData).forEach(k => {
-                        if (k !== '_clone') cloneData[k] = finalData[k];
-                    });
-                    await fetch(`/api/db/${dbSec}`, { 
-                        method: "POST", 
-                        headers: { "Content-Type": "application/json" }, 
-                        body: JSON.stringify(cloneData) 
-                    });
-                    continue;
-                }
+        if (isEntity) {
+          if (finalData._delete) {
+            if (!g.id.startsWith("temp_")) {
+              await fetch(`/api/db/${dbSec}?id=${g.id}`, { method: "DELETE" });
             }
-            
-            if (!isEntity) {
-                try {
-                    const getResp = await fetch(`/api/db/site_content?section_key=${g.section}&_single=1`);
-                    const getData = await getResp.json();
-                    if (getData.data && getData.data.content) {
-                        let existingContent = getData.data.content;
-                        if (typeof existingContent === "string") {
-                            try { existingContent = JSON.parse(existingContent); } catch { existingContent = {}; }
-                        }
-                        finalData = { ...existingContent, ...g.data };
-                    }
-                } catch (e) {
-                    console.error("Failed to fetch existing content", e);
-                }
-            }
+            continue;
+          }
 
-            const endpoint = isEntity ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
-            const method = isEntity ? "PATCH" : "POST";
-            const body = isEntity ? finalData : { section_key: g.section, content: finalData };
+          if (finalData._clone) {
+            const cloneData = { ...finalData._clone };
+            Object.keys(finalData).forEach(k => {
+              if (k !== '_clone') cloneData[k] = finalData[k];
+            });
+            await fetch(`/api/db/${dbSec}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(cloneData)
+            });
+            continue;
+          }
+        }
+        if (g.section === "settings" || g.section === "site_settings") {
+          const siteSettingsFields = new Set([
+            "site_name", "site_logo", "site_url", "whatsapp_number", "viber_number",
+            "contact_email", "contact_phone", "hr_email", "google_analytics_id",
+            "microsoft_clarity_id", "contact_from_email", "smtp_host", "smtp_port",
+            "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url",
+            "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent",
+            "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color",
+            "chatbot_position", "chatbot_btn_size", "theme", "font_style", "font_size",
+            "card_style", "accent_color", "global_view", "nav_items"
+          ]);
+          const settingsData: Record<string, any> = {};
+          const contentData: Record<string, any> = {};
+          for (const [k, v] of Object.entries(finalData)) {
+            if (siteSettingsFields.has(k)) settingsData[k] = v;
+            else contentData[k] = v;
+          }
 
-            const resp = await fetch(endpoint, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+          if (Object.keys(settingsData).length > 0) {
+            const resp = await fetch(`/api/db/site_settings?id=settings`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(settingsData)
             });
             const json = await resp.json();
             if (json.error) throw new Error(json.error.message);
+          }
+
+          if (Object.keys(contentData).length > 0) {
+            try {
+              const getResp = await fetch(`/api/db/site_content?section_key=settings&_single=1`);
+              const getData = await getResp.json();
+              let existingContent = getData?.data?.content || {};
+              if (typeof existingContent === "string") {
+                try { existingContent = JSON.parse(existingContent); } catch { existingContent = {}; }
+              }
+              const finalContentData = { ...existingContent, ...contentData };
+              const resp2 = await fetch(`/api/db/site_content`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ section_key: "settings", content: finalContentData })
+              });
+              const json2 = await resp2.json();
+              if (json2.error) throw new Error(json2.error.message);
+            } catch (e) {
+              console.error("Failed to save settings content", e);
+            }
+          }
+          continue; // Skip the default save logic for this section
         }
 
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
-        await queryClient.invalidateQueries();
-        setPendingChanges({});
-        toast.success("All changes saved successfully", { id: toastId });
+        if (!isEntity) {
+          try {
+            const getResp = await fetch(`/api/db/site_content?section_key=${g.section}&_single=1`);
+            const getData = await getResp.json();
+            if (getData.data && getData.data.content) {
+              let existingContent = getData.data.content;
+              if (typeof existingContent === "string") {
+                try { existingContent = JSON.parse(existingContent); } catch { existingContent = {}; }
+              }
+              finalData = { ...existingContent, ...g.data };
+            }
+          } catch (e) {
+            console.error("Failed to fetch existing content", e);
+          }
+        }
+
+        const endpoint = isEntity ? `/api/db/${dbSec}?id=${g.id}` : `/api/db/site_content`;
+        const method = isEntity ? "PATCH" : "POST";
+        const body = isEntity ? finalData : { section_key: g.section, content: finalData };
+
+        const resp = await fetch(endpoint, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const json = await resp.json();
+        if (json.error) throw new Error(json.error.message);
+      }
+
+      window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+      await queryClient.invalidateQueries();
+      setPendingChanges({});
+      toast.success("All changes saved successfully", { id: toastId });
     } catch (err: any) {
-        toast.error(`Failed to save changes: ${err.message}`, { id: toastId });
+      toast.error(`Failed to save changes: ${err.message}`, { id: toastId });
     }
   };
 
   const handleDiscard = () => {
     if (confirm("Are you sure you want to discard all unsaved changes?")) {
-        setPendingChanges({});
-        toast.info("Changes discarded");
+      setPendingChanges({});
+      toast.info("Changes discarded");
     }
   };
 
@@ -175,20 +225,20 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
   const handleDelete = async (section: string, id: string) => {
     if (!confirm("Are you sure you want to mark this item for deletion? It will be removed when you click 'Save All Changes'.")) return;
     try {
-        if (id.startsWith("temp_")) {
-            setPendingChanges(prev => {
-                const next = { ...prev };
-                Object.keys(next).forEach(k => {
-                   if (k.startsWith(`${section}:${id}:`)) delete next[k];
-                });
-                return next;
-            });
-        } else {
-            setPendingChanges(prev => ({ ...prev, [`${section}:${id}:_delete`]: true }));
-        }
-        toast.success(`Item queued for deletion. Click 'Save All Changes' to apply.`);
+      if (id.startsWith("temp_")) {
+        setPendingChanges(prev => {
+          const next = { ...prev };
+          Object.keys(next).forEach(k => {
+            if (k.startsWith(`${section}:${id}:`)) delete next[k];
+          });
+          return next;
+        });
+      } else {
+        setPendingChanges(prev => ({ ...prev, [`${section}:${id}:_delete`]: true }));
+      }
+      toast.success(`Item queued for deletion. Click 'Save All Changes' to apply.`);
     } catch (err: any) {
-        toast.error(`Failed to delete: ${err.message}`);
+      toast.error(`Failed to delete: ${err.message}`);
     }
   };
 
@@ -198,55 +248,55 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       return;
     }
     try {
-        const defaults: any = { is_visible: true, sort_order: 0 };
-        if (section === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
-        else if (section === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
-        else if (section === "global_presence") { defaults.name = "New Location, Country"; defaults.lat = 4.1755; defaults.lng = 73.5093; defaults.clients = "New Clients details"; defaults.description = "New location active operations and technical details."; defaults.flag = "📍"; defaults.landmark = "New Landmark"; }
-        else if (section === "our_network") { defaults.name = "New Partner Company"; defaults.subtitle = "Technology Affiliate"; defaults.desc = "Brief description of the partner company, services, and strategic alignment."; defaults.href = "https://"; defaults.logo_url = "/assets/clients/oblu.png"; defaults.accent = "#3b82f6"; defaults.flag = "🏢"; }
-        else if (section === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
-        else if (section === "client_logos") { defaults.name = "New Client"; defaults.logo_url = ""; }
-        else if (section === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
-        else { defaults.title = "New Item"; defaults.name = "New Item"; }
+      const defaults: any = { is_visible: true, sort_order: 0 };
+      if (section === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
+      else if (section === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
+      else if (section === "global_presence") { defaults.name = "New Location, Country"; defaults.lat = 4.1755; defaults.lng = 73.5093; defaults.clients = "New Clients details"; defaults.description = "New location active operations and technical details."; defaults.flag = "📍"; defaults.landmark = "New Landmark"; }
+      else if (section === "our_network") { defaults.name = "New Partner Company"; defaults.subtitle = "Technology Affiliate"; defaults.desc = "Brief description of the partner company, services, and strategic alignment."; defaults.href = "https://"; defaults.logo_url = "/assets/clients/oblu.png"; defaults.accent = "#3b82f6"; defaults.flag = "🏢"; }
+      else if (section === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
+      else if (section === "client_logos") { defaults.name = "New Client"; defaults.logo_url = ""; }
+      else if (section === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
+      else { defaults.title = "New Item"; defaults.name = "New Item"; }
 
-        const newId = `temp_${Date.now()}`;
-        setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: defaults }));
-        toast.success(`Added new item to ${section} (Draft). Click 'Save All Changes' to apply.`);
+      const newId = `temp_${Date.now()}`;
+      setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: defaults }));
+      toast.success(`Added new item to ${section} (Draft). Click 'Save All Changes' to apply.`);
     } catch (err: any) {
-        toast.error(`Failed to add: ${err.message}`);
+      toast.error(`Failed to add: ${err.message}`);
     }
   };
 
   const handleClone = async (section: string, id: string) => {
     try {
-        const dbSection = section === "clients" ? "client_logos" : section;
-        let itemToClone;
-        if (id.startsWith("temp_")) {
-            itemToClone = { ...pendingChanges[`${section}:${id}:_clone`] };
-            for (const [k, v] of Object.entries(pendingChanges)) {
-                if (k.startsWith(`${section}:${id}:`) && !k.endsWith(":_clone") && !k.endsWith(":_delete")) {
-                    const field = k.split(":")[2];
-                    if (field) itemToClone[field] = v;
-                }
-            }
-        } else {
-            const getResp = await fetch(`/api/db/${dbSection}?id=${id}&_single=1`);
-            const getData = await getResp.json();
-            if (getData.error) throw new Error(getData.error.message);
-            itemToClone = getData.data;
+      const dbSection = section === "clients" ? "client_logos" : section;
+      let itemToClone;
+      if (id.startsWith("temp_")) {
+        itemToClone = { ...pendingChanges[`${section}:${id}:_clone`] };
+        for (const [k, v] of Object.entries(pendingChanges)) {
+          if (k.startsWith(`${section}:${id}:`) && !k.endsWith(":_clone") && !k.endsWith(":_delete")) {
+            const field = k.split(":")[2];
+            if (field) itemToClone[field] = v;
+          }
         }
+      } else {
+        const getResp = await fetch(`/api/db/${dbSection}?id=${id}&_single=1`);
+        const getData = await getResp.json();
+        if (getData.error) throw new Error(getData.error.message);
+        itemToClone = getData.data;
+      }
 
-        const newItem = { ...itemToClone };
-        delete newItem.id;
-        delete newItem.created_at;
-        newItem.sort_order = (newItem.sort_order || 0) + 1;
-        if (newItem.title) newItem.title += " (Clone)";
-        if (newItem.name) newItem.name += " (Clone)";
+      const newItem = { ...itemToClone };
+      delete newItem.id;
+      delete newItem.created_at;
+      newItem.sort_order = (newItem.sort_order || 0) + 1;
+      if (newItem.title) newItem.title += " (Clone)";
+      if (newItem.name) newItem.name += " (Clone)";
 
-        const newId = `temp_${Date.now()}`;
-        setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: newItem }));
-        toast.success(`Cloned item in ${section} (Draft). Click 'Save All Changes' to apply.`);
+      const newId = `temp_${Date.now()}`;
+      setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: newItem }));
+      toast.success(`Cloned item in ${section} (Draft). Click 'Save All Changes' to apply.`);
     } catch (err: any) {
-        toast.error(`Failed to clone: ${err.message}`);
+      toast.error(`Failed to clone: ${err.message}`);
     }
   };
 
@@ -279,73 +329,73 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
   };
 
   return (
-    <LiveEditorProvider 
-        userRole={userRole}
-        onUpdate={handleUpdate}
-        onHide={handleHide}
-        onDelete={handleDelete}
-        onAdd={handleAdd}
-        onClone={handleClone}
-        onSave={handleSave}
-        onPickImage={handlePickImage}
-        onPickMultiImage={handlePickMultiImage}
-        onPickIcon={handlePickIcon}
-        onPickLink={handlePickLink}
-        onPickColor={handlePickColor}
-        onOpenCustomizer={handleOpenCustomizer}
-        handleSaveAll={handleSaveAll}
-        handleDiscard={handleDiscard}
-        pendingChanges={pendingChanges}
+    <LiveEditorProvider
+      userRole={userRole}
+      onUpdate={handleUpdate}
+      onHide={handleHide}
+      onDelete={handleDelete}
+      onAdd={handleAdd}
+      onClone={handleClone}
+      onSave={handleSave}
+      onPickImage={handlePickImage}
+      onPickMultiImage={handlePickMultiImage}
+      onPickIcon={handlePickIcon}
+      onPickLink={handlePickLink}
+      onPickColor={handlePickColor}
+      onOpenCustomizer={handleOpenCustomizer}
+      handleSaveAll={handleSaveAll}
+      handleDiscard={handleDiscard}
+      pendingChanges={pendingChanges}
     >
       <div className="relative min-h-screen bg-background pb-10 pointer-events-auto">
 
         <div className="pointer-events-auto relative">
-            <Header />
-            <HeroSection />
-            <Suspense fallback={<SkeletonSection />}>
-                <AboutSection />
-                <ServicesSection />
-                <ProductsSection />
-                <ClientsSection />
-                <TestimonialsSection />
-                <WorldMap />
-                <TechnologiesSection />
+          <Header />
+          <HeroSection />
+          <Suspense fallback={<SkeletonSection />}>
+            <AboutSection />
+            <ServicesSection />
+            <ProductsSection />
+            <ClientsSection />
+            <TestimonialsSection />
+            <WorldMap />
+            <TechnologiesSection />
 
-                <ContactSection />
-                <Footer />
-                <WhatsAppButton />
-                <ScrollToTop />
-                <CookieConsent />
-            </Suspense>
+            <ContactSection />
+            <Footer />
+            <WhatsAppButton />
+            <ScrollToTop />
+            <CookieConsent />
+          </Suspense>
         </div>
       </div>
 
       {Object.keys(pendingChanges).length > 0 && (
         <div className="fixed bottom-6 right-6 z-[9999] flex gap-3 animate-in fade-in slide-in-from-bottom-5">
-            <button
-                onClick={handleDiscard}
-                className="px-4 py-2.5 bg-background text-foreground border border-border/80 rounded-xl font-bold text-sm shadow-xl hover:bg-muted transition-all active:scale-95"
-            >
-                Discard
-            </button>
-            <button 
-                onClick={handleSaveAll}
-                disabled={userRole === "viewer"}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2 transition-all ${userRole === "viewer" ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed" : "bg-secondary text-secondary-foreground shadow-secondary/20 hover:opacity-90 hover:scale-105 active:scale-95"}`}
-            >
-                <LucideIcons.Save size={16} /> Save Changes ({Object.keys(pendingChanges).length})
-            </button>
+          <button
+            onClick={handleDiscard}
+            className="px-4 py-2.5 bg-background text-foreground border border-border/80 rounded-xl font-bold text-sm shadow-xl hover:bg-muted transition-all active:scale-95"
+          >
+            Discard
+          </button>
+          <button
+            onClick={handleSaveAll}
+            disabled={userRole === "viewer"}
+            className={`px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2 transition-all ${userRole === "viewer" ? "bg-muted text-muted-foreground opacity-50 cursor-not-allowed" : "bg-secondary text-secondary-foreground shadow-secondary/20 hover:opacity-90 hover:scale-105 active:scale-95"}`}
+          >
+            <LucideIcons.Save size={16} /> Save Changes ({Object.keys(pendingChanges).length})
+          </button>
         </div>
       )}
       {pickerConfig && (
-        <PickerModal 
-          config={pickerConfig} 
-          onClose={() => setPickerConfig(null)} 
+        <PickerModal
+          config={pickerConfig}
+          onClose={() => setPickerConfig(null)}
           onSelect={(value) => {
             const finalValue = Array.isArray(value) ? value.join(",") : value;
             handleUpdate(pickerConfig.section, pickerConfig.field, finalValue, pickerConfig.id);
             setPickerConfig(null);
-          }} 
+          }}
         />
       )}
       <UICustomizer />
@@ -353,9 +403,9 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
   );
 };
 
-const PickerModal = ({ config, onClose, onSelect }: { 
-  config: { type: "image" | "icon" | "link" | "color"; section: string; field: string; id?: string; multi?: boolean }; 
-  onClose: () => void; 
+const PickerModal = ({ config, onClose, onSelect }: {
+  config: { type: "image" | "icon" | "link" | "color"; section: string; field: string; id?: string; multi?: boolean };
+  onClose: () => void;
   onSelect: (val: string | string[]) => void;
 }) => {
   const editor = useLiveEditor();
@@ -386,10 +436,10 @@ const PickerModal = ({ config, onClose, onSelect }: {
   const handleLocalUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    
+
     toast.info(`Uploading ${files.length} images...`);
     const uploadedUrls: string[] = [];
-    
+
     for (const file of files) {
       const formData = new FormData();
       formData.append("file", file);
@@ -410,10 +460,10 @@ const PickerModal = ({ config, onClose, onSelect }: {
   useEffect(() => {
     // For single pick, try to load current value into manual field
     if (!config.multi) {
-      const pendingKey = config.id 
+      const pendingKey = config.id
         ? `${config.section}:${config.id}:${config.field}`
         : `${config.section}:${config.field}`;
-      
+
       const pendingValue = editor?.pendingChanges[pendingKey];
       if (pendingValue !== undefined) {
         setManualValue(pendingValue);
@@ -424,10 +474,10 @@ const PickerModal = ({ config, onClose, onSelect }: {
       let table = config.section;
       if (table === "clients") table = "client_logos";
 
-      let url = config.id 
+      let url = config.id
         ? `/api/db/${table}?id=${config.id}&_single=1`
         : `/api/db/site_content?section_key=${config.section}&_single=1`;
-      
+
       fetch(url)
         .then(r => r.json())
         .then(json => {
@@ -455,10 +505,10 @@ const PickerModal = ({ config, onClose, onSelect }: {
 
   useEffect(() => {
     if (config.multi) {
-      const pendingKey = config.id 
+      const pendingKey = config.id
         ? `${config.section}:${config.id}:${config.field}`
         : `${config.section}:${config.field}`;
-      
+
       const pendingValue = editor?.pendingChanges[pendingKey];
       if (pendingValue !== undefined) {
         const val = pendingValue;
@@ -473,7 +523,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
       let table = config.section;
       if (table === "clients") table = "client_logos";
 
-      let url = config.id 
+      let url = config.id
         ? `/api/db/${table}?id=${config.id}&_single=1`
         : `/api/db/site_content?section_key=${config.section}&_single=1`;
 
@@ -504,7 +554,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
     }
   }, [config.id, config.section, config.field, config.multi, editor?.pendingChanges]);
 
-  
+
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
       <div className="w-full max-w-xl bg-card border border-border/60 shadow-xl rounded-xl overflow-hidden flex flex-col max-h-[80vh]">
@@ -521,16 +571,16 @@ const PickerModal = ({ config, onClose, onSelect }: {
             )}
           </h3>
           <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-full">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
-        
+
         <div className="p-3 border-b border-border/50 bg-muted/10 space-y-2">
           {config.type !== "image" && (
             <div className="flex gap-2">
-              <input 
+              <input
                 autoFocus
-                type="text" 
+                type="text"
                 placeholder={`Search ${config.type}s...`}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -538,12 +588,12 @@ const PickerModal = ({ config, onClose, onSelect }: {
               />
             </div>
           )}
-          
+
           <div className="space-y-1">
             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1">Manual {config.type === "icon" ? "SVG Code" : config.type === "color" ? "HEX Color" : "Asset Path"}</p>
             <div className="flex gap-2">
               {config.type === "icon" ? (
-                <textarea 
+                <textarea
                   value={manualValue}
                   onChange={e => setManualValue(e.target.value)}
                   placeholder="Paste <svg> code here..."
@@ -551,14 +601,14 @@ const PickerModal = ({ config, onClose, onSelect }: {
                 />
               ) : config.type === "color" ? (
                 <div className="flex-1 flex gap-2">
-                  <input 
+                  <input
                     type="color"
                     value={manualValue.startsWith("#") ? manualValue : "#3b82f6"}
                     onChange={e => setManualValue(e.target.value)}
                     className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer"
                   />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={manualValue}
                     onChange={e => setManualValue(e.target.value)}
                     placeholder="#3b82f6"
@@ -567,8 +617,8 @@ const PickerModal = ({ config, onClose, onSelect }: {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col gap-1.5">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={manualValue}
                     onChange={e => handleManualPathChange(e.target.value)}
                     placeholder={config.type === "image" ? (config.multi ? "Enter comma separated paths: /img1.jpg, /img2.jpg" : "/assets/uploads/image.jpg") : "Target Link"}
@@ -579,12 +629,12 @@ const PickerModal = ({ config, onClose, onSelect }: {
                   )}
                 </div>
               )}
-              <input 
+              <input
                 ref={fileInputRef}
-                type="file" 
-                multiple 
-                accept="image/*"
-                className="hidden" 
+                type="file"
+                multiple
+                accept="image/*,.jpg,.jpeg,.png,.svg,.webp,.ico"
+                className="hidden"
                 onChange={handleLocalUpload}
               />
             </div>
@@ -601,44 +651,44 @@ const PickerModal = ({ config, onClose, onSelect }: {
                     <img src={asset} alt="" className="h-full w-auto object-contain bg-black/5" />
                     <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">Live</div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                      <button 
+                      <button
                         onClick={() => window.open(asset, "_blank")}
-                        className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform" 
+                        className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform"
                         title="View Full Image"
                       >
                         <LucideIcons.Eye size={10} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           syncAssets(currentAssets.filter((_, i) => i !== idx));
                         }}
-                        className="p-1 bg-white/20 text-white rounded hover:bg-white/30 transition-all" 
+                        className="p-1 bg-white/20 text-white rounded hover:bg-white/30 transition-all"
                         title="Remove from selection"
                       >
                         <LucideIcons.X size={10} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           if (idx > 0) {
                             const next = [...currentAssets];
-                            [next[idx], next[idx-1]] = [next[idx-1], next[idx]];
+                            [next[idx], next[idx - 1]] = [next[idx - 1], next[idx]];
                             syncAssets(next);
                           }
                         }}
-                        className="p-1 bg-secondary text-secondary-foreground rounded hover:scale-110 transition-transform" 
+                        className="p-1 bg-secondary text-secondary-foreground rounded hover:scale-110 transition-transform"
                         title="Move Up"
                       >
                         <LucideIcons.ChevronLeft size={10} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           if (idx < currentAssets.length - 1) {
                             const next = [...currentAssets];
-                            [next[idx], next[idx+1]] = [next[idx+1], next[idx]];
+                            [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
                             syncAssets(next);
                           }
                         }}
-                        className="p-1 bg-secondary text-secondary-foreground rounded hover:scale-110 transition-transform" 
+                        className="p-1 bg-secondary text-secondary-foreground rounded hover:scale-110 transition-transform"
                         title="Move Down"
                       >
                         <LucideIcons.ChevronRight size={10} />
@@ -655,46 +705,46 @@ const PickerModal = ({ config, onClose, onSelect }: {
             </div>
           )}
 
-            <>
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-3">
-                {config.type === "image" ? "Upload & Preview" : "Browse All Assets"}
-              </p>
-              {config.type === "image" ? (
-                <ImageGrid 
-                  section={config.section} 
-                  onSelect={(v) => {
-                    if (config.multi) {
-                      if (Array.isArray(v)) {
-                         const next = [...selected, ...v.filter(url => !selected.includes(url))];
-                         syncAssets(next);
-                      } else {
-                         const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
-                         syncAssets(next);
-                      }
+          <>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-3">
+              {config.type === "image" ? "Upload & Preview" : "Browse All Assets"}
+            </p>
+            {config.type === "image" ? (
+              <ImageGrid
+                section={config.section}
+                onSelect={(v) => {
+                  if (config.multi) {
+                    if (Array.isArray(v)) {
+                      const next = [...selected, ...v.filter(url => !selected.includes(url))];
+                      syncAssets(next);
                     } else {
-                      const val = Array.isArray(v) ? v[0] : v;
-                      setManualValue(val);
-                      setSelected([val]);
+                      const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
+                      syncAssets(next);
                     }
-                  }} 
-                  search={search} 
-                  multi={config.multi}
-                  selected={selected}
-                />
-              ) : config.type === "icon" ? (
-                <IconGrid onSelect={(v) => { setManualValue(v); }} search={search} />
-              ) : config.type === "color" ? (
-                <ColorGrid onSelect={(v) => { setManualValue(v); }} search={search} />
-              ) : (
-                <LinkPicker onSelect={(v) => { setManualValue(v); }} search={search} />
-              )}
-            </>
+                  } else {
+                    const val = Array.isArray(v) ? v[0] : v;
+                    setManualValue(val);
+                    setSelected([val]);
+                  }
+                }}
+                search={search}
+                multi={config.multi}
+                selected={selected}
+              />
+            ) : config.type === "icon" ? (
+              <IconGrid onSelect={(v) => { setManualValue(v); }} search={search} />
+            ) : config.type === "color" ? (
+              <ColorGrid onSelect={(v) => { setManualValue(v); }} search={search} />
+            ) : (
+              <LinkPicker onSelect={(v) => { setManualValue(v); }} search={search} />
+            )}
+          </>
         </div>
 
         {!config.multi ? (
           <div className="p-3 border-t border-border/50 flex items-center justify-between bg-muted/10">
             <span className="text-[10px] font-medium text-muted-foreground">{manualValue ? "Selection ready" : "No selection"}</span>
-            <button 
+            <button
               onClick={() => onSelect(manualValue)}
               disabled={!manualValue || editor?.userRole === "viewer"}
               className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -705,7 +755,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
         ) : (
           <div className="p-3 border-t border-border/50 flex items-center justify-between bg-muted/10">
             <span className="text-[10px] font-medium text-muted-foreground">{selected.length} items selected</span>
-            <button 
+            <button
               onClick={() => onSelect(selected)}
               disabled={selected.length === 0 || editor?.userRole === "viewer"}
               className="px-5 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-[11px] font-bold hover:opacity-90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -720,9 +770,9 @@ const PickerModal = ({ config, onClose, onSelect }: {
 };
 
 
-const ImageGrid = ({ section, onSelect, search, multi, selected }: { 
-  section: string; 
-  onSelect: (v: string | string[]) => void; 
+const ImageGrid = ({ section, onSelect, search, multi, selected }: {
+  section: string;
+  onSelect: (v: string | string[]) => void;
   search: string;
   multi?: boolean;
   selected?: string[];
@@ -738,7 +788,7 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    
+
     setUploading(true);
     const newUrls: string[] = [];
 
@@ -759,9 +809,9 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
         toast.error(`Upload failed for ${file.name}: ${err.message}`);
       }
     }
-    
+
     setUploading(false);
-    
+
     if (newUrls.length > 0) {
       toast.success(`${newUrls.length} image(s) uploaded successfully`);
       if (multi) {
@@ -776,52 +826,52 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
   return (
     <div className="grid grid-cols-2 gap-3 items-center">
       <label className="group relative h-[120px] w-full flex flex-col items-center justify-center border border-dashed border-border/80 bg-muted/5 rounded-xl hover:border-secondary hover:bg-secondary/10 cursor-pointer transition-all shadow-sm">
-        <input type="file" className="hidden" accept="image/*" multiple={multi} onChange={handleUpload} disabled={uploading} />
+        <input type="file" className="hidden" accept="image/*,.jpg,.jpeg,.png,.svg,.webp,.ico" multiple={multi} onChange={handleUpload} disabled={uploading} />
         {uploading ? (
           <LoadingSpinner />
         ) : (
           <>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/70 group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/70 group-hover:text-secondary mb-2 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 group-hover:text-secondary transition-colors text-center px-2">Upload Image</span>
           </>
         )}
       </label>
 
       {uploadedUrl && !multi ? (
-        <div 
+        <div
           onClick={() => onSelect(uploadedUrl)}
           className="group relative h-[120px] w-full bg-muted/20 rounded-xl overflow-hidden border border-secondary/30 ring-2 ring-secondary/50 ring-offset-2 ring-offset-background cursor-pointer flex items-center justify-center shadow-md transition-all hover:ring-secondary"
         >
           <img src={uploadedUrl} alt="Uploaded Image" className="h-full w-auto max-w-full object-contain transition-transform group-hover:scale-105" />
-          
+
           <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">
             Selected
           </div>
-          
+
           <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 window.open(uploadedUrl, "_blank");
               }}
-              className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform" 
+              className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform"
               title="View Full Image"
             >
               <LucideIcons.Eye size={12} />
             </button>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 setUploadedUrl(null);
                 onSelect("");
               }}
-              className="p-1 bg-destructive text-white rounded hover:scale-110 transition-transform" 
+              className="p-1 bg-destructive text-white rounded hover:scale-110 transition-transform"
               title="Clear Image Selection"
             >
               <LucideIcons.Trash2 size={12} />
             </button>
           </div>
-          
+
           <div className="absolute inset-0 rounded-xl pointer-events-none" />
         </div>
       ) : (
@@ -855,7 +905,7 @@ const LinkPicker = ({ onSelect, search }: { onSelect: (v: string) => void; searc
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
       {filtered.map(p => (
-        <button 
+        <button
           key={p.value}
           onClick={() => onSelect(p.value)}
           className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-muted/10 hover:bg-blue-500/10 hover:border-blue-500 transition-all group text-left shadow-sm"
@@ -873,11 +923,11 @@ const LinkPicker = ({ onSelect, search }: { onSelect: (v: string) => void; searc
 
 const IconGrid = ({ onSelect, search }: { onSelect: (v: string) => void; search: string }) => {
   const filtered = ALL_ICONS.filter(i => i.toLowerCase().includes(search.toLowerCase()));
-  
+
   return (
     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
       {filtered.map(name => (
-        <button 
+        <button
           key={name}
           onClick={() => onSelect(name)}
           className="flex flex-col items-center justify-center p-2 rounded-lg border border-border/40 bg-muted/10 hover:bg-secondary/10 hover:border-secondary transition-all group shadow-sm"
@@ -914,7 +964,7 @@ const ColorGrid = ({ onSelect, search }: { onSelect: (v: string) => void; search
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {filtered.map(p => (
-        <button 
+        <button
           key={p.value}
           onClick={() => onSelect(p.value)}
           className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-secondary/10 transition-all group"

@@ -195,7 +195,7 @@ const UPLOADS_DIR = join(PUBLIC_ASSETS, "uploads");
 if (!existsSync(UPLOADS_DIR)) mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const ALLOWED_FOLDERS = ["uploads"];
-const ALLOWED_IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]);
+const ALLOWED_IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico"]);
 
 function resolveAssetTarget(requestedPath = "") {
   const rawPath = String(requestedPath || "").replace(/\\/g, "/").trim();
@@ -799,32 +799,59 @@ function filterCols(table, row) {
  * Copies the site logo to public/logo.png and public/favicon.png
  * so that the favicon and default logo always stay in sync.
  */
-function syncLogoAndFavicon(logoPath) {
+function syncLogoAndFavicon(logoPathRaw) {
   try {
-    if (!logoPath) return;
-    // PUBLIC_ASSETS = public/assets, so go up one level for public/
+    if (!logoPathRaw) return logoPathRaw;
+
+    const logoPath = logoPathRaw.split('?')[0];
+
+    // If it's already a root logo, we don't need to re-copy unless requested
+    if (logoPath.startsWith("/logo.")) return logoPathRaw;
+
     const publicRoot = join(PUBLIC_ASSETS, "..");
-    // logoPath is a public URL like "/assets/uploads/MyLogo.png"
-    // Resolve to filesystem path
+
     let srcFile;
     if (logoPath.startsWith("/assets/")) {
       srcFile = join(publicRoot, logoPath);
     } else if (logoPath.startsWith("/")) {
       srcFile = join(publicRoot, logoPath);
     } else {
-      return; // Can't resolve, skip
+      return logoPathRaw;
     }
+
     if (!existsSync(srcFile)) {
       console.warn(`[syncLogoAndFavicon] Source file not found: ${srcFile}`);
-      return;
+      return logoPathRaw;
     }
-    const destLogo = join(publicRoot, "logo.png");
+
+    const ext = extname(logoPath).toLowerCase() || ".png";
+    const destLogo = join(publicRoot, "logo" + ext);
     const destFavicon = join(publicRoot, "favicon.ico");
+
+    // Clean up any old logos to prevent clutter (e.g. logo.png vs logo.webp)
+    try {
+      const files = readdirSync(publicRoot);
+      files.forEach(f => {
+        if (f.startsWith("logo.") && f !== "logo" + ext) {
+          unlinkSync(join(publicRoot, f));
+        }
+      });
+    } catch (e) { }
+
     copyFileSync(srcFile, destLogo);
     copyFileSync(srcFile, destFavicon);
-    console.log(`[syncLogoAndFavicon] Copied ${srcFile} → logo.png + favicon.ico`);
+
+    console.log(`[syncLogoAndFavicon] Copied ${srcFile} → logo${ext} + favicon.ico`);
+
+    const timestamp = Date.now();
+    const newLogoPath = `/logo${ext}?v=${timestamp}`;
+    
+    // Update DB to reflect the new root logo path with timestamp
+    db.prepare(`UPDATE site_settings SET site_logo = ? WHERE id = 'settings'`).run(newLogoPath);
+    return newLogoPath;
   } catch (e) {
     console.error("[syncLogoAndFavicon] Error:", e);
+    return logoPath;
   }
 }
 
@@ -846,8 +873,9 @@ function updateIndexHtml(settings) {
       }
     });
 
-    // Sync logo & favicon whenever settings are updated
-    syncLogoAndFavicon(settings.site_logo);
+    // Sync logo & favicon whenever settings are updated, and get final path
+    const finalLogoPath = syncLogoAndFavicon(settings.site_logo);
+    settings.site_logo = finalLogoPath;
   } catch (e) {
     console.error("[updateIndexHtml] Error:", e);
   }
@@ -1140,7 +1168,9 @@ app.delete("/api/db/:table", (req, res) => {
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file" });
   // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
-  const publicUrl = `/assets/uploads/${req.file.filename}`;
+  // Append a timestamp to bypass browser caching when overwriting existing files
+  const timestamp = Date.now();
+  const publicUrl = `/assets/uploads/${req.file.filename}?t=${timestamp}`;
 
   // Removed: We no longer eagerly sync files with "logo" in their name.
   // The logo sync happens safely in `updateIndexHtml` when `site_settings` is actually updated in the database.

@@ -53,12 +53,12 @@ type ClientLogo = Tables<"client_logos">;
 
 const ClientLogoImage = ({ client }: { client: ClientLogo }) => {
   const clientName = client?.name || "";
-  
+
   const seedClient = useMemo(() => {
-    return SEED_CLIENTS.find(s => 
-      s.id === client?.id || 
-      s.name === clientName || 
-      (s.name && clientName && s.name.includes(clientName)) || 
+    return SEED_CLIENTS.find(s =>
+      s.id === client?.id ||
+      s.name === clientName ||
+      (s.name && clientName && s.name.includes(clientName)) ||
       (clientName && s.name && clientName.includes(s.name))
     );
   }, [client?.id, clientName]);
@@ -89,10 +89,10 @@ const ClientLogoImage = ({ client }: { client: ClientLogo }) => {
   }
 
   return (
-    <img 
-      src={imgSrc} 
-      alt={clientName} 
-      className="w-full h-full min-w-0 min-h-0 object-contain" 
+    <img
+      src={imgSrc}
+      alt={clientName}
+      className="w-full h-full min-w-0 min-h-0 object-contain"
       onError={() => {
         if (seedClient?.logo_url && imgSrc !== seedClient.logo_url) {
           setImgSrc(seedClient.logo_url);
@@ -332,7 +332,7 @@ const StaticGlobe = ({ clients, getNavProps }: { clients: ClientLogo[]; getNavPr
         >
           <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--secondary))", lineHeight: 1, opacity: 0.85 }}>JOIN</span>
           <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, letterSpacing: "0.06em", color: "hsl(var(--secondary))", textShadow: "0 0 12px hsl(var(--secondary)/0.6)", lineHeight: 1.1 }}>Here</span>
-          <span className="blink-hint" style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 4, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
+          <span className="blink-hint" style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, color: "hsl(var(--secondary))", marginTop: 6, letterSpacing: "0.1em", opacity: 0.9 }}>↓ Get in touch</span>
         </button>
         {positions.map((pos, slotIdx) => {
           const client = clients[slotIndices[slotIdx] ?? slotIdx % clients.length];
@@ -371,14 +371,13 @@ const ClientCard = ({
   const editor = useLiveEditor();
   return (
     <div
-      className={`flex flex-col items-center rounded-lg border border-white/60 dark:border-white/20 bg-white dark:bg-card shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-10 group/item relative ${
-        draggedId === client.id ? 'opacity-20 scale-95' : ''
-      }`}
+      className={`flex flex-col items-center rounded-lg border border-white/60 dark:border-white/20 bg-white dark:bg-card shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-10 group/item relative ${draggedId === client.id ? 'opacity-20 scale-95' : ''
+        }`}
       style={flexible
         ? { width: '100%', minHeight: 100, overflow: 'visible', paddingTop: editor?.isEditMode ? 18 : 6 }
         : { width: CARD_W, height: CARD_H, overflow: 'visible' }
       }
-      {...getNavProps(() => {})}
+      {...getNavProps(() => { })}
       draggable={!!editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, client.id) : undefined}
       onDragOver={onDragOver}
@@ -397,10 +396,9 @@ const ClientCard = ({
       )}
 
       {/* Inner content wrapper - applies opacity and grayscale ONLY to content when invisible */}
-      <div 
-        className={`w-full h-full flex flex-col items-center ${
-          !client.is_visible ? 'opacity-50 grayscale' : ''
-        }`}
+      <div
+        className={`w-full h-full flex flex-col items-center ${!client.is_visible ? 'opacity-50 grayscale' : ''
+          }`}
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%' }}
       >
         {/* Logo image — constrained max height so name always shows */}
@@ -449,7 +447,7 @@ const ClientCard = ({
               className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
               title="Move Up"
             >
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
             </button>
             <div className="flex items-center gap-0.5">
               <button
@@ -457,7 +455,7 @@ const ClientCard = ({
                 className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
                 title="Move Left"
               >
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
               </button>
               <div className="w-2 h-2 rounded-full bg-secondary/40" />
               <button
@@ -465,7 +463,7 @@ const ClientCard = ({
                 className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
                 title="Move Right"
               >
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
               </button>
             </div>
             <button
@@ -473,7 +471,7 @@ const ClientCard = ({
               className="p-0.5 bg-secondary/90 text-white rounded-full hover:scale-110 transition-transform shadow"
               title="Move Down"
             >
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
             </button>
           </div>
         </div>
@@ -580,7 +578,7 @@ const ClientsSection = () => {
     if (!isEdit) return;
     const idx = clientsState.findIndex(c => c.id === id);
     if (idx === -1) return;
-    
+
     let step = 0;
     if (direction === "left") step = -1;
     else if (direction === "right") step = 1;
@@ -589,7 +587,7 @@ const ClientsSection = () => {
 
     const targetIdx = Math.max(0, Math.min(clientsState.length - 1, idx + step));
     if (targetIdx === idx) return;
-    
+
     const newItems = [...clientsState];
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);
@@ -609,7 +607,7 @@ const ClientsSection = () => {
   return (
     <section id="portfolio" className="section-padding relative group" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div className="container-wide">
-        <AnimatedSection className="text-center mb-8 relative group">
+        <AnimatedSection className="text-center relative group">
           <div className="absolute right-0 top-0 sm:top-2">
             <button
               onClick={() => setShowAll(!showAll)}
@@ -622,10 +620,10 @@ const ClientsSection = () => {
               </span>
             </button>
           </div>
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest">
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest  ">
             <EditableText section="clients" field="badge" value={header.badge || "Portfolio (Our Clients)"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 relative">
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-2 relative">
             <span>
               <EditableText section="clients" field="title" value={header.title || "Trusted by"} colorField="title_color" />{" "}
               <span className="gradient-text">
@@ -645,13 +643,13 @@ const ClientsSection = () => {
                 <div key={client.id} className="w-[calc(33.333%-10.66px)] sm:w-[calc(25%-12px)] md:w-[calc(20%-16px)] lg:w-[calc(16.666%-16.66px)]">
                   <ClientCard
                     client={client}
-                  getNavProps={getNavProps}
-                  flexible={true}
-                  onMove={isEdit ? (dir) => handleMove(client.id, dir) : undefined}
-                  draggedId={draggedId}
-                  onDragStart={isEdit ? handleDragStart : undefined}
-                  onDragOver={isEdit ? handleDragOver : undefined}
-                  onDrop={isEdit ? handleDrop : undefined}
+                    getNavProps={getNavProps}
+                    flexible={true}
+                    onMove={isEdit ? (dir) => handleMove(client.id, dir) : undefined}
+                    draggedId={draggedId}
+                    onDragStart={isEdit ? handleDragStart : undefined}
+                    onDragOver={isEdit ? handleDragOver : undefined}
+                    onDrop={isEdit ? handleDrop : undefined}
                   />
                 </div>
               ))}
@@ -675,7 +673,7 @@ const ClientsSection = () => {
               </div>
             </>
           )}
-          <p className="text-xs text-muted-foreground mt-8 text-center bg-muted/20 py-2 px-4 rounded-full w-fit mx-auto">
+          <p className="text-xs text-muted-foreground mt-1 text-center bg-muted/20   px-4 rounded-full w-fit mx-auto">
             {clients.length} <EditableText section="clients" field="clients_summary" value={content.clients_summary || "clients across Maldives, Bhutan &amp; beyond"} />
           </p>
         </AnimatedSection>

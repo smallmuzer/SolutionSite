@@ -125,7 +125,7 @@ const TechnologiesSection = () => {
   if (isLoading) return (
     <section id="technologies" className="section-padding section-alt relative overflow-hidden">
       <div className="container-wide relative z-10 animate-pulse">
-        <div className="text-center mb-12">
+        <div className="text-center mb-6">
           <div className="h-6 w-32 bg-secondary/20 mx-auto rounded-full mb-4" />
           <div className="h-12 w-3/4 max-w-sm bg-muted mx-auto rounded-lg mb-5" />
           <div className="h-5 w-2/3 max-w-lg bg-muted/60 mx-auto rounded-md" />
@@ -149,13 +149,13 @@ const TechnologiesSection = () => {
       <div className="absolute top-1/2 -left-20 w-72 h-72 bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center mb-12 relative z-10">
+        <AnimatedSection className="text-center mb-6 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 mb-4 shadow-sm backdrop-blur-sm">
             <span className="text-secondary font-semibold text-xs uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
               <EditableText section="technologies" field="badge" value={header.badge || "Our Stack"} colorField="badge_color" />
             </span>
           </div>
-          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-2 mb-5 tracking-tight relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
+          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-1 mb-2 tracking-tight relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <span>
               <EditableText section="technologies" field="title" value={header.title || "Technologies"} colorField="title_color" />{" "}
               <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>

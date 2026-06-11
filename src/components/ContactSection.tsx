@@ -146,10 +146,10 @@ const ContactSection = () => {
       <EditorToolbar section="contact" canHide={false} />
       <div className="container-wide relative z-10">
         <AnimatedSection className="text-center mb-6">
-          <div id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest inline-block" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
+          <div id="contact-header" className="text-secondary font-semibold text-sm uppercase tracking-widest inline-block mb-2" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
             <EditableText section="contact" field="badge" value={content.badge || "Reach Us"} colorField="badge_color" />
           </div>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-2 mb-2" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
           </h2>
           <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>

@@ -16,37 +16,31 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { t
     const el = ref.current;
     if (!el) return;
     const check = () => {
-      if (window.innerWidth >= 640) { setOverflows(false); return; }
-      setOverflows(el.scrollHeight > el.clientHeight + 2);
+      if (!expanded) {
+        setOverflows(el.scrollHeight > el.clientHeight + 6);
+      }
     };
     const ro = new ResizeObserver(check);
     ro.observe(el);
     const t = setTimeout(check, 100);
     window.addEventListener("resize", check);
     return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
-  }, [text]);
+  }, [text, expanded]);
 
   return (
-    <div>
+    <div className="relative">
       <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
         {section && field ? (
-            <EditableText section={section} field={field} value={text} />
+          <EditableText section={section} field={field} id={id} value={text} />
         ) : text}
       </div>
-      {overflows && !expanded && (
+      {(overflows || expanded) && (
         <button
           type="button"
-          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(true); }}
-          className="sm:hidden text-secondary text-[0.6875rem] font-bold mt-0.5 hover:underline block">
-          Read more
-        </button>
-      )}
-      {expanded && (
-        <button
-          type="button"
-          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(false); }}
-          className="sm:hidden text-secondary text-[0.6875rem] font-bold mt-0.5 hover:underline block">
-          Show less
+          onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(!expanded); }}
+          className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2 block"
+        >
+          Read {expanded ? "Less" : "More"}
         </button>
       )}
     </div>
@@ -158,7 +152,7 @@ const ServicesSection = () => {
     if (!editor?.isEditMode || !services) return;
     const idx = services.findIndex(t => t.id === id);
     if (idx === -1) return;
-    
+
     let step = 0;
     if (direction === "left") step = -1;
     else if (direction === "right") step = 1;
@@ -202,18 +196,18 @@ const ServicesSection = () => {
   return (
     <section id="services" className="section-padding section-alt relative overflow-hidden group/services">
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center mb-10 relative group">
-          <div className="inline-flex items-center gap-2 mb-3">
+        <AnimatedSection className="text-center relative group mb-4">
+          <div className="inline-flex items-center gap-2 mb-2">
             <span className="text-secondary font-bold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor("What We Do") ? undefined : (content.badge_color || undefined) }}>
               <EditableText section="services" field="badge" value={content.badge || "What We Do"} colorField="badge_color" />
             </span>
           </div>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <span>
               <EditableText section="services" field="title" value={content.title || "Services & Solutions"} colorField="title_color" />{" "}
               {(content.highlight !== undefined ? content.highlight : "We Deliver") && (
                 <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
-                    <EditableText section="services" field="highlight" value={content.highlight !== undefined ? content.highlight : "We Deliver"} colorField="highlight_color" />
+                  <EditableText section="services" field="highlight" value={content.highlight !== undefined ? content.highlight : "We Deliver"} colorField="highlight_color" />
                 </span>
               )}
             </span>
@@ -244,14 +238,14 @@ const ServicesSection = () => {
                     onDrop={(e) => handleDrop(e, service.id)}
                   >
                     <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
-                    
+
                     {editor?.isEditMode && (
                       <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                         <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                         </button>
                       </div>
                     )}
@@ -319,25 +313,25 @@ const ServicesSection = () => {
               const htmlIcon = service.icon && isHtmlIcon(service.icon);
               return (
                 <AnimatedSection key={service.id} delay={i * 0.03}>
-                    <div
-                      className={`glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden ${!service.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === service.id ? "opacity-20 scale-95" : ""}`}
-                      {...getNavProps(scrollTo)}
-                      draggable={editor?.isEditMode}
-                      onDragStart={(e) => handleDragStart(e, service.id)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, service.id)}
-                    >
-                      <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
-                      {editor?.isEditMode && (
-                        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
-                          <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                          </button>
-                        </div>
-                      )}
+                  <div
+                    className={`glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden ${!service.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === service.id ? "opacity-20 scale-95" : ""}`}
+                    {...getNavProps(scrollTo)}
+                    draggable={editor?.isEditMode}
+                    onDragStart={(e) => handleDragStart(e, service.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, service.id)}
+                  >
+                    <EditorToolbar section="services" id={service.id} isVisible={service.is_visible} imageField="image_url" iconField="icon" />
+                    {editor?.isEditMode && (
+                      <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+                        <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMove(service.id, "down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                        </button>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-r from-secondary/[0.03] to-transparent group-hover:from-secondary/[0.07] transition-all pointer-events-none rounded-xl" />
                     <div className="relative shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-border/40 flex items-center justify-center">
                       {useImg ? (
@@ -364,9 +358,14 @@ const ServicesSection = () => {
                       <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug">
                         <EditableText section="services" field="title" id={service.id} value={service.title} />
                       </h3>
-                      <div className="text-muted-foreground text-[0.8125rem] mt-0.5 line-clamp-1">
-                        <EditableText section="services" field="description" id={service.id} value={service.description} />
-                      </div>
+                      <MobileReadMore
+                        section="services"
+                        field="description"
+                        id={service.id}
+                        text={service.description}
+                        clampClass="line-clamp-1"
+                        textClass="text-[0.8125rem] text-muted-foreground mt-0.5"
+                      />
                     </div>
                     <ArrowRight size={16} className="text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all shrink-0 relative z-10" />
                   </div>

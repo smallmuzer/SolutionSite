@@ -78,7 +78,7 @@ export default function AssetField({
           <Upload size={13} /> {uploading ? "Uploading..." : "Upload"}
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.jpg,.jpeg,.png,.svg,.webp,.ico"
             className="hidden"
             disabled={uploading}
             onChange={async (e) => {

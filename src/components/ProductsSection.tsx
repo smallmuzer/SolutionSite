@@ -67,6 +67,10 @@ interface SectionHeader {
   title?: string;
   highlight?: string;
   subtitle?: string;
+  badge_color?: string;
+  title_color?: string;
+  highlight_color?: string;
+  subtitle_color?: string;
 }
 
 const FALLBACK_PRODUCTS: Product[] = [];
@@ -76,6 +80,45 @@ const DEFAULT_HEADER: SectionHeader = {
   title: "Premium",
   highlight: "Software Products",
   subtitle: "Explore our suite of enterprise-grade software solutions designed to transform your business operations."
+};
+
+const ReadMoreText = ({ text, clampClass, textClass, section, field, id, colorField }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string; colorField?: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      if (!expanded) {
+        setOverflows(el.scrollHeight > el.clientHeight + 6);
+      }
+    };
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    const t = setTimeout(check, 100);
+    window.addEventListener("resize", check);
+    return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
+  }, [text, expanded]);
+
+  return (
+    <div className="relative">
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+        {section && field ? (
+          <EditableText section={section} field={field} id={id} value={text} colorField={colorField} />
+        ) : text}
+      </div>
+      {(overflows || expanded) && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2"
+        >
+          Read {expanded ? "Less" : "More"}
+        </button>
+      )}
+    </div>
+  );
 };
 
 const ProductCard = ({
@@ -102,7 +145,6 @@ const ProductCard = ({
   onEditTypo?: any;
 }) => {
   const editor = useLiveEditor();
-  const [expanded, setExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
   const badgeColor = product.extra_color || "#007600";
 
@@ -110,7 +152,7 @@ const ProductCard = ({
     <div
       className={`relative flex-shrink-0 bg-white dark:bg-[#11111f] rounded-2xl overflow-hidden group/item cursor-pointer border border-border/50 hover:border-blue-500/30 hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-2 hover:outline hover:outline-2 hover:outline-secondary/50 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
       style={{ width: 280 }}
-      {...getNavProps(() => {})}
+      {...getNavProps(() => { })}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
       onDragOver={onDragOver}
@@ -170,11 +212,10 @@ const ProductCard = ({
       )}
       {product.is_popular && (
         <div
-          className={`absolute top-2 left-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[0.6875rem] font-black text-white shadow-lg ${
-            product.name === "HR-Metrics"
-              ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse"
-              : "bg-[#CC0C39]"
-          }`}
+          className={`absolute top-2 left-2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[0.6875rem] font-black text-white shadow-lg ${product.name === "HR-Metrics"
+            ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse"
+            : "bg-[#CC0C39]"
+            }`}
         >
           {product.name === "HR-Metrics" && (
             <Star size={10} fill="currentColor" className="animate-spin-slow" />
@@ -225,30 +266,15 @@ const ProductCard = ({
             colorField="name_color"
           />
         </h3>
-        <div className="relative">
-          <div
-            className={`text-[0.75rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}
-          >
-            <EditableText
-              section="products"
-              field="description"
-              id={product.id}
-              value={product.description}
-              colorField="description_color"
-            />
-          </div>
-          {product.description.length > 80 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded(!expanded);
-              }}
-              className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2"
-            >
-              Read {expanded ? "Less" : "More"}
-            </button>
-          )}
-        </div>
+        <ReadMoreText
+          section="products"
+          field="description"
+          id={product.id}
+          text={product.description}
+          colorField="description_color"
+          clampClass="line-clamp-2"
+          textClass="text-[0.75rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed"
+        />
 
         <div className="relative flex flex-col gap-2 mt-1 border-t border-gray-100 dark:border-white/5 pt-3 group/features">
           {editor?.isEditMode && (
@@ -305,11 +331,11 @@ const ProductCard = ({
                 ? extraText.split("|||")
                 : extraText.split(",")
               : [
-                  "15 Days Free Trial",
-                  "Cloud-based SaaS",
-                  "24/7 Support",
-                  "Custom Onboarding",
-                ];
+                "15 Days Free Trial",
+                "Cloud-based SaaS",
+                "24/7 Support",
+                "Custom Onboarding",
+              ];
 
             const colorDraftKey = product.id
               ? `products:${product.id}:extra_color`
@@ -328,7 +354,7 @@ const ProductCard = ({
               const cleanText = isNegative
                 ? rawText.substring(1).trim()
                 : rawText;
-              
+
               const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
               const hasStyles = Object.values(parsedStyles).some(v => !!v);
 
@@ -370,15 +396,15 @@ const ProductCard = ({
                       const newVal = e.currentTarget.textContent || "";
                       const currentFeatures = extraText
                         ? (extraText.includes("|||")
-                            ? extraText.split("|||")
-                            : extraText.split(",")
-                          ).map((s) => s.trim())
+                          ? extraText.split("|||")
+                          : extraText.split(",")
+                        ).map((s) => s.trim())
                         : [
-                            "15 Days Free Trial",
-                            "Cloud-based SaaS",
-                            "24/7 Support",
-                            "Custom Onboarding",
-                          ];
+                          "15 Days Free Trial",
+                          "Cloud-based SaaS",
+                          "24/7 Support",
+                          "Custom Onboarding",
+                        ];
                       currentFeatures[idx] = isNegative
                         ? `! ${newVal}`
                         : newVal;
@@ -443,9 +469,9 @@ const ProductCard = ({
                       onClick={() => {
                         const currentFeatures = extraText
                           ? (extraText.includes("|||")
-                              ? extraText.split("|||")
-                              : extraText.split(",")
-                            ).map((s) => s.trim())
+                            ? extraText.split("|||")
+                            : extraText.split(",")
+                          ).map((s) => s.trim())
                           : [];
                         currentFeatures.splice(idx, 1);
                         editor.onUpdate(
@@ -604,7 +630,7 @@ const ProductCardList = ({
   return (
     <div
       className={`flex flex-col sm:flex-row gap-5 bg-white dark:bg-[#11111f] rounded-2xl border border-border/50 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 group/item relative hover:outline hover:outline-2 hover:outline-secondary/50 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
-      {...getNavProps(() => {})}
+      {...getNavProps(() => { })}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
       onDragOver={onDragOver}
@@ -686,11 +712,10 @@ const ProductCardList = ({
       <div className="flex-1 p-4 flex flex-col gap-2">
         {product.is_popular && (
           <span
-            className={`self-start text-[0.625rem] font-bold text-white px-2 py-0.5 rounded-sm ${
-              product.name === "HR-Metrics"
-                ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse"
-                : "bg-[#CC0C39]"
-            }`}
+            className={`self-start text-[0.625rem] font-bold text-white px-2 py-0.5 rounded-sm ${product.name === "HR-Metrics"
+              ? "bg-gradient-to-r from-pink-600 to-rose-700 ring-2 ring-white/30 animate-pulse"
+              : "bg-[#CC0C39]"
+              }`}
           >
             {product.name === "HR-Metrics" ? "MOST POPULAR HR" : "Best Seller"}
           </span>
@@ -711,14 +736,14 @@ const ProductCardList = ({
             value={product.name}
           />
         </h3>
-        <div className="text-[0.8125rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-3">
-          <EditableText
-            section="products"
-            field="description"
-            id={product.id}
-            value={product.description}
-          />
-        </div>
+        <ReadMoreText
+          section="products"
+          field="description"
+          id={product.id}
+          text={product.description}
+          clampClass="line-clamp-3"
+          textClass="text-[0.8125rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed"
+        />
         <div className="flex flex-wrap items-center gap-3 mt-auto pt-2">
           <div className="relative flex flex-col gap-2 mb-4 w-full group/features">
             {editor?.isEditMode && (
@@ -775,11 +800,11 @@ const ProductCardList = ({
                   ? extraText.split("|||")
                   : extraText.split(",")
                 : [
-                    "15 Days Free Trial",
-                    "Cloud-based SaaS",
-                    "24/7 Support",
-                    "Custom Onboarding",
-                  ];
+                  "15 Days Free Trial",
+                  "Cloud-based SaaS",
+                  "24/7 Support",
+                  "Custom Onboarding",
+                ];
 
               const colorDraftKey = product.id
                 ? `products:${product.id}:extra_color`
@@ -840,15 +865,15 @@ const ProductCardList = ({
                         const newVal = e.currentTarget.textContent || "";
                         const currentFeatures = extraText
                           ? (extraText.includes("|||")
-                              ? extraText.split("|||")
-                              : extraText.split(",")
-                            ).map((s) => s.trim())
+                            ? extraText.split("|||")
+                            : extraText.split(",")
+                          ).map((s) => s.trim())
                           : [
-                              "15 Days Free Trial",
-                              "Cloud-based SaaS",
-                              "24/7 Support",
-                              "Custom Onboarding",
-                            ];
+                            "15 Days Free Trial",
+                            "Cloud-based SaaS",
+                            "24/7 Support",
+                            "Custom Onboarding",
+                          ];
                         currentFeatures[idx] = isNegative
                           ? `! ${newVal}`
                           : newVal;
@@ -913,9 +938,9 @@ const ProductCardList = ({
                         onClick={() => {
                           const currentFeatures = extraText
                             ? (extraText.includes("|||")
-                                ? extraText.split("|||")
-                                : extraText.split(",")
-                              ).map((s) => s.trim())
+                              ? extraText.split("|||")
+                              : extraText.split(",")
+                            ).map((s) => s.trim())
                             : [];
                           currentFeatures.splice(idx, 1);
                           editor.onUpdate(
@@ -1155,7 +1180,7 @@ const ProductsSection = () => {
     >
       <EditorToolbar section="products" canAdd />
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center mb-6 relative group">
+        <AnimatedSection className="text-center  mb-4 relative group">
           <div className="inline-flex items-center gap-2 mb-3">
             <span
               className="text-secondary font-bold text-sm uppercase tracking-widest"
@@ -1170,7 +1195,7 @@ const ProductsSection = () => {
             </span>
           </div>
           <h2
-            className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-0 mb-2 relative"
+            className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2 relative"
             style={{ color: hasEmbeddedColor(header.title) ? undefined : (header.title_color || undefined) }}
           >
             <span>
@@ -1270,9 +1295,9 @@ const ProductsSection = () => {
               editor?.isEditMode
                 ? undefined
                 : {
-                    maskImage:
-                      "linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%)",
-                  }
+                  maskImage:
+                    "linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%)",
+                }
             }
             onMouseEnter={() => {
               pausedRef.current = true;
@@ -1358,20 +1383,21 @@ const ProductsSection = () => {
           section="products"
           field="extra_text_badge"
           initialValue={typoFeature.value}
+          originalValue={typoFeature.value}
           targetStyles={typoFeature.targetStyles}
           onClose={() => setTypoFeature(null)}
           onSave={(_, __, val) => {
             const currentFeatures = typoFeature.extra_text
               ? (typoFeature.extra_text.includes("|||")
-                  ? typoFeature.extra_text.split("|||")
-                  : typoFeature.extra_text.split(",")
-                ).map((s) => s.trim())
+                ? typoFeature.extra_text.split("|||")
+                : typoFeature.extra_text.split(",")
+              ).map((s) => s.trim())
               : [
-                  "15 Days Free Trial",
-                  "Cloud-based SaaS",
-                  "24/7 Support",
-                  "Custom Onboarding",
-                ];
+                "15 Days Free Trial",
+                "Cloud-based SaaS",
+                "24/7 Support",
+                "Custom Onboarding",
+              ];
 
             currentFeatures[typoFeature.idx] = typoFeature.isNegative
               ? `! ${val}`

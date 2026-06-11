@@ -35,7 +35,7 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field, id }: { t
     if (!el) return;
     const check = () => {
       if (window.innerWidth >= 640) { setOverflows(false); return; }
-      setOverflows(el.scrollHeight > el.clientHeight + 2);
+      setOverflows(el.scrollHeight > el.clientHeight + 6);
     };
     const ro = new ResizeObserver(check);
     ro.observe(el);
@@ -174,7 +174,7 @@ const Footer = () => {
       {(isNetworkVisible || editor?.isEditMode) && (
         <div className={`border-b border-border/50 relative group/sect ${!isNetworkVisible ? 'opacity-50 border-dashed border-2' : ''}`}>
           <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
-            <div className="text-center mb-10">
+            <div className="text-center mb-6">
               <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.network_badge) ? undefined : (content.network_badge_color || undefined) }}>
                 <EditableText section="footer" field="network_badge" value={content.network_badge || "Our Network"} colorField="network_badge_color" />
               </span>
@@ -335,28 +335,29 @@ const Footer = () => {
 
             {/* Brand */}
             <div className="sm:col-span-2 lg:col-span-3">
-              <div className="flex items-center gap-2.5 mb-4">
+              <div className="flex items-center gap-2.5 mb-4 relative group/item w-max">
+                {editor?.isEditMode && (
+                  <EditorToolbar
+                    section="settings"
+                    imageField="site_logo"
+                    className="absolute -top-2 -right-6 z-[60] scale-[0.80]"
+                    canHide={false}
+                    canDelete={false}
+                    canClone={false}
+                  />
+                )}
                 {logoPath ? (
-                  <div className="flex items-center justify-center rounded-full shrink-0 shadow-sm" style={{ width: 33, height: 36, backgroundColor: "none" }}>
+                  <div className="flex items-center justify-start shrink-0 bg-white/90 p-1.5 rounded-md" style={{ height: 60, width: "auto", maxWidth: 220 ,backgroundColor: "transparent"}}>
                     <img src={logoPath} alt={siteName}
-                      className="w-full h-full object-contain"
+                      className="h-full w-auto object-contain object-left"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                     />
                   </div>
                 ) : (
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg,#3b82f6,#6366f1)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "#fff", fontWeight: 900, fontSize: 16 }}>S</span>
+                  <div style={{ width: 45, height: 45, borderRadius: 10, background: "linear-gradient(135deg,#3b82f6,#6366f1)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#fff", fontWeight: 900, fontSize: 20 }}>S</span>
                   </div>
                 )}
-                <div className="flex flex-wrap items-center gap-1.5 leading-none">
-                  <span className="font-heading font-bold text-[1rem] leading-tight" style={{ color: "#f1f5f9" }}>
-                    <EditableText section="settings" field="site_name_part1" value={siteName.split(" ")[0] || "Systems"} />
-                  </span>
-                  <span className="font-heading font-bold text-[1rem] leading-tight"
-                    style={{ background: "linear-gradient(90deg,#60a5fa,#818cf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                    <EditableText section="settings" field="site_name_part2" value={siteName.split(" ").slice(1).join(" ") || "Solutions"} />
-                  </span>
-                </div>
               </div>
               <div className="text-sm leading-relaxed mb-5 relative" style={{ color: "#94a3b8" }}>
                 <EditableText section="footer" field="tagline" value={content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."} />

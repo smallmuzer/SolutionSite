@@ -149,11 +149,11 @@ const WorldMap = () => {
     <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
-        <AnimatedSection className="text-center mb-10">
+        <AnimatedSection className="text-center mb-0">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(header.badge) ? undefined : ((header as any).badge_color || undefined) }}>
             <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: hasEmbeddedColor(header.title) ? undefined : ((header as any).title_color || undefined) }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-2 relative" style={{ color: hasEmbeddedColor(header.title) ? undefined : ((header as any).title_color || undefined) }}>
             <EditableText section="global_reach" field="title" value={header.title || "Our"} colorField="title_color" />{" "}
             <span className="gradient-text" style={{ color: hasEmbeddedColor(header.highlight) ? undefined : ((header as any).highlight_color || undefined), background: (header as any).highlight_color && !hasEmbeddedColor(header.highlight) ? "none" : undefined, WebkitTextFillColor: (header as any).highlight_color && !hasEmbeddedColor(header.highlight) ? "initial" : undefined }}>
               <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} colorField="highlight_color" />

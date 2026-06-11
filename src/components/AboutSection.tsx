@@ -19,7 +19,7 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field }: { text:
     if (!el) return;
     const check = () => {
       if (window.innerWidth >= 640) { setOverflows(false); return; }
-      setOverflows(el.scrollHeight > el.clientHeight + 2);
+      setOverflows(el.scrollHeight > el.clientHeight + 6);
     };
     const ro = new ResizeObserver(check);
     ro.observe(el);
@@ -31,7 +31,7 @@ const MobileReadMore = ({ text, clampClass, textClass, section, field }: { text:
     <div>
       <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
         {section && field ? (
-            <EditableText section={section} field={field} value={text} />
+          <EditableText section={section} field={field} value={text} />
         ) : text}
       </div>
       {overflows && !expanded && (
@@ -147,7 +147,7 @@ const AboutSection = () => {
     const newItems = [...cardsState];
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);
-    
+
     setCardsState(newItems);
     saveOrder(newItems);
   };
@@ -164,7 +164,7 @@ const AboutSection = () => {
               <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.badge) ? undefined : (content.badge_color || undefined) }}>
                 <EditableText section="about" field="badge" value={content.badge || "Who We Are"} colorField="badge_color" />
               </span>
-              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-6 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
+              <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-2 mb-4 relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
                 <span>
                   <EditableText section="about" field="title" value={content.title || "Driving Digital Transformation"} colorField="title_color" />
                 </span>
@@ -205,10 +205,10 @@ const AboutSection = () => {
                       {editor?.isEditMode && (
                         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                           <button onClick={(e) => { e.stopPropagation(); handleMove(card.key, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); handleMove(card.key, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                           </button>
                         </div>
                       )}
@@ -282,10 +282,10 @@ const AboutSection = () => {
                       {editor?.isEditMode && (
                         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                           <button onClick={(e) => { e.stopPropagation(); handleMove(card.key, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); handleMove(card.key, "down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                           </button>
                         </div>
                       )}
@@ -312,7 +312,7 @@ const AboutSection = () => {
                       </div>
                       <div className="flex-1 min-w-0 relative z-10">
                         <h3 className="font-heading font-extrabold text-foreground text-[0.9375rem] leading-snug">
-                            <EditableText section="about" field={`card_title_${card.key}`} value={card.title} />
+                          <EditableText section="about" field={`card_title_${card.key}`} value={card.title} />
                         </h3>
                         <MobileReadMore
                           section="about"

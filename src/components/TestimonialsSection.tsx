@@ -44,7 +44,7 @@ const StarRating = ({ rating, id, editor }: { rating: number, id?: string, edito
         })}
       </div>
       {editor?.isEditMode && id && (
-        <button 
+        <button
           onClick={handleEdit}
           className="p-1 rounded-md opacity-0 group-hover/star:opacity-100 bg-secondary/10 hover:bg-secondary/20 text-secondary transition-all"
           title="Edit Star Rating"
@@ -106,7 +106,7 @@ const TestimonialsSection = () => {
     if (!editor?.isEditMode || !testimonialsState) return;
     const idx = testimonialsState.findIndex(t => t.id === id);
     if (idx === -1) return;
-    
+
     let step = 0;
     if (direction === "left") step = -1;
     else if (direction === "right") step = 1;
@@ -160,7 +160,7 @@ const TestimonialsSection = () => {
   const pageCards = testimonials.slice(currentPage * CARDS_PER_PAGE, (currentPage + 1) * CARDS_PER_PAGE);
 
   const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div 
+    <div
       className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
       draggable={editor?.isEditMode}
       onDragStart={(e) => handleDragStart(e, t.id)}
@@ -171,10 +171,10 @@ const TestimonialsSection = () => {
       {editor?.isEditMode && (
         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
           <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>
       )}
@@ -220,11 +220,11 @@ const TestimonialsSection = () => {
   return (
     <section id="testimonials" className="section-padding section-alt relative group">
       <div className="container-wide">
-        <AnimatedSection className="text-center mb-14">
+        <AnimatedSection className="text-center mb-6">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: headerContent.badge_color || undefined }}>
             <EditableText section="testimonials" field="badge" value={header.badge || "Testimonials"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-4 relative" style={{ color: headerContent.title_color || undefined }}>
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-2 relative" style={{ color: headerContent.title_color || undefined }}>
             <span>
               <EditableText section="testimonials" field="title" value={header.title || "What Our"} colorField="title_color" />{" "}
               <span className="gradient-text" style={{ color: headerContent.highlight_color || undefined, background: headerContent.highlight_color ? "none" : undefined, WebkitTextFillColor: headerContent.highlight_color ? "initial" : undefined }}>
