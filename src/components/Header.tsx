@@ -247,7 +247,13 @@ const Header = () => {
                   alt={siteName}
                   className="shrink-0"
                   style={{ height: "42px", width: "auto", maxWidth: "200px", objectFit: "contain", objectPosition: "left center" }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_LOGO; }}
+                  onError={(e) => { 
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (target.getAttribute('data-error') !== 'true') {
+                      target.setAttribute('data-error', 'true');
+                      target.src = "https://placehold.co/200x60/transparent/666?text=Upload+Logo";
+                    }
+                  }}
                 />
               </Wrapper>
             );

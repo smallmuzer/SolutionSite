@@ -1503,11 +1503,11 @@ export const getCountryByCode = (code: string) => COUNTRIES.find(c => c.code ===
 export const detectCountry = async (): Promise<Country> => {
   try {
     // Try to get country code via IP API
-    const res = await fetch("https://ipapi.co/json/");
+    const res = await fetch("https://ipinfo.io/json");
     if (res.ok) {
       const data = await res.json();
-      if (data && data.country_code) {
-        return getCountryByCode(data.country_code);
+      if (data && data.country) {
+        return getCountryByCode(data.country);
       }
     }
   } catch (e) {

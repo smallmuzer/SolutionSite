@@ -789,11 +789,22 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     <option value="">Default (Inherit)</option>
                     <option value="system-ui, sans-serif">System Sans</option>
                     <option value="'Inter', sans-serif">Inter</option>
-                    <option value="'Outfit', sans-serif">Outfit</option>
-                    <option value="'Montserrat', sans-serif">Montserrat</option>
-                    <option value="'Playfair Display', serif">Playfair Display</option>
-                    <option value="'Fira Code', monospace">Fira Code</option>
                     <option value="'Roboto', sans-serif">Roboto</option>
+                    <option value="'Open Sans', sans-serif">Open Sans</option>
+                    <option value="'Montserrat', sans-serif">Montserrat</option>
+                    <option value="'Poppins', sans-serif">Poppins</option>
+                    <option value="'Lato', sans-serif">Lato</option>
+                    <option value="'Nunito', sans-serif">Nunito</option>
+                    <option value="'Raleway', sans-serif">Raleway</option>
+                    <option value="'Outfit', sans-serif">Outfit</option>
+                    <option value="'DM Sans', sans-serif">DM Sans</option>
+                    <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+                    <option value="'Work Sans', sans-serif">Work Sans</option>
+                    <option value="'Oswald', sans-serif">Oswald</option>
+                    <option value="'Playfair Display', serif">Playfair Display</option>
+                    <option value="'Merriweather', serif">Merriweather</option>
+                    <option value="'Lora', serif">Lora</option>
+                    <option value="'Source Code Pro', monospace">Source Code Pro</option>
                   </select>
                 </div>
 

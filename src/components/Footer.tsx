@@ -350,7 +350,13 @@ const Footer = () => {
                   <div className="flex items-center justify-start shrink-0 bg-white/90 p-1.5 rounded-md" style={{ height: 60, width: "auto", maxWidth: 220 ,backgroundColor: "transparent"}}>
                     <img src={logoPath} alt={siteName}
                       className="h-full w-auto object-contain object-left"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      onError={(e) => { 
+                        const target = e.currentTarget as HTMLImageElement;
+                        if (target.getAttribute('data-error') !== 'true') {
+                          target.setAttribute('data-error', 'true');
+                          target.src = "https://placehold.co/200x60/transparent/666?text=Upload+Logo";
+                        }
+                      }}
                     />
                   </div>
                 ) : (
