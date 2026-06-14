@@ -159,6 +159,7 @@ const WorldMap = () => {
             <div className={`flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-12 snap-x snap-mandatory scroll-smooth custom-scrollbar w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}>
               {uniqueLocations.map((loc) => {
                 const isActive = activeLocation?.name === loc.name;
+                const currentFlag = editor?.pendingChanges?.[`global_presence:${(loc as any).id || loc.name}:flag`] ?? loc.flag;
                 return (
                   <div
                     key={(loc as any).id || loc.name}
@@ -179,9 +180,9 @@ const WorldMap = () => {
                     <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
                       <div className="flex items-center gap-2.5">
                         <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
-                          {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
+                          {currentFlag && (currentFlag.startsWith("/") || currentFlag.startsWith("http") || currentFlag.includes(".")) ? (
                             <img
-                              src={loc.flag}
+                              src={currentFlag}
                               alt="flag"
                               className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
                               onDoubleClick={(e) => {
@@ -269,7 +270,9 @@ const WorldMap = () => {
                   />
                   <InvalidateSize />
                   {activeLocation && <FlyToLocation lat={activeLocation.lat} lng={activeLocation.lng} />}
-                  {uniqueLocations.map((loc) => (
+                  {uniqueLocations.map((loc) => {
+                    const currentFlag = editor?.pendingChanges?.[`global_presence:${(loc as any).id || loc.name}:flag`] ?? loc.flag;
+                    return (
                     <Marker
                       key={loc.name}
                       position={[loc.lat, loc.lng]}
@@ -290,9 +293,9 @@ const WorldMap = () => {
                     >
                       <Popup>
                         <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
-                          {loc.flag && (loc.flag.startsWith("/") || loc.flag.startsWith("http") || loc.flag.includes(".")) ? (
+                          {currentFlag && (currentFlag.startsWith("/") || currentFlag.startsWith("http") || currentFlag.includes(".")) ? (
                             <img
-                              src={loc.flag}
+                              src={currentFlag}
                               alt="flag"
                               className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
                               onDoubleClick={(e) => {
@@ -309,7 +312,7 @@ const WorldMap = () => {
                         <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
                       </Popup>
                     </Marker>
-                  ))}
+                  )})}
                 </MapContainer>
               </div>
             )}

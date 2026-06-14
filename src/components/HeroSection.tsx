@@ -65,6 +65,10 @@ const HeroSection = () => {
     if (heroImg?.trim()) return [heroImg.trim()];
     return [];
   })();
+  const overlayImage = editor?.pendingChanges["hero:overlay_image"] ?? (content as any)?.overlay_image;
+  const overlayVisibleStr = editor?.pendingChanges["hero:is_overlay_visible"] ?? (content as any)?.is_overlay_visible ?? "true";
+  const overlayVisible = overlayVisibleStr !== "false" && overlayVisibleStr !== false;
+
   const [isDark, setIsDark] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
   const scrollTo = (id: string) => {
@@ -148,6 +152,49 @@ const HeroSection = () => {
           backgroundSize: "60px 60px",
         }}
       />
+
+      {/* SVG Overlay Spotlight (Increases visibility of multiplied images) */}
+      {(overlayImage || editor?.isEditMode) && (
+        <div className={`absolute top-1/2 -translate-y-1/2 right-0 sm:right-[2%] lg:right-[5%] z-10 w-[75%] sm:w-[45%] lg:w-[35%] max-w-[300px] aspect-square bg-white/80 rounded-full blur-[60px] pointer-events-none ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`} />
+      )}
+
+      {/* SVG Overlay Graphic (Visual Layer) */}
+      {(overlayImage || editor?.isEditMode) && (
+        <div className={`absolute top-0 bottom-0 my-auto h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-20 mix-blend-multiply peer/overlay ${editor?.isEditMode ? 'pointer-events-auto' : 'pointer-events-none'} ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`}>
+          <div className={`w-full transition-opacity duration-300 ${!overlayVisible ? 'opacity-30 grayscale' : 'opacity-100'}`}>
+            {overlayImage ? (
+              <img src={overlayImage} alt="Hero Overlay" className="w-full h-auto object-contain animate-float pointer-events-none brightness-110 contrast-110" />
+            ) : (
+              editor?.isEditMode && (
+                <div className="w-full aspect-video border-2 border-dashed border-white/20 bg-white/5 backdrop-blur-sm rounded-2xl flex items-center justify-center pointer-events-auto hover:bg-white/10 transition-colors">
+                  <p className="text-white/50 text-xs font-bold uppercase tracking-widest text-center px-4">Click Image Icon to Add SVG Overlay</p>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SVG Overlay Toolbar (Interaction Layer) */}
+      {editor?.isEditMode && (
+        <div className={`absolute top-0 bottom-0 my-auto h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-30 pointer-events-none ${!overlayVisible ? 'hidden' : ''}`}>
+          <div className="opacity-0 peer-hover/overlay:opacity-100 hover:opacity-100 transition-all duration-300 pointer-events-auto absolute -top-12 right-0">
+            <EditorToolbar
+              section="hero"
+              group=""
+              imageField="overlay_image"
+              isVisible={overlayVisible}
+              canHide={true}
+              canDelete={false}
+              canClone={false}
+              onToggle={() => {
+                editor?.onUpdate("hero", "is_overlay_visible", overlayVisible ? "false" : "true");
+              }}
+              className="relative top-0 right-0"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-32 sm:pt-40 pb-20">
         <div className="flex-1 flex flex-col justify-center max-w-4xl">
