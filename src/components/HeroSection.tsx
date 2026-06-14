@@ -115,7 +115,7 @@ const HeroSection = () => {
   }, [heroStatsData]);
 
   return (
-    <section id="home" className="relative flex flex-col min-h-screen overflow-hidden bg-[#020617] group/hero">
+    <section id="home" className="relative flex flex-col min-h-[90vh] lg:min-h-[85vh] overflow-hidden bg-[#020617] group/hero">
       <SectionHeaderToolbar section="hero" className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10" />
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[#020617]" />
@@ -198,7 +198,7 @@ const HeroSection = () => {
         </div>
       )}
 
-      <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-32 sm:pt-40 pb-20">
+      <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-28 sm:pt-32 pb-12">
         <div className="flex-1 flex flex-col justify-center max-w-4xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-10 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
@@ -239,7 +239,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats */}
-        <div ref={statsRef} className="mt-12 sm:mt-24 lg:mt-32 hero-fade-in" style={{ animationDelay: "0.7s" }}>
+        <div ref={statsRef} className="mt-10 sm:mt-16 lg:mt-20 hero-fade-in" style={{ animationDelay: "0.7s" }}>
           <div className={`w-fit mx-auto ${content.stats_layout === "compact"
             ? "flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-16 lg:gap-x-24 gap-y-6"
             : "p-6 sm:p-8 px-8 sm:px-12 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-20 gap-y-6 shadow-2xl"
