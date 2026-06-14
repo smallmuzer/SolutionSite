@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 const logo = "/logo.png";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useSiteSettingsData } from "@/hooks/useSiteContent";
 
 async function hasAccess(userId: string): Promise<boolean> {
   try {
@@ -21,6 +22,9 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
+  const settings = useSiteSettingsData();
+  const logoPath = settings.site_logo || null;
+  const resolvedLogo = logoPath && logoPath !== "src/assets/logo.png" ? logoPath : logo;
 
   useEffect(() => {
     auth.getSession().then(async ({ data: { session } }) => {
@@ -54,7 +58,7 @@ const AdminLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="glass-card p-8 sm:p-10 w-full max-w-md">
         <div className="text-center mb-8">
-          <img src={logo} alt="Systems Solutions" className="h-12 w-12 mx-auto mb-4" />
+          <img src={resolvedLogo} alt="Systems Solutions" className="h-12 w-auto max-w-full mx-auto mb-4 object-contain" />
           <h1 className="font-heading font-bold text-2xl text-foreground">Login</h1>
           <p className="text-muted-foreground text-sm mt-1">Sign in to manage your website</p>
         </div>
