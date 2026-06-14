@@ -191,7 +191,7 @@ const HeroSection = () => {
 
         {/* Stats */}
         <div ref={statsRef} className="mt-12 sm:mt-24 lg:mt-32 hero-fade-in" style={{ animationDelay: "0.7s" }}>
-          <div className={`${content.stats_layout === "compact"
+          <div className={`w-fit mx-auto ${content.stats_layout === "compact"
             ? "flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-16 lg:gap-x-24 gap-y-6"
             : "p-6 sm:p-8 px-8 sm:px-12 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-20 gap-y-6 shadow-2xl"
             }`}>

@@ -786,7 +786,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     onChange={(e) => setActiveStyles(prev => ({ ...prev, fontFamily: e.target.value }))}
                     className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                   >
-                    <option value="">Default (Inherit)</option>
+                    <option value="">Inherit Global Font</option>
                     <option value="system-ui, sans-serif">System Sans</option>
                     <option value="'Inter', sans-serif">Inter</option>
                     <option value="'Roboto', sans-serif">Roboto</option>

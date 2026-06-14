@@ -13,7 +13,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['"Space Grotesk"', "system-ui", "sans-serif"],
+        heading: ["var(--font-header, \"Space Grotesk\")", "system-ui", "sans-serif"],
         body: ["var(--font-body,\"DM Sans\")", "system-ui", "sans-serif"],
       },
       colors: {

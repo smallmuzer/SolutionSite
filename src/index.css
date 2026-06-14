@@ -105,6 +105,16 @@
     color: inherit;
   }
 
+  h1 *,
+  h2 *,
+  h3 *,
+  h4 *,
+  h5 *,
+  h6 *,
+  .font-heading * {
+    font-family: inherit !important;
+  }
+
   .dark .text-foreground {
     color: hsl(210 20% 95%) !important;
   }
@@ -231,38 +241,117 @@
 }
 
 /* Tighter design global overrides */
-.p-6 { padding: 1rem !important; }
-.px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
-.py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.p-6 {
+  padding: 1rem !important;
+}
 
-.p-8 { padding: 1.25rem !important; }
-.px-8 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
-.py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+.px-6 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
 
-.p-10 { padding: 1.5rem !important; }
-.px-10 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
-.py-10 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+.py-6 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
 
-.p-12 { padding: 2rem !important; }
-.px-12 { padding-left: 2rem !important; padding-right: 2rem !important; }
-.py-12 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+.p-8 {
+  padding: 1.25rem !important;
+}
 
-.mb-6 { margin-bottom: 1rem !important; }
-.mb-8 { margin-bottom: 1.25rem !important; }
-.mb-10 { margin-bottom: 1.5rem !important; }
-.mb-12 { margin-bottom: 2rem !important; }
-.mb-14 { margin-bottom: 2.5rem !important; }
+.px-8 {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
 
-.mt-6 { margin-top: 1rem !important; }
-.mt-8 { margin-top: 1.25rem !important; }
-.mt-10 { margin-top: 1.5rem !important; }
-.mt-12 { margin-top: 2rem !important; }
-.mt-14 { margin-top: 2.5rem !important; }
+.py-8 {
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
 
-.gap-6 { gap: 1rem !important; }
-.gap-8 { gap: 1.25rem !important; }
-.gap-10 { gap: 1.5rem !important; }
-.gap-12 { gap: 2rem !important; }
+.p-10 {
+  padding: 1.5rem !important;
+}
+
+.px-10 {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+.py-10 {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+.p-12 {
+  padding: 2rem !important;
+}
+
+.px-12 {
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+
+.py-12 {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+.mb-6 {
+  margin-bottom: 1rem !important;
+}
+
+.mb-8 {
+  margin-bottom: 1.25rem !important;
+}
+
+.mb-10 {
+  margin-bottom: 1.5rem !important;
+}
+
+.mb-12 {
+  margin-bottom: 2rem !important;
+}
+
+.mb-14 {
+  margin-bottom: 2.5rem !important;
+}
+
+.mt-6 {
+  margin-top: 1rem !important;
+}
+
+.mt-8 {
+  margin-top: 1.25rem !important;
+}
+
+.mt-10 {
+  margin-top: 1.5rem !important;
+}
+
+.mt-12 {
+  margin-top: 2rem !important;
+}
+
+.mt-14 {
+  margin-top: 2.5rem !important;
+}
+
+.gap-6 {
+  gap: 1rem !important;
+}
+
+.gap-8 {
+  gap: 1.25rem !important;
+}
+
+.gap-10 {
+  gap: 1.5rem !important;
+}
+
+.gap-12 {
+  gap: 2rem !important;
+}
 
 
 
@@ -678,7 +767,8 @@ body.cinematic-mode .hero-parallax::after {
 }
 
 /* --- Live Visual Editor Helpers --- */
-#home, section[id] {
+#home,
+section[id] {
   scroll-margin-top: 100px;
 }
 
@@ -737,6 +827,10 @@ body.cinematic-mode .hero-parallax::after {
 }
 
 /* Ensure nav items and other active elements can override child inline typography styles */
+.nav-btn-wrapper [style] {
+  color: inherit !important;
+}
+
 .nav-btn-wrapper:hover span[style],
 .nav-btn-active span[style],
 .nav-btn-wrapper:hover [style],

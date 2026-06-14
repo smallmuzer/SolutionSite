@@ -78,6 +78,7 @@ function useDarkMode() {
 type Tab = "inbox" | "website" | "sitehealth" | "settings" | "chat";
 
 const AVAILABLE_FONTS: { label: string; value: string }[] = [
+  { label: "Default Font", value: "" },
   { label: "System Sans", value: "system-ui, sans-serif" },
   { label: "Inter", value: "'Inter', sans-serif" },
   { label: "Roboto", value: "'Roboto', sans-serif" },
@@ -1360,6 +1361,7 @@ const AdminDashboard = () => {
       // 2. Sync UX draft prioritizing Local Overrides > DB Settings
       setUxDraft({
         font_style: localPrefs.font_style || c.font_style || "'Inter', sans-serif",
+        header_font_family: localPrefs.header_font_family || c.header_font_family || "",
         font_size: localPrefs.font_size || c.font_size || "medium",
         accent_color: localPrefs.accent_color || c.accent_color || "#3b82f6",
         global_view: localPrefs.global_view || c.global_view || "grid",
@@ -2748,11 +2750,11 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-4 bg-muted/20 p-5 rounded-2xl border border-border/50 flex-1">
+                          <div className="grid grid-cols-1 gap-2 bg-muted/20 p-3 rounded-2xl border border-border/50 flex-1">
                             {/* Theme */}
                             <div>
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Visual Theme</label>
-                              <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Visual Theme</label>
+                              <div className="flex gap-1 p-0.5 bg-background border border-border rounded-xl">
                                 {["light", "dark"].map(t => (
                                   <button key={t} onClick={() => {
                                     const theme = t;
@@ -2769,7 +2771,7 @@ const AdminDashboard = () => {
                                     } catch { /* ignore */ }
                                     window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
                                   }}
-                                    className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${uxDraft.theme === t ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
+                                    className={`flex-1 py-1 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${uxDraft.theme === t ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
                                     {t}
                                   </button>
                                 ))}
@@ -2778,9 +2780,40 @@ const AdminDashboard = () => {
 
                             {/* Font Family */}
                             <div className="xl:col-span-1">
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Typography</label>
-                              <select value={uxDraft.font_style} onChange={(e) => setUxDraft(p => ({ ...p, font_style: e.target.value }))}
-                                className="w-full px-3 py-2 rounded-xl bg-background border border-border text-xs outline-none focus:ring-2 focus:ring-secondary/20">
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Global Typography</label>
+                              <select value={uxDraft.font_style} onChange={(e) => {
+                                const val = e.target.value;
+                                setUxDraft(p => ({ ...p, font_style: val }));
+                                setSiteSettings(p => ({ ...p, font_style: val }));
+                                try {
+                                  const prefs = getUserSettings() || {};
+                                  prefs.font_style = val;
+                                  saveUserSettings(prefs);
+                                } catch { /* ignore */ }
+                                applySettings({ ...siteSettings, font_style: val }, true);
+                              }}
+                                className="w-full px-3 py-0.5 rounded-xl bg-background border border-border text-xs outline-none focus:ring-2 focus:ring-secondary/20">
+                                {AVAILABLE_FONTS.map(f => (
+                                  <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Header Font Family */}
+                            <div className="xl:col-span-1">
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Header Typography</label>
+                              <select value={uxDraft.header_font_family || ''} onChange={(e) => {
+                                const val = e.target.value;
+                                setUxDraft(p => ({ ...p, header_font_family: val }));
+                                setSiteSettings(p => ({ ...p, header_font_family: val }));
+                                try {
+                                  const prefs = getUserSettings() || {};
+                                  prefs.header_font_family = val;
+                                  saveUserSettings(prefs);
+                                } catch { /* ignore */ }
+                                applySettings({ ...siteSettings, header_font_family: val }, true);
+                              }}
+                                className="w-full px-3 py-0.5 rounded-xl bg-background border border-border text-xs outline-none focus:ring-2 focus:ring-secondary/20">
                                 {AVAILABLE_FONTS.map(f => (
                                   <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>
                                 ))}
@@ -2789,13 +2822,13 @@ const AdminDashboard = () => {
 
                             {/* Text Size */}
                             <div>
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Text Size</label>
-                              <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Text Size</label>
+                              <div className="flex gap-1 p-0.5 bg-background border border-border rounded-xl">
                                 {["xs", "sm", "md", "lg", "xl"].map((size, i) => {
                                   const vals = ["x-small", "small", "medium", "large", "x-large"];
                                   return (
                                     <button key={size} onClick={() => setUxDraft(p => ({ ...p, font_size: vals[i] }))}
-                                      className={`flex-1 py-1.5 rounded-lg text-[0.625rem] font-bold uppercase tracking-tighter transition-all ${uxDraft.font_size === vals[i] ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
+                                      className={`flex-1 py-1 rounded-lg text-[0.625rem] font-bold uppercase tracking-tighter transition-all ${uxDraft.font_size === vals[i] ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
                                       {size}
                                     </button>
                                   );
@@ -2805,15 +2838,15 @@ const AdminDashboard = () => {
 
                             {/* Image/Icon Mode */}
                             <div>
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Display Mode</label>
-                              <div className="flex gap-1 p-1 bg-background border border-border rounded-xl">
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Display Mode</label>
+                              <div className="flex gap-1 p-0.5 bg-background border border-border rounded-xl">
                                 <button onClick={() => setUxDraft(p => ({ ...p, card_style: "icon" }))}
-                                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "icon" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
+                                  className={`flex-1 flex items-center justify-center gap-1 py-0.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "icon" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
                                     }`}>
                                   <Type size={10} /> Icon
                                 </button>
                                 <button onClick={() => setUxDraft(p => ({ ...p, card_style: "image" }))}
-                                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "image" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
+                                  className={`flex-1 flex items-center justify-center gap-1 py-0.5 rounded-lg text-[0.625rem] font-bold border-0 transition-all ${uxDraft.card_style === "image" ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
                                     }`}>
                                   <Image size={10} /> Image
                                 </button>
@@ -2822,10 +2855,10 @@ const AdminDashboard = () => {
 
                             {/* Brand Accent */}
                             <div>
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">Brand Accent</label>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Brand Accent</label>
                               <div className="flex items-center gap-2">
                                 <input type="color" value={uxDraft.accent_color} onChange={(e) => setUxDraft(p => ({ ...p, accent_color: e.target.value }))}
-                                  className="w-8 h-8 rounded-lg bg-background border border-border cursor-pointer p-0.5" />
+                                  className="w-7 h-7 rounded-lg bg-background border border-border cursor-pointer p-0.5" />
                                 <div className="flex gap-1 flex-wrap">
                                   {["#3b82f6", "#2db8a0", "#8b5cf6", "#f43f5e", "#f59e0b", "#10b981"].map(c => (
                                     <button key={c} onClick={() => setUxDraft(p => ({ ...p, accent_color: c }))}
@@ -2838,14 +2871,14 @@ const AdminDashboard = () => {
 
                             {/* View Strategy */}
                             <div>
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-2 block px-1">View Layout</label>
+                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block px-1">View Layout</label>
                               <div className="flex gap-1">
                                 <button onClick={() => setUxDraft(p => ({ ...p, global_view: "grid" }))}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "grid" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                                  className={`flex-1 flex items-center justify-center gap-1.5 py-1 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "grid" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
                                   <LayoutGrid size={11} /> Grid
                                 </button>
                                 <button onClick={() => setUxDraft(p => ({ ...p, global_view: "list" }))}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "list" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                                  className={`flex-1 flex items-center justify-center gap-1.5 py-1 rounded-lg text-[0.625rem] font-bold border transition-all ${uxDraft.global_view === "list" ? "border-secondary bg-secondary/5 text-secondary" : "border-border text-muted-foreground hover:bg-muted"}`}>
                                   <List size={11} /> List
                                 </button>
                               </div>
@@ -2861,7 +2894,7 @@ const AdminDashboard = () => {
                         <button onClick={() => {
                           const defaults = {
                             font_style: "'Inter', sans-serif", font_size: "small", accent_color: "#3b82f6",
-                            global_view: "grid", card_style: "icon", theme: "light"
+                            global_view: "grid", card_style: "icon", theme: "light", header_font_family: ""
                           };
                           setUxDraft(defaults);
                           setSiteSettings(p => ({ ...p, ...defaults }));

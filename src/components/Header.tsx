@@ -209,6 +209,7 @@ const Header = () => {
   return (
     <header
       style={{
+        fontFamily: "var(--font-header, inherit)",
         position: "fixed",
         top: 0,
         left: 0,
@@ -241,13 +242,13 @@ const Header = () => {
             const target = settings.site_url || "#home";
             const props = editor?.isEditMode ? getNavProps(() => scrollTo(target)) : { href: target };
             return (
-              <Wrapper {...props} className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink cursor-pointer bg-white/10 dark:bg-white/90 p-1 rounded-md transition-colors hover:bg-white/20 dark:hover:bg-white">
+              <Wrapper {...props} className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink cursor-pointer  p-1 rounded-md transition-colors ">
                 <img
                   src={resolvedLogo}
                   alt={siteName}
                   className="shrink-0"
                   style={{ height: "42px", width: "auto", maxWidth: "200px", objectFit: "contain", objectPosition: "left center" }}
-                  onError={(e) => { 
+                  onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
                     if (target.getAttribute('data-error') !== 'true') {
                       target.setAttribute('data-error', 'true');
@@ -349,7 +350,7 @@ const Header = () => {
             </div>
           )}
 
-          <div className="flex items-center gap-1 ml-1">
+          {/* <div className="flex items-center gap-1 ml-1">
             <a
               href="/admin/login"
               target="_blank" rel="noopener noreferrer"
@@ -358,7 +359,7 @@ const Header = () => {
             >
               <ShieldCheck size={17} />
             </a>
-          </div>
+          </div> */}
         </nav>
 
         {/* Mobile controls */}

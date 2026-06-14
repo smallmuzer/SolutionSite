@@ -110,8 +110,35 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
   if (fontFamily) {
     document.documentElement.style.setProperty("--font-body", fontFamily);
     document.body.style.setProperty("font-family", fontFamily, "important");
-    document.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(h => (h as HTMLElement).style.fontFamily = fontFamily);
+  } else {
+    document.documentElement.style.removeProperty("--font-body");
+    document.body.style.removeProperty("font-family");
   }
+
+  const headerFontFamily = FONT_MAP[s.header_font_family] || s.header_font_family || "";
+  if (headerFontFamily) {
+    document.documentElement.style.setProperty("--font-header", headerFontFamily);
+  } else {
+    document.documentElement.style.removeProperty("--font-header");
+  }
+
+  // Dynamically inject Google Fonts if selected
+  const loadGoogleFont = (fontVal: string) => {
+    if (!fontVal || fontVal.includes("system-ui")) return;
+    const match = fontVal.match(/'([^']+)'/);
+    if (!match) return;
+    const familyName = match[1];
+    const id = `font-${familyName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${familyName.replace(/\s+/g, '+')}:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap`;
+      document.head.appendChild(link);
+    }
+  };
+  loadGoogleFont(fontFamily);
+  loadGoogleFont(headerFontFamily);
 
   if (s.accent_color) {
     const hexToHSL = (hex: string) => {

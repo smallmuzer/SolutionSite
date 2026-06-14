@@ -30,7 +30,24 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   General: Layers,
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Frontend: "#f43f5e", // Rose/Red
+  Backend: "#10b981",  // Emerald
+  Mobile: "#0ea5e9",   // Sky Blue
+  Database: "#f59e0b", // Amber
+  DevOps: "#8b5cf6",   // Violet
+  Cloud: "#3b82f6",    // Blue
+  Language: "#6366f1", // Indigo
+  General: "#64748b",  // Slate
+};
+
 const LOCAL_LOGOS: Record<string, string> = {};
+
+const extractColor = (htmlStr: string | null | undefined, fallback: string) => {
+  if (!htmlStr) return fallback;
+  const match = htmlStr.match(/color:\s*([^;>"']+)/i);
+  return match ? match[1].trim() : fallback;
+};
 
 const LogoImg = ({ src, name, size = 24 }: { src: string; name: string; size?: number }) => {
   const [err, setErr] = useState(false);
@@ -84,7 +101,7 @@ const TechnologiesSection = () => {
         editor.onUpdate("technologies", "sort_order", idx, tech.id);
       }
     });
-    
+
     setDraggedId(null);
   };
 
@@ -92,7 +109,7 @@ const TechnologiesSection = () => {
     if (!editor?.isEditMode || !techs) return;
     const idx = techs.findIndex(t => t.id === id);
     if (idx === -1) return;
-    
+
     // Determine step: Left/Right = 1, Top/Bottom = approx one row (5)
     let step = 0;
     if (direction === "left") step = -1;
@@ -139,7 +156,7 @@ const TechnologiesSection = () => {
     </section>
   );
 
-  if (!techs || techs.length === 0) return null;
+  // Always render the section so the header is visible, even if empty.
   const scrollToContact = () => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
   return (
@@ -169,60 +186,71 @@ const TechnologiesSection = () => {
           </div>
         </AnimatedSection>
 
-        {view === "grid" ? (
+        {!techs || techs.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground border border-dashed border-border/50 rounded-xl bg-muted/5">
+            <p className="text-sm">No technologies added yet.</p>
+            {editor?.isEditMode && <p className="text-xs mt-1">Add technologies from the Admin Dashboard.</p>}
+          </div>
+        ) : view === "grid" ? (
           <div className="flex flex-wrap justify-center gap-4">
             {techs.map((tech, i) => {
               const logoSrc = tech.image_url?.trim() || LOCAL_LOGOS[tech.name] || null;
-              const nameColor = tech.name_color || "#3178C6";
-              const catColor = tech.category_color || nameColor;
+              const rawNameColor = tech.name_color || "#3178C6";
+              const nameColor = extractColor(tech.name, rawNameColor);
+              const catColor = extractColor(tech.category, tech.category_color || nameColor);
               const CatIcon = CATEGORY_ICONS[tech.category] || Layers;
               return (
                 <AnimatedSection key={tech.id} delay={i * 0.04} className="w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-10.66px)] lg:w-[calc(25%-12px)] xl:w-[calc(20%-12.8px)]">
-                  <div 
-                    className={`relative group/item cursor-pointer h-full transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''} ${!tech.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`} 
+                  <div
+                    className={`relative group/item cursor-pointer h-full transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''} ${!tech.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}
                     {...getNavProps(scrollToContact)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, tech.id)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, tech.id)}
                   >
-                    <EditorToolbar 
-                      section="technologies" id={tech.id} isVisible={tech.is_visible} imageField="image_url" iconField="icon" 
-                      className="-top-2.5 -right-2.5 shadow-xl" 
+                    <EditorToolbar
+                      section="technologies" id={tech.id} isVisible={tech.is_visible} imageField="image_url" iconField="icon"
+                      className="-top-2.5 -right-2.5 shadow-xl"
                       canMove={false}
                     />
-                    
+
                     {editor?.isEditMode && (
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1.5 pointer-events-none">
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "up"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Up (Prev Row)">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "down"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Down (Next Row)">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "left"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Left">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "right"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Right">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                         </button>
                       </div>
                     )}
 
                     <div className="absolute -inset-0.5 rounded-xl blur opacity-0 group-hover/item:opacity-40 transition duration-500" style={{ backgroundColor: nameColor }} />
-                    <div className={`relative h-full glass-card flex flex-col p-4 ${editor?.isEditMode ? "pb-11" : ""} gap-2.5 group-hover/item:-translate-y-1 shadow-sm group-hover/item:shadow-md border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden hover:outline hover:outline-2 hover:outline-secondary/50`}>
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 min-w-0">
+                    <div
+                      className={`relative h-full glass-card flex flex-col p-4 ${editor?.isEditMode ? "pb-11" : ""} gap-2.5 group-hover/item:-translate-y-1 shadow-sm group-hover/item:shadow-md border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden`}
+                      style={{ ['--card-color' as string]: nameColor }}
+                    >
+                      {/* Dynamic hover outline + background tint */}
+                      <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" style={{ outline: `2px solid color-mix(in srgb, ${nameColor} 50%, transparent)`, outlineOffset: '-1px', backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }} />
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 min-w-0 relative z-[1]">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm transform group-hover/item:scale-110 transition-transform duration-300 ease-out"
-                            style={{ background: `linear-gradient(135deg, ${nameColor}15, ${nameColor}05)`, border: `1px solid ${nameColor}25` }}>
+                            style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
                             {logoSrc ? <LogoImg src={logoSrc} name={tech.name} size={22} /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
                           </div>
                           <h3 className="font-heading font-extrabold text-[1rem] leading-tight group-hover/item:text-shadow-sm transition-colors min-w-0 break-words" style={{ color: nameColor }}>
                             <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
                           </h3>
                         </div>
-                        <span className="self-start sm:shrink-0 max-w-full text-[0.6rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border whitespace-normal sm:whitespace-nowrap mt-1 break-words"
-                          style={{ background: `${catColor}10`, color: catColor, borderColor: `${catColor}30` }}>
+                        <span className="w-fit mx-auto text-[0.6rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded border whitespace-nowrap mt-1"
+                          style={{ background: `color-mix(in srgb, ${catColor} 15%, transparent)`, color: catColor, borderColor: `color-mix(in srgb, ${catColor} 40%, transparent)` }}>
                           <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                         </span>
                       </div>
@@ -239,54 +267,57 @@ const TechnologiesSection = () => {
           <div className="flex flex-col gap-4 max-w-4xl mx-auto">
             {techs.map((tech, i) => {
               const logoSrc = tech.image_url?.trim() || LOCAL_LOGOS[tech.name] || null;
-              const nameColor = tech.name_color || "#3178C6";
-              const catColor = tech.category_color || nameColor;
+              const rawNameColor = tech.name_color || "#3178C6";
+              const nameColor = extractColor(tech.name, rawNameColor);
+              const catColor = extractColor(tech.category, tech.category_color || nameColor);
               const CatIcon = CATEGORY_ICONS[tech.category] || Layers;
               return (
                 <AnimatedSection key={tech.id} delay={i * 0.03}>
-                  <div 
-                    className={`relative group/item cursor-pointer transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''} ${!tech.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`} 
+                  <div
+                    className={`relative group/item cursor-pointer transition-all ${draggedId === tech.id ? 'opacity-20 scale-95' : ''} ${!tech.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}
                     {...getNavProps(scrollToContact)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, tech.id)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, tech.id)}
                   >
-                    <EditorToolbar 
-                      section="technologies" id={tech.id} isVisible={tech.is_visible} imageField="image_url" iconField="icon" 
-                      className="-top-2 -right-2 shadow-xl" 
+                    <EditorToolbar
+                      section="technologies" id={tech.id} isVisible={tech.is_visible} imageField="image_url" iconField="icon"
+                      className="-top-2 -right-2 shadow-xl"
                       canMove={false}
                     />
-                    
+
                     {editor?.isEditMode && (
                       <div className="absolute bottom-4 sm:bottom-5 right-2 sm:right-4 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "down"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Down">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleMove(tech.id, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                         </button>
                       </div>
                     )}
                     <div className="absolute -inset-[1px] rounded-xl blur-sm opacity-0 group-hover/item:opacity-30 transition duration-500" style={{ backgroundColor: nameColor }} />
-                    <div className={`relative glass-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 px-4 sm:px-5 py-4 ${editor?.isEditMode ? "pb-11 sm:pb-4 sm:pr-32" : ""} border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-sm shadow-sm group-hover/item:shadow-md`}>
-                      <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center p-2.5 shadow-inner transform group-hover/item:rotate-3 transition-transform duration-300"
-                        style={{ background: `linear-gradient(to bottom right, ${nameColor}20, ${nameColor}05)`, border: `1px solid ${nameColor}25` }}>
+                    <div className={`relative glass-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 px-4 sm:px-5 py-4 ${editor?.isEditMode ? "pb-11 sm:pb-4 sm:pr-32" : ""} border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-sm shadow-sm group-hover/item:shadow-md overflow-hidden`}>
+                      {/* Dynamic hover outline + background tint */}
+                      <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" style={{ outline: `2px solid color-mix(in srgb, ${nameColor} 50%, transparent)`, outlineOffset: '-1px', backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }} />
+                      <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center p-2.5 shadow-inner transform group-hover/item:rotate-3 transition-transform duration-300 relative z-[1]"
+                        style={{ background: `linear-gradient(to bottom right, color-mix(in srgb, ${nameColor} 20%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
                         {logoSrc ? <LogoImg src={logoSrc} name={tech.name} size={28} /> : <CatIcon size={24} className="text-secondary" />}
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 relative z-[1]">
                         <div className="sm:w-1/3 min-w-0 flex flex-col gap-1.5 items-start">
                           <h3 className="font-heading font-bold text-[1.05rem] sm:text-[1.1rem] min-w-0 break-words" style={{ color: nameColor }}>
                             <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
                           </h3>
-                          <span className="max-w-full text-[0.65rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md inline-block border whitespace-normal sm:whitespace-nowrap break-words"
-                            style={{ background: `${catColor}10`, color: catColor, borderColor: `${catColor}25` }}>
+                          <span className="w-fit text-[0.65rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md inline-block border whitespace-nowrap"
+                            style={{ background: `color-mix(in srgb, ${catColor} 15%, transparent)`, color: catColor, borderColor: `color-mix(in srgb, ${catColor} 40%, transparent)` }}>
                             <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                           </span>
                         </div>
@@ -294,7 +325,7 @@ const TechnologiesSection = () => {
                           <EditableText section="technologies" field="description" id={tech.id} value={tech.description} />
                         </div>
                       </div>
-                      <div className="hidden sm:flex shrink-0 ml-2 w-8 h-8 rounded-full items-center justify-center bg-secondary/5 group-hover/item:bg-secondary/15 transition-colors border border-transparent group-hover/item:border-secondary/20">
+                      <div className="hidden sm:flex shrink-0 ml-2 w-8 h-8 rounded-full items-center justify-center transition-colors border border-transparent relative z-[1]" style={{ backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }}>
                         <ArrowRight size={16} className="text-secondary/70 group-hover/item:text-secondary group-hover/item:translate-x-0.5 transition-all" />
                       </div>
                     </div>

@@ -174,13 +174,20 @@ const Footer = () => {
       {(isNetworkVisible || editor?.isEditMode) && (
         <div className={`border-b border-border/50 relative group/sect ${!isNetworkVisible ? 'opacity-50 border-dashed border-2' : ''}`}>
           <div className="container-wide px-4 sm:px-6 lg:px-8 py-6">
-            <div className="text-center mb-6">
+            <div className="text-center mb-0">
               <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(content.network_badge) ? undefined : (content.network_badge_color || undefined) }}>
                 <EditableText section="footer" field="network_badge" value={content.network_badge || "Our Network"} colorField="network_badge_color" />
               </span>
               <h3 className="font-heading font-bold text-2xl mt-2 text-foreground relative" style={{ color: hasEmbeddedColor(content.network_title) ? undefined : (content.network_title_color || undefined) }}>
-                <span className="inline-flex items-center gap-2">
-                  <EditableText section="footer" field="network_title" value={content.network_title || "Associated Companies"} colorField="network_title_color" />
+                <span className="inline-flex items-center gap-2 flex-wrap justify-center">
+                  <span>
+                    <EditableText section="footer" field="network_title" value={content.network_title || "Associated"} colorField="network_title_color" />{" "}
+                    {(content.network_highlight !== undefined ? content.network_highlight : "Companies") && (
+                      <span className="gradient-text" style={{ color: hasEmbeddedColor(content.network_highlight) ? undefined : (content.network_highlight_color || undefined), background: content.network_highlight_color && !hasEmbeddedColor(content.network_highlight) ? "none" : undefined, WebkitTextFillColor: content.network_highlight_color && !hasEmbeddedColor(content.network_highlight) ? "initial" : undefined }}>
+                        <EditableText section="footer" field="network_highlight" value={content.network_highlight !== undefined ? content.network_highlight : "Companies"} colorField="network_highlight_color" />
+                      </span>
+                    )}
+                  </span>
                   {!isNetworkVisible && editor?.isEditMode && (
                     <span className="text-amber-500" title="Section Hidden"><EyeOff size={18} /></span>
                   )}
@@ -192,7 +199,7 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch gap-0 w-full max-w-4xl mx-auto">
+            <div className={`flex overflow-x-auto items-stretch gap-0 w-full mx-auto pt-6 pb-6 snap-x custom-scrollbar max-w-7xl px-2 ${associated.length <= 3 ? "md:justify-center" : "md:justify-start"}`}>
               {associated.map((co, idx) => {
                 const isCoVisibleDraft = editor?.pendingChanges[`our_network:${co.id}:is_visible`] ?? co.is_visible;
                 const isVisible = isCoVisibleDraft !== false;
@@ -216,7 +223,7 @@ const Footer = () => {
                           window.open(hrefDraft, "_blank");
                         }
                       }}
-                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 flex-1 border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
+                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 snap-center w-[85vw] sm:w-[320px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
                     >
                       <EditorToolbar
                         section="our_network"
@@ -261,10 +268,10 @@ const Footer = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground line-clamp-1">
+                            <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground">
                               <EditableText section="our_network" field="name" id={co.id} value={co.name} />
                             </h4>
-                            {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground" />}
+                            {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground shrink-0" />}
                           </div>
                           <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
                             <EditableText section="our_network" field="subtitle" id={co.id} value={co.subtitle} />
@@ -281,19 +288,18 @@ const Footer = () => {
                         style={{ background: `linear-gradient(90deg, transparent, ${co.accent}80, transparent)` }} />
                     </a>
 
-                    {/* Handshake connector — use Unicode directly, not encoded */}
+                    {/* Handshake connector */}
                     {idx < associated.length - 1 && (
                       <div className="flex items-center justify-center shrink-0 z-10" style={{ width: 48, margin: "0 -1px" }}>
                         <div className="flex flex-col items-center gap-1">
-                          <div className="w-px h-6 bg-border/50 sm:hidden" />
-                          <div className="hidden sm:flex items-center gap-0">
+                          <div className="flex items-center gap-0">
                             <div className="w-3 h-px bg-border/60" />
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted border border-border/50" title="Partnership">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted border border-border/50 shadow-sm" title="Partnership">
                               <span style={{ fontSize: 16 }}>🤝</span>
                             </div>
                             <div className="w-3 h-px bg-border/60" />
                           </div>
-                          <span className="hidden sm:block text-[0.5rem] font-bold uppercase tracking-widest text-muted-foreground">Partners</span>
+                          <span className="text-[0.5rem] font-bold uppercase tracking-widest text-muted-foreground">Partners</span>
                         </div>
                       </div>
                     )}
@@ -432,10 +438,12 @@ const Footer = () => {
                           {(!isLinkVisible || !isGloballyVisible) && editor?.isEditMode && (
                             <span className="text-amber-500 shrink-0" title={!isGloballyVisible ? "Service hidden globally" : "Link Hidden"}><EyeOff size={11} /></span>
                           )}
-                          <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#94a3b8" }}
+                          <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit line-clamp-1" style={{ color: "#94a3b8" }}
                             onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
                             onMouseLeave={e => ((e.target as HTMLElement).style.color = "#94a3b8")}
-                          >{s.title}</a>
+                          >
+                            {s.title ? String(s.title).replace(/<[^>]*>?/gm, '') : ""}
+                          </a>
                         </div>
                       </li>
                     );

@@ -98,6 +98,7 @@ db.exec(`
     chatbot_btn_size TEXT DEFAULT '',
     theme TEXT DEFAULT 'light',
     font_style TEXT DEFAULT '',
+    header_font_family TEXT DEFAULT '',
     font_size TEXT DEFAULT '',
     card_style TEXT DEFAULT '',
     accent_color TEXT DEFAULT '',
@@ -302,6 +303,9 @@ try {
   if (!settingsCols.includes("site_url")) {
     db.exec("ALTER TABLE site_settings ADD COLUMN site_url TEXT DEFAULT '';");
   }
+  if (!settingsCols.includes("header_font_family")) {
+    db.exec("ALTER TABLE site_settings ADD COLUMN header_font_family TEXT DEFAULT '';");
+  }
 
   const testCols = db.prepare("PRAGMA table_info(testimonials)").all().map(c => c.name);
   if (!testCols.includes("sort_order")) {
@@ -351,17 +355,17 @@ try {
 
   // Seed icon values for existing services that have no icon set
   const iconSeeds = [
-    { title_like: "%Software%",   icon: "Code"       },
-    { title_like: "%Web%",        icon: "Globe"      },
-    { title_like: "%Mobile%",     icon: "Smartphone" },
-    { title_like: "%ERP%",        icon: "Database"   },
-    { title_like: "%HR%",         icon: "Users"      },
-    { title_like: "%Consulting%", icon: "Briefcase"  },
-    { title_like: "%SEO%",        icon: "Search"     },
-    { title_like: "%Design%",     icon: "Palette"    },
-    { title_like: "%Cloud%",      icon: "Cloud"      },
-    { title_like: "%Security%",   icon: "Shield"     },
-    { title_like: "%Marketing%",  icon: "Megaphone"  },
+    { title_like: "%Software%", icon: "Code" },
+    { title_like: "%Web%", icon: "Globe" },
+    { title_like: "%Mobile%", icon: "Smartphone" },
+    { title_like: "%ERP%", icon: "Database" },
+    { title_like: "%HR%", icon: "Users" },
+    { title_like: "%Consulting%", icon: "Briefcase" },
+    { title_like: "%SEO%", icon: "Search" },
+    { title_like: "%Design%", icon: "Palette" },
+    { title_like: "%Cloud%", icon: "Cloud" },
+    { title_like: "%Security%", icon: "Shield" },
+    { title_like: "%Marketing%", icon: "Megaphone" },
   ];
   for (const seed of iconSeeds) {
     db.prepare("UPDATE services SET icon = ? WHERE (icon IS NULL OR icon = '') AND title LIKE ?").run(seed.icon, seed.title_like);
@@ -374,27 +378,27 @@ try {
 
   // Seed default icons for existing jobs that have no icon set
   const jobIconSeeds = [
-    { title_like: "%Developer%",   icon: "Code2"      },
-    { title_like: "%Engineer%",    icon: "Code2"      },
-    { title_like: "%Software%",    icon: "Code2"      },
-    { title_like: "%Mobile%",      icon: "Smartphone" },
-    { title_like: "%Design%",      icon: "Palette"    },
-    { title_like: "%UI%",          icon: "Palette"    },
-    { title_like: "%UX%",          icon: "Palette"    },
-    { title_like: "%HR%",          icon: "Users"      },
-    { title_like: "%Payroll%",     icon: "Users"      },
-    { title_like: "%Marketing%",   icon: "TrendingUp" },
-    { title_like: "%SEO%",         icon: "Search"     },
-    { title_like: "%Data%",        icon: "BarChart2"  },
-    { title_like: "%Analyst%",     icon: "BarChart2"  },
-    { title_like: "%Business%",    icon: "Briefcase"  },
-    { title_like: "%Sales%",       icon: "Briefcase"  },
-    { title_like: "%Executive%",   icon: "Briefcase"  },
-    { title_like: "%Manager%",     icon: "Briefcase"  },
-    { title_like: "%Cloud%",       icon: "Cloud"      },
-    { title_like: "%DevOps%",      icon: "Server"     },
-    { title_like: "%Security%",    icon: "Shield"     },
-    { title_like: "%Support%",     icon: "Headphones" },
+    { title_like: "%Developer%", icon: "Code2" },
+    { title_like: "%Engineer%", icon: "Code2" },
+    { title_like: "%Software%", icon: "Code2" },
+    { title_like: "%Mobile%", icon: "Smartphone" },
+    { title_like: "%Design%", icon: "Palette" },
+    { title_like: "%UI%", icon: "Palette" },
+    { title_like: "%UX%", icon: "Palette" },
+    { title_like: "%HR%", icon: "Users" },
+    { title_like: "%Payroll%", icon: "Users" },
+    { title_like: "%Marketing%", icon: "TrendingUp" },
+    { title_like: "%SEO%", icon: "Search" },
+    { title_like: "%Data%", icon: "BarChart2" },
+    { title_like: "%Analyst%", icon: "BarChart2" },
+    { title_like: "%Business%", icon: "Briefcase" },
+    { title_like: "%Sales%", icon: "Briefcase" },
+    { title_like: "%Executive%", icon: "Briefcase" },
+    { title_like: "%Manager%", icon: "Briefcase" },
+    { title_like: "%Cloud%", icon: "Cloud" },
+    { title_like: "%DevOps%", icon: "Server" },
+    { title_like: "%Security%", icon: "Shield" },
+    { title_like: "%Support%", icon: "Headphones" },
   ];
   for (const seed of jobIconSeeds) {
     db.prepare("UPDATE career_jobs SET icon=? WHERE (icon IS NULL OR icon='') AND title LIKE ?").run(seed.icon, seed.title_like);
@@ -412,7 +416,7 @@ try {
   if (!appCols.includes("status")) db.exec("ALTER TABLE job_applications ADD COLUMN status TEXT NOT NULL DEFAULT 'new';");
   const apptCols = db.prepare("PRAGMA table_info(appointments)").all().map(c => c.name);
   if (!apptCols.includes("notes")) db.exec("ALTER TABLE appointments ADD COLUMN notes TEXT;");
-  
+
   const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
   if (!userCols.includes("is_active")) db.exec("ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;");
 
@@ -476,28 +480,7 @@ try {
   const techCols = db.prepare("PRAGMA table_info(technologies)").all().map(c => c.name);
   if (!techCols.includes("name_color")) db.exec("ALTER TABLE technologies ADD COLUMN name_color TEXT NOT NULL DEFAULT '#3178C6';");
   if (!techCols.includes("category_color")) db.exec("ALTER TABLE technologies ADD COLUMN category_color TEXT NOT NULL DEFAULT '#3178C6';");
-  // Seed brand colors for existing rows that have default color
-  const techColorSeeds = [
-    { name: ".NET",       name_color: "#512BD4", category_color: "#512BD4" },
-    { name: "SQL Server", name_color: "#CC2927", category_color: "#CC2927" },
-    { name: "Vue.js",     name_color: "#4FC08D", category_color: "#4FC08D" },
-    { name: "Firebase",   name_color: "#FFCA28", category_color: "#FFCA28" },
-    { name: "Node.js",    name_color: "#339933", category_color: "#339933" },
-    { name: "Cordova",    name_color: "#E8E8E8", category_color: "#E8E8E8" },
-    { name: "Kendo UI",   name_color: "#FF6358", category_color: "#FF6358" },
-    { name: "Git",        name_color: "#F05032", category_color: "#F05032" },
-    { name: "Flutter",    name_color: "#02569B", category_color: "#02569B" },
-    { name: "Angular",    name_color: "#DD0031", category_color: "#DD0031" },
-    { name: "TypeScript", name_color: "#3178C6", category_color: "#3178C6" },
-    { name: "Dart",       name_color: "#0175C2", category_color: "#0175C2" },
-    { name: "React",      name_color: "#61DAFB", category_color: "#61DAFB" },
-    { name: "Python",     name_color: "#3776AB", category_color: "#3776AB" },
-    { name: "Docker",     name_color: "#2496ED", category_color: "#2496ED" },
-    { name: "AWS",        name_color: "#FF9900", category_color: "#FF9900" },
-  ];
-  for (const s of techColorSeeds) {
-    db.prepare("UPDATE technologies SET name_color=?, category_color=? WHERE name=? AND (name_color='#3178C6' OR name_color IS NULL)").run(s.name_color, s.category_color, s.name);
-  }
+// Auto-patching colors removed to avoid overwriting user settings.
 
   // Hero Stats: add suffix column if missing
   const heroStatsCols = db.prepare("PRAGMA table_info(hero_stats)").all().map(c => c.name);
@@ -515,8 +498,8 @@ try {
     const heroRow = db.prepare("SELECT content FROM site_content WHERE section_key = 'hero'").get();
     const hc = heroRow ? JSON.parse(heroRow.content) : {};
     const cleanStats = [
-      { id: 'hs-1', count: hc.stats_projects_count    || '300', suffix: '+', label: hc.stats_projects_label    || 'Projects Completed',  color: 'gradient', is_visible: 1, sort_order: 0 },
-      { id: 'hs-2', count: hc.stats_clients_count     || '50',  suffix: '+', label: hc.stats_clients_label     || 'Happy Clients',       color: 'gradient', is_visible: 1, sort_order: 1 },
+      { id: 'hs-1', count: hc.stats_projects_count || '300', suffix: '+', label: hc.stats_projects_label || 'Projects Completed', color: 'gradient', is_visible: 1, sort_order: 0 },
+      { id: 'hs-2', count: hc.stats_clients_count || '50', suffix: '+', label: hc.stats_clients_label || 'Happy Clients', color: 'gradient', is_visible: 1, sort_order: 1 },
       { id: 'hs-3', count: hc.stats_satisfaction_count || '100', suffix: '%', label: hc.stats_satisfaction_label || 'Client Satisfaction', color: 'gradient', is_visible: 1, sort_order: 2 },
     ];
     const ins = db.prepare('INSERT INTO hero_stats (id,count,suffix,label,color,is_visible,sort_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)');
@@ -582,9 +565,9 @@ function seedData(table, rows, conflictKey = "id", updateCondition = null) {
   if (!rows || rows.length === 0) return;
   const keys = Object.keys(rows[0]);
   const placeholders = keys.map(() => "?").join(", ");
-  
+
   const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
-  
+
   let condition = updateCondition;
   if (!condition) {
     if (cols.includes("created_at") && cols.includes("updated_at")) {
@@ -605,12 +588,12 @@ function seedData(table, rows, conflictKey = "id", updateCondition = null) {
     }
     return affected;
   });
-  
+
   const changes = insertMany(rows);
   if (changes > 0) console.log(`[db] Processed ${table}: ${changes} rows affected (inserted/updated)`);
 }
 
-seedData("services", [
+seedIfEmpty("services", [
   { id: "svc-1", title: "Software Development", description: "Custom enterprise software built to your exact specifications â€” scalable, secure, and maintainable.", image_url: "/assets/services/software.png", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "svc-2", title: "Web Development", description: "Modern, responsive websites and web applications using the latest frameworks and best practices.", image_url: "/assets/services/web.png", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "svc-3", title: "Mobile App Development", description: "Native and cross-platform mobile apps for iOS and Android that deliver exceptional user experiences.", image_url: "/assets/services/mobile.png", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
@@ -622,13 +605,13 @@ seedData("services", [
   { id: "svc-9", title: "Cloud & Infrastructure", description: "Cloud migration, DevOps pipelines, and managed infrastructure to keep your systems fast and reliable.", image_url: "/assets/services/software.png", is_visible: 1, sort_order: 8, created_at: t0, updated_at: t0 },
 ]);
 
-seedData("testimonials", [
+seedIfEmpty("testimonials", [
   { id: "tst-1", name: "Ahmed Rasheed", company: "Villa Group", message: "Systems Solutions transformed our operations with their ERP system. The team was professional, responsive, and delivered exactly what we needed.", avatar_url: "/assets/testimonials/ahmed.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
   { id: "tst-2", name: "Fatima Zahir", company: "OBLU Resorts", message: "Their web development team built us a stunning booking platform. Traffic and conversions have increased significantly since launch.", avatar_url: "/assets/testimonials/fatima.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
   { id: "tst-3", name: "Dorji Wangchuk", company: "RCSC Bhutan", message: "Excellent consulting services. They understood our requirements perfectly and delivered a robust HR system on time and within budget.", avatar_url: "/assets/testimonials/dorji.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
 ]);
 
-seedData("products", [
+seedIfEmpty("products", [
   { id: "prd-1", name: "BSOL", tagline: "ERP with CRM Combined", description: "Unify your entire business â€” finance, inventory, procurement, sales pipeline, and customer relationships â€” in one powerful platform.", image_url: "/assets/products/bsol.jpg", contact_url: "#contact", is_popular: 0, is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "prd-2", name: "HR-Metrics", tagline: "HR with Task Management", description: "From hiring to payroll, attendance to performance reviews â€” HR-Metrics streamlines every HR workflow while keeping your teams aligned.", image_url: "/assets/products/hr-metrics.jpg", contact_url: "#contact", is_popular: 1, is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "prd-3", name: "GoBoat", tagline: "Complete Boat Management Software", description: "Purpose-built for the marine industry. GoBoat handles vessel scheduling, crew management, maintenance logs, and charter bookings.", image_url: "/assets/products/goboat.jpg", contact_url: "#contact", is_popular: 0, is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
@@ -636,18 +619,17 @@ seedData("products", [
   { id: "prd-5", name: "Travel", tagline: "End-to-End Travel Booking Platform", description: "A full-featured travel booking engine for agencies and operators. Manage flights, hotels, packages, visa processing, and customer itineraries.", image_url: "/assets/products/travel.jpg", contact_url: "#contact", is_popular: 0, is_visible: 1, sort_order: 4, created_at: t0, updated_at: t0 },
 ]);
 
-seedData("career_jobs", [
+seedIfEmpty("career_jobs", [
   { id: "job-1", title: "Senior Full Stack Developer", description: "We are looking for an experienced Full Stack Developer proficient in React, Node.js, and cloud technologies to join our growing team.", location: "MalÃ©, Maldives", job_type: "Full-time", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "job-2", title: "UI/UX Designer", description: "Creative designer with strong Figma skills and a portfolio of web/mobile projects. You will work closely with our development team.", location: "MalÃ©, Maldives", job_type: "Full-time", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "job-3", title: "Business Development Executive", description: "Drive growth by identifying new business opportunities, building client relationships, and closing deals across the Maldives and Bhutan.", location: "MalÃ©, Maldives", job_type: "Full-time", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
 ]);
 
-seedData("seo_settings", [
+seedIfEmpty("seo_settings", [
   { id: "seo-1", page_key: "home", title: "Systems Solutions - Leading IT Company in Maldives", description: "Transform your business with cutting-edge technology solutions. Software development, ERP, mobile apps, and IT consulting.", keywords: "IT solutions, Maldives, software development, ERP, web development", og_image: "", updated_at: t0, updated_by: null },
-], "page_key");
+]);
 
-
-seedData("client_logos", [
+seedIfEmpty("client_logos", [
   { id: "cl-0", name: "aaa Hotels & Resorts", logo_url: "/assets/clients/aaa-1.png", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
   { id: "cl-1", name: "Alia Investments", logo_url: "/assets/clients/Alia.png", is_visible: 1, sort_order: 1, created_at: t0, updated_at: t0 },
   { id: "cl-2", name: "Baglioni Resorts", logo_url: "/assets/clients/Baglioni.jpg", is_visible: 1, sort_order: 2, created_at: t0, updated_at: t0 },
@@ -700,14 +682,14 @@ try {
     }
     if (!Array.isArray(c.nav_items) || c.nav_items.length === 0) {
       c.nav_items = [
-        { label: 'Home',         href: '#home' },
-        { label: 'About',        href: '#about' },
-        { label: 'Services',     href: '#services' },
-        { label: 'Products',     href: '#products' },
-        { label: 'Portfolio',    href: '#portfolio' },
+        { label: 'Home', href: '#home' },
+        { label: 'About', href: '#about' },
+        { label: 'Services', href: '#services' },
+        { label: 'Products', href: '#products' },
+        { label: 'Portfolio', href: '#portfolio' },
         { label: 'Technologies', href: '#technologies' },
-        { label: 'Careers',      href: '#careers' },
-        { label: 'Contact',      href: '#contact' },
+        { label: 'Careers', href: '#careers' },
+        { label: 'Contact', href: '#contact' },
       ];
       dirty = true;
     }
@@ -727,25 +709,27 @@ try {
 } catch (e) { console.error('[db] settings patch error:', e.message); }
 
 const siteSettingsSeeds = [
-  { id: "settings", 
+  {
+    id: "settings",
     site_name: "Systems Solutions",
     site_url: "http://beta.solutions.com.mv",
     site_logo: "/logo.png",
     contact_email: "info@solutions.com.mv",
     contact_phone: "+960 301-1355",
     nav_items: JSON.stringify([
-      { label: 'Home',         href: '#home' },
-      { label: 'About',        href: '#about' },
-      { label: 'Services',     href: '#services' },
-      { label: 'Products',     href: '#products' },
-      { label: 'Portfolio',    href: '#portfolio' },
+      { label: 'Home', href: '#home' },
+      { label: 'About', href: '#about' },
+      { label: 'Services', href: '#services' },
+      { label: 'Products', href: '#products' },
+      { label: 'Portfolio', href: '#portfolio' },
       { label: 'Technologies', href: '#technologies' },
-      { label: 'Careers',      href: '#careers' },
-      { label: 'Contact',      href: '#contact' },
+      { label: 'Careers', href: '#careers' },
+      { label: 'Contact', href: '#contact' },
     ]),
-    created_at: t0, updated_at: t0 }
+    created_at: t0, updated_at: t0
+  }
 ];
-seedData("site_settings", siteSettingsSeeds, "id");
+seedIfEmpty("site_settings", siteSettingsSeeds);
 
 const socialLinksSeeds = [
   { id: "sl-1", platform: "Facebook", icon: "Facebook", url: "https://www.facebook.com/brilliantsystemssolutions/", color: "#1877F2", is_visible: 1, sort_order: 0, created_at: t0, updated_at: t0 },
@@ -755,59 +739,69 @@ const socialLinksSeeds = [
   { id: "sl-5", platform: "Viber", icon: "Viber", url: "viber://chat?number=", color: "#7360f2", is_visible: 1, sort_order: 4, created_at: t0, updated_at: t0 },
   { id: "sl-6", platform: "WhatsApp", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whatsapp"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`, url: "https://wa.me/9603011355", color: "#25D366", is_visible: 1, sort_order: 5, created_at: t0, updated_at: t0 }
 ];
-seedData("social_links", socialLinksSeeds, "id");
+seedIfEmpty("social_links", socialLinksSeeds);
 
 const siteContentSeeds = [
-  { section_key: "hero", content: JSON.stringify({
-    title: "Leading IT Solutions Company in Maldives",
-    subtitle: "Transform your business with cutting-edge technology solutions.",
-    cta_text: "Get Started",
-    badge: "Maldives' Leading IT Solutions Partner",
-    hero_images: "/assets/uploads/whiteland5.jpg,/assets/uploads/Maldives.png",
-    hero_image: "/assets/uploads/modern_hero_glass_1775323942548.webp"
-  }) },
-  { section_key: "about", content: JSON.stringify({
-    title: "Driving Digital Transformation",
-    description: "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!",
-    vision: "Our journey began out of the passion for a unique position in the industry.",
-    card_mission: "Deliver innovative technology solutions that transform businesses.",
-    card_team: "Expert developers, designers, and consultants dedicated to your success.",
-    card_quality: "Every solution we build meets the highest standards of performance.",
-    card_global: "Serving clients across Maldives, Bhutan, and beyond.",
-    card_mission_image: "/assets/uploads/white_designer_1775410426535.png",
-    card_team_image: "/assets/uploads/white_dev_1775409804566.png",
-    card_quality_image: "/assets/uploads/white_business_1775409832581.png",
-    card_global_image: "/assets/uploads/CloudInfra_1775027818619.png"
-  }) },
-  { section_key: "contact", content: JSON.stringify({
-    title: "Get In Touch",
-    subtitle: "Ready to transform your business? Contact us today.",
-    address: "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives",
-    email: "info@solutions.com.mv",
-    phone: "+960 301-1355",
-    landline: "+91-452 238 7388",
-    hours: "Sun–Thu: 9AM–6PM\\nSat: 9AM–1PM",
-    facebook: "https://www.facebook.com/brilliantsystemssolutions/",
-    twitter: "https://x.com/bsspl_india",
-    linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
-    instagram: "https://www.instagram.com/brilliantsystemssolutions"
-  }) },
-  { section_key: "footer", content: JSON.stringify({
-    copyright: `© 2026 Systems Solutions Pvt Ltd. All rights reserved.`,
-    tagline: "Leading IT consulting and software development company delivering cutting-edge technology solutions.",
-    facebook: "https://www.facebook.com/brilliantsystemssolutions/",
-    twitter: "https://x.com/bsspl_india",
-    linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
-    instagram: "https://www.instagram.com/brilliantsystemssolutions"
-  }) },
-  { section_key: "clients", content: JSON.stringify({
-    badge: "Our Clients", title: "Trusted by", highlight: "Industry Leaders",
-    description: "We're proud to have served over 300+ successful projects for leading companies across the Maldives and beyond."
-  }) },
-  { section_key: "services",     content: JSON.stringify({ title: "Services & Solutions We Deliver", subtitle: "Team up with the perfect digital partner for all your technical needs to achieve your business goals, reduce costs and accelerate growth." }) },
+  {
+    section_key: "hero", content: JSON.stringify({
+      title: "Leading IT Solutions Company in Maldives",
+      subtitle: "Transform your business with cutting-edge technology solutions.",
+      cta_text: "Get Started",
+      badge: "Maldives' Leading IT Solutions Partner",
+      hero_images: "/assets/uploads/whiteland5.jpg,/assets/uploads/Maldives.png",
+      hero_image: "/assets/uploads/modern_hero_glass_1775323942548.webp"
+    })
+  },
+  {
+    section_key: "about", content: JSON.stringify({
+      title: "Driving Digital Transformation",
+      description: "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!",
+      vision: "Our journey began out of the passion for a unique position in the industry.",
+      card_mission: "Deliver innovative technology solutions that transform businesses.",
+      card_team: "Expert developers, designers, and consultants dedicated to your success.",
+      card_quality: "Every solution we build meets the highest standards of performance.",
+      card_global: "Serving clients across Maldives, Bhutan, and beyond.",
+      card_mission_image: "/assets/uploads/white_designer_1775410426535.png",
+      card_team_image: "/assets/uploads/white_dev_1775409804566.png",
+      card_quality_image: "/assets/uploads/white_business_1775409832581.png",
+      card_global_image: "/assets/uploads/CloudInfra_1775027818619.png"
+    })
+  },
+  {
+    section_key: "contact", content: JSON.stringify({
+      title: "Get In Touch",
+      subtitle: "Ready to transform your business? Contact us today.",
+      address: "Alia Building, 7th Floor\nGandhakoalhi Magu\nMalé, Maldives",
+      email: "info@solutions.com.mv",
+      phone: "+960 301-1355",
+      landline: "+91-452 238 7388",
+      hours: "Sun–Thu: 9AM–6PM\\nSat: 9AM–1PM",
+      facebook: "https://www.facebook.com/brilliantsystemssolutions/",
+      twitter: "https://x.com/bsspl_india",
+      linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
+      instagram: "https://www.instagram.com/brilliantsystemssolutions"
+    })
+  },
+  {
+    section_key: "footer", content: JSON.stringify({
+      copyright: `© 2026 Systems Solutions Pvt Ltd. All rights reserved.`,
+      tagline: "Leading IT consulting and software development company delivering cutting-edge technology solutions.",
+      facebook: "https://www.facebook.com/brilliantsystemssolutions/",
+      twitter: "https://x.com/bsspl_india",
+      linkedin: "https://in.linkedin.com/company/brilliantsystemssolutions",
+      instagram: "https://www.instagram.com/brilliantsystemssolutions"
+    })
+  },
+  {
+    section_key: "clients", content: JSON.stringify({
+      badge: "Our Clients", title: "Trusted by", highlight: "Industry Leaders",
+      description: "We're proud to have served over 300+ successful projects for leading companies across the Maldives and beyond."
+    })
+  },
+  { section_key: "services", content: JSON.stringify({ title: "Services & Solutions We Deliver", subtitle: "Team up with the perfect digital partner for all your technical needs to achieve your business goals, reduce costs and accelerate growth." }) },
   { section_key: "testimonials", content: JSON.stringify({ badge: "Testimonials", title: "What Our", highlight: "Clients Say" }) },
-  { section_key: "careers",      content: JSON.stringify({ badge: "Careers", title: "Join Our", highlight: "Team", description: "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide." }) },
-  { section_key: "technologies",  content: JSON.stringify({ badge: "Our Stack", title: "Technologies", highlight: "We Use", description: "We leverage cutting-edge technologies to build robust, scalable, and future-proof solutions for our clients." }) },
+  { section_key: "careers", content: JSON.stringify({ badge: "Careers", title: "Join Our", highlight: "Team", description: "Be part of a dynamic team building cutting-edge technology solutions for clients worldwide." }) },
+  { section_key: "technologies", content: JSON.stringify({ badge: "Our Stack", title: "Technologies", highlight: "We Use", description: "We leverage cutting-edge technologies to build robust, scalable, and future-proof solutions for our clients." }) },
 ];
 const mappedSiteContentSeeds = siteContentSeeds.map(s => ({
   id: randomUUID(),
@@ -816,26 +810,9 @@ const mappedSiteContentSeeds = siteContentSeeds.map(s => ({
   created_at: t0,
   updated_at: t0
 }));
-seedData("site_content", mappedSiteContentSeeds, "section_key");
+seedIfEmpty("site_content", mappedSiteContentSeeds);
 
-seedData("technologies", [
-  { id: "tech-1",  name: ".NET",        description: "Microsoft's powerful framework for building enterprise-grade web, desktop, and cloud applications.",          image_url: "/assets/technologies/dotnet.png",      category: "Backend",  name_color: "#512BD4", category_color: "#512BD4", is_visible: 1, sort_order: 0,  created_at: t0, updated_at: t0 },
-  { id: "tech-2",  name: "SQL Server",  description: "Microsoft's relational database management system for secure, scalable data storage and analytics.",       image_url: "/assets/technologies/sqlserver.png",   category: "Database", name_color: "#CC2927", category_color: "#CC2927", is_visible: 1, sort_order: 1,  created_at: t0, updated_at: t0 },
-  { id: "tech-3",  name: "Vue.js",      description: "Progressive JavaScript framework for building modern, reactive user interfaces and single-page apps.",      image_url: "/assets/technologies/vuejs.png",       category: "Frontend", name_color: "#4FC08D", category_color: "#4FC08D", is_visible: 1, sort_order: 2,  created_at: t0, updated_at: t0 },
-  { id: "tech-4",  name: "Firebase",    description: "Google's platform for real-time databases, authentication, hosting, and serverless cloud functions.",       image_url: "/assets/technologies/firebase.png",    category: "Backend",  name_color: "#FFCA28", category_color: "#FFCA28", is_visible: 1, sort_order: 3,  created_at: t0, updated_at: t0 },
-  { id: "tech-5",  name: "Node.js",     description: "Fast, event-driven JavaScript runtime for building scalable server-side and network applications.",         image_url: "/assets/technologies/nodejs.png",      category: "Backend",  name_color: "#339933", category_color: "#339933", is_visible: 1, sort_order: 4,  created_at: t0, updated_at: t0 },
-  { id: "tech-6",  name: "Cordova",     description: "Open-source framework for building cross-platform mobile apps using HTML, CSS, and JavaScript.",           image_url: "/assets/technologies/cordova.png",     category: "Mobile",   name_color: "#4CC2E4", category_color: "#4CC2E4", is_visible: 1, sort_order: 5,  created_at: t0, updated_at: t0 },
-  { id: "tech-7",  name: "Kendo UI",    description: "Comprehensive UI component library for building rich, data-driven web applications with ease.",             image_url: "/assets/technologies/kendoui.png",     category: "Frontend", name_color: "#FF6358", category_color: "#FF6358", is_visible: 1, sort_order: 6,  created_at: t0, updated_at: t0 },
-  { id: "tech-8",  name: "Git",         description: "Industry-standard distributed version control system for tracking code changes and team collaboration.",    image_url: "/assets/technologies/git.png",         category: "DevOps",   name_color: "#F05032", category_color: "#F05032", is_visible: 1, sort_order: 7,  created_at: t0, updated_at: t0 },
-  { id: "tech-9",  name: "Flutter",     description: "Google's UI toolkit for crafting natively compiled, beautiful apps for mobile, web, and desktop.",         image_url: "/assets/technologies/flutter.png",     category: "Mobile",   name_color: "#02569B", category_color: "#02569B", is_visible: 1, sort_order: 8,  created_at: t0, updated_at: t0 },
-  { id: "tech-10", name: "Angular",     description: "TypeScript-based web application framework by Google for building scalable enterprise front-ends.",         image_url: "/assets/technologies/angular.png",     category: "Frontend", name_color: "#DD0031", category_color: "#DD0031", is_visible: 1, sort_order: 9,  created_at: t0, updated_at: t0 },
-  { id: "tech-11", name: "TypeScript",  description: "Strongly typed superset of JavaScript that compiles to plain JS, enabling safer and more scalable code.",  image_url: "/assets/technologies/typescript.png",  category: "Language", name_color: "#3178C6", category_color: "#3178C6", is_visible: 1, sort_order: 10, created_at: t0, updated_at: t0 },
-  { id: "tech-12", name: "Dart",        description: "Client-optimized language by Google, powering Flutter apps with fast performance and expressive syntax.",   image_url: "/assets/technologies/dart.png",        category: "Language", name_color: "#0175C2", category_color: "#0175C2", is_visible: 1, sort_order: 11, created_at: t0, updated_at: t0 },
-  { id: "tech-13", name: "React",       description: "Facebook's declarative JavaScript library for building fast, component-based user interfaces.",              image_url: "/assets/technologies/react.png",       category: "Frontend", name_color: "#61DAFB", category_color: "#61DAFB", is_visible: 1, sort_order: 12, created_at: t0, updated_at: t0 },
-  { id: "tech-14", name: "Python",      description: "Versatile, high-level programming language widely used for AI, data science, automation, and web backends.", image_url: "/assets/technologies/python.png",      category: "Language", name_color: "#3776AB", category_color: "#3776AB", is_visible: 1, sort_order: 13, created_at: t0, updated_at: t0 },
-  { id: "tech-15", name: "Docker",      description: "Platform for containerizing applications to ensure consistent environments across development and production.", image_url: "/assets/technologies/docker.png",      category: "DevOps",   name_color: "#2496ED", category_color: "#2496ED", is_visible: 1, sort_order: 14, created_at: t0, updated_at: t0 },
-  { id: "tech-16", name: "AWS",         description: "Amazon Web Services — the world's most comprehensive cloud platform for hosting, storage, and AI services.",  image_url: "/assets/technologies/aws.png",         category: "Cloud",    name_color: "#FF9900", category_color: "#FF9900", is_visible: 1, sort_order: 15, created_at: t0, updated_at: t0 },
-]);
+// User-managed table: Do not auto-seed 'technologies' to prevent overwriting user deletions
 
 seedIfEmpty("users", [
   { id: "admin-local", email: "admin@solutions.com.mv", password: "Admin@1234", userrole: "admin", created_at: t0, updated_at: t0 }

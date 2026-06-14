@@ -248,19 +248,20 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       return;
     }
     try {
+      const uiSection = section === "client_logos" ? "clients" : section;
       const defaults: any = { is_visible: true, sort_order: 0 };
-      if (section === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
-      else if (section === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
-      else if (section === "global_presence") { defaults.name = "New Location, Country"; defaults.lat = 4.1755; defaults.lng = 73.5093; defaults.clients = "New Clients details"; defaults.description = "New location active operations and technical details."; defaults.flag = "📍"; defaults.landmark = "New Landmark"; }
-      else if (section === "our_network") { defaults.name = "New Partner Company"; defaults.subtitle = "Technology Affiliate"; defaults.desc = "Brief description of the partner company, services, and strategic alignment."; defaults.href = "https://"; defaults.logo_url = "/assets/clients/oblu.png"; defaults.accent = "#3b82f6"; defaults.flag = "🏢"; }
-      else if (section === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
-      else if (section === "client_logos") { defaults.name = "New Client"; defaults.logo_url = ""; }
-      else if (section === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
+      if (uiSection === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
+      else if (uiSection === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
+      else if (uiSection === "global_presence") { defaults.name = "New Location, Country"; defaults.lat = 4.1755; defaults.lng = 73.5093; defaults.clients = "New Clients details"; defaults.description = "New location active operations and technical details."; defaults.flag = "📍"; defaults.landmark = "New Landmark"; }
+      else if (uiSection === "our_network") { defaults.name = "New Partner Company"; defaults.subtitle = "Technology Affiliate"; defaults.desc = "Brief description of the partner company, services, and strategic alignment."; defaults.href = "https://"; defaults.logo_url = "/assets/clients/oblu.png"; defaults.accent = "#3b82f6"; defaults.flag = "🏢"; }
+      else if (uiSection === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
+      else if (uiSection === "clients") { defaults.name = "New Client"; defaults.logo_url = ""; }
+      else if (uiSection === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
       else { defaults.title = "New Item"; defaults.name = "New Item"; }
 
       const newId = `temp_${Date.now()}`;
-      setPendingChanges(prev => ({ ...prev, [`${section}:${newId}:_clone`]: defaults }));
-      toast.success(`Added new item to ${section} (Draft). Click 'Save All Changes' to apply.`);
+      setPendingChanges(prev => ({ ...prev, [`${uiSection}:${newId}:_clone`]: defaults }));
+      toast.success(`Added new item to ${uiSection} (Draft). Click 'Save All Changes' to apply.`);
     } catch (err: any) {
       toast.error(`Failed to add: ${err.message}`);
     }

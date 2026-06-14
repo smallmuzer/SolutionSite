@@ -6,7 +6,9 @@ import "leaflet/dist/leaflet.css";
 import { MapPin, Users, Building2, Map, X } from "lucide-react";
 import { dbSelect } from "@/lib/api";
 import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation, hasEmbeddedColor } from "./admin/LiveEditorContext";
-
+import { useDbQuery } from "@/hooks/useDbQuery";
+import { useSiteContent } from "@/hooks/useSiteContent";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -60,11 +62,14 @@ const WorldMap = () => {
   const editor = useLiveEditor();
   const getNavProps = useLiveEditorNavigation();
   const [activeLocation, setActiveLocation] = useState<LocationData | null>(null);
+  const { data: dbPresence } = useDbQuery<any[]>("global_presence", {}, { order: "sort_order", asc: true });
+  const { data: clientsRes } = useDbQuery<any[]>("client_logos", { is_visible: true });
+  const rawContent = useSiteContent("global_presence_header");
+  const headerContent = { badge: "Global Presence", title: "Our", highlight: "Reach", description: "Serving clients across Maldives, Bhutan, and beyond.", ...rawContent };
   const [locations, setLocations] = useState<LocationData[]>(DEFAULT_LOCATIONS);
   const [showMap, setShowMap] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
-  const [header, setHeader] = useState({ badge: "Global Presence", title: "Our", highlight: "Reach", description: "Serving clients across Maldives, Bhutan, and beyond." });
   const detailTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const handleMove = (id: string, direction: "up" | "down" | "left" | "right") => {
@@ -91,36 +96,20 @@ const WorldMap = () => {
   };
 
   useEffect(() => {
-    const load = async () => {
-      const [presenceRes, headerRes, clientsRes] = await Promise.all([
-        dbSelect<any>("global_presence", undefined, { order: "sort_order", asc: true }),
-        dbSelect<any>("site_content", { section_key: "global_presence_header" }, { single: true }),
-        dbSelect<any>("client_logos", { is_visible: true }),
-      ]);
-      let locs: LocationData[] = [...DEFAULT_LOCATIONS];
-      if (presenceRes.data && presenceRes.data.length > 0) {
-        locs = presenceRes.data;
-        // array check already done by length > 0
-      }
-      if (clientsRes.data) {
-        for (const cl of clientsRes.data) {
-          const mapped = CLIENT_LOCATION_MAP[cl.name];
-          if (mapped && !locs.some(l => l.name === mapped.name)) {
-            locs.push({ ...mapped, clients: cl.name });
-          }
+    let locs: LocationData[] = [...DEFAULT_LOCATIONS];
+    if (dbPresence && dbPresence.length > 0) {
+      locs = [...dbPresence];
+    }
+    if (clientsRes && clientsRes.length > 0) {
+      for (const cl of clientsRes) {
+        const mapped = CLIENT_LOCATION_MAP[cl.name];
+        if (mapped && !locs.some(l => l.name === mapped.name)) {
+          locs.push({ ...mapped, clients: cl.name } as any);
         }
       }
-      setLocations(locs);
-      if (headerRes.data?.content) {
-        const c = headerRes.data.content as any;
-        setHeader(h => ({ ...h, ...c }));
-      }
-    };
-    load();
-    const reload = () => { void load(); };
-    window.addEventListener("ss:contentSaved", reload);
-    return () => window.removeEventListener("ss:contentSaved", reload);
-  }, []);
+    }
+    setLocations(locs);
+  }, [dbPresence, clientsRes]);
 
   const handleLocationClick = (loc: LocationData) => {
     if (activeLocation?.name === loc.name && showMap) {
@@ -143,50 +132,50 @@ const WorldMap = () => {
     setTimeout(() => setActiveLocation(null), 250);
   };
 
-  const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => l.name === loc.name) === idx);
+  const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => ((l as any).id || l.name) === ((loc as any).id || loc.name)) === idx);
 
   return (
     <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-0">
-          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(header.badge) ? undefined : ((header as any).badge_color || undefined) }}>
-            <EditableText section="global_reach" field="badge" value={header.badge || "Global Presence"} colorField="badge_color" />
+          <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(headerContent.badge) ? undefined : ((headerContent as any).badge_color || undefined) }}>
+            <EditableText section="global_reach" field="badge" value={headerContent.badge || "Global Presence"} colorField="badge_color" />
           </span>
-          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-2 relative" style={{ color: hasEmbeddedColor(header.title) ? undefined : ((header as any).title_color || undefined) }}>
-            <EditableText section="global_reach" field="title" value={header.title || "Our"} colorField="title_color" />{" "}
-            <span className="gradient-text" style={{ color: hasEmbeddedColor(header.highlight) ? undefined : ((header as any).highlight_color || undefined), background: (header as any).highlight_color && !hasEmbeddedColor(header.highlight) ? "none" : undefined, WebkitTextFillColor: (header as any).highlight_color && !hasEmbeddedColor(header.highlight) ? "initial" : undefined }}>
-              <EditableText section="global_reach" field="highlight" value={header.highlight || "Reach"} colorField="highlight_color" />
+          <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-2 relative" style={{ color: hasEmbeddedColor(headerContent.title) ? undefined : ((headerContent as any).title_color || undefined) }}>
+            <EditableText section="global_reach" field="title" value={headerContent.title || "Our"} colorField="title_color" />{" "}
+            <span className="gradient-text" style={{ color: hasEmbeddedColor(headerContent.highlight) ? undefined : ((headerContent as any).highlight_color || undefined), background: (headerContent as any).highlight_color && !hasEmbeddedColor(headerContent.highlight) ? "none" : undefined, WebkitTextFillColor: (headerContent as any).highlight_color && !hasEmbeddedColor(headerContent.highlight) ? "initial" : undefined }}>
+              <EditableText section="global_reach" field="highlight" value={headerContent.highlight || "Reach"} colorField="highlight_color" />
             </span>
             <SectionHeaderToolbar section="global_presence" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(header.description) ? undefined : ((header as any).description_color || undefined) }}>
-            <EditableText section="global_reach" field="description" value={header.description || ""} colorField="description_color" />
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(headerContent.description) ? undefined : ((headerContent as any).description_color || undefined) }}>
+            <EditableText section="global_reach" field="description" value={headerContent.description || ""} colorField="description_color" />
           </div>
         </AnimatedSection>
 
         <AnimatedSection>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className={`flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-12 snap-x snap-mandatory scroll-smooth custom-scrollbar ${uniqueLocations.length === 1 ? "justify-center" : uniqueLocations.length === 2 ? "sm:justify-center" : uniqueLocations.length === 3 ? "md:justify-center lg:justify-center" : ""}`}>
+            <div className={`flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-12 snap-x snap-mandatory scroll-smooth custom-scrollbar w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}>
               {uniqueLocations.map((loc) => {
                 const isActive = activeLocation?.name === loc.name;
                 return (
                   <div
-                    key={loc.name}
+                    key={(loc as any).id || loc.name}
                     onPointerDown={() => editor?.setActiveElementId(`toolbar:global_presence:${loc.name}`)}
                     {...getNavProps(() => handleLocationClick(loc))}
                     className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 shrink-0 snap-start w-[85vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
-                    style={{
-                      border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
-                      background: isActive
-                        ? "linear-gradient(135deg, hsl(var(--secondary)/0.18), hsl(var(--secondary)/0.06))"
-                        : "linear-gradient(135deg, hsl(var(--card)/0.90), hsl(var(--card)/0.60))",
-                      backdropFilter: "blur(20px)",
-                      transform: isActive ? "scale(1.02)" : "scale(1)",
-                      boxShadow: isActive ? "0 6px 18px hsl(var(--secondary)/0.12)" : "0 3px 10px rgba(0,0,0,0.02)",
-                      minHeight: 100,
-                    }}
-                  >
+                        style={{
+                          border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
+                          background: isActive
+                            ? "linear-gradient(135deg, hsl(var(--secondary)/0.18), hsl(var(--secondary)/0.06))"
+                            : "linear-gradient(135deg, hsl(var(--card)/0.90), hsl(var(--card)/0.60))",
+                          backdropFilter: "blur(20px)",
+                          transform: isActive ? "scale(1.02)" : "scale(1)",
+                          boxShadow: isActive ? "0 6px 18px hsl(var(--secondary)/0.12)" : "0 3px 10px rgba(0,0,0,0.02)",
+                          minHeight: 100,
+                        }}
+                      >
                     <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
                       <div className="flex items-center gap-2.5">
                         <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">

@@ -150,7 +150,14 @@ const ContactSection = () => {
             <EditableText section="contact" field="badge" value={content.badge || "Reach Us"} colorField="badge_color" />
           </div>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-1 mb-2" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
-            <EditableText section="contact" field="title" value={content.title || "Get In Touch"} colorField="title_color" />
+            <span>
+              <EditableText section="contact" field="title" value={content.title || "Get In"} colorField="title_color" />{" "}
+              {(content.highlight !== undefined ? content.highlight : "Touch") && (
+                <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
+                  <EditableText section="contact" field="highlight" value={content.highlight !== undefined ? content.highlight : "Touch"} colorField="highlight_color" />
+                </span>
+              )}
+            </span>
           </h2>
           <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
             <EditableText section="contact" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
@@ -386,7 +393,7 @@ const ContactSection = () => {
                           </SelectTrigger>
                           <SelectContent>
                             {services.map(s => (
-                              <SelectItem key={(s as any).id || s.title} value={s.title}>{s.title}</SelectItem>
+                              <SelectItem key={(s as any).id || s.title} value={s.title}>{s.title ? String(s.title).replace(/<[^>]*>?/gm, '') : ""}</SelectItem>
                             ))}
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
