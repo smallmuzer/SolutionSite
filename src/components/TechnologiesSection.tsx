@@ -49,12 +49,12 @@ const extractColor = (htmlStr: string | null | undefined, fallback: string) => {
   return match ? match[1].trim() : fallback;
 };
 
-const LogoImg = ({ src, name, size = 24 }: { src: string; name: string; size?: number }) => {
+const LogoImg = ({ src, name, className }: { src: string; name: string; className?: string }) => {
   const [err, setErr] = useState(false);
-  if (err) return <Layers size={size * 0.7} className="text-secondary/60" />;
+  if (err) return <Layers className={`text-secondary/60 ${className}`} />;
   return (
-    <img src={src} alt={name} width={size} height={size}
-      className="object-contain" style={{ width: size, height: size }}
+    <img src={src} alt={name}
+      className={`object-contain mix-blend-multiply dark:mix-blend-normal ${className || "w-full h-full"}`}
       onError={() => setErr(true)} />
   );
 };
@@ -243,7 +243,7 @@ const TechnologiesSection = () => {
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm transform group-hover/item:scale-110 transition-transform duration-300 ease-out"
                             style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
-                            {logoSrc ? <LogoImg src={logoSrc} name={tech.name} size={22} /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
+                            {logoSrc ? <LogoImg src={logoSrc} name={tech.name} className="w-full h-full drop-shadow-sm" /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
                           </div>
                           <h3 className="font-heading font-extrabold text-[1rem] leading-tight group-hover/item:text-shadow-sm transition-colors min-w-0 break-words" style={{ color: nameColor }}>
                             <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
@@ -309,7 +309,7 @@ const TechnologiesSection = () => {
                       <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" style={{ outline: `2px solid color-mix(in srgb, ${nameColor} 50%, transparent)`, outlineOffset: '-1px', backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }} />
                       <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center p-2.5 shadow-inner transform group-hover/item:rotate-3 transition-transform duration-300 relative z-[1]"
                         style={{ background: `linear-gradient(to bottom right, color-mix(in srgb, ${nameColor} 20%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
-                        {logoSrc ? <LogoImg src={logoSrc} name={tech.name} size={28} /> : <CatIcon size={24} className="text-secondary" />}
+                        {logoSrc ? <LogoImg src={logoSrc} name={tech.name} className="w-full h-full drop-shadow-sm" /> : <CatIcon size={24} className="text-secondary" />}
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 relative z-[1]">
                         <div className="sm:w-1/3 min-w-0 flex flex-col gap-1.5 items-start">

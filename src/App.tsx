@@ -20,7 +20,7 @@ const RouteFallback = () => <div className="min-h-screen bg-background" />;
 
 const TrackingScripts = () => {
   const settings = useSiteSettings();
-  
+
   useEffect(() => {
     // Google Analytics
     if (settings.google_analytics_id) {
@@ -161,7 +161,7 @@ const AppContent = () => {
       <TrackingScripts />
       <TooltipProvider>
         <Toaster />
-        <Sonner duration={2500} />
+        <Sonner duration={1500} />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
