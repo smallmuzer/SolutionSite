@@ -29,17 +29,19 @@ const StatItem = ({ count, label, color, suffix, isVisible, inView, id }: {
   inView: boolean,
   id?: string
 }) => {
+  const editor = useLiveEditor();
   const numericVal = parseInt(count);
   const isNumeric = !isNaN(numericVal) && String(numericVal) === count.trim();
   const animated = useCountUp(isNumeric ? numericVal : 0, 2000, inView && isNumeric);
   const isGradient = color === "gradient";
+  const displayValue = !editor?.isEditMode && isNumeric ? String(animated) : count;
 
   return (
     <div className="flex flex-col transition-transform hover:scale-110 duration-300 relative group/item px-2">
       <EditorToolbar section="hero_stats" id={id} isVisible={isVisible} colorField="color" className="-top-8 right-1/2 translate-x-1/2" />
       <div className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl">
         <span className={isGradient ? "gradient-text" : ""}>
-          <EditableText section="hero_stats" field="count" id={id} value={count} colorField="color" colorValue={isGradient ? undefined : color} hideColorPicker />
+          <EditableText section="hero_stats" field="count" id={id} value={displayValue} colorField="color" colorValue={isGradient ? undefined : color} hideColorPicker />
           {suffix && <EditableText section="hero_stats" field="suffix" id={id} value={suffix} colorField="color" colorValue={isGradient ? undefined : color} hideColorPicker />}
         </span>
       </div>
@@ -157,10 +159,7 @@ const HeroSection = () => {
         }}
       />
 
-      {/* SVG Overlay Spotlight (Increases visibility of multiplied images) */}
-      {(overlayImage || editor?.isEditMode) && (
-        <div className={`absolute top-1/2 -translate-y-1/2 right-0 sm:right-[2%] lg:right-[5%] z-10 w-[75%] sm:w-[45%] lg:w-[35%] max-w-[300px] aspect-square bg-white/80 rounded-full blur-[60px] pointer-events-none ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`} />
-      )}
+      {/* Removed SVG Overlay Spotlight per user request */}
 
       {/* SVG Overlay Graphic (Visual Layer) */}
       {(overlayImage || editor?.isEditMode) && (
