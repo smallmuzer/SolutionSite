@@ -139,6 +139,8 @@ const TechnologiesSection = () => {
     description: content.description || "cutting-edge technologies..."
   };
 
+  if (!editor?.isEditMode && content?.is_visible === false) return null;
+
   if (isLoading) return (
     <section id="technologies" className="section-padding section-alt relative overflow-hidden">
       <div className="container-wide relative z-10 animate-pulse">

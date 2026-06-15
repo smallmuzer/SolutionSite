@@ -114,9 +114,11 @@ const HeroSection = () => {
     if (heroStatsData) setHeroStats(heroStatsData);
   }, [heroStatsData]);
 
+  if (!editor?.isEditMode && content?.is_visible === false) return null;
+
   return (
     <section id="home" className="relative flex flex-col min-h-[90vh] lg:min-h-[85vh] overflow-hidden bg-[#020617] group/hero">
-      <SectionHeaderToolbar section="hero" className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10" />
+      <SectionHeaderToolbar section="hero" isVisible={content.is_visible !== false} className="top-24 right-4 sm:top-28 sm:right-6 lg:top-24 lg:right-10" />
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[#020617]" />
         {allSlides.map((src, i) => (

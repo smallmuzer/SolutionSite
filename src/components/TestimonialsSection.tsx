@@ -143,6 +143,8 @@ const TestimonialsSection = () => {
     })) : [];
   }, [testimonialsState]);
 
+  if (!editor?.isEditMode && headerContent?.is_visible === false) return null;
+
   if (isDataLoading) return (
     <section className="section-padding section-alt animate-pulse">
       <div className="container-wide">

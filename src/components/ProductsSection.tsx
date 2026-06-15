@@ -1165,6 +1165,7 @@ const ProductsSection = () => {
   const scrollToContact = () =>
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
+  if (!editor?.isEditMode && content?.is_visible === false) return null;
   if (!dbProducts && !products.length) return null;
 
   const tripled = [...products, ...products, ...products];
@@ -1226,6 +1227,7 @@ const ProductsSection = () => {
             <SectionHeaderToolbar
               section="our_products"
               targetSection="products"
+              isVisible={content.is_visible !== false}
               className="absolute right-0 top-1/2 -translate-y-1/2 scale-90"
             />
           </h2>

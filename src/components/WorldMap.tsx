@@ -134,6 +134,8 @@ const WorldMap = () => {
 
   const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => ((l as any).id || l.name) === ((loc as any).id || loc.name)) === idx);
 
+  if (!editor?.isEditMode && rawContent?.is_visible === false) return null;
+
   return (
     <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
       <EditorToolbar section="global_reach" />
@@ -147,7 +149,7 @@ const WorldMap = () => {
             <span className="gradient-text" style={{ color: hasEmbeddedColor(headerContent.highlight) ? undefined : ((headerContent as any).highlight_color || undefined), background: (headerContent as any).highlight_color && !hasEmbeddedColor(headerContent.highlight) ? "none" : undefined, WebkitTextFillColor: (headerContent as any).highlight_color && !hasEmbeddedColor(headerContent.highlight) ? "initial" : undefined }}>
               <EditableText section="global_reach" field="highlight" value={headerContent.highlight || "Reach"} colorField="highlight_color" />
             </span>
-            <SectionHeaderToolbar section="global_presence" className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
+            <SectionHeaderToolbar section="global_presence" isVisible={rawContent.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(headerContent.description) ? undefined : ((headerContent as any).description_color || undefined) }}>
             <EditableText section="global_reach" field="description" value={headerContent.description || ""} colorField="description_color" />

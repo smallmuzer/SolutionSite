@@ -604,6 +604,8 @@ const ClientsSection = () => {
     description: content.description || "We're proud to have served over 300+ successful projects..."
   };
 
+  if (!editor?.isEditMode && content?.is_visible === false) return null;
+
   return (
     <section id="portfolio" className="section-padding relative group" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div className="container-wide">
@@ -630,7 +632,7 @@ const ClientsSection = () => {
                 <EditableText section="clients" field="highlight" value={header.highlight || "Industry Leaders"} colorField="highlight_color" />
               </span>
             </span>
-            <SectionHeaderToolbar section="clients" targetSection="client_logos" className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
+            <SectionHeaderToolbar section="clients" targetSection="client_logos" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />

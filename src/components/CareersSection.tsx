@@ -364,6 +364,8 @@ const CareersSection = () => {
     }
   };
 
+  if (!editor?.isEditMode && content?.is_visible === false) return null;
+
   return (
     <section id="careers" className="section-padding relative overflow-hidden group">
       <div className="container-wide relative z-10">
