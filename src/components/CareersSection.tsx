@@ -96,7 +96,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
             <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent" />
           </div>
           <div className="relative flex-1 w-full px-4 pt-3 pb-4 flex flex-col bg-white dark:bg-[#1e1e2e] z-10">
-            <h3 className="font-heading font-extrabold text-[0.9375rem] text-slate-900 dark:text-white mb-1 leading-tight tracking-tight">
+            <h3 className="font-heading font-bold text-[0.9375rem] text-slate-900 dark:text-white mb-1 leading-tight tracking-tight">
                 <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
             </h3>
             <div className="relative flex-1 mb-2">
@@ -104,7 +104,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
                 <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
               </div>
               {isLongDescription && (
-                <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.625rem] font-extrabold mt-0.5 hover:underline focus:outline-none flex items-center gap-1">
+                <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.625rem] font-bold mt-0.5 hover:underline focus:outline-none flex items-center gap-1">
                   {isExpanded ? "Show Less" : "Read More..."}
                 </button>
               )}
@@ -114,7 +114,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
               <span className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider"><Clock size={10} className="text-secondary" /> <EditableText section="career_jobs" field="job_type" id={job.id} value={job.job_type} /></span>
             </div>
             <button onClick={(e) => { e.stopPropagation(); onApply(); }}
-              className="px-4 py-2 bg-secondary text-white rounded-lg font-extrabold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 shrink-0">
+              className="px-4 py-2 bg-secondary text-white rounded-lg font-bold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 shrink-0">
               <EditableText section="careers" field="apply_now_text" value={careersContent.apply_now_text || "Apply Now"} />
             </button>
           </div>
@@ -126,7 +126,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
               <Icon size={18} className="text-secondary" />
             </div>
           </div>
-          <h3 className="font-heading font-extrabold text-slate-900 dark:text-white text-[0.9375rem] mb-1.5">
+          <h3 className="font-heading font-bold text-slate-900 dark:text-white text-[0.9375rem] mb-1.5">
             <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
           </h3>
           <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
@@ -138,13 +138,13 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
               <EditableText section="career_jobs" field="description" id={job.id} value={job.description} />
             </div>
             {isLongDescription && (
-              <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.6rem] font-extrabold mt-1 hover:underline focus:outline-none">
+              <button onClick={() => setIsExpanded(!isExpanded)} className="text-secondary text-[0.6rem] font-bold mt-1 hover:underline focus:outline-none">
                 {isExpanded ? "Show Less" : "Read More..."}
               </button>
             )}
           </div>
           <button onClick={(e) => { e.stopPropagation(); onApply(); }}
-            className="px-4 py-2 bg-secondary text-white rounded-lg font-extrabold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 mt-auto">
+            className="px-4 py-2 bg-secondary text-white rounded-lg font-bold text-[0.75rem] hover:brightness-110 active:scale-[0.98] transition-all w-full shadow-md shadow-secondary/15 mt-auto">
             <EditableText section="careers" field="apply_now_text" value={careersContent.apply_now_text || "Apply Now"} />
           </button>
         </div>
@@ -196,7 +196,7 @@ const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragSt
       </div>
       <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-white dark:bg-[#11111f]">
         <div className="flex-1 min-w-0">
-          <h3 className="font-heading font-extrabold text-foreground text-[1rem] mb-1">
+          <h3 className="font-heading font-bold text-foreground text-[1rem] mb-1">
             <EditableText section="career_jobs" field="title" id={job.id} value={job.title} />
           </h3>
           <div className="text-muted-foreground text-[0.8125rem] line-clamp-2">

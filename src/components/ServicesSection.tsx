@@ -267,7 +267,7 @@ const ServicesSection = () => {
                           </div>
                         </div>
                         <div className="relative flex-1 w-full px-3 pt-2.5 pb-4 flex flex-col bg-card dark:bg-card/40 z-10 border-t border-border/50">
-                          <h3 className="font-heading font-extrabold text-[0.9375rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
+                          <h3 className="font-heading font-bold text-[0.9375rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1" style={{ fontWeight: 700 }}>
                             <EditableText section="services" field="title" id={service.id} value={service.title} />
                           </h3>
                           <MobileReadMore
@@ -286,7 +286,7 @@ const ServicesSection = () => {
                           ? <span className="text-secondary text-[1.4rem] mb-1.5" dangerouslySetInnerHTML={{ __html: service.icon! }} />
                           : <Icon size={20} className="text-secondary mb-1.5" />
                         }
-                        <h3 className="font-heading font-extrabold text-[0.875rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1">
+                        <h3 className="font-heading font-bold text-[0.875rem] text-foreground mb-0.5 leading-snug group-hover:text-secondary transition-colors line-clamp-1" style={{ fontWeight: 700 }}>
                           <EditableText section="services" field="title" id={service.id} value={service.title} />
                         </h3>
                         <MobileReadMore
@@ -355,7 +355,7 @@ const ServicesSection = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0 relative z-10">
-                      <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug">
+                      <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug" style={{ fontWeight: 700 }}>
                         <EditableText section="services" field="title" id={service.id} value={service.title} />
                       </h3>
                       <MobileReadMore

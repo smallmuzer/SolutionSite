@@ -172,7 +172,7 @@ const TechnologiesSection = () => {
               <EditableText section="technologies" field="badge" value={header.badge || "Our Stack"} colorField="badge_color" />
             </span>
           </div>
-          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-extrabold text-foreground mt-1 mb-2 tracking-tight relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
+          <h2 className="text-4xl sm:text-[2.5rem] lg:text-[3rem] font-heading font-bold text-foreground mt-1 mb-2 tracking-tight relative" style={{ color: hasEmbeddedColor(content.title) ? undefined : (content.title_color || undefined) }}>
             <span>
               <EditableText section="technologies" field="title" value={header.title || "Technologies"} colorField="title_color" />{" "}
               <span className="gradient-text" style={{ color: hasEmbeddedColor(content.highlight) ? undefined : (content.highlight_color || undefined), background: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "none" : undefined, WebkitTextFillColor: content.highlight_color && !hasEmbeddedColor(content.highlight) ? "initial" : undefined }}>
@@ -245,7 +245,7 @@ const TechnologiesSection = () => {
                             style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
                             {logoSrc ? <LogoImg src={logoSrc} name={tech.name} className="w-full h-full drop-shadow-sm" /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
                           </div>
-                          <h3 className="font-heading font-extrabold text-[1rem] leading-tight group-hover/item:text-shadow-sm transition-colors min-w-0 break-words" style={{ color: nameColor }}>
+                          <h3 className="font-heading font-bold text-[1rem] leading-tight group-hover/item:text-shadow-sm transition-colors min-w-0 break-words" style={{ color: nameColor, fontWeight: 700 }}>
                             <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
                           </h3>
                         </div>
@@ -313,7 +313,7 @@ const TechnologiesSection = () => {
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 relative z-[1]">
                         <div className="sm:w-1/3 min-w-0 flex flex-col gap-1.5 items-start">
-                          <h3 className="font-heading font-bold text-[1.05rem] sm:text-[1.1rem] min-w-0 break-words" style={{ color: nameColor }}>
+                          <h3 className="font-heading font-bold text-[1.05rem] sm:text-[1.1rem] min-w-0 break-words" style={{ color: nameColor, fontWeight: 700 }}>
                             <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
                           </h3>
                           <span className="w-fit text-[0.65rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md inline-block border whitespace-nowrap"

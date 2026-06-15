@@ -360,7 +360,7 @@ export const EditableText: React.FC<{
               className="px-1 py-0.5 hover:bg-white/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer [@media(hover:none)]:hidden"
               title="Edit Text Style"
             >
-              <span className="font-serif font-extrabold text-[12px] leading-none text-white pr-[1px]">A</span>
+              <span className="font-serif font-bold text-[12px] leading-none text-white pr-[1px]">A</span>
             </span>
             {/* Color picker icon removed: Typography editor (A icon) handles text color now */}
             {linkField && (

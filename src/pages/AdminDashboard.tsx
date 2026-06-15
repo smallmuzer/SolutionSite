@@ -2541,7 +2541,7 @@ const AdminDashboard = () => {
 
                                           {/* Section 1: Popular Brand Presets */}
                                           <div className="mb-3">
-                                            <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1.5">Popular Presets</span>
+                                            <span className="text-[7.5px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">Popular Presets</span>
                                             <div className="grid grid-cols-5 gap-1">
                                               {[
                                                 { name: "Facebook", value: "Facebook" },
@@ -2580,7 +2580,7 @@ const AdminDashboard = () => {
 
                                           {/* Section 2: Full Catalog Search */}
                                           <div>
-                                            <span className="text-[7.5px] font-extrabold text-muted-foreground uppercase tracking-widest block mb-1">Search 1000+ Icons</span>
+                                            <span className="text-[7.5px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Search 1000+ Icons</span>
                                             <input
                                               type="text"
                                               value={pickerSearch}

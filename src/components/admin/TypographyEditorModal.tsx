@@ -154,7 +154,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  
+
   // Rich Text Editor Undo/Redo stacks
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
@@ -729,9 +729,9 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
           className={`drag-handle flex items-center justify-between border-b border-border/60 bg-muted/40 px-5 py-3.5 select-none ${isFullscreen ? "cursor-default" : "cursor-move"}`}
         >
           <div className="flex items-center gap-2.5">
-            <span className="flex w-7 h-7 rounded-lg bg-secondary/10 items-center justify-center text-secondary font-serif font-extrabold text-sm shadow-inner select-none">A</span>
+            <span className="flex w-7 h-7 rounded-lg bg-secondary/10 items-center justify-center text-secondary font-serif font-bold text-sm shadow-inner select-none">A</span>
             <div>
-              <h3 className="font-heading font-extrabold text-[0.9375rem] leading-none text-foreground">Style & Typography Editor</h3>
+              <h3 className="font-heading font-bold text-[0.9375rem] leading-none text-foreground">Style & Typography Editor</h3>
               <p className="text-[0.6875rem] font-medium text-muted-foreground mt-0.5 uppercase tracking-wider">Target: {section}.{field} {id ? `(ID: ${id})` : ""}</p>
             </div>
           </div>

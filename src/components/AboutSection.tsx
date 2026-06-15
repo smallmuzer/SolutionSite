@@ -239,7 +239,7 @@ const AboutSection = () => {
                             })()}
                           </div>
                         )}
-                        <h3 className={`font-heading font-extrabold text-[0.9375rem] mb-1 drop-shadow leading-snug pointer-events-auto ${useImg ? "text-white" : "text-foreground"}`}>
+                        <h3 className={`font-heading font-bold text-[0.9375rem] mb-1 drop-shadow leading-snug pointer-events-auto ${useImg ? "text-white" : "text-foreground"}`}>
                           <EditableText section="about" field={`card_title_${card.key}`} value={card.title} />
                         </h3>
                         <div className="pointer-events-auto">
@@ -311,7 +311,7 @@ const AboutSection = () => {
                         )}
                       </div>
                       <div className="flex-1 min-w-0 relative z-10">
-                        <h3 className="font-heading font-extrabold text-foreground text-[0.9375rem] leading-snug">
+                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] leading-snug">
                           <EditableText section="about" field={`card_title_${card.key}`} value={card.title} />
                         </h3>
                         <MobileReadMore

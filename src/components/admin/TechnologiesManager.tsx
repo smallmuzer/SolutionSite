@@ -129,7 +129,7 @@ const TechForm = ({ data, onChange, onSave, onCancel, saving, isNew }: {
       {/* Live preview */}
       <div className="flex items-center gap-3 p-3 bg-muted/10 rounded-xl border border-border/40">
         <span className="text-[0.6rem] font-bold text-muted-foreground uppercase tracking-widest">Preview:</span>
-        <span className="font-heading font-extrabold text-sm" style={{ color: data.name_color }}>
+        <span className="font-heading font-bold text-sm" style={{ color: data.name_color }}>
           {data.name || "Tech Name"}
         </span>
         <span

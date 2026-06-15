@@ -82,7 +82,7 @@ const ClientLogoImage = ({ client }: { client: ClientLogo }) => {
       .toUpperCase();
 
     return (
-      <div className="w-full h-full flex items-center justify-center bg-secondary/10 text-secondary font-extrabold text-[0.65rem] sm:text-[0.75rem] rounded-md tracking-wider select-none">
+      <div className="w-full h-full flex items-center justify-center bg-secondary/10 text-secondary font-bold text-[0.65rem] sm:text-[0.75rem] rounded-md tracking-wider select-none">
         {initials || "•"}
       </div>
     );

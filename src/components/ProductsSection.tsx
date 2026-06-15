@@ -459,7 +459,7 @@ const ProductCard = ({
                       className="ml-1 p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0 opacity-0 group-hover/badge:opacity-100"
                       title="Edit Text Style"
                     >
-                      <span className="font-serif font-extrabold text-[10px] leading-none px-1 py-0.5">
+                      <span className="font-serif font-bold text-[10px] leading-none px-1 py-0.5">
                         A
                       </span>
                     </div>
@@ -728,7 +728,7 @@ const ProductCardList = ({
             value={product.tagline}
           />
         </span>
-        <h3 className="font-extrabold text-[1.0625rem] text-gray-900 dark:text-white group-hover:text-[#C7511F] dark:group-hover:text-[#4db8c8] transition-colors">
+        <h3 className="font-bold text-[1.0625rem] text-gray-900 dark:text-white group-hover:text-[#C7511F] dark:group-hover:text-[#4db8c8] transition-colors">
           <EditableText
             section="products"
             field="name"
@@ -928,7 +928,7 @@ const ProductCardList = ({
                         className="ml-1 p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0 opacity-0 group-hover/badge:opacity-100"
                         title="Edit Text Style"
                       >
-                        <span className="font-serif font-extrabold text-[10px] leading-none px-1 py-0.5">
+                        <span className="font-serif font-bold text-[10px] leading-none px-1 py-0.5">
                           A
                         </span>
                       </div>
