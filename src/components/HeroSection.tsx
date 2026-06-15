@@ -116,6 +116,8 @@ const HeroSection = () => {
     if (heroStatsData) setHeroStats(heroStatsData);
   }, [heroStatsData]);
 
+  const [isOverlayLoaded, setIsOverlayLoaded] = useState(false);
+
   if (!editor?.isEditMode && content?.is_visible === false) return null;
 
   return (
@@ -159,14 +161,17 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Removed SVG Overlay Spotlight per user request */}
+      {/* SVG Overlay Spotlight (Increases visibility of multiplied images) */}
+      {(overlayImage || editor?.isEditMode) && (
+        <div className={`absolute top-1/2 -translate-y-1/2 right-0 sm:right-[2%] lg:right-[5%] z-10 w-[75%] sm:w-[45%] lg:w-[35%] max-w-[300px] aspect-square bg-white/80 rounded-full blur-[60px] pointer-events-none transition-opacity duration-500 ${(!overlayVisible && !editor?.isEditMode) || (overlayImage && !isOverlayLoaded) ? 'opacity-0' : 'opacity-100'}`} />
+      )}
 
       {/* SVG Overlay Graphic (Visual Layer) */}
       {(overlayImage || editor?.isEditMode) && (
         <div className={`absolute top-0 bottom-0 my-auto h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-20 mix-blend-multiply peer/overlay ${editor?.isEditMode ? 'pointer-events-auto' : 'pointer-events-none'} ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`}>
           <div className={`w-full transition-opacity duration-300 ${!overlayVisible ? 'opacity-30 grayscale' : 'opacity-100'}`}>
             {overlayImage ? (
-              <img src={overlayImage} alt="Hero Overlay" loading="eager" fetchPriority="high" className="w-full h-auto object-contain animate-float pointer-events-none brightness-110 contrast-110" />
+              <img src={overlayImage} onLoad={() => setIsOverlayLoaded(true)} alt="Hero Overlay" loading="eager" fetchPriority="high" className="w-full h-auto object-contain animate-float pointer-events-none brightness-110 contrast-110" />
             ) : (
               editor?.isEditMode && (
                 <div className="w-full aspect-video border-2 border-dashed border-white/20 bg-white/5 backdrop-blur-sm rounded-2xl flex items-center justify-center pointer-events-auto hover:bg-white/10 transition-colors">
