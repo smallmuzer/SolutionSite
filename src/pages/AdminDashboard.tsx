@@ -1527,6 +1527,46 @@ const AdminDashboard = () => {
       settingsToSave.nav_items = JSON.stringify(settingsToSave.nav_items);
     }
 
+    const socialCount = parseInt(finalSettings.social_count || "6", 10);
+    const socialPromises = [];
+    for (let i = 1; i <= socialCount; i++) {
+      socialPromises.push(
+        dbFetch("social_links", {
+          method: "POST",
+          body: {
+            id: `sl-${i}`,
+            platform: finalSettings[`social_icon_${i}`] || 'Unknown',
+            icon: finalSettings[`social_icon_${i}`] || 'Globe',
+            url: finalSettings[`social_href_${i}`] || '',
+            color: finalSettings[`social_color_${i}`] || '#000000',
+            is_visible: finalSettings[`social_visible_${i}`] === "false" ? 0 : 1,
+            sort_order: i - 1
+          }
+        }).then(slRes => {
+          if (slRes.error) {
+            toast.error(`Failed to save social link ${i}: ${slRes.error.message}`);
+          }
+        })
+      );
+    }
+    await Promise.all(socialPromises);
+
+    try {
+      const { data: currentLinks } = await dbFetch("social_links", {});
+      if (currentLinks && Array.isArray(currentLinks)) {
+        const deletePromises = currentLinks.map(link => {
+          const num = parseInt(link.id.replace('sl-', ''), 10);
+          if (num > socialCount) {
+            return fetch(`/api/db/social_links?id=${link.id}`, { method: 'DELETE' });
+          }
+          return Promise.resolve();
+        });
+        await Promise.all(deletePromises);
+      }
+    } catch (error) {
+      console.error("Failed cleaning up social links:", error);
+    }
+
     const res = await dbFetch("site_settings", {
       method: "POST",
       body: settingsToSave
@@ -1536,41 +1576,6 @@ const AdminDashboard = () => {
       setSavingSettings(false);
       toast.error(`Failed to save settings: ${res.error.message}`);
       return;
-    }
-
-    const socialCount = parseInt(finalSettings.social_count || "6", 10);
-    for (let i = 1; i <= socialCount; i++) {
-      const slRes = await dbFetch("social_links", {
-        method: "POST",
-        body: {
-          id: `sl-${i}`,
-          platform: finalSettings[`social_icon_${i}`] || 'Unknown',
-          icon: finalSettings[`social_icon_${i}`] || 'Globe',
-          url: finalSettings[`social_href_${i}`] || '',
-          color: finalSettings[`social_color_${i}`] || '#000000',
-          is_visible: finalSettings[`social_visible_${i}`] === "false" ? 0 : 1,
-          sort_order: i - 1
-        }
-      });
-
-      if (slRes.error) {
-        toast.error(`Failed to save social link ${i}: ${slRes.error.message}`);
-      }
-    }
-
-    try {
-      const { data: currentLinks } = await dbFetch("social_links", {});
-      if (currentLinks && Array.isArray(currentLinks)) {
-        for (const link of currentLinks) {
-          const num = parseInt(link.id.replace('sl-', ''), 10);
-          if (num > socialCount) {
-            await fetch(`/api/db/social_links?id=${link.id}`, { method: 'DELETE' });
-          }
-        }
-      }
-    } catch (error) {
-      // Ignore delete cleanup failures; non-critical for saving settings.
-      console.error("Failed cleaning up social links:", error);
     }
     // --- Save Users ---
     try {
@@ -2625,10 +2630,11 @@ const AdminDashboard = () => {
                                           const val = e.target.value;
                                           setSiteSettings(p => {
                                             const next = { ...p, [hrefKey]: val };
-                                            if (i === 1) next.social_facebook = val;
-                                            else if (i === 2) next.social_twitter = val;
-                                            else if (i === 3) next.social_linkedin = val;
-                                            else if (i === 4) next.social_instagram = val;
+                                            const iconName = siteSettings[iconKey] || '';
+                                            if (iconName.toLowerCase() === 'facebook') next.social_facebook = val;
+                                            else if (iconName.toLowerCase() === 'twitter') next.social_twitter = val;
+                                            else if (iconName.toLowerCase() === 'linkedin') next.social_linkedin = val;
+                                            else if (iconName.toLowerCase() === 'instagram') next.social_instagram = val;
                                             return next;
                                           });
                                         }}
