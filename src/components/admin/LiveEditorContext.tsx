@@ -437,7 +437,7 @@ export const EditorToolbar: React.FC<{
 
   const toolbarKey = `toolbar:${section}:${id || "__section"}`;
   const isTouchActive = editor.activeElementId === toolbarKey;
-  const hoverClasses = !group
+  const hoverClasses = (!group || !isVisible)
     ? "opacity-100 scale-100"
     : group === "item"
       ? "group-hover/item:opacity-100 group-hover/item:scale-100"

@@ -180,8 +180,8 @@ const HeroSection = () => {
 
       {/* SVG Overlay Toolbar (Interaction Layer) */}
       {editor?.isEditMode && (
-        <div className={`absolute top-0 bottom-0 my-auto h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-30 pointer-events-none ${!overlayVisible ? 'hidden' : ''}`}>
-          <div className="opacity-0 peer-hover/overlay:opacity-100 hover:opacity-100 transition-all duration-300 pointer-events-auto absolute -top-12 right-0">
+        <div className={`absolute top-0 bottom-0 my-auto h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-30 pointer-events-none`}>
+          <div className={`${!overlayVisible ? "opacity-100" : "opacity-0 peer-hover/overlay:opacity-100"} hover:opacity-100 transition-all duration-300 pointer-events-auto absolute -top-12 right-0`}>
             <EditorToolbar
               section="hero"
               group=""
