@@ -275,7 +275,7 @@ const TechnologiesSection = () => {
             onTouchEnd={() => { pausedRef.current = false; }}
           >
             <div 
-              className="flex transition-transform duration-500 ease-in-out w-full"
+              className="flex items-start transition-transform duration-500 ease-in-out w-full"
               style={{ transform: `translateX(-${mobilePage * 100}%)` }}
             >
               {Array.from({ length: mobileTotalPages }).map((_, pageIdx) => (

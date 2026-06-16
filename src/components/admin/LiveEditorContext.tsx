@@ -444,7 +444,7 @@ export const EditorToolbar: React.FC<{
       : `group-hover/${group}:opacity-100 group-hover/${group}:scale-100`;
 
   return (
-    <div className={`absolute z-[100] flex items-center gap-3 ${group && !isTouchActive ? "opacity-0" : "opacity-100"} ${isTouchActive ? "scale-100" : "scale-90"} ${hoverClasses} transition-all duration-300 bg-card/95 backdrop-blur-md border border-border/50 ${isSmall ? "p-1 rounded-lg" : "p-1.5 rounded-xl"} shadow-2xl origin-top-right ${className || "top-2 right-2"}`}>
+    <div className={`absolute z-[999] flex items-center gap-3 ${group && !isTouchActive ? "opacity-0" : "opacity-100"} ${isTouchActive ? "scale-100" : "scale-90"} ${hoverClasses} transition-all duration-300 bg-card/95 backdrop-blur-md border border-border/50 ${isSmall ? "p-1 rounded-lg" : "p-1.5 rounded-xl"} shadow-2xl origin-top-right ${className || "top-2 right-2"}`}>
       {imageField && (
         <button onClick={() => editor.onPickImage(section, imageField, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Image">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>

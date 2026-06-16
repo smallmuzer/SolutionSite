@@ -242,7 +242,7 @@ const WorldMap = () => {
                         boxShadow: isActive ? "0 4px 14px hsl(var(--secondary)/0.12)" : "0 1px 4px rgba(0,0,0,0.04)",
                       }}
                     >
-                      <EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
+                      <EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-2 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-2xl drop-shadow-sm flex items-center justify-center min-w-[28px] min-h-[20px]">

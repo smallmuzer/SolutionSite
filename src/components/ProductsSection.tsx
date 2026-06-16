@@ -1174,7 +1174,7 @@ const ProductsSection = () => {
   const mobileCardsPerPage = 1;
   const mobileTotalPages = Math.max(1, Math.ceil(products.length / mobileCardsPerPage));
   const mobileProducts = products.slice(mobilePage * mobileCardsPerPage, (mobilePage + 1) * mobileCardsPerPage);
-  
+
   const goToMobilePage = (page: number, interaction = false) => {
     if (interaction) userInteractedRef.current = true;
     setMobilePage(((page % mobileTotalPages) + mobileTotalPages) % mobileTotalPages);
@@ -1264,14 +1264,14 @@ const ProductsSection = () => {
         </AnimatedSection>
 
         {globalView === "grid" && isMobileProducts && !editor?.isEditMode ? (
-          <div 
+          <div
             className="max-w-3xl mx-auto px-1 overflow-hidden"
             onMouseEnter={() => pausedRef.current = true}
             onMouseLeave={() => pausedRef.current = false}
             onTouchStart={() => pausedRef.current = true}
             onTouchEnd={() => pausedRef.current = false}
           >
-            <div 
+            <div
               className="flex transition-transform duration-500 ease-in-out w-full"
               style={{ transform: `translateX(-${mobilePage * 100}%)` }}
             >
