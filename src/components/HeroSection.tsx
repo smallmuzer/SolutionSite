@@ -163,12 +163,12 @@ const HeroSection = () => {
 
       {/* SVG Overlay Spotlight (Increases visibility of multiplied images) */}
       {(overlayImage || editor?.isEditMode) && (
-        <div className={`absolute top-1/2 right-0 sm:right-[2%] lg:right-[5%] z-10 w-[75%] sm:w-[45%] lg:w-[35%] max-w-[300px] aspect-square bg-white/80 rounded-full blur-[60px] pointer-events-none transition-opacity duration-500 ${(!overlayVisible && !editor?.isEditMode) || (overlayImage && !isOverlayLoaded) ? 'opacity-0' : 'opacity-100'}`} style={{ transform: 'translate(10px, calc(-50% + 10px))' }} />
+        <div className={`absolute top-1/2 right-0 sm:right-[2%] lg:right-[5%] z-10 w-[85%] sm:w-[50%] lg:w-[40%] max-w-[380px] aspect-square bg-white/80 rounded-full blur-[60px] pointer-events-none transition-opacity duration-500 ${(!overlayVisible && !editor?.isEditMode) || (overlayImage && !isOverlayLoaded) ? 'opacity-0' : 'opacity-100'}`} style={{ transform: 'translate(10px, calc(-50% + 10px))' }} />
       )}
 
       {/* SVG Overlay Graphic (Visual Layer) */}
       {(overlayImage || editor?.isEditMode) && (
-        <div className={`absolute top-0 bottom-0 h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-20 mix-blend-multiply peer/overlay ${editor?.isEditMode ? 'pointer-events-auto' : 'pointer-events-none'} ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`} style={{ marginTop: 'auto', marginBottom: 'auto', transform: 'translate(10px, 10px)' }}>
+        <div className={`absolute top-0 bottom-0 h-fit right-0 sm:right-[2%] lg:right-[5%] w-[85%] sm:w-[50%] lg:w-[40%] max-w-[500px] z-20 mix-blend-multiply peer/overlay ${editor?.isEditMode ? 'pointer-events-auto' : 'pointer-events-none'} ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`} style={{ marginTop: 'auto', marginBottom: 'auto', transform: 'translate(10px, 10px)' }}>
           <div className={`w-full transition-opacity duration-300 ${!overlayVisible ? 'opacity-30 grayscale' : 'opacity-100'}`}>
             {overlayImage ? (
               <img src={overlayImage} onLoad={() => setIsOverlayLoaded(true)} alt="Hero Overlay" loading="eager" fetchPriority="high" className="w-full h-auto object-contain animate-float pointer-events-none brightness-110 contrast-110" />
@@ -185,7 +185,7 @@ const HeroSection = () => {
 
       {/* SVG Overlay Toolbar (Interaction Layer) */}
       {editor?.isEditMode && (
-        <div className={`absolute top-0 bottom-0 h-fit right-0 sm:right-[2%] lg:right-[5%] w-[75%] sm:w-[45%] lg:w-[35%] max-w-[400px] z-30 pointer-events-none`} style={{ marginTop: 'auto', marginBottom: 'auto', transform: 'translate(10px, 10px)' }}>
+        <div className={`absolute top-0 bottom-0 h-fit right-0 sm:right-[2%] lg:right-[5%] w-[85%] sm:w-[50%] lg:w-[40%] max-w-[500px] z-30 pointer-events-none`} style={{ marginTop: 'auto', marginBottom: 'auto', transform: 'translate(10px, 10px)' }}>
           <div className={`${!overlayVisible ? "opacity-100" : "opacity-0 peer-hover/overlay:opacity-100"} hover:opacity-100 transition-all duration-300 pointer-events-auto absolute -top-12 right-0`}>
             <EditorToolbar
               section="hero"
