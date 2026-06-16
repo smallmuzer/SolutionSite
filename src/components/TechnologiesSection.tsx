@@ -59,7 +59,7 @@ const LogoImg = ({ src, name, className }: { src: string; name: string; classNam
   );
 };
 
-const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
+const ReadMoreText = ({ text, clampClass, textClass, section, field, id, onExpand }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string; onExpand?: () => void }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -88,7 +88,7 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { tex
       </div>
       {(overflows || expanded) && (
         <button
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); onExpand?.(); }}
           className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2"
         >
           Read {expanded ? "Less" : "More"}
@@ -288,29 +288,36 @@ const TechnologiesSection = () => {
                   >
                     <div className="absolute -inset-0.5 rounded-xl blur opacity-0 group-hover/item:opacity-40 transition duration-500" style={{ backgroundColor: nameColor }} />
                     <div
-                      className="relative h-full glass-card flex flex-row items-start gap-3 p-3 border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden shadow-sm group-hover/item:shadow-md"
+                      className="relative h-full glass-card flex flex-col p-3 gap-2.5 border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden shadow-sm group-hover/item:shadow-md"
                       style={{ ['--card-color' as string]: nameColor }}
                     >
                       <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" style={{ outline: `2px solid color-mix(in srgb, ${nameColor} 50%, transparent)`, outlineOffset: '-1px', backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }} />
-                      <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm relative z-[1] mt-0.5"
-                        style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
-                        {logoSrc ? <LogoImg src={logoSrc} name={tech.name} className="w-full h-full drop-shadow-sm" /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
+                      
+                      <div className="flex flex-row items-center gap-2.5 min-w-0 relative z-[1]">
+                        <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm relative z-[1]"
+                          style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
+                          {logoSrc ? <LogoImg src={logoSrc} name={tech.name} className="w-full h-full drop-shadow-sm" /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                          <h3 className="font-heading font-bold text-[0.8rem] leading-tight min-w-0 break-words" style={{ color: nameColor, fontWeight: 700 }}>
+                            <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
+                          </h3>
+                          <span className="w-fit text-[0.5rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border whitespace-nowrap"
+                            style={{ background: `color-mix(in srgb, ${catColor} 15%, transparent)`, color: catColor, borderColor: `color-mix(in srgb, ${catColor} 40%, transparent)` }}>
+                            <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col gap-1 relative z-[1]">
-                        <h3 className="font-heading font-bold text-[0.8rem] leading-tight min-w-0 break-words" style={{ color: nameColor, fontWeight: 700 }}>
-                          <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
-                        </h3>
-                        <span className="w-fit text-[0.5rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border whitespace-nowrap"
-                          style={{ background: `color-mix(in srgb, ${catColor} 15%, transparent)`, color: catColor, borderColor: `color-mix(in srgb, ${catColor} 40%, transparent)` }}>
-                          <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
-                        </span>
+
+                      <div className="relative z-[1] w-full">
                         <ReadMoreText
                           text={tech.description}
                           clampClass="line-clamp-2"
-                          textClass="text-[0.65rem] text-muted-foreground leading-relaxed mt-0.5"
+                          textClass="text-[0.65rem] text-muted-foreground leading-relaxed"
                           section="technologies"
                           field="description"
                           id={tech.id}
+                          onExpand={() => { userInteractedRef.current = true; }}
                         />
                       </div>
                     </div>

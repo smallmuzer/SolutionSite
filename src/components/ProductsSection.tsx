@@ -82,7 +82,7 @@ const DEFAULT_HEADER: SectionHeader = {
   subtitle: "Explore our suite of enterprise-grade software solutions designed to transform your business operations."
 };
 
-const ReadMoreText = ({ text, clampClass, textClass, section, field, id, colorField }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string; colorField?: string }) => {
+const ReadMoreText = ({ text, clampClass, textClass, section, field, id, colorField, onExpand }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string; colorField?: string; onExpand?: () => void }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -111,7 +111,7 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id, colorFi
       </div>
       {(overflows || expanded) && (
         <button
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); onExpand?.(); }}
           className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2"
         >
           Read {expanded ? "Less" : "More"}
@@ -132,6 +132,7 @@ const ProductCard = ({
   onDragOver,
   onDrop,
   onEditTypo,
+  onReadMore,
 }: {
   product: Product;
   onDemo: () => void;
@@ -143,6 +144,7 @@ const ProductCard = ({
   onDragOver?: any;
   onDrop?: any;
   onEditTypo?: any;
+  onReadMore?: () => void;
 }) => {
   const editor = useLiveEditor();
   const { Icon, bg } = getProductIcon(product.name);
@@ -274,6 +276,7 @@ const ProductCard = ({
           colorField="description_color"
           clampClass="line-clamp-2"
           textClass="text-[0.75rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed"
+          onExpand={onReadMore}
         />
 
         <div className="relative flex flex-col gap-2 mt-1 border-t border-gray-100 dark:border-white/5 pt-3 group/features">
@@ -1278,6 +1281,7 @@ const ProductsSection = () => {
                     getNavProps={getNavProps}
                     draggedId={draggedId}
                     onEditTypo={setTypoFeature}
+                    onReadMore={() => { userInteractedRef.current = true; }}
                   />
                 </AnimatedSection>
               ))}
