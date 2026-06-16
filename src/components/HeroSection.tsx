@@ -37,7 +37,7 @@ const StatItem = ({ count, label, color, suffix, isVisible, inView, id }: {
   const displayValue = !editor?.isEditMode && isNumeric ? String(animated) : count;
 
   return (
-    <div className="flex flex-col transition-transform hover:scale-110 duration-300 relative group/item px-2">
+    <div className="flex flex-col items-center sm:items-start transition-transform hover:scale-110 duration-300 relative group/item px-1 sm:px-2">
       <EditorToolbar section="hero_stats" id={id} isVisible={isVisible} colorField="color" className="-top-8 right-1/2 translate-x-1/2" />
       <div className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl">
         <span className={isGradient ? "gradient-text" : ""}>
@@ -245,10 +245,10 @@ const HeroSection = () => {
         </div>
 
         {/* Stats */}
-        <div ref={statsRef} className="mt-10 sm:mt-16 lg:mt-20 hero-fade-in" style={{ animationDelay: "0.7s" }}>
-          <div className={`w-fit mx-auto ${content.stats_layout === "compact"
-            ? "flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-16 lg:gap-x-24 gap-y-6"
-            : "p-6 sm:p-8 px-8 sm:px-12 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-wrap items-center justify-center gap-x-12 sm:gap-x-20 gap-y-6 shadow-2xl"
+        <div ref={statsRef} className="mt-10 sm:mt-16 lg:mt-20 hero-fade-in w-full" style={{ animationDelay: "0.7s" }}>
+          <div className={`mx-auto w-full sm:w-fit ${content.stats_layout === "compact"
+            ? "flex flex-row flex-nowrap items-center justify-between sm:justify-center gap-x-1 sm:gap-x-16 lg:gap-x-24"
+            : "py-3 sm:py-5 px-4 sm:px-12 rounded-2xl sm:rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-row flex-nowrap items-center justify-between sm:justify-center gap-x-1 sm:gap-x-20 shadow-2xl"
             }`}>
             {heroStats.map(stat => (
               <StatItem

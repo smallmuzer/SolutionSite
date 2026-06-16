@@ -268,14 +268,19 @@ const TechnologiesSection = () => {
           </div>
         ) : isMobile && !editor?.isEditMode ? (
           <div
-            className="flex flex-col gap-4 mx-auto w-full"
+            className="flex flex-col gap-4 mx-auto w-full overflow-hidden"
             onMouseEnter={() => { pausedRef.current = true; }}
             onMouseLeave={() => { pausedRef.current = false; }}
             onTouchStart={() => { pausedRef.current = true; }}
             onTouchEnd={() => { pausedRef.current = false; }}
           >
-            <div className="grid grid-cols-2 gap-3">
-              {mobileTechs.map((tech) => {
+            <div 
+              className="flex transition-transform duration-500 ease-in-out w-full"
+              style={{ transform: `translateX(-${mobilePage * 100}%)` }}
+            >
+              {Array.from({ length: mobileTotalPages }).map((_, pageIdx) => (
+                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-2 gap-3 px-1">
+                  {techs.slice(pageIdx * mobileCardsPerPage, (pageIdx + 1) * mobileCardsPerPage).map((tech) => {
                 const logoSrc = tech.image_url?.trim() || LOCAL_LOGOS[tech.name] || null;
                 const rawNameColor = tech.name_color || "#3178C6";
                 const nameColor = extractColor(tech.name, rawNameColor);
@@ -324,6 +329,8 @@ const TechnologiesSection = () => {
                   </div>
                 );
               })}
+                </div>
+              ))}
             </div>
             {mobileTotalPages > 1 && (
               <div className="flex items-center justify-center gap-5 mt-2">

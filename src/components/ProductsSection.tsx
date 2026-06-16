@@ -1265,25 +1265,32 @@ const ProductsSection = () => {
 
         {globalView === "grid" && isMobileProducts && !editor?.isEditMode ? (
           <div 
-            className="max-w-3xl mx-auto px-1"
+            className="max-w-3xl mx-auto px-1 overflow-hidden"
             onMouseEnter={() => pausedRef.current = true}
             onMouseLeave={() => pausedRef.current = false}
             onTouchStart={() => pausedRef.current = true}
             onTouchEnd={() => pausedRef.current = false}
           >
-            <div className="grid grid-cols-1 gap-4 items-stretch transition-all duration-500">
-              {mobileProducts.map((product, i) => (
-                <AnimatedSection key={product.id} delay={i * 0.08} className="flex justify-center">
-                  <ProductCard
-                    product={product}
-                    onDemo={scrollToContact}
-                    cardStyle={cardStyle}
-                    getNavProps={getNavProps}
-                    draggedId={draggedId}
-                    onEditTypo={setTypoFeature}
-                    onReadMore={() => { userInteractedRef.current = true; }}
-                  />
-                </AnimatedSection>
+            <div 
+              className="flex transition-transform duration-500 ease-in-out w-full"
+              style={{ transform: `translateX(-${mobilePage * 100}%)` }}
+            >
+              {Array.from({ length: mobileTotalPages }).map((_, pageIdx) => (
+                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 gap-4 items-stretch px-1">
+                  {products.slice(pageIdx * mobileCardsPerPage, (pageIdx + 1) * mobileCardsPerPage).map((product) => (
+                    <div key={product.id} className="flex justify-center">
+                      <ProductCard
+                        product={product}
+                        onDemo={scrollToContact}
+                        cardStyle={cardStyle}
+                        getNavProps={getNavProps}
+                        draggedId={draggedId}
+                        onEditTypo={setTypoFeature}
+                        onReadMore={() => { userInteractedRef.current = true; }}
+                      />
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
 

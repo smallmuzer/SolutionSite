@@ -278,17 +278,24 @@ const TestimonialsSection = () => {
           </div>
         ) : (
           <div 
-            className="max-w-[90rem] mx-auto px-4"
+            className="max-w-[90rem] mx-auto px-4 overflow-hidden"
             onMouseEnter={() => pausedRef.current = true}
             onMouseLeave={() => pausedRef.current = false}
             onTouchStart={() => pausedRef.current = true}
             onTouchEnd={() => pausedRef.current = false}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch transition-all duration-500">
-              {pageCards.map((t, i) => (
-                <AnimatedSection key={t.id} delay={i * 0.08} className="h-full">
-                  <GridCard t={t} />
-                </AnimatedSection>
+            <div 
+              className="flex transition-transform duration-500 ease-in-out w-full"
+              style={{ transform: `translateX(-${currentPage * 100}%)` }}
+            >
+              {Array.from({ length: totalPages }).map((_, pageIdx) => (
+                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch px-1">
+                  {testimonials.slice(pageIdx * currentCardsPerPage, (pageIdx + 1) * currentCardsPerPage).map((t) => (
+                    <div key={t.id} className="h-full">
+                      <GridCard t={t} />
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
 

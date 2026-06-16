@@ -194,7 +194,7 @@ const AboutSection = () => {
                       key={card.title}
                       className={`glass-card relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""}`}
                       style={{
-                        height: "clamp(120px, 16vw, 145px)",
+                        minHeight: "clamp(120px, 16vw, 145px)",
                         animationDelay: `${idx * 0.6}s`,
                         animationDuration: `${4 + idx * 0.5}s`,
                       }}

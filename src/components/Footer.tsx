@@ -355,12 +355,12 @@ const Footer = () => {
         <div className="absolute inset-0 z-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.10) 0%, transparent 70%)" }}
         />
-        <div className="relative z-10 container-wide px-5 sm:px-6 lg:px-8 pt-10 pb-6 lg:pt-12">
-          <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-10 sm:gap-x-8 lg:gap-10">
+        <div className="relative z-10 container-wide px-5 sm:px-6 lg:px-8 pt-6 pb-4 lg:pt-8">
+          <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6 sm:gap-x-8 lg:gap-10">
 
             {/* Brand */}
-            <div className="col-span-2 lg:col-span-3">
-              <div className="flex items-center gap-2.5 mb-4 relative group/item w-max">
+            <div className="col-span-2 lg:col-span-3 flex flex-col items-start text-left">
+              <div className="flex items-center justify-start gap-2.5 mb-4 relative group/item w-full sm:w-max">
                 {editor?.isEditMode && (
                   <EditorToolbar
                     section="settings"
@@ -390,10 +390,10 @@ const Footer = () => {
                   </div>
                 )}
               </div>
-              <div className="text-sm leading-relaxed mb-5 relative" style={{ color: "#94a3b8" }}>
+              <div className="text-sm leading-relaxed mb-5 relative text-left w-full" style={{ color: "#94a3b8" }}>
                 <EditableText section="footer" field="tagline" value={content.tagline || "Leading IT consulting and software development company delivering cutting-edge technology solutions."} />
               </div>
-              <div className="flex flex-wrap items-center gap-2.5 relative">
+              <div className="flex flex-wrap items-center justify-start gap-2.5 relative w-full">
                 {socialList.map((s) => {
                   if (!editor?.isEditMode && !s.isVisible) return null;
                   const iconColor = s.color || "#3b82f6";
@@ -428,11 +428,11 @@ const Footer = () => {
             </div>
 
             {/* Services */}
-            <div className="col-span-1 lg:col-span-2" {...getNavProps(() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" }))}>
-              <h4 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2 group/h" style={{ color: "#f1f5f9" }}>
+            <div className="col-span-1 lg:col-span-2 flex flex-col items-start text-left w-full" {...getNavProps(() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" }))}>
+              <h4 className="font-heading font-semibold text-sm mb-4 flex items-center justify-start gap-2 group/h w-full" style={{ color: "#f1f5f9" }}>
                 <EditableText section="footer" field="label_services" value={content.label_services || "Services"} />
               </h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-2.5 flex flex-col items-start w-full">
                 {(servicesData || [])
                   .filter(s => editor?.isEditMode || (!hiddenLinks.includes(s.id) && s.is_visible !== false))
                   .map(s => {
@@ -471,11 +471,11 @@ const Footer = () => {
             </div>
 
             {/* Company */}
-            <div className="col-span-1 lg:col-span-2" {...getNavProps(() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" }))}>
-              <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
+            <div className="col-span-1 lg:col-span-2 flex flex-col items-start text-left w-full" {...getNavProps(() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" }))}>
+              <h4 className="font-heading font-semibold text-sm mb-4 flex items-center justify-start gap-2 group/h w-full" style={{ color: "#f1f5f9" }}>
                 <EditableText section="footer" field="label_company" value={content.label_company || "Company"} />
               </h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-2.5 flex flex-col items-start w-full">
                 {[
                   { label: "Who We Are", href: "#about" },
                   { label: "Our Services", href: "#services" },
@@ -518,8 +518,8 @@ const Footer = () => {
             </div>
 
             {/* Contact */}
-            <div className="col-span-2 lg:col-span-5 relative group/contact">
-              <h4 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2" style={{ color: "#f1f5f9" }}>
+            <div className="col-span-2 lg:col-span-5 relative group/contact text-left">
+              <h4 className="font-heading font-semibold text-sm mb-4 flex items-center justify-start gap-2" style={{ color: "#f1f5f9" }}>
                 <span><EditableText section="footer" field="label_contact" value={content.label_contact || "Contact"} /></span>
                 {editor?.isEditMode && (
                   <button onClick={handleAddAddress} className="text-secondary hover:text-white bg-secondary/20 p-1 rounded transition-colors ml-auto" title="Add Address">
@@ -576,18 +576,18 @@ const Footer = () => {
                         </div>
 
                         {/* Contact Details */}
-                        <div className="flex flex-col gap-2 text-xs">
-                          <div className="flex items-center gap-2 hover:text-blue-400 transition-colors group/link">
+                        <div className="flex flex-col gap-2 text-xs w-full">
+                          <div className="flex items-center justify-start gap-2 hover:text-blue-400 transition-colors group/link">
                             <LucideIcons.Mail size={12} className="opacity-60 group-hover/link:opacity-100 transition-opacity shrink-0" />
                             <a href={`mailto:${contact[emailField] || defaultEmail}`} className="hover:underline truncate">
                               <EditableText section="contact" field={emailField} value={contact[emailField] || defaultEmail} />
                             </a>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-start gap-2">
                             <LucideIcons.Smartphone size={12} className="opacity-60 shrink-0" />
                             <EditableText section="contact" field={phoneField} value={contact[phoneField] || defaultPhone} />
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-start gap-2">
                             <LucideIcons.PhoneCall size={12} className="opacity-60 shrink-0" />
                             <EditableText section="contact" field={landlineField} value={contact[landlineField] || defaultLandline} />
                           </div>

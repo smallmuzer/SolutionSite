@@ -189,7 +189,7 @@ const WorldMap = () => {
     <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
       <EditorToolbar section="global_reach" />
       <div className="container-wide">
-        <AnimatedSection className="text-center mb-0">
+        <AnimatedSection className="text-center mb-1">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(headerContent.badge) ? undefined : ((headerContent as any).badge_color || undefined) }}>
             <EditableText section="global_reach" field="badge" value={headerContent.badge || "Global Presence"} colorField="badge_color" />
           </span>
@@ -207,94 +207,94 @@ const WorldMap = () => {
 
         <AnimatedSection>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div 
-              className={`relative ${isMobile && !editor?.isEditMode ? "overflow-hidden" : "overflow-x-auto custom-scrollbar"} pb-6 pt-12 w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}
+            <div
+              className={`relative ${isMobile && !editor?.isEditMode ? "overflow-hidden" : "overflow-x-auto custom-scrollbar"} pb-4 pt-2 w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}
               onMouseEnter={() => { pausedRef.current = true; }}
               onMouseLeave={() => { pausedRef.current = false; }}
               onTouchStart={() => { pausedRef.current = true; }}
               onTouchEnd={() => { pausedRef.current = false; }}
               style={isMobile && !editor?.isEditMode ? {
-                  maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+                maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+                WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
               } : undefined}
             >
-              <div 
+              <div
                 ref={trackRef}
-                className={`flex gap-4 sm:gap-6 ${isMobile && !editor?.isEditMode ? "w-max" : "w-full snap-x snap-mandatory scroll-smooth"}`}
+                className={`flex gap-4 sm:gap-6 ${isMobile && !editor?.isEditMode ? "w-max" : "w-full snap-x snap-mandatory scroll-smooth justify-center"}`}
                 style={{ willChange: isMobile && !editor?.isEditMode ? "transform" : "auto" }}
               >
-              {(isMobile && !editor?.isEditMode ? [...uniqueLocations, ...uniqueLocations, ...uniqueLocations] : uniqueLocations).map((loc, index) => {
-                const isActive = activeLocation?.name === loc.name;
-                const currentFlag = editor?.pendingChanges?.[`global_presence:${(loc as any).id || loc.name}:flag`] ?? loc.flag;
-                return (
-                  <div
-                    key={`${(loc as any).id || loc.name}-${index}`}
-                    onPointerDown={() => editor?.setActiveElementId(`toolbar:global_presence:${loc.name}`)}
-                    {...getNavProps(() => handleLocationClick(loc))}
-                    className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 shrink-0 snap-start w-[280px] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
-                        style={{
-                          border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
-                          background: isActive
-                            ? "linear-gradient(135deg, hsl(var(--secondary)/0.18), hsl(var(--secondary)/0.06))"
-                            : "linear-gradient(135deg, hsl(var(--card)/0.90), hsl(var(--card)/0.60))",
-                          backdropFilter: "blur(20px)",
-                          transform: isActive ? "scale(1.02)" : "scale(1)",
-                          boxShadow: isActive ? "0 6px 18px hsl(var(--secondary)/0.12)" : "0 3px 10px rgba(0,0,0,0.02)",
-                          minHeight: 100,
-                        }}
-                      >
-                    <div className="flex items-start justify-between mb-3"><EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
-                          {currentFlag && (currentFlag.startsWith("/") || currentFlag.startsWith("http") || currentFlag.includes(".")) ? (
-                            <img
-                              src={currentFlag}
-                              alt="flag"
-                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
-                              onDoubleClick={(e) => {
-                                if (editor?.isEditMode) {
-                                  e.stopPropagation();
-                                  editor.onPickImage("global_presence", "flag", (loc as any).id || loc.name);
-                                }
-                              }}
-                            />
-                          ) : (
-                            <EditableText section="global_presence" field="flag" id={(loc as any).id || loc.name} value={loc.flag} />
-                          )}
-                        </span>
-                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
+                {(isMobile && !editor?.isEditMode ? [...uniqueLocations, ...uniqueLocations, ...uniqueLocations] : uniqueLocations).map((loc, index) => {
+                  const isActive = activeLocation?.name === loc.name;
+                  const currentFlag = editor?.pendingChanges?.[`global_presence:${(loc as any).id || loc.name}:flag`] ?? loc.flag;
+                  return (
+                    <div
+                      key={`${(loc as any).id || loc.name}-${index}`}
+                      onPointerDown={() => editor?.setActiveElementId(`toolbar:global_presence:${loc.name}`)}
+                      {...getNavProps(() => handleLocationClick(loc))}
+                      className={`group group/item p-3 sm:p-3.5 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-lg hover:z-20 shrink-0 snap-start w-[260px] sm:w-[280px] flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
+                      style={{
+                        border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.4)",
+                        background: isActive
+                          ? "linear-gradient(135deg, hsl(var(--secondary)/0.18), hsl(var(--secondary)/0.06))"
+                          : "hsl(var(--card)/0.95)",
+                        backdropFilter: "blur(20px)",
+                        transform: isActive ? "scale(1.02)" : "scale(1)",
+                        boxShadow: isActive ? "0 4px 14px hsl(var(--secondary)/0.12)" : "0 1px 4px rgba(0,0,0,0.04)",
+                      }}
+                    >
+                      <EditorToolbar section="global_presence" id={(loc as any).id || loc.name} imageField="flag" canClone canDelete canMove moveDirections={["left", "right"]} className="absolute -top-9 right-2 scale-90" onMove={(dir) => handleMove((loc as any).id || loc.name, dir)} />
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl drop-shadow-sm flex items-center justify-center min-w-[28px] min-h-[20px]">
+                            {currentFlag && (currentFlag.startsWith("/") || currentFlag.startsWith("http") || currentFlag.includes(".")) ? (
+                              <img
+                                src={currentFlag}
+                                alt="flag"
+                                className="w-7 h-[18px] object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
+                                onDoubleClick={(e) => {
+                                  if (editor?.isEditMode) {
+                                    e.stopPropagation();
+                                    editor.onPickImage("global_presence", "flag", (loc as any).id || loc.name);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <EditableText section="global_presence" field="flag" id={(loc as any).id || loc.name} value={loc.flag} />
+                            )}
+                          </span>
+                          <h3 className="font-heading font-bold text-foreground text-[0.875rem] flex items-center gap-1.5"><MapPin size={13} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
+                        </div>
+                        <button
+                          className={`shrink-0 p-1.5 rounded-full transition-all duration-300 shadow-sm ${isActive ? "bg-secondary text-white scale-110" : "bg-secondary/15 text-secondary hover:bg-secondary hover:text-white hover:scale-110"}`}
+                          title="View on map"
+                          {...getNavProps(() => handleLocationClick(loc))}
+                        >
+                          <MapPin size={14} />
+                        </button>
                       </div>
-                      <button
-                        className={`shrink-0 p-2 rounded-full transition-all duration-300 shadow-sm animate-glow ${isActive ? "bg-secondary text-white scale-110" : "bg-secondary/70 text-white hover:bg-secondary hover:scale-110"}`}
-                        title="View on map"
-                        {...getNavProps(() => handleLocationClick(loc))}
-                      >
-                        <MapPin size={16} />
-                      </button>
-                    </div>
-                    <div className="text-muted-foreground text-[0.8125rem] leading-relaxed line-clamp-2 mb-2 flex-1">
-                      <EditableText section="global_reach_locations" field="clients" id={(loc as any).id || loc.name} value={loc.clients} />
-                    </div>
-                    <div className="text-[0.6875rem] text-secondary/90 font-semibold flex items-center gap-1.5 mt-auto pt-2 border-t border-border/40">
-                      <Building2 size={12} /> <EditableText section="global_reach_locations" field="landmark" id={(loc as any).id || loc.name} value={loc.landmark} />
-                    </div>
+                      <div className="text-muted-foreground text-[0.8rem] leading-relaxed line-clamp-2 mb-1.5 flex-1">
+                        <EditableText section="global_reach_locations" field="clients" id={(loc as any).id || loc.name} value={loc.clients} />
+                      </div>
+                      <div className="text-[0.675rem] text-secondary/80 font-semibold flex items-center gap-1.5 mt-auto pt-1.5 border-t border-border/30">
+                        <Building2 size={11} /> <EditableText section="global_reach_locations" field="landmark" id={(loc as any).id || loc.name} value={loc.landmark} />
+                      </div>
 
-                    {/* Admin-only: lat/lng coordinate editor */}
-                    {editor?.isEditMode && (
-                      <div className="mt-3 pt-2 border-t border-dashed border-secondary/20 text-[0.65rem] font-mono text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-secondary/70 font-bold shrink-0">Lat:</span>
-                          <EditableText section="global_presence" field="lat" id={(loc as any).id || loc.name} value={String(loc.lat)} />
+                      {/* Admin-only: lat/lng coordinate editor */}
+                      {editor?.isEditMode && (
+                        <div className="mt-3 pt-2 border-t border-dashed border-secondary/20 text-[0.65rem] font-mono text-muted-foreground space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-secondary/70 font-bold shrink-0">Lat:</span>
+                            <EditableText section="global_presence" field="lat" id={(loc as any).id || loc.name} value={String(loc.lat)} />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-secondary/70 font-bold shrink-0">Lng:</span>
+                            <EditableText section="global_presence" field="lng" id={(loc as any).id || loc.name} value={String(loc.lng)} />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-secondary/70 font-bold shrink-0">Lng:</span>
-                          <EditableText section="global_presence" field="lng" id={(loc as any).id || loc.name} value={String(loc.lng)} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -340,46 +340,47 @@ const WorldMap = () => {
                   {uniqueLocations.map((loc) => {
                     const currentFlag = editor?.pendingChanges?.[`global_presence:${(loc as any).id || loc.name}:flag`] ?? loc.flag;
                     return (
-                    <Marker
-                      key={loc.name}
-                      position={[loc.lat, loc.lng]}
-                      icon={createCustomIcon(activeLocation?.name === loc.name)}
-                      draggable={editor?.isEditMode}
-                      eventHandlers={{
-                        click: () => handleLocationClick(loc),
-                        dragend: (e) => {
-                          const { lat, lng } = e.target.getLatLng();
-                          setLocations((prev) =>
-                            prev.map((l) => (l.name === loc.name ? { ...l, lat, lng } : l))
-                          );
-                          if (activeLocation?.name === loc.name) {
-                            setActiveLocation((prev) => prev && { ...prev, lat, lng });
-                          }
-                        },
-                      }}
-                    >
-                      <Popup>
-                        <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
-                          {currentFlag && (currentFlag.startsWith("/") || currentFlag.startsWith("http") || currentFlag.includes(".")) ? (
-                            <img
-                              src={currentFlag}
-                              alt="flag"
-                              className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
-                              onDoubleClick={(e) => {
-                                if (editor?.isEditMode) {
-                                  e.stopPropagation();
-                                  editor.onPickImage("global_presence", "flag", (loc as any).id || loc.name);
-                                }
-                              }}
-                            />
-                          ) : (
-                            <EditableText section="global_presence" field="flag" id={(loc as any).id || loc.name} value={loc.flag} />
-                          )}
-                        </span>
-                        <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
-                      </Popup>
-                    </Marker>
-                  )})}
+                      <Marker
+                        key={loc.name}
+                        position={[loc.lat, loc.lng]}
+                        icon={createCustomIcon(activeLocation?.name === loc.name)}
+                        draggable={editor?.isEditMode}
+                        eventHandlers={{
+                          click: () => handleLocationClick(loc),
+                          dragend: (e) => {
+                            const { lat, lng } = e.target.getLatLng();
+                            setLocations((prev) =>
+                              prev.map((l) => (l.name === loc.name ? { ...l, lat, lng } : l))
+                            );
+                            if (activeLocation?.name === loc.name) {
+                              setActiveLocation((prev) => prev && { ...prev, lat, lng });
+                            }
+                          },
+                        }}
+                      >
+                        <Popup>
+                          <span className="text-3xl drop-shadow-sm flex items-center justify-center min-w-[32px] min-h-[24px]">
+                            {currentFlag && (currentFlag.startsWith("/") || currentFlag.startsWith("http") || currentFlag.includes(".")) ? (
+                              <img
+                                src={currentFlag}
+                                alt="flag"
+                                className="w-8 h-5 object-cover rounded shadow-sm inline-block cursor-pointer hover:opacity-85 transition-opacity"
+                                onDoubleClick={(e) => {
+                                  if (editor?.isEditMode) {
+                                    e.stopPropagation();
+                                    editor.onPickImage("global_presence", "flag", (loc as any).id || loc.name);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <EditableText section="global_presence" field="flag" id={(loc as any).id || loc.name} value={loc.flag} />
+                            )}
+                          </span>
+                          <h3 className="font-heading font-bold text-foreground text-[0.9375rem] flex items-center gap-2"><MapPin size={14} className="text-secondary" /><EditableText section="global_presence" field="name" id={(loc as any).id || loc.name} value={loc.name.split(",")[0]} /></h3>
+                        </Popup>
+                      </Marker>
+                    )
+                  })}
                 </MapContainer>
               </div>
             )}
