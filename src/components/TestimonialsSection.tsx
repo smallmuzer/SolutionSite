@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { ChevronLeft, ChevronRight, Star, StarHalf, Edit2 } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
@@ -59,6 +59,21 @@ const StarRating = ({ rating, id, editor }: { rating: number, id?: string, edito
 const TestimonialsSection = () => {
   const view = useGlobalView();
   const [currentPage, setCurrentPage] = useState(0);
+  const userInteractedRef = useRef(false);
+  const pausedRef = useRef(false);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [isMobile]);
 
   const headerContent = useSiteContent("testimonials");
   const editor = useLiveEditor();
@@ -143,6 +158,28 @@ const TestimonialsSection = () => {
     })) : [];
   }, [testimonialsState]);
 
+
+
+  const currentCardsPerPage = isMobile ? 1 : CARDS_PER_PAGE;
+  const totalPages = Math.max(1, Math.ceil(testimonials.length / currentCardsPerPage));
+  
+  const goTo = (p: number, interaction = false) => {
+    if (interaction) userInteractedRef.current = true;
+    setCurrentPage(((p % totalPages) + totalPages) % totalPages);
+  };
+  
+  const pageCards = testimonials.slice(currentPage * currentCardsPerPage, (currentPage + 1) * currentCardsPerPage);
+
+  useEffect(() => {
+    if (!isMobile || editor?.isEditMode || totalPages <= 1) return;
+    const interval = setInterval(() => {
+      if (!userInteractedRef.current && !pausedRef.current) {
+        setCurrentPage(prev => (prev + 1) % totalPages);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isMobile, editor?.isEditMode, totalPages]);
+
   if (!editor?.isEditMode && headerContent?.is_visible === false) return null;
 
   if (isDataLoading) return (
@@ -156,10 +193,6 @@ const TestimonialsSection = () => {
       </div>
     </section>
   );
-
-  const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);
-  const goTo = (p: number) => setCurrentPage(((p % totalPages) + totalPages) % totalPages);
-  const pageCards = testimonials.slice(currentPage * CARDS_PER_PAGE, (currentPage + 1) * CARDS_PER_PAGE);
 
   const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
     <div
@@ -244,7 +277,13 @@ const TestimonialsSection = () => {
             ))}
           </div>
         ) : (
-          <div className="max-w-[90rem] mx-auto px-4">
+          <div 
+            className="max-w-[90rem] mx-auto px-4"
+            onMouseEnter={() => pausedRef.current = true}
+            onMouseLeave={() => pausedRef.current = false}
+            onTouchStart={() => pausedRef.current = true}
+            onTouchEnd={() => pausedRef.current = false}
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch transition-all duration-500">
               {pageCards.map((t, i) => (
                 <AnimatedSection key={t.id} delay={i * 0.08} className="h-full">
@@ -256,7 +295,7 @@ const TestimonialsSection = () => {
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-6 mt-12">
                 <button
-                  onClick={() => goTo(currentPage - 1)}
+                  onClick={() => goTo(currentPage - 1, true)}
                   className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
                 >
                   <ChevronLeft size={20} className="group-hover/nav:-translate-x-0.5 transition-transform" />
@@ -265,13 +304,13 @@ const TestimonialsSection = () => {
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => goTo(i)}
+                      onClick={() => goTo(i, true)}
                       className={`h-1.5 rounded-full transition-all ${i === currentPage ? "w-8 bg-secondary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`}
                     />
                   ))}
                 </div>
                 <button
-                  onClick={() => goTo(currentPage + 1)}
+                  onClick={() => goTo(currentPage + 1, true)}
                   className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
                 >
                   <ChevronRight size={20} className="group-hover/nav:translate-x-0.5 transition-transform" />

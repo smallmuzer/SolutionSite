@@ -482,7 +482,7 @@ const ClientCard = ({
 
 const GridSlideshow = ({
   clients, getNavProps, startOffset = 0, reverse = false,
-  onMove, draggedId, onDragStart, onDragOver, onDrop
+  onMove, draggedId, onDragStart, onDragOver, onDrop, cols
 }: {
   clients: ClientLogo[];
   getNavProps: any;
@@ -493,10 +493,13 @@ const GridSlideshow = ({
   onDragStart?: (e: React.DragEvent, id: string) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, id: string) => void;
+  cols?: number;
 }) => {
   const total = clients.length, stripRef = useRef<HTMLDivElement>(null), rafRef = useRef<number>(0), posRef = useRef<number>(0);
   const ordered = total === 0 ? [] : Array.from({ length: total }, (_, k) => clients[(startOffset + k) % total]), doubled = [...ordered, ...ordered, ...ordered];
-  const stripH = Math.ceil(total / COLS) * (CARD_H + GAP);
+  const activeCols = cols || COLS;
+  const stripH = Math.ceil(total / activeCols) * (CARD_H + GAP);
+  const activeGridW = activeCols * CARD_W + (activeCols - 1) * GAP;
   useEffect(() => {
     if (total === 0) return; const el = stripRef.current; if (!el) return; if (reverse) posRef.current = stripH;
     const animate = () => { if (reverse) { posRef.current -= SPEED_PX; if (posRef.current <= 0) posRef.current += stripH; } else { posRef.current += SPEED_PX; if (posRef.current >= stripH) posRef.current -= stripH; } el.style.transform = `translateY(-${posRef.current}px)`; rafRef.current = requestAnimationFrame(animate); };
@@ -504,10 +507,10 @@ const GridSlideshow = ({
   }, [total, stripH, reverse]);
   if (total === 0) return null;
   return (
-    <div style={{ width: GRID_W, height: VISIBLE_H, overflow: "hidden", position: "relative", flexShrink: 0 }}>
+    <div style={{ width: activeGridW, height: VISIBLE_H, overflow: "hidden", position: "relative", flexShrink: 0 }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 48, zIndex: 2, pointerEvents: "none", background: "linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)" }} />
-      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, ${CARD_W}px)`, gap: GAP, width: GRID_W }}>
+      <div ref={stripRef} style={{ display: "grid", gridTemplateColumns: `repeat(${activeCols}, ${CARD_W}px)`, gap: GAP, width: activeGridW }}>
         {doubled.map((client, k) => (
           <ClientCard
             key={`${client.id}-${k}`}
@@ -671,7 +674,7 @@ const ClientsSection = () => {
               </div>
               <div className="flex sm:hidden flex-col items-center gap-10">
                 <StaticGlobe clients={clients} getNavProps={getNavProps} />
-                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
+                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} cols={3} />
               </div>
             </>
           )}

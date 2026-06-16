@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AnimatedSection from "./AnimatedSection";
 import { useGlobalView } from "./ui-customizer-context";
 import { ArrowRight, Code2, Database, Smartphone, Globe, Server, Cloud, GitBranch, Layers } from "lucide-react";
@@ -59,6 +59,45 @@ const LogoImg = ({ src, name, className }: { src: string; name: string; classNam
   );
 };
 
+const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      if (!expanded) {
+        setOverflows(el.scrollHeight > el.clientHeight + 6);
+      }
+    };
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    const t = setTimeout(check, 100);
+    window.addEventListener("resize", check);
+    return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
+  }, [text, expanded]);
+
+  return (
+    <div className="relative">
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+        {section && field ? (
+          <EditableText section={section} field={field} id={id} value={text} />
+        ) : text}
+      </div>
+      {(overflows || expanded) && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          className="text-[0.6875rem] font-bold text-secondary mt-1 hover:underline underline-offset-2"
+        >
+          Read {expanded ? "Less" : "More"}
+        </button>
+      )}
+    </div>
+  );
+};
+
 const TechnologiesSection = () => {
   const view = useGlobalView();
   const editor = useLiveEditor();
@@ -66,6 +105,20 @@ const TechnologiesSection = () => {
   const [techs, setTechs] = useState<Technology[]>([]);
   useEffect(() => { if (dbTechs) setTechs(dbTechs); }, [dbTechs]);
   const content = useSiteContent("technologies");
+
+  // Mobile slideshow state — hooks must be called unconditionally
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePage, setMobilePage] = useState(0);
+  const userInteractedRef = useRef(false);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   // Hook must be called unconditionally — before any early returns
   const getNavProps = useLiveEditorNavigation();
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -139,6 +192,26 @@ const TechnologiesSection = () => {
     description: content.description || "cutting-edge technologies..."
   };
 
+  // Mobile pagination — 5 cards per page
+  const mobileCardsPerPage = 6;
+  const mobileTotalPages = Math.max(1, Math.ceil(techs.length / mobileCardsPerPage));
+  const mobileTechs = techs.slice(mobilePage * mobileCardsPerPage, (mobilePage + 1) * mobileCardsPerPage);
+
+  const goToMobilePage = (page: number, interaction = false) => {
+    if (interaction) userInteractedRef.current = true;
+    setMobilePage(((page % mobileTotalPages) + mobileTotalPages) % mobileTotalPages);
+  };
+
+  useEffect(() => {
+    if (!isMobile || editor?.isEditMode || mobileTotalPages <= 1) return;
+    const interval = setInterval(() => {
+      if (!userInteractedRef.current && !pausedRef.current) {
+        setMobilePage(prev => (prev + 1) % mobileTotalPages);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isMobile, editor?.isEditMode, mobileTotalPages]);
+
   if (!editor?.isEditMode && content?.is_visible === false) return null;
 
   if (isLoading) return (
@@ -193,6 +266,74 @@ const TechnologiesSection = () => {
             <p className="text-sm">No technologies added yet.</p>
             {editor?.isEditMode && <p className="text-xs mt-1">Add technologies from the Admin Dashboard.</p>}
           </div>
+        ) : isMobile && !editor?.isEditMode ? (
+          <div
+            className="flex flex-col gap-4 mx-auto w-full"
+            onMouseEnter={() => { pausedRef.current = true; }}
+            onMouseLeave={() => { pausedRef.current = false; }}
+            onTouchStart={() => { pausedRef.current = true; }}
+            onTouchEnd={() => { pausedRef.current = false; }}
+          >
+            <div className="grid grid-cols-2 gap-3">
+              {mobileTechs.map((tech) => {
+                const logoSrc = tech.image_url?.trim() || LOCAL_LOGOS[tech.name] || null;
+                const rawNameColor = tech.name_color || "#3178C6";
+                const nameColor = extractColor(tech.name, rawNameColor);
+                const catColor = extractColor(tech.category, tech.category_color || nameColor);
+                const CatIcon = CATEGORY_ICONS[tech.category] || Layers;
+                return (
+                  <div key={tech.id}
+                    className="relative group/item cursor-pointer transition-all h-full"
+                    {...getNavProps(scrollToContact)}
+                  >
+                    <div className="absolute -inset-0.5 rounded-xl blur opacity-0 group-hover/item:opacity-40 transition duration-500" style={{ backgroundColor: nameColor }} />
+                    <div
+                      className="relative h-full glass-card flex flex-row items-start gap-3 p-3 border border-border/40 hover:border-transparent transition-all duration-300 rounded-xl bg-card/60 backdrop-blur-md overflow-hidden shadow-sm group-hover/item:shadow-md"
+                      style={{ ['--card-color' as string]: nameColor }}
+                    >
+                      <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" style={{ outline: `2px solid color-mix(in srgb, ${nameColor} 50%, transparent)`, outlineOffset: '-1px', backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }} />
+                      <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm relative z-[1] mt-0.5"
+                        style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
+                        {logoSrc ? <LogoImg src={logoSrc} name={tech.name} className="w-full h-full drop-shadow-sm" /> : <CatIcon size={18} className="text-secondary drop-shadow" />}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col gap-1 relative z-[1]">
+                        <h3 className="font-heading font-bold text-[0.8rem] leading-tight min-w-0 break-words" style={{ color: nameColor, fontWeight: 700 }}>
+                          <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
+                        </h3>
+                        <span className="w-fit text-[0.5rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border whitespace-nowrap"
+                          style={{ background: `color-mix(in srgb, ${catColor} 15%, transparent)`, color: catColor, borderColor: `color-mix(in srgb, ${catColor} 40%, transparent)` }}>
+                          <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
+                        </span>
+                        <ReadMoreText
+                          text={tech.description}
+                          clampClass="line-clamp-2"
+                          textClass="text-[0.65rem] text-muted-foreground leading-relaxed mt-0.5"
+                          section="technologies"
+                          field="description"
+                          id={tech.id}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {mobileTotalPages > 1 && (
+              <div className="flex items-center justify-center gap-5 mt-2">
+                <button onClick={() => goToMobilePage(mobilePage - 1, true)} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 transition-all text-foreground shadow-sm">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <div className="flex gap-2">
+                  {Array.from({ length: mobileTotalPages }).map((_, i) => (
+                    <button key={i} onClick={() => goToMobilePage(i, true)} className={`h-1.5 rounded-full transition-all ${i === mobilePage ? "w-6 bg-secondary" : "w-1.5 bg-muted-foreground/30"}`} />
+                  ))}
+                </div>
+                <button onClick={() => goToMobilePage(mobilePage + 1, true)} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 transition-all text-foreground shadow-sm">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+              </div>
+            )}
+          </div>
         ) : view === "grid" ? (
           <div className="flex flex-wrap justify-center gap-4">
             {techs.map((tech, i) => {
@@ -241,7 +382,7 @@ const TechnologiesSection = () => {
                     >
                       {/* Dynamic hover outline + background tint */}
                       <div className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" style={{ outline: `2px solid color-mix(in srgb, ${nameColor} 50%, transparent)`, outlineOffset: '-1px', backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }} />
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 min-w-0 relative z-[1]">
+                      <div className="flex flex-row items-center justify-between gap-2 min-w-0 relative z-[1]">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center p-1.5 shadow-sm transform group-hover/item:scale-110 transition-transform duration-300 ease-out"
                             style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${nameColor} 15%, transparent), color-mix(in srgb, ${nameColor} 5%, transparent))`, border: `1px solid color-mix(in srgb, ${nameColor} 25%, transparent)` }}>
@@ -251,7 +392,7 @@ const TechnologiesSection = () => {
                             <EditableText section="technologies" field="name" id={tech.id} value={tech.name} />
                           </h3>
                         </div>
-                        <span className="w-fit mx-auto text-[0.6rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded border whitespace-nowrap mt-1"
+                        <span className="w-fit shrink-0 text-[0.6rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded border whitespace-nowrap"
                           style={{ background: `color-mix(in srgb, ${catColor} 15%, transparent)`, color: catColor, borderColor: `color-mix(in srgb, ${catColor} 40%, transparent)` }}>
                           <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                         </span>

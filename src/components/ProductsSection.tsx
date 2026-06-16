@@ -1031,6 +1031,7 @@ const ProductsSection = () => {
   const rafRef = useRef<number>(0);
   const posRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
+  const userInteractedRef = useRef<boolean>(false);
   const getNavProps = useLiveEditorNavigation();
   const SPEED = 0.45;
   const GAP = 24;
@@ -1165,14 +1166,29 @@ const ProductsSection = () => {
   const scrollToContact = () =>
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
 
-  if (!editor?.isEditMode && content?.is_visible === false) return null;
-  if (!dbProducts && !products.length) return null;
 
   const tripled = [...products, ...products, ...products];
-  const mobileCardsPerPage = 2;
+  const mobileCardsPerPage = 1;
   const mobileTotalPages = Math.max(1, Math.ceil(products.length / mobileCardsPerPage));
   const mobileProducts = products.slice(mobilePage * mobileCardsPerPage, (mobilePage + 1) * mobileCardsPerPage);
-  const goToMobilePage = (page: number) => setMobilePage(((page % mobileTotalPages) + mobileTotalPages) % mobileTotalPages);
+  
+  const goToMobilePage = (page: number, interaction = false) => {
+    if (interaction) userInteractedRef.current = true;
+    setMobilePage(((page % mobileTotalPages) + mobileTotalPages) % mobileTotalPages);
+  };
+
+  useEffect(() => {
+    if (!isMobileProducts || globalView !== "grid" || editor?.isEditMode || mobileTotalPages <= 1) return;
+    const interval = setInterval(() => {
+      if (!userInteractedRef.current && !pausedRef.current) {
+        setMobilePage(prev => (prev + 1) % mobileTotalPages);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isMobileProducts, globalView, editor?.isEditMode, mobileTotalPages]);
+
+  if (!editor?.isEditMode && content?.is_visible === false) return null;
+  if (!dbProducts && !products.length) return null;
 
   return (
     <section
@@ -1245,11 +1261,17 @@ const ProductsSection = () => {
         </AnimatedSection>
 
         {globalView === "grid" && isMobileProducts && !editor?.isEditMode ? (
-          <div className="max-w-3xl mx-auto px-1">
+          <div 
+            className="max-w-3xl mx-auto px-1"
+            onMouseEnter={() => pausedRef.current = true}
+            onMouseLeave={() => pausedRef.current = false}
+            onTouchStart={() => pausedRef.current = true}
+            onTouchEnd={() => pausedRef.current = false}
+          >
             <div className="grid grid-cols-1 gap-4 items-stretch transition-all duration-500">
               {mobileProducts.map((product, i) => (
-                <AnimatedSection key={product.id} delay={i * 0.08}>
-                  <ProductCardList
+                <AnimatedSection key={product.id} delay={i * 0.08} className="flex justify-center">
+                  <ProductCard
                     product={product}
                     onDemo={scrollToContact}
                     cardStyle={cardStyle}
@@ -1264,7 +1286,7 @@ const ProductsSection = () => {
             {mobileTotalPages > 1 && (
               <div className="flex items-center justify-center gap-5 mt-8">
                 <button
-                  onClick={() => goToMobilePage(mobilePage - 1)}
+                  onClick={() => goToMobilePage(mobilePage - 1, true)}
                   className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
                   aria-label="Previous products"
                 >
@@ -1274,14 +1296,14 @@ const ProductsSection = () => {
                   {Array.from({ length: mobileTotalPages }).map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => goToMobilePage(i)}
+                      onClick={() => goToMobilePage(i, true)}
                       className={`h-1.5 rounded-full transition-all ${i === mobilePage ? "w-8 bg-secondary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`}
                       aria-label={`Go to products page ${i + 1}`}
                     />
                   ))}
                 </div>
                 <button
-                  onClick={() => goToMobilePage(mobilePage + 1)}
+                  onClick={() => goToMobilePage(mobilePage + 1, true)}
                   className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
                   aria-label="Next products"
                 >

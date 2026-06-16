@@ -218,7 +218,7 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className={`flex overflow-x-auto items-stretch gap-0 w-full mx-auto pt-6 pb-6 snap-x custom-scrollbar max-w-7xl px-2 ${associated.length <= 3 ? "md:justify-center" : "md:justify-start"}`}>
+            <div className={`flex flex-col sm:flex-row sm:overflow-x-auto items-center sm:items-stretch gap-0 w-full mx-auto pt-6 pb-6 sm:snap-x sm:custom-scrollbar max-w-7xl px-2 ${associated.length <= 3 ? "md:justify-center" : "md:justify-start"}`}>
               {associated.map((co, idx) => {
                 const isCoVisibleDraft = editor?.pendingChanges[`our_network:${co.id}:is_visible`] ?? co.is_visible;
                 const isVisible = isCoVisibleDraft !== false;
@@ -242,7 +242,7 @@ const Footer = () => {
                           window.open(hrefDraft, "_blank");
                         }
                       }}
-                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 snap-center w-[85vw] sm:w-[320px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
+                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 sm:snap-center w-full sm:w-[320px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
                     >
                       <EditorToolbar
                         section="our_network"
@@ -309,16 +309,16 @@ const Footer = () => {
 
                     {/* Handshake connector */}
                     {idx < associated.length - 1 && (
-                      <div className="flex items-center justify-center shrink-0 z-10" style={{ width: 48, margin: "0 -1px" }}>
+                      <div className="flex items-center justify-center shrink-0 z-10 my-[-1px] sm:my-0 sm:mx-[-1px]">
                         <div className="flex flex-col items-center gap-1">
-                          <div className="flex items-center gap-0">
-                            <div className="w-3 h-px bg-border/60" />
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted border border-border/50 shadow-sm" title="Partnership">
+                          <div className="flex flex-col sm:flex-row items-center gap-0">
+                            <div className="w-px h-4 sm:w-4 sm:h-px bg-border/60" />
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted border border-border/50 shadow-sm z-10 my-0.5 sm:my-0 sm:mx-0.5" title="Partnership">
                               <span style={{ fontSize: 16 }}>🤝</span>
                             </div>
-                            <div className="w-3 h-px bg-border/60" />
+                            <div className="w-px h-4 sm:w-4 sm:h-px bg-border/60" />
                           </div>
-                          <span className="text-[0.5rem] font-bold uppercase tracking-widest text-muted-foreground">Partners</span>
+                          <span className="text-[0.5rem] font-bold uppercase tracking-widest text-muted-foreground hidden sm:block">Partners</span>
                         </div>
                       </div>
                     )}
@@ -355,11 +355,11 @@ const Footer = () => {
         <div className="absolute inset-0 z-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.10) 0%, transparent 70%)" }}
         />
-        <div className="relative z-10 container-wide px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+        <div className="relative z-10 container-wide px-5 sm:px-6 lg:px-8 pt-10 pb-6 lg:pt-12">
+          <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-10 sm:gap-x-8 lg:gap-10">
 
             {/* Brand */}
-            <div className="sm:col-span-2 lg:col-span-3">
+            <div className="col-span-2 lg:col-span-3">
               <div className="flex items-center gap-2.5 mb-4 relative group/item w-max">
                 {editor?.isEditMode && (
                   <EditorToolbar
@@ -428,7 +428,7 @@ const Footer = () => {
             </div>
 
             {/* Services */}
-            <div className="lg:col-span-2" {...getNavProps(() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" }))}>
+            <div className="col-span-1 lg:col-span-2" {...getNavProps(() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" }))}>
               <h4 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2 group/h" style={{ color: "#f1f5f9" }}>
                 <EditableText section="footer" field="label_services" value={content.label_services || "Services"} />
               </h4>
@@ -457,7 +457,7 @@ const Footer = () => {
                           {(!isLinkVisible || !isGloballyVisible) && editor?.isEditMode && (
                             <span className="text-amber-500 shrink-0" title={!isGloballyVisible ? "Service hidden globally" : "Link Hidden"}><EyeOff size={11} /></span>
                           )}
-                          <a href={s.href || "#services"} className="text-sm transition-colors duration-150 w-fit line-clamp-1" style={{ color: "#94a3b8" }}
+                          <a href={s.href || "#services"} className="text-[0.8125rem] transition-colors duration-150 w-fit line-clamp-2" style={{ color: "#94a3b8" }}
                             onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
                             onMouseLeave={e => ((e.target as HTMLElement).style.color = "#94a3b8")}
                           >
@@ -471,7 +471,7 @@ const Footer = () => {
             </div>
 
             {/* Company */}
-            <div className="lg:col-span-2" {...getNavProps(() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" }))}>
+            <div className="col-span-1 lg:col-span-2" {...getNavProps(() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" }))}>
               <h4 className="font-heading font-semibold text-sm mb-4" style={{ color: "#f1f5f9" }}>
                 <EditableText section="footer" field="label_company" value={content.label_company || "Company"} />
               </h4>
@@ -506,7 +506,7 @@ const Footer = () => {
                         {!isLinkVisible && editor?.isEditMode && (
                           <span className="text-amber-500 shrink-0" title="Link Hidden"><EyeOff size={11} /></span>
                         )}
-                        <a href={s.href} className="text-sm transition-colors duration-150 w-fit" style={{ color: "#94a3b8" }}
+                        <a href={s.href} className="text-[0.8125rem] transition-colors duration-150 w-fit" style={{ color: "#94a3b8" }}
                           onMouseEnter={e => ((e.target as HTMLElement).style.color = "#60a5fa")}
                           onMouseLeave={e => ((e.target as HTMLElement).style.color = "#94a3b8")}
                         >{s.label}</a>
@@ -518,7 +518,7 @@ const Footer = () => {
             </div>
 
             {/* Contact */}
-            <div className="sm:col-span-2 lg:col-span-5 relative group/contact">
+            <div className="col-span-2 lg:col-span-5 relative group/contact">
               <h4 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2" style={{ color: "#f1f5f9" }}>
                 <span><EditableText section="footer" field="label_contact" value={content.label_contact || "Contact"} /></span>
                 {editor?.isEditMode && (

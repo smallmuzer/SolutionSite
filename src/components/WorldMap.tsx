@@ -72,6 +72,57 @@ const WorldMap = () => {
   const [detailVisible, setDetailVisible] = useState(false);
   const detailTimer = useRef<ReturnType<typeof setTimeout>>();
 
+  const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => ((l as any).id || l.name) === ((loc as any).id || loc.name)) === idx);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  const trackRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const posRef = useRef<number>(0);
+  const pausedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (!isMobile || editor?.isEditMode || uniqueLocations.length === 0) {
+      if (trackRef.current) trackRef.current.style.transform = 'none';
+      cancelAnimationFrame(rafRef.current);
+      return;
+    }
+    const el = trackRef.current;
+    if (!el) return;
+
+    const startAnimate = () => {
+      const children = el.children;
+      if (children.length === 0) return;
+      const firstChild = children[0] as HTMLElement;
+      const itemW = firstChild.offsetWidth + 16; // 16px gap for gap-4
+      const totalW = uniqueLocations.length * itemW;
+
+      cancelAnimationFrame(rafRef.current);
+      const animate = () => {
+        if (!pausedRef.current && totalW > 0) {
+          posRef.current += 0.5; // sliding speed
+          if (posRef.current >= totalW) posRef.current -= totalW;
+          el.style.transform = `translateX(-${posRef.current}px)`;
+        }
+        rafRef.current = requestAnimationFrame(animate);
+      };
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    const timer = setTimeout(startAnimate, 100);
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [uniqueLocations, isMobile, editor?.isEditMode]);
+
   const handleMove = (id: string, direction: "up" | "down" | "left" | "right") => {
     const idx = locations.findIndex(l => ((l as any).id || l.name) === id);
     if (idx === -1) return;
@@ -132,8 +183,6 @@ const WorldMap = () => {
     setTimeout(() => setActiveLocation(null), 250);
   };
 
-  const uniqueLocations = locations.filter((loc, idx, arr) => arr.findIndex(l => ((l as any).id || l.name) === ((loc as any).id || loc.name)) === idx);
-
   if (!editor?.isEditMode && rawContent?.is_visible === false) return null;
 
   return (
@@ -158,16 +207,31 @@ const WorldMap = () => {
 
         <AnimatedSection>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className={`flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-12 snap-x snap-mandatory scroll-smooth custom-scrollbar w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}>
-              {uniqueLocations.map((loc) => {
+            <div 
+              className={`relative ${isMobile && !editor?.isEditMode ? "overflow-hidden" : "overflow-x-auto custom-scrollbar"} pb-6 pt-12 w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}
+              onMouseEnter={() => { pausedRef.current = true; }}
+              onMouseLeave={() => { pausedRef.current = false; }}
+              onTouchStart={() => { pausedRef.current = true; }}
+              onTouchEnd={() => { pausedRef.current = false; }}
+              style={isMobile && !editor?.isEditMode ? {
+                  maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+              } : undefined}
+            >
+              <div 
+                ref={trackRef}
+                className={`flex gap-4 sm:gap-6 ${isMobile && !editor?.isEditMode ? "w-max" : "w-full snap-x snap-mandatory scroll-smooth"}`}
+                style={{ willChange: isMobile && !editor?.isEditMode ? "transform" : "auto" }}
+              >
+              {(isMobile && !editor?.isEditMode ? [...uniqueLocations, ...uniqueLocations, ...uniqueLocations] : uniqueLocations).map((loc, index) => {
                 const isActive = activeLocation?.name === loc.name;
                 const currentFlag = editor?.pendingChanges?.[`global_presence:${(loc as any).id || loc.name}:flag`] ?? loc.flag;
                 return (
                   <div
-                    key={(loc as any).id || loc.name}
+                    key={`${(loc as any).id || loc.name}-${index}`}
                     onPointerDown={() => editor?.setActiveElementId(`toolbar:global_presence:${loc.name}`)}
                     {...getNavProps(() => handleLocationClick(loc))}
-                    className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 shrink-0 snap-start w-[85vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
+                    className={`group group/item p-4 rounded-xl text-left cursor-pointer border relative transition-all duration-300 hover:shadow-xl hover:z-20 shrink-0 snap-start w-[280px] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] flex flex-col ${editor?.isEditMode ? "overflow-visible" : "overflow-hidden"}`}
                         style={{
                           border: isActive ? "1.5px solid hsl(var(--secondary)/0.7)" : "1px solid hsl(var(--border)/0.5)",
                           background: isActive
@@ -231,6 +295,7 @@ const WorldMap = () => {
                   </div>
                 );
               })}
+              </div>
             </div>
 
             {/* Map — with increased gap from cards */}

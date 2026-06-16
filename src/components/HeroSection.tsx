@@ -132,7 +132,7 @@ const HeroSection = () => {
             alt=""
             crossOrigin="anonymous"
             loading="eager"
-            fetchPriority={i === 0 ? "high" : "auto"}
+            {...({ fetchpriority: i === 0 ? "high" : "auto" } as any)}
             className="absolute inset-0 w-full h-full object-cover hero-parallax"
             style={{
               opacity: i === bgIndex ? 1 : 0,
@@ -163,15 +163,15 @@ const HeroSection = () => {
 
       {/* SVG Overlay Spotlight (Increases visibility of multiplied images) */}
       {(overlayImage || editor?.isEditMode) && (
-        <div className={`absolute top-1/2 right-0 sm:right-[2%] lg:right-[5%] z-10 w-[85%] sm:w-[50%] lg:w-[40%] max-w-[380px] aspect-square bg-white/80 rounded-full blur-[60px] pointer-events-none transition-opacity duration-500 ${(!overlayVisible && !editor?.isEditMode) || (overlayImage && !isOverlayLoaded) ? 'opacity-0' : 'opacity-100'}`} style={{ transform: 'translate(10px, calc(-50% + 10px))' }} />
+        <div className={`absolute top-24 sm:top-1/2 right-4 sm:right-[2%] lg:right-[5%] z-10 w-[40%] sm:w-[50%] lg:w-[40%] max-w-[180px] sm:max-w-[380px] aspect-square bg-white/80 rounded-full blur-[40px] sm:blur-[60px] pointer-events-none transition-opacity duration-500 translate-x-[10px] translate-y-[10px] sm:translate-y-[calc(-50%+10px)] ${(!overlayVisible && !editor?.isEditMode) || (overlayImage && !isOverlayLoaded) ? 'opacity-0' : 'opacity-100'}`} />
       )}
 
       {/* SVG Overlay Graphic (Visual Layer) */}
       {(overlayImage || editor?.isEditMode) && (
-        <div className={`absolute top-0 bottom-0 h-fit right-0 sm:right-[2%] lg:right-[5%] w-[85%] sm:w-[50%] lg:w-[40%] max-w-[500px] z-20 mix-blend-multiply peer/overlay ${editor?.isEditMode ? 'pointer-events-auto' : 'pointer-events-none'} ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`} style={{ marginTop: 'auto', marginBottom: 'auto', transform: 'translate(10px, 10px)' }}>
+        <div className={`absolute top-24 sm:top-0 sm:bottom-0 sm:my-auto h-fit right-4 sm:right-[2%] lg:right-[5%] w-[40%] sm:w-[50%] lg:w-[40%] max-w-[180px] sm:max-w-[500px] z-20 mix-blend-multiply peer/overlay translate-x-[10px] translate-y-[10px] sm:translate-y-0 ${editor?.isEditMode ? 'pointer-events-auto' : 'pointer-events-none'} ${!overlayVisible && !editor?.isEditMode ? 'hidden' : ''}`}>
           <div className={`w-full transition-opacity duration-300 ${!overlayVisible ? 'opacity-30 grayscale' : 'opacity-100'}`}>
             {overlayImage ? (
-              <img src={overlayImage} onLoad={() => setIsOverlayLoaded(true)} alt="Hero Overlay" loading="eager" fetchPriority="high" className="w-full h-auto object-contain animate-float pointer-events-none brightness-110 contrast-110" />
+              <img src={overlayImage} onLoad={() => setIsOverlayLoaded(true)} alt="Hero Overlay" loading="eager" {...({ fetchpriority: "high" } as any)} className="w-full h-auto object-contain animate-float pointer-events-none brightness-110 contrast-110" />
             ) : (
               editor?.isEditMode && (
                 <div className="w-full aspect-video border-2 border-dashed border-white/20 bg-white/5 backdrop-blur-sm rounded-2xl flex items-center justify-center pointer-events-auto hover:bg-white/10 transition-colors">
@@ -185,7 +185,7 @@ const HeroSection = () => {
 
       {/* SVG Overlay Toolbar (Interaction Layer) */}
       {editor?.isEditMode && (
-        <div className={`absolute top-0 bottom-0 h-fit right-0 sm:right-[2%] lg:right-[5%] w-[85%] sm:w-[50%] lg:w-[40%] max-w-[500px] z-30 pointer-events-none`} style={{ marginTop: 'auto', marginBottom: 'auto', transform: 'translate(10px, 10px)' }}>
+        <div className={`absolute top-24 sm:top-0 sm:bottom-0 sm:my-auto h-fit right-4 sm:right-[2%] lg:right-[5%] w-[40%] sm:w-[50%] lg:w-[40%] max-w-[180px] sm:max-w-[500px] z-30 pointer-events-none translate-x-[10px] translate-y-[10px] sm:translate-y-0`}>
           <div className={`${!overlayVisible ? "opacity-100" : "opacity-0 peer-hover/overlay:opacity-100"} hover:opacity-100 transition-all duration-300 pointer-events-auto absolute -top-12 right-0`}>
             <EditorToolbar
               section="hero"
@@ -204,7 +204,7 @@ const HeroSection = () => {
         </div>
       )}
 
-      <div className="container-wide relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-28 sm:pt-32 pb-12">
+      <div className="container-wide relative z-30 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-28 sm:pt-32 pb-12">
         <div className="flex-1 flex flex-col justify-center max-w-4xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm mb-10 hero-fade-in w-fit" style={{ animationDelay: "0.1s" }}>
