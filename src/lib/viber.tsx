@@ -27,11 +27,12 @@ export const openViber = (phoneNumbers: string = "9489477144", shareMessage: str
 
   const numbersArray = phoneNumbers.split(",").map(n => n.trim().replace("+", "")).filter(Boolean);
 
-  if (phoneNumbers && phoneNumbers.length >= 10) {
+  if (phoneNumbers && phoneNumbers.replace(/[^0-9]/g, "").length >= 7) {
+    const cleanNumber = phoneNumbers.replace(/[^0-9]/g, "");
     if (isMobile) {
-      window.location.href = `viber://forward?text=${encodedMessage}&contacts=${numbersArray.join(",")}`;
+      window.location.href = `viber://chat?number=${cleanNumber}`;
     } else {
-      window.location.href = `viber://chat?number=${phoneNumbers.replace("+", "")}`;
+      window.location.href = `viber://chat?number=${cleanNumber}`;
       tryCopy();
     }
   } else {
