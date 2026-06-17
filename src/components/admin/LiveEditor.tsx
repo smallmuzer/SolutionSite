@@ -26,11 +26,7 @@ const WhatsAppButton = lazy(() => import("@/components/WhatsAppButton"));
 const ScrollToTop = lazy(() => import("@/components/ScrollToTop"));
 const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
-const SkeletonSection = () => (
-  <div className="w-full h-64 bg-muted/10 animate-pulse flex items-center justify-center">
-    <LoadingSpinner />
-  </div>
-);
+const SkeletonSection = () => null;
 
 const LiveEditor = ({ userRole }: { userRole?: string }) => {
   const { data: settings } = useSiteSettings();
@@ -242,6 +238,8 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     }
   };
 
+let nextSortOrder = 9999;
+
   const handleAdd = async (section: string) => {
     if (section === "hero") {
       handlePickMultiImage("hero", "hero_images");
@@ -249,7 +247,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     }
     try {
       const uiSection = section === "client_logos" ? "clients" : section;
-      const defaults: any = { is_visible: true, sort_order: 0 };
+      const defaults: any = { is_visible: true, sort_order: nextSortOrder++ };
       if (uiSection === "hero_stats") { defaults.count = "00"; defaults.label = "Label"; defaults.suffix = "+"; }
       else if (uiSection === "services") { defaults.title = "New Service"; defaults.description = "Service description"; defaults.badge = "Service"; }
       else if (uiSection === "global_presence") { defaults.name = "New Location, Country"; defaults.lat = 4.1755; defaults.lng = 73.5093; defaults.clients = "New Clients details"; defaults.description = "New location active operations and technical details."; defaults.flag = "📍"; defaults.landmark = "New Landmark"; }
@@ -289,7 +287,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       const newItem = { ...itemToClone };
       delete newItem.id;
       delete newItem.created_at;
-      newItem.sort_order = (newItem.sort_order || 0) + 1;
+      newItem.sort_order = (newItem.sort_order || 0) + 0.01;
       if (newItem.title) newItem.title += " (Clone)";
       if (newItem.name) newItem.name += " (Clone)";
 
@@ -557,7 +555,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
 
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
       <div className="w-full max-w-xl bg-card border border-border/60 shadow-xl rounded-xl overflow-hidden flex flex-col max-h-[80vh]">
         <div className="p-3 border-b border-border/50 flex items-center justify-between">
           <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2">

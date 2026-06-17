@@ -23,9 +23,7 @@ const ScrollToTop        = lazy(() => import("@/components/ScrollToTop"));
 const CookieConsent      = lazy(() => import("@/components/CookieConsent"));
 
 // Smooth Skeleton fallback to prevent layout shift (CLS)
-const SkeletonSection = () => (
-  <div className="w-full bg-muted/20 animate-pulse" style={{ minHeight: "350px" }} />
-);
+const SkeletonSection = () => null;
 
 const Index = () => {
   useSiteSettings(); // Preloads site_content

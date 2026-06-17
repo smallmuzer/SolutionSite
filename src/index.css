@@ -829,6 +829,7 @@ section[id] {
 /* Ensure nav items and other active elements can override child inline typography styles */
 .nav-btn-wrapper [style] {
   color: inherit !important;
+  background-color: transparent !important;
 }
 
 .nav-btn-wrapper:hover span[style],

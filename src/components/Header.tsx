@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Menu, X, Sun, Moon, ShieldCheck, Settings, Eye, EyeOff } from "lucide-react";
+import { Menu, X, Sun, Moon, ShieldCheck, Settings, Eye, EyeOff, Trash2, RotateCcw, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 const DEFAULT_LOGO = "/logo.png";
 import { EditableText, EditorToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 import { useNavigate } from "react-router-dom";
@@ -70,19 +70,51 @@ const Header = () => {
     () => hiddenNavItemsValue.split(",").filter(Boolean),
     [hiddenNavItemsValue]
   );
-  const navItems = DEFAULT_NAV.map(item => {
+
+  const pendingDeletedNavItems = editor?.pendingChanges?.["settings:nav_deleted_items"];
+  const deletedNavItemsValue = String(pendingDeletedNavItems ?? settingsContent.nav_deleted_items ?? (settings as any).nav_deleted_items ?? "");
+  const deletedNavItems = useMemo(
+    () => deletedNavItemsValue.split(",").filter(Boolean),
+    [deletedNavItemsValue]
+  );
+
+  const getBaseNavItems = () => {
+    let rawNavItems = editor?.pendingChanges?.["settings:nav_items"] ?? (settings as any).nav_items ?? settingsContent.nav_items;
+    let custom = rawNavItems;
+    if (typeof custom === 'string') {
+      try { custom = JSON.parse(custom); } catch { custom = null; }
+    }
+    if (!Array.isArray(custom) || custom.length === 0) {
+      custom = DEFAULT_NAV;
+    }
+    return custom as {label: string, href: string}[];
+  };
+
+  const customNavItems = useMemo(getBaseNavItems, [editor?.pendingChanges, settingsContent.nav_items, (settings as any).nav_items]);
+
+  const navItems = customNavItems.map(item => {
     const key = `nav_link_${item.href.replace('#', '')}`;
     const labelKey = `nav_label_${item.href.replace('#', '')}`;
     const pendingKey = `settings:${key}`;
     const pendingLabelKey = `settings:${labelKey}`;
     const pendingVal = editor?.pendingChanges?.[pendingKey];
     const pendingLabelVal = editor?.pendingChanges?.[pendingLabelKey];
+    
+    let resolvedHref = pendingVal ?? settingsContent[key] ?? (settings as any)[key] ?? item.href;
+    if (typeof resolvedHref === 'string') {
+      resolvedHref = resolvedHref.trim();
+      if (!resolvedHref.startsWith("#") && !resolvedHref.startsWith("http") && !resolvedHref.startsWith("/")) {
+        resolvedHref = "#" + resolvedHref;
+      }
+    }
+
     return {
       ...item,
-      resolvedHref: pendingVal ?? settingsContent[key] ?? (settings as any)[key] ?? item.href,
+      resolvedHref,
       resolvedLabel: pendingLabelVal ?? settingsContent[labelKey] ?? (settings as any)[labelKey] ?? item.label
     };
   }).filter(item => {
+    if (deletedNavItems.includes(item.href)) return false;
     return editor?.isEditMode || !hiddenNavItems.includes(item.href);
   });
 
@@ -103,7 +135,7 @@ const Header = () => {
 
   // Active section via IntersectionObserver
   useEffect(() => {
-    const ids = navItems.map((n) => n.href.replace("#", ""));
+    const ids = navItems.map((n) => n.resolvedHref.replace("#", ""));
     const ratios = new Map<string, number>();
     const observer = new IntersectionObserver(
       (entries) => {
@@ -175,30 +207,100 @@ const Header = () => {
   };
 
   const navBtn = (active: boolean) =>
-    `nav-btn-wrapper px-3 py-1.5 rounded-lg text-[14px] font-semibold transition-colors relative whitespace-nowrap ${active ? "nav-btn-active text-secondary bg-secondary/10" : "text-foreground hover:text-secondary hover:bg-muted"
+    `nav-btn-wrapper px-3 py-1.5 rounded-lg text-[14px] font-semibold transition-colors relative whitespace-nowrap ${active ? "nav-btn-active text-secondary" : "text-foreground hover:text-secondary"
     }`;
 
   const iconBtn = "p-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors";
-  const renderNavVisibilityToggle = (href: string, mobile = false, inlineEditor = false) => {
+  const moveNavItem = (href: string, direction: 'left' | 'right') => {
+    const base = [...customNavItems];
+    const index = base.findIndex(i => i.href === href);
+    if (index === -1) return;
+    
+    if (direction === 'left' && index > 0) {
+      [base[index - 1], base[index]] = [base[index], base[index - 1]];
+    } else if (direction === 'right' && index < base.length - 1) {
+      [base[index], base[index + 1]] = [base[index + 1], base[index]];
+    } else {
+      return;
+    }
+    editor?.onUpdate("settings", "nav_items", JSON.stringify(base));
+  };
+
+  const deleteNavItem = (href: string) => {
+    if (confirm("Are you sure you want to delete this menu item?")) {
+      const base = customNavItems.filter(i => i.href !== href);
+      editor?.onUpdate("settings", "nav_items", JSON.stringify(base));
+      const nextDeleted = [...deletedNavItems, href];
+      editor?.onUpdate("settings", "nav_deleted_items", nextDeleted.join(","));
+    }
+  };
+
+  const addNavItem = () => {
+    const id = Date.now();
+    const next = [...customNavItems, { label: "New Menu", href: `#new-section-${id}` }];
+    editor?.onUpdate("settings", "nav_items", JSON.stringify(next));
+  };
+
+  const renderNavControls = (href: string) => {
     if (!editor?.isEditMode) return null;
     const isHidden = hiddenNavItems.includes(href);
+    const index = customNavItems.findIndex(i => i.href === href);
+    const canMoveLeft = index > 0;
+    const canMoveRight = index !== -1 && index < customNavItems.length - 1;
+
     return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggleNavVisibility(href);
-        }}
-        className={inlineEditor
-          ? "p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
-          : `${mobile ? "absolute right-2 top-1/2 -translate-y-1/2 p-1.5" : "ml-1 p-1"} z-[80] rounded-md border border-border/60 bg-card shadow-lg transition-all hover:scale-110 active:scale-95 ${isHidden ? "opacity-100 text-muted-foreground" : "opacity-0 group-hover/item:opacity-100 text-secondary"}`
-        }
-        title={isHidden ? "Show Menu Item" : "Hide Menu Item"}
-        aria-label={isHidden ? "Show menu item" : "Hide menu item"}
-      >
-        {isHidden ? <EyeOff size={mobile ? 14 : 12} /> : <Eye size={mobile ? 14 : 12} />}
-      </button>
+      <div className="flex items-center gap-0">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            moveNavItem(href, 'left');
+          }}
+          disabled={!canMoveLeft}
+          className={`p-1 rounded-[2px] transition-colors text-white cursor-pointer ${!canMoveLeft ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20'}`}
+          title="Move Left"
+        >
+          <ChevronLeft size={12} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            moveNavItem(href, 'right');
+          }}
+          disabled={!canMoveRight}
+          className={`p-1 rounded-[2px] transition-colors text-white cursor-pointer mr-0.5 ${!canMoveRight ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20'}`}
+          title="Move Right"
+        >
+          <ChevronRight size={12} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleNavVisibility(href);
+          }}
+          className="p-1 hover:bg-white/20 rounded-[2px] transition-colors text-white cursor-pointer"
+          title={isHidden ? "Show Menu Item" : "Hide Menu Item"}
+        >
+          {isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteNavItem(href);
+          }}
+          className="p-1 hover:bg-red-500/80 rounded-[2px] transition-colors text-white cursor-pointer"
+          title="Delete Menu Item"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
     );
   };
   const activeNavToolbar = (href: string) => editor?.activeElementId === `header-nav:${href}`;
@@ -214,7 +316,7 @@ const Header = () => {
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 1000,
         transition: "all 0.3s ease",
         background: scrolled ? "hsl(var(--background)/0.85)" : "hsl(var(--background))",
         backdropFilter: scrolled ? "blur(12px)" : "none",
@@ -224,41 +326,52 @@ const Header = () => {
       }}
     >
       <div className="w-full flex items-center justify-between gap-2 px-3 sm:px-6 h-[60px] lg:h-[55px]">
-        {/* Logo */}
-        <div className="relative group/item flex items-center min-w-0 shrink">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="relative group/item flex items-center min-w-0 shrink">
+            {editor?.isEditMode && (
+              <EditorToolbar
+                section="settings"
+                imageField="site_logo"
+                className="absolute -top-2 -right-6 z-[60] scale-[0.80]"
+                canHide={false}
+                canDelete={false}
+                canClone={false}
+              />
+            )}
+            {/* Fix: Use a div instead of an 'a' tag in edit mode to prevent contentEditable and click event conflicts */}
+            {(() => {
+              const Wrapper = editor?.isEditMode ? "div" : "a";
+              const target = settings.site_url || "#home";
+              const props = editor?.isEditMode ? getNavProps(() => scrollTo(target)) : { href: target };
+              return (
+                <Wrapper {...props} className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink cursor-pointer  p-1 rounded-md transition-colors ">
+                  <img
+                    src={resolvedLogo}
+                    alt={siteName}
+                    className="shrink-0"
+                    style={{ height: "42px", width: "auto", maxWidth: "200px", objectFit: "contain", objectPosition: "left center" }}
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      if (target.getAttribute('data-error') !== 'true') {
+                        target.setAttribute('data-error', 'true');
+                        target.src = "https://placehold.co/200x60/transparent/666?text=Upload+Logo";
+                      }
+                    }}
+                  />
+                </Wrapper>
+              );
+            })()}
+          </div>
           {editor?.isEditMode && (
-            <EditorToolbar
-              section="settings"
-              imageField="site_logo"
-              className="absolute -top-2 -right-6 z-[60] scale-[0.80]"
-              canHide={false}
-              canDelete={false}
-              canClone={false}
-            />
+            <button
+              onClick={addNavItem}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary text-secondary-foreground rounded-[6px] text-[11px] font-bold shadow-sm hover:scale-105 active:scale-95 transition-all"
+              title="Add a new menu item to the end"
+            >
+              <Plus size={13} strokeWidth={2.5} />
+              <span className="hidden sm:inline">Add Menu</span>
+            </button>
           )}
-          {/* Fix: Use a div instead of an 'a' tag in edit mode to prevent contentEditable and click event conflicts */}
-          {(() => {
-            const Wrapper = editor?.isEditMode ? "div" : "a";
-            const target = settings.site_url || "#home";
-            const props = editor?.isEditMode ? getNavProps(() => scrollTo(target)) : { href: target };
-            return (
-              <Wrapper {...props} className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink cursor-pointer  p-1 rounded-md transition-colors ">
-                <img
-                  src={resolvedLogo}
-                  alt={siteName}
-                  className="shrink-0"
-                  style={{ height: "42px", width: "auto", maxWidth: "200px", objectFit: "contain", objectPosition: "left center" }}
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    if (target.getAttribute('data-error') !== 'true') {
-                      target.setAttribute('data-error', 'true');
-                      target.src = "https://placehold.co/200x60/transparent/666?text=Upload+Logo";
-                    }
-                  }}
-                />
-              </Wrapper>
-            );
-          })()}
         </div>
 
         {/* Desktop Nav */}
@@ -292,8 +405,8 @@ const Header = () => {
                   linkField={`nav_link_${item.href.replace('#', '')}`}
                   value={item.resolvedLabel}
                   toolbarClassName="-top-3 -right-3"
-                  toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0 group-hover/item:opacity-100"}
-                  extraControls={renderNavVisibilityToggle(item.href, false, true)}
+                  toolbarVisibilityClassName="opacity-0 group-hover/item:opacity-100 transition-opacity"
+                  extraControls={renderNavControls(item.href)}
                   onDoubleClick={(e) => {
                     if (editor?.isEditMode) {
                       e.preventDefault();
@@ -414,8 +527,8 @@ const Header = () => {
                     }
                   }}
                   className={`nav-btn-wrapper w-full text-left px-3 py-2.5 ${editor?.isEditMode ? "pr-9" : ""} rounded-xl font-semibold text-sm transition-all flex items-center justify-between group cursor-pointer ${activeSection === item.resolvedHref
-                    ? "nav-btn-active text-secondary bg-secondary/10"
-                    : "text-foreground/80 hover:text-foreground hover:bg-muted"
+                    ? "nav-btn-active text-secondary"
+                    : "text-foreground/80 hover:text-foreground"
                     }`}
                 >
                   <EditableText
@@ -425,7 +538,7 @@ const Header = () => {
                     value={item.resolvedLabel}
                     toolbarClassName="-top-3 right-8"
                     toolbarVisibilityClassName={activeNavToolbar(item.href) ? "opacity-100" : "opacity-0"}
-                    extraControls={renderNavVisibilityToggle(item.href, true, true)}
+                    extraControls={renderNavControls(item.href)}
                     onDoubleClick={(e) => {
                       if (editor?.isEditMode) {
                         e.preventDefault();

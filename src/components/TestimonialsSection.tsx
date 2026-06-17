@@ -150,13 +150,17 @@ const TestimonialsSection = () => {
   };
 
   const testimonials = useMemo(() => {
-    return testimonialsState ? testimonialsState.map((t: any) => ({
-      id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
-      message: t.message,
-      avatar_url: t.avatar_url || "",
-      is_visible: t.is_visible,
-    })) : [];
-  }, [testimonialsState]);
+    return testimonialsState ? testimonialsState.map((t: any) => {
+      const pendingImage = editor?.pendingChanges?.[`testimonials:${t.id}:avatar_url`];
+      const pendingVisibility = editor?.pendingChanges?.[`testimonials:${t.id}:is_visible`];
+      return {
+        id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
+        message: t.message,
+        avatar_url: pendingImage !== undefined ? pendingImage : (t.avatar_url || ""),
+        is_visible: pendingVisibility !== undefined ? pendingVisibility : t.is_visible,
+      };
+    }) : [];
+  }, [testimonialsState, editor?.pendingChanges]);
 
   const hideProfilesDraft = editor?.pendingChanges["testimonials:hide_profiles"] ?? headerContent.hide_profiles;
   const hideProfiles = hideProfilesDraft === "true" || hideProfilesDraft === true;
@@ -247,11 +251,11 @@ const TestimonialsSection = () => {
         <div className="font-heading font-bold text-foreground text-[0.9375rem] mb-0.5">
           <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
         </div>
-        <div className="text-secondary text-[0.8125rem] font-medium mb-2">
+        <div className="text-secondary text-[0.8125rem] font-medium mb-2 min-h-[1.25rem] flex items-center justify-center w-full">
           <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
         </div>
         <StarRating rating={t.rating} id={t.id} editor={editor} />
-        <div className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1">
+        <div className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1 w-full mt-1">
           <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
         </div>
       </div>

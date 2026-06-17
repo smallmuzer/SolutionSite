@@ -188,8 +188,8 @@ export const storage = {
     return {
       async upload(path: string, file: File): Promise<{ error: any }> {
         const form = new FormData();
-        form.append("file", file);
         form.append("path", path);
+        form.append("file", file);
         const res = await fetch("/api/upload", { method: "POST", body: form });
         const json = await res.json();
         if (json.error) throw new Error(json.error);

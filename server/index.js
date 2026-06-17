@@ -1165,17 +1165,22 @@ app.delete("/api/db/:table", (req, res) => {
 });
 
 // ── File upload ───────────────────────────────────────────────────────────────
-app.post("/api/upload", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file" });
-  // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
-  // Append a timestamp to bypass browser caching when overwriting existing files
-  const timestamp = Date.now();
-  const publicUrl = `/assets/uploads/${req.file.filename}?t=${timestamp}`;
+const uploadMiddleware = upload.single("file");
+app.post("/api/upload", (req, res) => {
+  uploadMiddleware(req, res, (err) => {
+    if (err) {
+      console.error("[upload error]", err.message);
+      return res.status(400).json({ error: err.message });
+    }
+    if (!req.file) return res.status(400).json({ error: "No file" });
+    
+    // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
+    // Append a timestamp to bypass browser caching when overwriting existing files
+    const timestamp = Date.now();
+    const publicUrl = `/assets/uploads/${req.file.filename}?t=${timestamp}`;
 
-  // Removed: We no longer eagerly sync files with "logo" in their name.
-  // The logo sync happens safely in `updateIndexHtml` when `site_settings` is actually updated in the database.
-
-  res.json({ data: { publicUrl }, error: null });
+    res.json({ data: { publicUrl }, error: null });
+  });
 });
 
 // ── Bot mode toggle ───────────────────────────────────────────────────────────

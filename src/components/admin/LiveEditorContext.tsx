@@ -423,6 +423,7 @@ export const EditorToolbar: React.FC<{
   linkField2?: string;
   colorField?: string;
   colorField2?: string;
+  visibilityField?: string;
   className?: string;
   group?: string;
   profileHidden?: boolean;
@@ -430,10 +431,12 @@ export const EditorToolbar: React.FC<{
   onToggle?: () => void;
   onToggleProfile?: () => void;
   onDelete?: () => void;
-}> = ({ section, id, isVisible = true, canHide = true, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, imageField2, multiImageField, iconField, linkField, linkField2, colorField, colorField2, className = "", group = "item", profileHidden, onMove, onToggle, onToggleProfile, onDelete }) => {
+}> = ({ section, id, isVisible = true, canHide, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, imageField2, multiImageField, iconField, linkField, linkField2, colorField, colorField2, visibilityField, className = "", group = "item", profileHidden, onMove, onToggle, onToggleProfile, onDelete }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
+  const actualCanHide = canHide !== undefined ? canHide : (id !== undefined || visibilityField !== undefined || onToggle !== undefined);
+  
   const isSmall = className.includes("scale-75") || className.includes("scale-[0.75]") || className.includes("scale-50");
   const btnPadding = isSmall ? "p-1" : "p-1.5";
 
@@ -499,22 +502,28 @@ export const EditorToolbar: React.FC<{
         </button>
       )}
 
-      {canHide && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onToggle) onToggle();
-            else editor.onHide(section, id, isVisible);
-          }}
-          className={`${btnPadding} rounded-lg transition-colors ${isVisible ? "hover:bg-amber-500/10 text-amber-500" : "bg-amber-500 text-white"}`}
-          title={isVisible ? "Hide Item" : "Show Item"}
-        >
-          {isVisible ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-          )}
-        </button>
+      {actualCanHide && (
+        (() => {
+          const draftKey = visibilityField ? `${section}:${visibilityField}` : (id ? `${section}:${id}:is_visible` : `${section}:is_visible`);
+          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onToggle) onToggle();
+                else editor.onHide(section, id, currentVisibility);
+              }}
+              className={`${btnPadding} rounded-lg transition-colors ${currentVisibility ? "hover:bg-amber-500/10 text-amber-500" : "bg-amber-500 text-white"}`}
+              title={currentVisibility ? "Hide Item" : "Show Item"}
+            >
+              {currentVisibility ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+              )}
+            </button>
+          );
+        })()
       )}
 
       {onToggleProfile && (
@@ -623,17 +632,31 @@ export const SectionHeaderToolbar: React.FC<{
       <button
         onClick={(e) => {
           e.stopPropagation();
+          const draftKey = `${section}:is_visible`;
+          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
           if (onToggle) onToggle();
-          else editor.onHide(section, undefined, isVisible);
+          else editor.onHide(section, undefined, currentVisibility);
         }}
-        className={`p-1.5 rounded-lg shadow-xl border border-border/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center ${isVisible ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'}`}
-        title={isVisible ? "Hide Section" : "Show Section"}
+        className={`p-1.5 rounded-lg shadow-xl border border-border/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center ${(() => {
+          const draftKey = `${section}:is_visible`;
+          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+          return currentVisibility ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground';
+        })()}`}
+        title={(() => {
+          const draftKey = `${section}:is_visible`;
+          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+          return currentVisibility ? "Hide Section" : "Show Section";
+        })()}
       >
-        {isVisible ? (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-        )}
+        {(() => {
+          const draftKey = `${section}:is_visible`;
+          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+          return currentVisibility ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+          );
+        })()}
       </button>
     </div>
   );

@@ -208,7 +208,7 @@ const WorldMap = () => {
         <AnimatedSection>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
-              className={`relative ${isMobile && !editor?.isEditMode ? "overflow-hidden" : "overflow-x-auto custom-scrollbar"} pb-4 pt-2 w-full ${uniqueLocations.length <= 4 ? "md:justify-center" : "md:justify-start"}`}
+              className={`relative ${isMobile && !editor?.isEditMode ? "overflow-hidden" : "overflow-x-auto custom-scrollbar"} pb-4 pt-2 w-full`}
               onMouseEnter={() => { pausedRef.current = true; }}
               onMouseLeave={() => { pausedRef.current = false; }}
               onTouchStart={() => { pausedRef.current = true; }}
@@ -220,7 +220,7 @@ const WorldMap = () => {
             >
               <div
                 ref={trackRef}
-                className={`flex gap-4 sm:gap-6 ${isMobile && !editor?.isEditMode ? "w-max" : "w-full snap-x snap-mandatory scroll-smooth justify-center"}`}
+                className={`flex gap-4 sm:gap-6 ${isMobile && !editor?.isEditMode ? "w-max" : `w-max min-w-full snap-x snap-mandatory scroll-smooth ${uniqueLocations.length <= 3 ? "xl:justify-center" : "justify-start"}`}`}
                 style={{ willChange: isMobile && !editor?.isEditMode ? "transform" : "auto" }}
               >
                 {(isMobile && !editor?.isEditMode ? [...uniqueLocations, ...uniqueLocations, ...uniqueLocations] : uniqueLocations).map((loc, index) => {

@@ -189,10 +189,14 @@ const AboutSection = () => {
                 {cardData.map((card, idx) => {
                   const { Icon } = card;
                   const imgSrc = resolveImg(card.imgKey);
+                  const isVisible = content[`card_visible_${card.key}`] !== false;
+                  
+                  if (!editor?.isEditMode && !isVisible) return null;
+
                   return (
                     <div
                       key={card.title}
-                      className={`glass-card relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""}`}
+                      className={`glass-card relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""} ${!isVisible ? "opacity-50 grayscale" : ""}`}
                       style={{
                         minHeight: "clamp(120px, 16vw, 145px)",
                         animationDelay: `${idx * 0.6}s`,
@@ -203,7 +207,14 @@ const AboutSection = () => {
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, card.key)}
                     >
-                      <EditorToolbar section="about" imageField={card.imgKey} iconField={`card_icon_${card.key}`} />
+                      <EditorToolbar 
+                        section="about" 
+                        imageField={card.imgKey} 
+                        iconField={`card_icon_${card.key}`}
+                        visibilityField={`card_visible_${card.key}`}
+                        isVisible={isVisible}
+                        onToggle={() => editor?.onUpdate("about", `card_visible_${card.key}`, !isVisible)}
+                      />
                       {editor?.isEditMode && (
                         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                           <button onClick={(e) => { e.stopPropagation(); handleMove(card.key, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
@@ -272,15 +283,25 @@ const AboutSection = () => {
                 {cardData.map((card) => {
                   const { Icon } = card;
                   const imgSrc = resolveImg(card.imgKey);
+                  const isVisible = content[`card_visible_${card.key}`] !== false;
+                  
+                  if (!editor?.isEditMode && !isVisible) return null;
+
                   return (
                     <div key={card.title}
-                      className={`glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden border border-border/40 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""}`}
+                      className={`glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden border border-border/40 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""} ${!isVisible ? "opacity-50 grayscale" : ""}`}
                       draggable={editor?.isEditMode}
                       onDragStart={(e) => handleDragStart(e, card.key)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, card.key)}
                     >
-                      <EditorToolbar section="about" imageField={card.imgKey} />
+                      <EditorToolbar 
+                        section="about" 
+                        imageField={card.imgKey} 
+                        visibilityField={`card_visible_${card.key}`}
+                        isVisible={isVisible}
+                        onToggle={() => editor?.onUpdate("about", `card_visible_${card.key}`, !isVisible)}
+                      />
                       {editor?.isEditMode && (
                         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
                           <button onClick={(e) => { e.stopPropagation(); handleMove(card.key, "up"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Up">

@@ -190,9 +190,25 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     if (isOpen) {
       const { styles, innerHtml } = parseInlineStyles(initialValue);
 
-      // Removed: Do not merge targetStyles into styles to prevent hardcoding inherited styles (like computed colors).
+      // Merge computed targetStyles to show current font, padding, and text styles in the editor
+      const mergedStyles = { ...styles };
+      if (targetStyles) {
+        Object.keys(targetStyles).forEach((key) => {
+          const k = key as keyof ActiveStyles;
+          if (!mergedStyles[k] && targetStyles[k] && targetStyles[k] !== '0px' && targetStyles[k] !== 'rgba(0, 0, 0, 0)') {
+            let val = targetStyles[k];
+            if (k === 'textColor' || k === 'bgColor') {
+              val = rgbToHex(val);
+            }
+            if (k === 'fontFamily' && typeof val === 'string') {
+              val = val.replace(/['"]/g, "");
+            }
+            mergedStyles[k] = val;
+          }
+        });
+      }
 
-      setActiveStyles(styles);
+      setActiveStyles(mergedStyles);
       setEditorHtml(innerHtml);
       undoStackRef.current = [];
       redoStackRef.current = [];
@@ -787,24 +803,33 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                   >
                     <option value="">Inherit Global Font</option>
+                    {activeStyles.fontFamily && ![
+                      "system-ui, sans-serif", "Inter, sans-serif", "Roboto, sans-serif", "Open Sans, sans-serif",
+                      "Montserrat, sans-serif", "Poppins, sans-serif", "Lato, sans-serif", "Nunito, sans-serif",
+                      "Raleway, sans-serif", "Outfit, sans-serif", "DM Sans, sans-serif", "Space Grotesk, sans-serif",
+                      "Work Sans, sans-serif", "Oswald, sans-serif", "Playfair Display, serif", "Merriweather, serif",
+                      "Lora, serif", "Source Code Pro, monospace"
+                    ].includes(activeStyles.fontFamily) && (
+                      <option value={activeStyles.fontFamily}>{activeStyles.fontFamily.split(',')[0]} (Current)</option>
+                    )}
                     <option value="system-ui, sans-serif">System Sans</option>
-                    <option value="'Inter', sans-serif">Inter</option>
-                    <option value="'Roboto', sans-serif">Roboto</option>
-                    <option value="'Open Sans', sans-serif">Open Sans</option>
-                    <option value="'Montserrat', sans-serif">Montserrat</option>
-                    <option value="'Poppins', sans-serif">Poppins</option>
-                    <option value="'Lato', sans-serif">Lato</option>
-                    <option value="'Nunito', sans-serif">Nunito</option>
-                    <option value="'Raleway', sans-serif">Raleway</option>
-                    <option value="'Outfit', sans-serif">Outfit</option>
-                    <option value="'DM Sans', sans-serif">DM Sans</option>
-                    <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
-                    <option value="'Work Sans', sans-serif">Work Sans</option>
-                    <option value="'Oswald', sans-serif">Oswald</option>
-                    <option value="'Playfair Display', serif">Playfair Display</option>
-                    <option value="'Merriweather', serif">Merriweather</option>
-                    <option value="'Lora', serif">Lora</option>
-                    <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                    <option value="Inter, sans-serif">Inter</option>
+                    <option value="Roboto, sans-serif">Roboto</option>
+                    <option value="Open Sans, sans-serif">Open Sans</option>
+                    <option value="Montserrat, sans-serif">Montserrat</option>
+                    <option value="Poppins, sans-serif">Poppins</option>
+                    <option value="Lato, sans-serif">Lato</option>
+                    <option value="Nunito, sans-serif">Nunito</option>
+                    <option value="Raleway, sans-serif">Raleway</option>
+                    <option value="Outfit, sans-serif">Outfit</option>
+                    <option value="DM Sans, sans-serif">DM Sans</option>
+                    <option value="Space Grotesk, sans-serif">Space Grotesk</option>
+                    <option value="Work Sans, sans-serif">Work Sans</option>
+                    <option value="Oswald, sans-serif">Oswald</option>
+                    <option value="Playfair Display, serif">Playfair Display</option>
+                    <option value="Merriweather, serif">Merriweather</option>
+                    <option value="Lora, serif">Lora</option>
+                    <option value="Source Code Pro, monospace">Source Code Pro</option>
                   </select>
                 </div>
 
@@ -818,6 +843,9 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
                       <option value="">Inherit</option>
+                      {activeStyles.fontSize && !["11px", "12px", "13px", "14px", "15px", "16px", "18px", "20px", "24px", "28px", "32px", "36px", "40px", "48px", "56px", "64px", "72px"].includes(activeStyles.fontSize) && (
+                        <option value={activeStyles.fontSize}>{activeStyles.fontSize} (Current)</option>
+                      )}
                       {["11px", "12px", "13px", "14px", "15px", "16px", "18px", "20px", "24px", "28px", "32px", "36px", "40px", "48px", "56px", "64px", "72px"].map(sz => (
                         <option key={sz} value={sz}>{sz}</option>
                       ))}

@@ -244,7 +244,7 @@ const Footer = () => {
                           window.open(hrefDraft, "_blank");
                         }
                       }}
-                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 sm:snap-center w-full sm:w-[320px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
+                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 sm:snap-center w-full sm:w-[380px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
                     >
                       <EditorToolbar
                         section="our_network"
