@@ -199,9 +199,15 @@ const TestimonialsSection = () => {
 
   const CornerDesigns = () => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
-      <div className="absolute -top-2 -left-2 w-16 h-16 sm:w-20 sm:h-20 bg-orange-500/30 dark:bg-orange-500/20 rounded-br-full" />
-      <div className="absolute -top-2 -left-2 w-10 h-10 sm:w-14 sm:h-14 bg-sky-400/40 dark:bg-sky-400/30 rounded-br-full" />
-      <div className="absolute -bottom-2 -right-2 w-14 h-14 sm:w-16 sm:h-16 bg-sky-400/30 dark:bg-sky-400/20 rounded-tl-full" />
+      {/* Top Left: Orange Leaf Shape */}
+      <svg className="absolute -top-1 -left-1 w-14 h-14 sm:w-16 sm:h-16 opacity-70 dark:opacity-60" viewBox="0 0 100 100">
+        <path d="M 10,90 C 10,40 40,10 90,10 C 90,60 60,90 10,90 Z" fill="#f97316"/>
+      </svg>
+      
+      {/* Bottom Right: Blue Leaf Shape */}
+      <svg className="absolute -bottom-1 -right-1 w-14 h-14 sm:w-16 sm:h-16 opacity-70 dark:opacity-60" viewBox="0 0 100 100">
+        <path d="M 10,90 C 10,40 40,10 90,10 C 90,60 60,90 10,90 Z" fill="#38bdf8"/>
+      </svg>
     </div>
   );
 
