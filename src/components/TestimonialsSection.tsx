@@ -158,6 +158,9 @@ const TestimonialsSection = () => {
     })) : [];
   }, [testimonialsState]);
 
+  const hideProfilesDraft = editor?.pendingChanges["testimonials:hide_profiles"] ?? headerContent.hide_profiles;
+  const hideProfiles = hideProfilesDraft === "true" || hideProfilesDraft === true;
+
 
 
   const currentCardsPerPage = isMobile ? 1 : CARDS_PER_PAGE;
@@ -194,15 +197,31 @@ const TestimonialsSection = () => {
     </section>
   );
 
+  const CornerDesigns = () => (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
+      <div className="absolute -top-2 -left-2 w-16 h-16 sm:w-20 sm:h-20 bg-orange-500/30 dark:bg-orange-500/20 rounded-br-full" />
+      <div className="absolute -top-2 -left-2 w-10 h-10 sm:w-14 sm:h-14 bg-sky-400/40 dark:bg-sky-400/30 rounded-br-full" />
+      <div className="absolute -bottom-2 -right-2 w-14 h-14 sm:w-16 sm:h-16 bg-sky-400/30 dark:bg-sky-400/20 rounded-tl-full" />
+    </div>
+  );
+
   const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
     <div
-      className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
+      className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
       draggable={editor?.isEditMode}
       onDragStart={(e) => handleDragStart(e, t.id)}
       onDragOver={handleDragOver}
       onDrop={(e) => handleDrop(e, t.id)}
     >
-      <EditorToolbar section="testimonials" id={t.id} isVisible={t.is_visible} imageField="avatar_url" />
+      <CornerDesigns />
+      <EditorToolbar 
+        section="testimonials" 
+        id={t.id} 
+        isVisible={t.is_visible} 
+        imageField="avatar_url" 
+        profileHidden={hideProfiles}
+        onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
+      />
       {editor?.isEditMode && (
         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
           <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
@@ -213,40 +232,55 @@ const TestimonialsSection = () => {
           </button>
         </div>
       )}
-      <div className="w-20 h-20 rounded-full border-4 border-secondary/25 shadow-xl overflow-hidden bg-muted mb-4 shrink-0">
-        <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
-      </div>
-      <div className="font-heading font-bold text-foreground text-[0.9375rem] mb-0.5">
-        <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
-      </div>
-      <div className="text-secondary text-[0.8125rem] font-medium mb-2">
-        <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
-      </div>
-      <StarRating rating={t.rating} id={t.id} editor={editor} />
-      <div className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1">
-        <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
+      <div className="relative z-10 flex flex-col items-center w-full h-full">
+        {!hideProfiles && (
+          <div className="w-20 h-20 rounded-full border-4 border-secondary/25 shadow-xl overflow-hidden bg-muted mb-4 shrink-0">
+            <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="font-heading font-bold text-foreground text-[0.9375rem] mb-0.5">
+          <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
+        </div>
+        <div className="text-secondary text-[0.8125rem] font-medium mb-2">
+          <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
+        </div>
+        <StarRating rating={t.rating} id={t.id} editor={editor} />
+        <div className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1">
+          <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
+        </div>
       </div>
     </div>
   );
 
   const ListCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div className={`glass-card p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
-      <EditorToolbar section="testimonials" id={t.id} isVisible={t.is_visible} />
-      <div className="flex flex-col items-center shrink-0 sm:w-28">
-        <div className="w-[72px] h-[72px] rounded-full border-4 border-secondary/20 shadow-xl overflow-hidden bg-muted">
-          <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
+    <div className={`glass-card p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
+      <CornerDesigns />
+      <EditorToolbar 
+        section="testimonials" 
+        id={t.id} 
+        isVisible={t.is_visible} 
+        profileHidden={hideProfiles}
+        onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
+      />
+      <div className="relative z-10 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center w-full">
+        <div className="flex flex-col items-center shrink-0 sm:w-28">
+          {!hideProfiles && (
+            <div className="w-[72px] h-[72px] rounded-full border-4 border-secondary/20 shadow-xl overflow-hidden bg-muted">
+              <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="font-heading font-semibold text-foreground text-[0.875rem] text-center mt-2">
+            <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
+          </div>
+          <div className="text-secondary text-[0.75rem] text-center font-medium mb-1">
+            <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
+          </div>
+          <StarRating rating={t.rating} id={t.id} editor={editor} />
         </div>
-        <div className="font-heading font-semibold text-foreground text-[0.875rem] text-center mt-2">
-          <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
-        </div>
-        <div className="text-secondary text-[0.75rem] text-center font-medium mb-1">
-          <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
-        </div>
-        <StarRating rating={t.rating} id={t.id} editor={editor} />
-      </div>
-      <div className="flex-1">
-        <div className="text-muted-foreground text-[0.875rem] leading-relaxed">
-          <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
+        <div className="flex-1">
+          <div className="text-muted-foreground text-[0.875rem] leading-relaxed">
+            <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
+          </div>
         </div>
       </div>
     </div>
