@@ -65,21 +65,21 @@ const Header = () => {
   const siteName = settings.site_name || "Systems Solutions";
   const pendingHiddenNavItems = editor?.pendingChanges?.["settings:nav_hidden_items"];
   const settingsContent = useSiteContent("settings");
-  const hiddenNavItemsValue = String(pendingHiddenNavItems ?? settingsContent.nav_hidden_items ?? (settings as any).nav_hidden_items ?? "");
+  const hiddenNavItemsValue = String(pendingHiddenNavItems ?? settingsContent.nav_hidden_items ?? "");
   const hiddenNavItems = useMemo(
     () => hiddenNavItemsValue.split(",").filter(Boolean),
     [hiddenNavItemsValue]
   );
 
   const pendingDeletedNavItems = editor?.pendingChanges?.["settings:nav_deleted_items"];
-  const deletedNavItemsValue = String(pendingDeletedNavItems ?? settingsContent.nav_deleted_items ?? (settings as any).nav_deleted_items ?? "");
+  const deletedNavItemsValue = String(pendingDeletedNavItems ?? settingsContent.nav_deleted_items ?? "");
   const deletedNavItems = useMemo(
     () => deletedNavItemsValue.split(",").filter(Boolean),
     [deletedNavItemsValue]
   );
 
   const getBaseNavItems = () => {
-    let rawNavItems = editor?.pendingChanges?.["settings:nav_items"] ?? (settings as any).nav_items ?? settingsContent.nav_items;
+    let rawNavItems = editor?.pendingChanges?.["settings:nav_items"] ?? settingsContent.nav_items;
     let custom = rawNavItems;
     if (typeof custom === 'string') {
       try { custom = JSON.parse(custom); } catch { custom = null; }
@@ -223,13 +223,13 @@ const Header = () => {
     } else {
       return;
     }
-    editor?.onUpdate("settings", "nav_items", JSON.stringify(base));
+    editor?.onUpdate("settings", "nav_items", base);
   };
 
   const deleteNavItem = (href: string) => {
     if (confirm("Are you sure you want to delete this menu item?")) {
       const base = customNavItems.filter(i => i.href !== href);
-      editor?.onUpdate("settings", "nav_items", JSON.stringify(base));
+      editor?.onUpdate("settings", "nav_items", base);
       const nextDeleted = [...deletedNavItems, href];
       editor?.onUpdate("settings", "nav_deleted_items", nextDeleted.join(","));
     }
@@ -238,7 +238,7 @@ const Header = () => {
   const addNavItem = () => {
     const id = Date.now();
     const next = [...customNavItems, { label: "New Menu", href: `#new-section-${id}` }];
-    editor?.onUpdate("settings", "nav_items", JSON.stringify(next));
+    editor?.onUpdate("settings", "nav_items", next);
   };
 
   const renderNavControls = (href: string) => {
@@ -380,7 +380,7 @@ const Header = () => {
             <div
               key={item.href}
               onPointerDown={() => editor?.setActiveElementId(`header-nav:${item.href}`)}
-              className={`relative group/item inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
+              className={`relative group inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
             >
               <div
                 onClick={(e) => {
@@ -400,12 +400,13 @@ const Header = () => {
                 className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}
               >
                 <EditableText
+                  className="nav-text-element"
                   section="settings"
                   field={`nav_label_${item.href.replace('#', '')}`}
                   linkField={`nav_link_${item.href.replace('#', '')}`}
                   value={item.resolvedLabel}
                   toolbarClassName="-top-3 -right-3"
-                  toolbarVisibilityClassName="opacity-0 group-hover/item:opacity-100 transition-opacity"
+                  toolbarVisibilityClassName="opacity-0 group-hover:opacity-100 transition-opacity"
                   extraControls={renderNavControls(item.href)}
                   onDoubleClick={(e) => {
                     if (editor?.isEditMode) {
@@ -416,13 +417,7 @@ const Header = () => {
                   }}
                 />
                 <span
-                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full"
-                  style={{
-                    opacity: activeSection === item.resolvedHref ? 1 : 0,
-                    transform: activeSection === item.resolvedHref ? "scaleX(1)" : "scaleX(0)",
-                    transition: "opacity 0.2s ease, transform 0.2s ease",
-                    transformOrigin: "center",
-                  }}
+                  className={`absolute bottom-0 left-2 right-2 h-0.5 bg-secondary rounded-full origin-center transition-all duration-200 ${activeSection === item.resolvedHref ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"}`}
                 />
               </div>
             </div>
@@ -532,6 +527,7 @@ const Header = () => {
                     }`}
                 >
                   <EditableText
+                    className="nav-text-element"
                     section="settings"
                     field={`nav_label_${item.href.replace('#', '')}`}
                     linkField={`nav_link_${item.href.replace('#', '')}`}

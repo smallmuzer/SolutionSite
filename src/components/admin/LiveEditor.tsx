@@ -125,7 +125,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
             "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent",
             "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color",
             "chatbot_position", "chatbot_btn_size", "theme", "font_style", "font_size",
-            "card_style", "accent_color", "global_view", "nav_items"
+            "card_style", "accent_color", "global_view"
           ]);
           const settingsData: Record<string, any> = {};
           const contentData: Record<string, any> = {};
@@ -238,7 +238,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     }
   };
 
-let nextSortOrder = 9999;
+  let nextSortOrder = 9999;
 
   const handleAdd = async (section: string) => {
     if (section === "hero") {

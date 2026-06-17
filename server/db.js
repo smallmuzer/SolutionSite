@@ -684,6 +684,10 @@ try {
       c.site_logo = '/logo.png';
       dirty = true;
     }
+    // Parse nav_items if stored as a JSON string (backward compat)
+    if (typeof c.nav_items === 'string') {
+      try { c.nav_items = JSON.parse(c.nav_items); dirty = true; } catch { c.nav_items = null; }
+    }
     if (!Array.isArray(c.nav_items) || c.nav_items.length === 0) {
       c.nav_items = [
         { label: 'Home', href: '#home' },

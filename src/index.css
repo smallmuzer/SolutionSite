@@ -68,7 +68,7 @@
 
 @layer base {
 
-  /* Theme color transitions — only on non-interactive elements */
+  /* Theme color transitions â€” only on non-interactive elements */
   *:not(button):not(a):not(input):not(canvas):not([class*="animate-"]):not([style*="animation"]) {
     transition-property: background-color, border-color, color;
     transition-duration: 200ms;
@@ -357,7 +357,7 @@
 
 
 
-/* ── Blink ── */
+/* â”€â”€ Blink â”€â”€ */
 @keyframes blink {
 
   0%,
@@ -374,7 +374,7 @@
   animation: blink 0.4s step-start infinite;
 }
 
-/* ── Globe ring animations ── */
+/* â”€â”€ Globe ring animations â”€â”€ */
 @keyframes globe-ring-cw {
   from {
     transform: rotate(0deg);
@@ -395,7 +395,7 @@
   }
 }
 
-/* ── Globe world map continuous scroll ── */
+/* â”€â”€ Globe world map continuous scroll â”€â”€ */
 @keyframes globeMapScroll {
   0% {
     transform: translateX(0);
@@ -406,7 +406,7 @@
   }
 }
 
-/* ── Card entrance ── */
+/* â”€â”€ Card entrance â”€â”€ */
 @keyframes card-in {
   from {
     opacity: 0;
@@ -423,7 +423,7 @@
   animation: card-in 0.35s ease-out forwards;
 }
 
-/* ── Float ── */
+/* â”€â”€ Float â”€â”€ */
 @keyframes float {
 
   0%,
@@ -436,7 +436,7 @@
   }
 }
 
-/* ── Marquee ── */
+/* â”€â”€ Marquee â”€â”€ */
 @keyframes marquee {
   0% {
     transform: translateX(0%);
@@ -447,7 +447,7 @@
   }
 }
 
-/* ── Shimmer ── */
+/* â”€â”€ Shimmer â”€â”€ */
 @keyframes shimmer {
   0% {
     background-position: -200% center;
@@ -458,7 +458,7 @@
   }
 }
 
-/* ── Accordion ── */
+/* â”€â”€ Accordion â”€â”€ */
 @keyframes accordion-down {
   from {
     height: 0;
@@ -479,7 +479,7 @@
   }
 }
 
-/* ── Hero background parallax (CSS only) ── */
+/* â”€â”€ Hero background parallax (CSS only) â”€â”€ */
 @keyframes hero-drift {
 
   0%,
@@ -535,7 +535,7 @@ body.cinematic-mode .hero-parallax::after {
   pointer-events: none;
 }
 
-/* ── Hero decorative orbs ── */
+/* â”€â”€ Hero decorative orbs â”€â”€ */
 @keyframes orb-float-1 {
 
   0%,
@@ -568,7 +568,7 @@ body.cinematic-mode .hero-parallax::after {
   animation: orb-float-2 13s ease-in-out infinite;
 }
 
-/* ── Hero text fade-in ── */
+/* â”€â”€ Hero text fade-in â”€â”€ */
 @keyframes hero-fade-in {
   from {
     opacity: 0;
@@ -586,7 +586,7 @@ body.cinematic-mode .hero-parallax::after {
   animation: hero-fade-in 0.6s ease-out forwards;
 }
 
-/* ── Scroll bounce indicator ── */
+/* â”€â”€ Scroll bounce indicator â”€â”€ */
 @keyframes scroll-bounce {
 
   0%,
@@ -644,7 +644,7 @@ body.cinematic-mode .hero-parallax::after {
   transition: transform 0.3s ease;
 }
 
-/* ── Mobile responsive overrides ── */
+/* â”€â”€ Mobile responsive overrides â”€â”€ */
 @media (max-width: 480px) {
   .section-padding {
     padding-left: 0.5rem;
@@ -718,7 +718,7 @@ body.cinematic-mode .hero-parallax::after {
   }
 }
 
-/* ── Reduce motion: accessibility + low-end devices ── */
+/* â”€â”€ Reduce motion: accessibility + low-end devices â”€â”€ */
 @media (prefers-reduced-motion: reduce) {
 
   .hero-parallax,
@@ -739,7 +739,7 @@ body.cinematic-mode .hero-parallax::after {
   }
 }
 
-/* ── Touch devices: disable scale hover only (not opacity/pointer-events) ── */
+/* â”€â”€ Touch devices: disable scale hover only (not opacity/pointer-events) â”€â”€ */
 @media (hover: none) and (pointer: coarse) {
   .group:hover img {
     transform: none !important;
@@ -827,14 +827,225 @@ section[id] {
 }
 
 /* Ensure nav items and other active elements can override child inline typography styles */
-.nav-btn-wrapper [style] {
+.nav-btn-wrapper .nav-text-element,
+.nav-btn-wrapper .nav-text-element * {
   color: inherit !important;
   background-color: transparent !important;
 }
 
-.nav-btn-wrapper:hover span[style],
-.nav-btn-active span[style],
-.nav-btn-wrapper:hover [style],
-.nav-btn-active [style] {
+.nav-btn-wrapper:hover .nav-text-element,
+.nav-btn-active .nav-text-element,
+.nav-btn-wrapper:hover .nav-text-element *,
+.nav-btn-active .nav-text-element * {
   color: hsl(var(--secondary)) !important;
+}/* â”€â”€ Mobile responsive overrides â”€â”€ */
+@media (max-width: 480px) {
+  .section-padding {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  /* Prevent globe overflow on very small screens */
+  #portfolio .relative.mx-auto {
+    width: min(340px, 88vw) !important;
+    height: min(340px, 88vw) !important;
+  }
+
+  /* Stack contact form grid on mobile */
+  .grid.sm\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+
+  /* Fluid headings */
+  h1 {
+    font-size: clamp(1.6rem, 7vw, 2.5rem) !important;
+    line-height: 1.2 !important;
+  }
+
+  h2 {
+    font-size: clamp(1.4rem, 5.5vw, 2rem) !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Footer grid: 2 cols on mobile */
+  footer .grid.grid-cols-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Associated companies: single col on very small */
+  footer .grid.sm\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .container-wide {
+    width: min(100%, 100vw);
+  }
+
+  .live-editor-container [contenteditable] {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .live-editor-container .absolute.z-\[100\],
+  .live-editor-container .absolute.z-\[150\] {
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .section-padding {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .container-wide {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* â”€â”€ Reduce motion: accessibility + low-end devices â”€â”€ */
+@media (prefers-reduced-motion: reduce) {
+
+  .hero-parallax,
+  .hero-orb-1,
+  .hero-orb-2,
+  .hero-fade-in,
+  .scroll-bounce,
+  .card-animate-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* Disable framer-motion animations via CSS */
+  [style*="transform"] {
+    transition: none !important;
+  }
+}
+
+/* â”€â”€ Touch devices: disable scale hover only (not opacity/pointer-events) â”€â”€ */
+@media (hover: none) and (pointer: coarse) {
+  .group:hover img {
+    transform: none !important;
+  }
+}
+
+@keyframes fiber-light-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fiber-light-1 {
+  animation: fiber-light-rotate 4s linear infinite;
+  transform-origin: center;
+}
+
+.animate-fiber-light-2 {
+  animation: fiber-light-rotate 6s linear reverse infinite;
+  transform-origin: center;
+}
+
+/* --- Live Visual Editor Helpers --- */
+#home,
+section[id] {
+  scroll-margin-top: 100px;
+}
+
+.live-editor-container [contenteditable] {
+  outline: none;
+  min-width: 1ch;
+  display: inline-block;
+}
+
+.live-editor-container [contenteditable]:hover {
+  outline: 2px solid rgba(115, 96, 242, 0.4);
+  background: rgba(115, 96, 242, 0.03);
+  border-radius: 4px;
+}
+
+.live-editor-container [contenteditable]:focus {
+  outline: 2px solid #7360f2;
+  background: rgba(115, 96, 242, 0.06);
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(115, 96, 242, 0.2);
+}
+
+.live-editor-container [contenteditable] ul,
+.live-editor-container [contenteditable] ol,
+.live-editor-container .prose ul,
+.live-editor-container .prose ol {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.live-editor-container [contenteditable] ul,
+.live-editor-container .prose ul {
+  list-style-type: disc;
+}
+
+.live-editor-container [contenteditable] ol,
+.live-editor-container .prose ol {
+  list-style-type: decimal;
+}
+
+.live-editor-container [contenteditable] li,
+.live-editor-container .prose li {
+  display: list-item;
+  margin: 0.2rem 0;
+}
+
+.live-editor-container .section-block-editable {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.live-editor-container .section-block-editable:hover {
+  outline: 1px dashed rgba(115, 96, 242, 0.3);
+  outline-offset: 4px;
+}
+
+/* Ensure nav items and other active elements can override child inline typography styles */
+.nav-text-element[style],
+.group\/edit > .nav-text-element[style] {
+  color: inherit !important;
+  background-color: transparent !important;
+}
+
+.nav-btn-wrapper:hover .nav-text-element[style],
+.nav-btn-wrapper:hover .group\/edit > .nav-text-element[style],
+.nav-btn-active .nav-text-element[style],
+.nav-btn-active .group\/edit > .nav-text-element[style] {
+  color: hsl(var(--secondary)) !important;
+}
+
+.glossy-blue-header {
+  background: linear-gradient(180deg, #1e90ff, #0047b3);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -1px 3px rgba(0,0,0,0.3);
+}
+.glossy-blue-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
 }
