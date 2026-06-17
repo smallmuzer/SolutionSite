@@ -64,7 +64,7 @@ const TrackingScripts = () => {
       }
     }
     // AskKoya Chatbot
-    const koyaEnabled = settings.chatbot_enabled === "true" && !!settings.chatbot_script_url && !!settings.chatbot_api_key;
+    const koyaEnabled = settings.overall_bot_visible !== "false" && settings.chatbot_enabled === "true" && !!settings.chatbot_script_url && !!settings.chatbot_api_key;
 
     if (koyaEnabled) {
       // Inject button size style
@@ -137,6 +137,7 @@ const TrackingScripts = () => {
   }, [
     settings.google_analytics_id,
     settings.microsoft_clarity_id,
+    settings.overall_bot_visible,
     settings.chatbot_enabled,
     settings.chatbot_script_url,
     settings.chatbot_api_key,

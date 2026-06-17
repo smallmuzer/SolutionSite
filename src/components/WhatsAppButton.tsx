@@ -17,9 +17,9 @@ const WhatsAppButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // --- One-bot-at-a-time: hide default bot when Koya is active ---
   const [koyaActive, setKoyaActive] = useState(() => !!document.getElementById("askkoya-embed"));
   const [btnSize, setBtnSize] = useState("46"); // Default size for WA/Bot buttons
+  const [overallBotVisible, setOverallBotVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const onKoyaStatus = (e: Event) => {
@@ -36,14 +36,19 @@ const WhatsAppButton = () => {
       if (c.whatsapp_number) setWaNumber(c.whatsapp_number);
       if (c.contact_email || c.hr_email) setContactEmail(c.contact_email || c.hr_email);
       if (c.chatbot_btn_size) setBtnSize(c.chatbot_btn_size);
+      if (c.overall_bot_visible === "false") setOverallBotVisible(false);
+      else setOverallBotVisible(true);
       // Set greeting using site_name from DB, only if no saved chat history
       const name = c.site_name || "BSS";
       setMessages([{ role: "assistant" as const, content: `Hi! 👋 I'm the ${name} virtual assistant.\n\nI can help you with:\n• HR & Payroll software\n• ERP & CRM systems\n• Web & Mobile development\n• Pricing, demos & trials\n\nWhat can I help you with today?` }]);
     });
     const handler = (e: Event) => {
       const d = (e as CustomEvent).detail;
+      if (!d) return;
       if (d.whatsapp_number) setWaNumber(d.whatsapp_number);
       if (d.chatbot_btn_size) setBtnSize(d.chatbot_btn_size);
+      if (d.overall_bot_visible === "false") setOverallBotVisible(false);
+      else if (d.overall_bot_visible === "true") setOverallBotVisible(true);
     };
     window.addEventListener("ss:siteSettings", handler);
     return () => window.removeEventListener("ss:siteSettings", handler);
@@ -109,8 +114,8 @@ const WhatsAppButton = () => {
           right: koyaActive ? "20px" : "1rem"
         }}
       >
-        {/* Bot — hidden when Koya chatbot is active */}
-        {!koyaActive && (
+        {/* Bot — hidden when Koya chatbot is active or overall_bot_visible is false */}
+        {!koyaActive && overallBotVisible && (
           <button
             id="tour-bot-btn"
             onClick={chatOpen ? closeChat : openChat}
@@ -176,8 +181,8 @@ const WhatsAppButton = () => {
       {/* </a> */}
       {/* </div> */}
 
-      {/* Chat window — only when default bot is active (Koya not loaded) */}
-      {!koyaActive && chatMounted && (
+      {/* Chat window — only when default bot is active (Koya not loaded and overall visible) */}
+      {!koyaActive && chatMounted && overallBotVisible && (
         <div
           style={{
             position: "fixed", bottom: 80, right: 16, zIndex: 50,

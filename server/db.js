@@ -96,6 +96,7 @@ db.exec(`
     chatbot_user_color TEXT DEFAULT '',
     chatbot_position TEXT DEFAULT '',
     chatbot_btn_size TEXT DEFAULT '',
+    overall_bot_visible TEXT DEFAULT 'true',
     theme TEXT DEFAULT 'light',
     font_style TEXT DEFAULT '',
     header_font_family TEXT DEFAULT '',
@@ -305,6 +306,9 @@ try {
   }
   if (!settingsCols.includes("header_font_family")) {
     db.exec("ALTER TABLE site_settings ADD COLUMN header_font_family TEXT DEFAULT '';");
+  }
+  if (!settingsCols.includes("overall_bot_visible")) {
+    db.exec("ALTER TABLE site_settings ADD COLUMN overall_bot_visible TEXT DEFAULT 'true';");
   }
 
   const testCols = db.prepare("PRAGMA table_info(testimonials)").all().map(c => c.name);

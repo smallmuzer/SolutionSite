@@ -145,6 +145,7 @@ interface SiteSettings {
   chatbot_user_color: string;
   chatbot_position: string;
   chatbot_btn_size: string;
+  overall_bot_visible: string;
   [key: string]: any;
 }
 
@@ -1304,7 +1305,8 @@ const AdminDashboard = () => {
     chatbot_bot_bubble: "#ffffff",
     chatbot_user_color: "#ffffff",
     chatbot_position: "right",
-    chatbot_btn_size: "32",
+    chatbot_btn_size: "46",
+    overall_bot_visible: "true",
     google_analytics_id: "",
     microsoft_clarity_id: "",
   });
@@ -2337,8 +2339,20 @@ const AdminDashboard = () => {
 
                         {/* --- AI & CHAT BOT --- */}
                         <div className="space-y-4">
-                          <h3 className="text-[0.6875rem] font-bold text-secondary uppercase tracking-widest border-b border-border/50 pb-1">AI & Chat Bot</h3>
-                          <div className="p-4 bg-muted/30 rounded-2xl border border-border/50 space-y-4">
+                          <div className="flex items-center justify-between border-b border-border/50 pb-1">
+                            <h3 className="text-[0.6875rem] font-bold text-secondary uppercase tracking-widest">AI & Chat Bot</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Overall Bot Visibility</span>
+                              <button
+                                type="button"
+                                onClick={() => setSiteSettings(p => ({ ...p, overall_bot_visible: p.overall_bot_visible === "false" ? "true" : "false" }))}
+                                className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${siteSettings.overall_bot_visible !== "false" ? "bg-emerald-500" : "bg-border"}`}
+                              >
+                                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-transform duration-200 ${siteSettings.overall_bot_visible !== "false" ? "translate-x-4" : "translate-x-0"}`} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className={`p-4 bg-muted/30 rounded-2xl border border-border/50 space-y-4 transition-opacity ${siteSettings.overall_bot_visible === "false" ? "opacity-50 pointer-events-none" : ""}`}>
                             {/* Toggle + Status */}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">

@@ -179,6 +179,8 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     demo_url: s.demo_url || "",
     whatsapp_number: s.whatsapp_number || "",
     viber_number: s.viber_number || "",
+    overall_bot_visible: s.overall_bot_visible || "true",
+    chatbot_btn_size: s.chatbot_btn_size || "46",
     nav_items: s.nav_items || [],
   }}));
 }
