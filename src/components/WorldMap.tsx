@@ -187,21 +187,21 @@ const WorldMap = () => {
 
   return (
     <section className="section-padding overflow-hidden relative group" id="global-reach" onDoubleClick={(e) => { if (editor?.isEditMode) { e.stopPropagation(); setMapMounted(true); setShowMap(true); } }}>
-      <EditorToolbar section="global_reach" />
+      <EditorToolbar section="global_presence_header" />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-1">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: hasEmbeddedColor(headerContent.badge) ? undefined : ((headerContent as any).badge_color || undefined) }}>
-            <EditableText section="global_reach" field="badge" value={headerContent.badge || "Global Presence"} colorField="badge_color" />
+            <EditableText section="global_presence_header" field="badge" value={headerContent.badge || "Global Presence"} colorField="badge_color" />
           </span>
           <h2 className="text-3xl sm:text-[2.15rem] lg:text-[2.75rem] font-heading font-bold text-foreground mt-3 mb-2 relative" style={{ color: hasEmbeddedColor(headerContent.title) ? undefined : ((headerContent as any).title_color || undefined) }}>
-            <EditableText section="global_reach" field="title" value={headerContent.title || "Our"} colorField="title_color" />{" "}
+            <EditableText section="global_presence_header" field="title" value={headerContent.title || "Our"} colorField="title_color" />{" "}
             <span className="gradient-text" style={{ color: hasEmbeddedColor(headerContent.highlight) ? undefined : ((headerContent as any).highlight_color || undefined), background: (headerContent as any).highlight_color && !hasEmbeddedColor(headerContent.highlight) ? "none" : undefined, WebkitTextFillColor: (headerContent as any).highlight_color && !hasEmbeddedColor(headerContent.highlight) ? "initial" : undefined }}>
-              <EditableText section="global_reach" field="highlight" value={headerContent.highlight || "Reach"} colorField="highlight_color" />
+              <EditableText section="global_presence_header" field="highlight" value={headerContent.highlight || "Reach"} colorField="highlight_color" />
             </span>
             <SectionHeaderToolbar section="global_presence" isVisible={rawContent.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(headerContent.description) ? undefined : ((headerContent as any).description_color || undefined) }}>
-            <EditableText section="global_reach" field="description" value={headerContent.description || ""} colorField="description_color" />
+            <EditableText section="global_presence_header" field="description" value={headerContent.description || ""} colorField="description_color" />
           </div>
         </AnimatedSection>
 
@@ -273,10 +273,10 @@ const WorldMap = () => {
                         </button>
                       </div>
                       <div className="text-muted-foreground text-[0.8rem] leading-relaxed line-clamp-2 mb-1.5 flex-1">
-                        <EditableText section="global_reach_locations" field="clients" id={(loc as any).id || loc.name} value={loc.clients} />
+                        <EditableText section="global_presence" field="clients" id={(loc as any).id || loc.name} value={loc.clients} />
                       </div>
                       <div className="text-[0.675rem] text-secondary/80 font-semibold flex items-center gap-1.5 mt-auto pt-1.5 border-t border-border/30">
-                        <Building2 size={11} /> <EditableText section="global_reach_locations" field="landmark" id={(loc as any).id || loc.name} value={loc.landmark} />
+                        <Building2 size={11} /> <EditableText section="global_presence" field="landmark" id={(loc as any).id || loc.name} value={loc.landmark} />
                       </div>
 
                       {/* Admin-only: lat/lng coordinate editor */}

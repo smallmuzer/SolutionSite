@@ -386,7 +386,7 @@ const ClientCard = ({
       {/* Action toolbar — top edge centered, shows on hover only (grid mode only) */}
       {flexible && (
         <EditorToolbar
-          section="clients"
+          section="client_logos"
           id={client.id}
           isVisible={client.is_visible}
           imageField="logo_url"
@@ -434,7 +434,7 @@ const ClientCard = ({
           flexShrink: 0,
           marginTop: 'auto',
         }}>
-          <EditableText section="clients" field="name" id={client.id} value={client.name} />
+          <EditableText section="client_logos" field="name" id={client.id} value={client.name} />
         </span>
       </div>
 
@@ -573,7 +573,7 @@ const ClientsSection = () => {
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
     setClientsState(newItems);
-    newItems.forEach((item, idx) => { editor?.onUpdate("clients", "sort_order", idx, item.id); });
+    newItems.forEach((item, idx) => { editor?.onUpdate("client_logos", "sort_order", idx, item.id); });
     setDraggedId(null);
   };
 
@@ -595,7 +595,7 @@ const ClientsSection = () => {
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);
     setClientsState(newItems);
-    newItems.forEach((item, i) => { editor?.onUpdate("clients", "sort_order", i, item.id); });
+    newItems.forEach((item, i) => { editor?.onUpdate("client_logos", "sort_order", i, item.id); });
   };
 
   const clients = isEdit ? clientsState : rawClients;

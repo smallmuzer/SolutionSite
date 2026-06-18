@@ -446,7 +446,10 @@ const PickerModal = ({ config, onClose, onSelect }: {
       try {
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         const json = await res.json();
-        if (json.data?.publicUrl) uploadedUrls.push(json.data.publicUrl);
+        if (json.data?.publicUrl) {
+          const bustUrl = json.data.publicUrl.split("?")[0] + "?v=" + Date.now();
+          uploadedUrls.push(bustUrl);
+        }
       } catch (err) { console.error(err); }
     }
 
@@ -454,6 +457,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
       syncAssets([...currentAssets, ...uploadedUrls]);
       toast.success(`Added ${uploadedUrls.length} images`);
     }
+    e.target.value = "";
   };
 
   useEffect(() => {
@@ -803,13 +807,15 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
         });
         const json = await res.json();
         if (json.error) throw new Error(json.error.message);
-        newUrls.push(json.data.publicUrl);
+        const bustUrl = json.data.publicUrl.split("?")[0] + "?v=" + Date.now();
+        newUrls.push(bustUrl);
       } catch (err: any) {
         toast.error(`Upload failed for ${file.name}: ${err.message}`);
       }
     }
 
     setUploading(false);
+    e.target.value = "";
 
     if (newUrls.length > 0) {
       toast.success(`${newUrls.length} image(s) uploaded successfully`);
