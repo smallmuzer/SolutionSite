@@ -245,7 +245,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats */}
-        <div ref={statsRef} className="mt-10 sm:mt-16 lg:mt-20 hero-fade-in w-full" style={{ animationDelay: "0.7s" }}>
+        <div ref={statsRef} className="mt-6 sm:mt-10 lg:mt-12 hero-fade-in w-full" style={{ animationDelay: "0.7s" }}>
           <div className={`mx-auto w-full sm:w-fit ${content.stats_layout === "compact"
             ? "flex flex-row flex-nowrap items-center justify-between sm:justify-center gap-x-1 sm:gap-x-16 lg:gap-x-24"
             : "py-3 sm:py-5 px-4 sm:px-12 rounded-2xl sm:rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 flex flex-row flex-nowrap items-center justify-between sm:justify-center gap-x-1 sm:gap-x-20 shadow-2xl"

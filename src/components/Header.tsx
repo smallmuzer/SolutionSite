@@ -241,15 +241,19 @@ const Header = () => {
     editor?.onUpdate("settings", "nav_items", next);
   };
 
-  const renderNavControls = (href: string) => {
+  const renderMoveControls = (href: string, isAbsolute: boolean = true) => {
     if (!editor?.isEditMode) return null;
-    const isHidden = hiddenNavItems.includes(href);
     const index = customNavItems.findIndex(i => i.href === href);
     const canMoveLeft = index > 0;
     const canMoveRight = index !== -1 && index < customNavItems.length - 1;
 
+    const baseClass = "flex items-center gap-0.5 bg-secondary text-secondary-foreground rounded-[4px] shadow-2xl p-[2px] z-[150] pointer-events-auto";
+    const className = isAbsolute 
+      ? `absolute -top-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity ${baseClass}`
+      : "flex items-center gap-0.5";
+
     return (
-      <div className="flex items-center gap-0">
+      <div className={className}>
         <button
           type="button"
           onClick={(e) => {
@@ -271,11 +275,21 @@ const Header = () => {
             moveNavItem(href, 'right');
           }}
           disabled={!canMoveRight}
-          className={`p-1 rounded-[2px] transition-colors text-white cursor-pointer mr-0.5 ${!canMoveRight ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20'}`}
+          className={`p-1 rounded-[2px] transition-colors text-white cursor-pointer ${!canMoveRight ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20'}`}
           title="Move Right"
         >
           <ChevronRight size={12} />
         </button>
+      </div>
+    );
+  };
+
+  const renderActionControls = (href: string) => {
+    if (!editor?.isEditMode) return null;
+    const isHidden = hiddenNavItems.includes(href);
+
+    return (
+      <div className="flex items-center gap-0.5">
         <button
           type="button"
           onClick={(e) => {
@@ -303,6 +317,15 @@ const Header = () => {
       </div>
     );
   };
+
+  const renderNavControls = (href: string) => {
+    return (
+      <>
+        {renderMoveControls(href, false)}
+        {renderActionControls(href)}
+      </>
+    );
+  };
   const activeNavToolbar = (href: string) => editor?.activeElementId === `header-nav:${href}`;
 
   // Resolve logo: prefer DB path, fallback to bundled asset
@@ -325,7 +348,7 @@ const Header = () => {
         borderBottom: scrolled ? "1px solid hsl(var(--border)/0.5)" : "1px solid transparent",
       }}
     >
-      <div className="w-full flex items-center justify-between gap-2 px-3 sm:px-6 h-[60px] lg:h-[55px]">
+      <div className={`w-full flex items-center justify-between gap-2 px-3 sm:px-6 transition-all duration-300 ${editor?.isEditMode ? "h-[70px]" : "h-[60px] lg:h-[55px]"}`}>
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="relative group/item flex items-center min-w-0 shrink">
             {editor?.isEditMode && (
@@ -365,10 +388,10 @@ const Header = () => {
           {editor?.isEditMode && (
             <button
               onClick={addNavItem}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-secondary text-secondary-foreground rounded-[6px] text-[11px] font-bold shadow-sm hover:scale-105 active:scale-95 transition-all"
+              className="flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground rounded-[4px] text-[10px] font-bold shadow-sm hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
               title="Add a new menu item to the end"
             >
-              <Plus size={13} strokeWidth={2.5} />
+              <Plus size={11} strokeWidth={2.5} />
               <span className="hidden sm:inline">Add Menu</span>
             </button>
           )}
@@ -380,8 +403,9 @@ const Header = () => {
             <div
               key={item.href}
               onPointerDown={() => editor?.setActiveElementId(`header-nav:${item.href}`)}
-              className={`relative group inline-flex items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
+              className={`relative group inline-flex flex-col items-center justify-center ${hiddenNavItems.includes(item.href) ? "opacity-60" : ""}`}
             >
+              {renderMoveControls(item.href)}
               <div
                 onClick={(e) => {
                   if (editor?.isEditMode) {
@@ -400,14 +424,14 @@ const Header = () => {
                 className={navBtn(activeSection === item.resolvedHref) + " cursor-pointer inline-flex items-center justify-center"}
               >
                 <EditableText
-                  className="nav-text-element"
+                  className="nav-text-element text-center"
                   section="settings"
                   field={`nav_label_${item.href.replace('#', '')}`}
                   linkField={`nav_link_${item.href.replace('#', '')}`}
                   value={item.resolvedLabel}
-                  toolbarClassName="-top-3 -right-3"
+                  toolbarClassName="top-[110%] left-1/2 -translate-x-1/2 whitespace-nowrap"
                   toolbarVisibilityClassName="opacity-0 group-hover:opacity-100 transition-opacity"
-                  extraControls={renderNavControls(item.href)}
+                  extraControls={renderActionControls(item.href)}
                   onDoubleClick={(e) => {
                     if (editor?.isEditMode) {
                       e.preventDefault();
