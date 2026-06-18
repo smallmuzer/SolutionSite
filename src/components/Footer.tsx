@@ -117,17 +117,21 @@ const Footer = () => {
       return isCoVisibleDraft !== false;
     });
 
+  const [associatedState, setAssociatedState] = useState(associated);
+  useEffect(() => { setAssociatedState(associated); }, [associated]);
+
   const handleNetworkMove = (id: string, direction: "up" | "down" | "left" | "right") => {
     if (!editor?.isEditMode) return;
-    const idx = associated.findIndex(c => c.id === id);
+    const idx = associatedState.findIndex(c => c.id === id);
     if (idx === -1) return;
     const step = (direction === "left" || direction === "up") ? -1 : 1;
-    const targetIdx = Math.max(0, Math.min(associated.length - 1, idx + step));
+    const targetIdx = Math.max(0, Math.min(associatedState.length - 1, idx + step));
     if (targetIdx === idx) return;
 
-    const newItems = [...associated];
+    const newItems = [...associatedState];
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);
+    setAssociatedState(newItems);
 
     newItems.forEach((item, index) => {
       if (item.id) {
@@ -220,8 +224,8 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className={`flex flex-col sm:flex-row sm:overflow-x-auto items-center sm:items-stretch gap-0 w-full mx-auto pt-6 pb-6 sm:snap-x sm:custom-scrollbar max-w-7xl px-2 ${associated.length <= 3 ? "md:justify-center" : "md:justify-start"}`}>
-              {associated.map((co, idx) => {
+            <div className={`flex flex-col sm:flex-row sm:overflow-x-auto items-center sm:items-stretch gap-0 w-full mx-auto pt-6 pb-6 sm:snap-x sm:custom-scrollbar max-w-7xl px-2 ${associatedState.length <= 3 ? "md:justify-center" : "md:justify-start"}`}>
+              {associatedState.map((co, idx) => {
                 const isCoVisibleDraft = editor?.pendingChanges[`our_network:${co.id}:is_visible`] ?? co.is_visible;
                 const isVisible = isCoVisibleDraft !== false;
                 const logoDraft = editor?.pendingChanges[`our_network:${co.id}:logo_url`] ?? (co as any).logo_url;
@@ -310,7 +314,7 @@ const Footer = () => {
                     </a>
 
                     {/* Handshake connector */}
-                    {idx < associated.length - 1 && (
+                    {idx < associatedState.length - 1 && (
                       <div className="flex items-center justify-center shrink-0 z-10 my-[-1px] sm:my-0 sm:mx-[-1px]">
                         <div className="flex flex-col items-center gap-1">
                           <div className="flex flex-col sm:flex-row items-center gap-0">

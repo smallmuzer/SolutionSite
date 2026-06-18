@@ -42,7 +42,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     { table: "global_presence", order: "sort_order" },
     { table: "our_network", order: "sort_order" },
     { table: "career_jobs", order: "sort_order" },
-    { table: "testimonials", order: "created_at", asc: false },
+    { table: "testimonials", order: "sort_order" },
   ]);
 
   const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});

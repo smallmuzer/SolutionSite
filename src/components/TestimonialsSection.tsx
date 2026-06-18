@@ -108,6 +108,7 @@ const TestimonialsSection = () => {
     const newItems = [...testimonialsState];
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
+    setTestimonialsState(newItems);
 
     newItems.forEach((item, idx) => {
       if (item.sort_order !== idx) {

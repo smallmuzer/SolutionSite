@@ -40,7 +40,7 @@ const Index = () => {
     { table: "hero_stats",    filter: { is_visible: true }, order: "sort_order" },
     { table: "global_presence", filter: { is_visible: true }, order: "sort_order" },
     { table: "our_network",   filter: { is_visible: true }, order: "sort_order" },
-    { table: "testimonials",  filter: { is_visible: true }, order: "created_at", asc: false },
+    { table: "testimonials",  filter: { is_visible: true }, order: "sort_order" },
   ]);
 
   useEffect(() => {

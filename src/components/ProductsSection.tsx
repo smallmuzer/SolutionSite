@@ -909,6 +909,7 @@ const ProductsSection = () => {
     const newItems = [...productsState];
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
+    setProductsState(newItems);
 
     newItems.forEach((item, idx) => {
       if (item.sort_order !== idx) {

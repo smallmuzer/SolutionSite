@@ -139,6 +139,7 @@ const ServicesSection = () => {
     const newItems = [...services];
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
+    setServices(newItems);
 
     newItems.forEach((item, idx) => {
       if (item.sort_order !== idx) {

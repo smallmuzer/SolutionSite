@@ -254,6 +254,7 @@ const CareersSection = () => {
     const newItems = [...jobsState];
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
+    setJobsState(newItems);
 
     newItems.forEach((item, idx) => {
       if (item.sort_order !== idx) {

@@ -147,6 +147,7 @@ const TechnologiesSection = () => {
     const newTechs = [...techs];
     const [moved] = newTechs.splice(sourceIdx, 1);
     newTechs.splice(targetIdx, 0, moved);
+    setTechs(newTechs);
 
     // Update all sort_orders
     newTechs.forEach((tech, idx) => {

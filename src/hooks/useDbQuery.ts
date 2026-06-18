@@ -63,6 +63,21 @@ export function useDbQuery<T = unknown[]>(
           return false;
         }
         return true;
+      }).map(item => {
+        const id = (item as any).id;
+        if (!id) return item;
+        let hasChanges = false;
+        const newItem = { ...item };
+        for (const [key, val] of Object.entries(pending)) {
+          if (key.startsWith(`${section}:${id}:`) && !key.endsWith(":_clone") && !key.endsWith(":_delete")) {
+            const field = key.split(":")[2];
+            if (field) {
+              (newItem as any)[field] = val;
+              hasChanges = true;
+            }
+          }
+        }
+        return hasChanges ? newItem : item;
       });
 
       const addedIds = new Set();
@@ -89,8 +104,10 @@ export function useDbQuery<T = unknown[]>(
 
       if (additions.length > 0) {
         modifiedData = [...modifiedData, ...additions];
-        modifiedData.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
       }
+
+      // Always sort the array by sort_order to reflect instant drag-and-drop
+      modifiedData.sort((a, b) => ((a as any).sort_order || 0) - ((b as any).sort_order || 0));
 
       return modifiedData;
     }

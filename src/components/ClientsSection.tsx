@@ -573,7 +573,7 @@ const ClientsSection = () => {
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
     setClientsState(newItems);
-    newItems.forEach((item, idx) => { editor?.onUpdate("client_logos", "sort_order", idx, item.id); });
+    newItems.forEach((item, idx) => { editor?.onUpdate("clients", "sort_order", idx, item.id); });
     setDraggedId(null);
   };
 
@@ -595,7 +595,7 @@ const ClientsSection = () => {
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);
     setClientsState(newItems);
-    newItems.forEach((item, i) => { editor?.onUpdate("client_logos", "sort_order", i, item.id); });
+    newItems.forEach((item, i) => { editor?.onUpdate("clients", "sort_order", i, item.id); });
   };
 
   const clients = isEdit ? clientsState : rawClients;
