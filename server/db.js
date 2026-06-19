@@ -162,6 +162,8 @@ db.exec(`
     image_url TEXT,
     extra_text TEXT,
     extra_color TEXT,
+    more_info_label TEXT,
+    demo_label TEXT,
     contact_url TEXT NOT NULL DEFAULT '#contact',
     is_popular INTEGER NOT NULL DEFAULT 0,
     is_visible INTEGER NOT NULL DEFAULT 1,
@@ -322,10 +324,12 @@ try {
     })();
   }
 
-  // Add extra_text / extra_color to products if missing
+  // Add extra_text / extra_color / more_info_label / demo_label to products if missing
   const prodCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
   if (!prodCols.includes("extra_text")) db.exec("ALTER TABLE products ADD COLUMN extra_text TEXT;");
   if (!prodCols.includes("extra_color")) db.exec("ALTER TABLE products ADD COLUMN extra_color TEXT;");
+  if (!prodCols.includes("more_info_label")) db.exec("ALTER TABLE products ADD COLUMN more_info_label TEXT;");
+  if (!prodCols.includes("demo_label")) db.exec("ALTER TABLE products ADD COLUMN demo_label TEXT;");
 
   // Services table: add icon column, remove accent_color column
   const svcCols = db.prepare("PRAGMA table_info(services)").all().map(c => c.name);

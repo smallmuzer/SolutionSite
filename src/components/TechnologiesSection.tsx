@@ -412,8 +412,15 @@ const TechnologiesSection = () => {
                           <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                         </span>
                       </div>
-                      <div className="text-[0.75rem] text-muted-foreground leading-relaxed sm:line-clamp-3 mt-auto">
-                        <EditableText section="technologies" field="description" id={tech.id} value={tech.description} />
+                      <div className="relative z-[1] w-full mt-auto">
+                        <ReadMoreText
+                          text={tech.description}
+                          clampClass="line-clamp-3"
+                          textClass="text-[0.75rem] text-muted-foreground leading-relaxed"
+                          section="technologies"
+                          field="description"
+                          id={tech.id}
+                        />
                       </div>
                     </div>
                   </div>
@@ -479,8 +486,15 @@ const TechnologiesSection = () => {
                             <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                           </span>
                         </div>
-                        <div className="text-muted-foreground text-[0.85rem] mt-1 sm:mt-0 flex-1 sm:line-clamp-1 leading-relaxed">
-                          <EditableText section="technologies" field="description" id={tech.id} value={tech.description} />
+                        <div className="relative z-[1] flex-1 mt-1 sm:mt-0 w-full">
+                          <ReadMoreText
+                            text={tech.description}
+                            clampClass="line-clamp-2 sm:line-clamp-1"
+                            textClass="text-[0.85rem] text-muted-foreground leading-relaxed"
+                            section="technologies"
+                            field="description"
+                            id={tech.id}
+                          />
                         </div>
                       </div>
                       <div className="hidden sm:flex shrink-0 ml-2 w-8 h-8 rounded-full items-center justify-center transition-colors border border-transparent relative z-[1]" style={{ backgroundColor: `color-mix(in srgb, ${nameColor} 8%, transparent)` }}>

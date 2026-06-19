@@ -273,7 +273,7 @@ const Footer = () => {
                         style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
                       <div className="flex items-center gap-3 relative z-10">
                         <div className="relative shrink-0">
-                          <div className="w-14 h-14 rounded-lg flex items-center justify-center bg-white overflow-hidden border border-border/50 shadow-inner">
+                          <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white overflow-hidden border border-border/50 shadow-inner p-1">
                             {logoDraft ? (
                               <img
                                 key={logoDraft}

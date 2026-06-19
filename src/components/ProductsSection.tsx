@@ -284,7 +284,8 @@ const ProductCard = ({
                 onClick={() => {
                   const draftKey = product.id ? `products:${product.id}:extra_text` : `products:extra_text`;
                   const current = editor?.pendingChanges[draftKey] ?? product.extra_text;
-                  editor.onUpdate("products", "extra_text", current ? `${current}, New Feature` : "New Feature", product.id);
+                  const currentFeatures = current ? (current.includes("|||") ? current.split("|||") : current.split(",")) : [];
+                  editor.onUpdate("products", "extra_text", [...currentFeatures, "New Feature"].join("|||"), product.id);
                 }}
                 className="p-1 hover:bg-secondary/10 text-secondary rounded"
                 title="Add Feature"
@@ -597,10 +598,11 @@ const ProductCardList = ({
                         : `products:extra_text`;
                       const current =
                         editor?.pendingChanges[draftKey] ?? product.extra_text;
+                      const currentFeatures = current ? (current.includes("|||") ? current.split("|||") : current.split(",")) : [];
                       editor.onUpdate(
                         "products",
                         "extra_text",
-                        current ? `${current}, New Feature` : "New Feature",
+                        [...currentFeatures, "New Feature"].join("|||"),
                         product.id,
                       );
                     }}
