@@ -236,6 +236,7 @@ const TestimonialsSection = () => {
         imageField="avatar_url" 
         profileHidden={hideProfiles}
         onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
+        className="-top-5 right-2"
       />
       {editor?.isEditMode && (
         <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
@@ -276,6 +277,7 @@ const TestimonialsSection = () => {
         isVisible={t.is_visible} 
         profileHidden={hideProfiles}
         onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
+        className="-top-5 right-2"
       />
       <div className="relative z-10 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center w-full">
         <div className="flex flex-col items-center shrink-0 sm:w-28">

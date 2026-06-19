@@ -322,6 +322,20 @@ const ProductCard = ({
                 if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
                 if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
                 if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
+                if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
+                if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
+                if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
+                if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
+                if (parsedStyles.textColor) inlineStyle.color = parsedStyles.textColor;
+                if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
+                if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
+                if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
+                if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
+                if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
+                if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
+                if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
+                if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
+                if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
               }
               const displayHtml = hasStyles ? innerHtml.replace(/(?<!-)\bcolor:\s*[^;"]+;?/gi, "") : cleanText;
 

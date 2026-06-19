@@ -147,6 +147,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
 }) => {
   const [editorHtml, setEditorHtml] = useState("");
   const [activeStyles, setActiveStyles] = useState<ActiveStyles>({ ...DEFAULT_STYLES });
+  const [explicitStyles, setExplicitStyles] = useState<ActiveStyles>({ ...DEFAULT_STYLES });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<"visual" | "html">("visual");
   const [previewMode, setPreviewMode] = useState(false);
@@ -188,10 +189,25 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   // Initialize and parse current content
   useEffect(() => {
     if (isOpen) {
+      // Parse explicitly defined inline styles
       const { styles, innerHtml } = parseInlineStyles(initialValue);
+      setExplicitStyles(styles);
 
-      // Set explicitly defined styles only, to avoid hardcoding computed theme values.
-      setActiveStyles(styles);
+      // Merge computed target styles for UI display
+      const mergedStyles = { ...DEFAULT_STYLES };
+      if (targetStyles) {
+        Object.assign(mergedStyles, targetStyles);
+        if (targetStyles.textColor) mergedStyles.textColor = rgbToHex(targetStyles.textColor);
+        if (targetStyles.bgColor) mergedStyles.bgColor = rgbToHex(targetStyles.bgColor);
+      }
+      Object.keys(styles).forEach((key) => {
+        const k = key as keyof ActiveStyles;
+        if (styles[k]) {
+          mergedStyles[k] = styles[k];
+        }
+      });
+
+      setActiveStyles(mergedStyles);
       setEditorHtml(innerHtml);
       undoStackRef.current = [];
       redoStackRef.current = [];
@@ -488,25 +504,38 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     let serialized = editorHtml;
 
     if (viewMode === "visual") {
+      // Helper to determine if a style should be saved:
+      // Save if it differs from the computed targetStyle, OR if it was already explicitly set before.
+      const shouldSave = (key: keyof ActiveStyles) => {
+        if (!activeStyles[key]) return false;
+        
+        let targetVal = targetStyles?.[key] || "";
+        if (key === 'textColor' || key === 'bgColor') {
+          targetVal = rgbToHex(targetVal);
+        }
+        
+        return activeStyles[key] !== targetVal || !!explicitStyles[key];
+      };
+
       // Construct CSS styles string
       const stylesList = [
-        activeStyles.fontFamily && `font-family: ${activeStyles.fontFamily}`,
-        activeStyles.fontSize && `font-size: ${activeStyles.fontSize}`,
-        activeStyles.fontWeight && `font-weight: ${activeStyles.fontWeight}`,
-        activeStyles.lineHeight && `line-height: ${activeStyles.lineHeight}`,
-        activeStyles.letterSpacing && `letter-spacing: ${activeStyles.letterSpacing}`,
-        activeStyles.textTransform && `text-transform: ${activeStyles.textTransform}`,
-        activeStyles.textAlign && `text-align: ${activeStyles.textAlign}`,
-        activeStyles.textColor && `color: ${activeStyles.textColor}`,
-        activeStyles.bgColor && `background-color: ${activeStyles.bgColor}`,
-        activeStyles.paddingTop && `padding-top: ${activeStyles.paddingTop}`,
-        activeStyles.paddingRight && `padding-right: ${activeStyles.paddingRight}`,
-        activeStyles.paddingBottom && `padding-bottom: ${activeStyles.paddingBottom}`,
-        activeStyles.paddingLeft && `padding-left: ${activeStyles.paddingLeft}`,
-        activeStyles.marginTop && `margin-top: ${activeStyles.marginTop}`,
-        activeStyles.marginRight && `margin-right: ${activeStyles.marginRight}`,
-        activeStyles.marginBottom && `margin-bottom: ${activeStyles.marginBottom}`,
-        activeStyles.marginLeft && `margin-left: ${activeStyles.marginLeft}`,
+        shouldSave('fontFamily') && `font-family: ${activeStyles.fontFamily}`,
+        shouldSave('fontSize') && `font-size: ${activeStyles.fontSize}`,
+        shouldSave('fontWeight') && `font-weight: ${activeStyles.fontWeight}`,
+        shouldSave('lineHeight') && `line-height: ${activeStyles.lineHeight}`,
+        shouldSave('letterSpacing') && `letter-spacing: ${activeStyles.letterSpacing}`,
+        shouldSave('textTransform') && `text-transform: ${activeStyles.textTransform}`,
+        shouldSave('textAlign') && `text-align: ${activeStyles.textAlign}`,
+        shouldSave('textColor') && `color: ${activeStyles.textColor}`,
+        shouldSave('bgColor') && `background-color: ${activeStyles.bgColor}`,
+        shouldSave('paddingTop') && `padding-top: ${activeStyles.paddingTop}`,
+        shouldSave('paddingRight') && `padding-right: ${activeStyles.paddingRight}`,
+        shouldSave('paddingBottom') && `padding-bottom: ${activeStyles.paddingBottom}`,
+        shouldSave('paddingLeft') && `padding-left: ${activeStyles.paddingLeft}`,
+        shouldSave('marginTop') && `margin-top: ${activeStyles.marginTop}`,
+        shouldSave('marginRight') && `margin-right: ${activeStyles.marginRight}`,
+        shouldSave('marginBottom') && `margin-bottom: ${activeStyles.marginBottom}`,
+        shouldSave('marginLeft') && `margin-left: ${activeStyles.marginLeft}`,
       ].filter(Boolean);
 
       const cssText = stylesList.join("; ").trim();
@@ -580,24 +609,33 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   useEffect(() => {
     if (viewMode === "html" && !isHtmlEditRef.current) {
       const { innerHtml } = parseInlineStyles(editorHtml);
+      const shouldSave = (key: keyof ActiveStyles) => {
+        if (!activeStyles[key]) return false;
+        let targetVal = targetStyles?.[key] || "";
+        if (key === 'textColor' || key === 'bgColor') {
+          targetVal = rgbToHex(targetVal);
+        }
+        return activeStyles[key] !== targetVal || !!explicitStyles[key];
+      };
+
       const stylesList = [
-        activeStyles.fontFamily && `font-family: ${activeStyles.fontFamily}`,
-        activeStyles.fontSize && `font-size: ${activeStyles.fontSize}`,
-        activeStyles.fontWeight && `font-weight: ${activeStyles.fontWeight}`,
-        activeStyles.lineHeight && `line-height: ${activeStyles.lineHeight}`,
-        activeStyles.letterSpacing && `letter-spacing: ${activeStyles.letterSpacing}`,
-        activeStyles.textTransform && `text-transform: ${activeStyles.textTransform}`,
-        activeStyles.textAlign && `text-align: ${activeStyles.textAlign}`,
-        activeStyles.textColor && `color: ${activeStyles.textColor}`,
-        activeStyles.bgColor && `background-color: ${activeStyles.bgColor}`,
-        activeStyles.paddingTop && `padding-top: ${activeStyles.paddingTop}`,
-        activeStyles.paddingRight && `padding-right: ${activeStyles.paddingRight}`,
-        activeStyles.paddingBottom && `padding-bottom: ${activeStyles.paddingBottom}`,
-        activeStyles.paddingLeft && `padding-left: ${activeStyles.paddingLeft}`,
-        activeStyles.marginTop && `margin-top: ${activeStyles.marginTop}`,
-        activeStyles.marginRight && `margin-right: ${activeStyles.marginRight}`,
-        activeStyles.marginBottom && `margin-bottom: ${activeStyles.marginBottom}`,
-        activeStyles.marginLeft && `margin-left: ${activeStyles.marginLeft}`,
+        shouldSave('fontFamily') && `font-family: ${activeStyles.fontFamily}`,
+        shouldSave('fontSize') && `font-size: ${activeStyles.fontSize}`,
+        shouldSave('fontWeight') && `font-weight: ${activeStyles.fontWeight}`,
+        shouldSave('lineHeight') && `line-height: ${activeStyles.lineHeight}`,
+        shouldSave('letterSpacing') && `letter-spacing: ${activeStyles.letterSpacing}`,
+        shouldSave('textTransform') && `text-transform: ${activeStyles.textTransform}`,
+        shouldSave('textAlign') && `text-align: ${activeStyles.textAlign}`,
+        shouldSave('textColor') && `color: ${activeStyles.textColor}`,
+        shouldSave('bgColor') && `background-color: ${activeStyles.bgColor}`,
+        shouldSave('paddingTop') && `padding-top: ${activeStyles.paddingTop}`,
+        shouldSave('paddingRight') && `padding-right: ${activeStyles.paddingRight}`,
+        shouldSave('paddingBottom') && `padding-bottom: ${activeStyles.paddingBottom}`,
+        shouldSave('paddingLeft') && `padding-left: ${activeStyles.paddingLeft}`,
+        shouldSave('marginTop') && `margin-top: ${activeStyles.marginTop}`,
+        shouldSave('marginRight') && `margin-right: ${activeStyles.marginRight}`,
+        shouldSave('marginBottom') && `margin-bottom: ${activeStyles.marginBottom}`,
+        shouldSave('marginLeft') && `margin-left: ${activeStyles.marginLeft}`,
       ].filter(Boolean);
 
       const cssText = stylesList.join("; ").trim();
@@ -785,7 +823,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                     onChange={(e) => setActiveStyles(prev => ({ ...prev, fontFamily: e.target.value }))}
                     className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                   >
-                    <option value="">Inherit Global Font</option>
+                    <option value="">Inherit {targetStyles?.fontFamily ? `(${targetStyles.fontFamily.split(',')[0].replace(/['"]/g, '')})` : 'Global Font'}</option>
                     {activeStyles.fontFamily && ![
                       "system-ui, sans-serif", "Inter, sans-serif", "Roboto, sans-serif", "Open Sans, sans-serif",
                       "Montserrat, sans-serif", "Poppins, sans-serif", "Lato, sans-serif", "Nunito, sans-serif",
@@ -793,8 +831,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       "Work Sans, sans-serif", "Oswald, sans-serif", "Playfair Display, serif", "Merriweather, serif",
                       "Lora, serif", "Source Code Pro, monospace"
                     ].includes(activeStyles.fontFamily) && (
-                      <option value={activeStyles.fontFamily}>{activeStyles.fontFamily.split(',')[0]} (Current)</option>
-                    )}
+                        <option value={activeStyles.fontFamily}>{activeStyles.fontFamily.split(',')[0]} (Current)</option>
+                      )}
                     <option value="system-ui, sans-serif">System Sans</option>
                     <option value="Inter, sans-serif">Inter</option>
                     <option value="Roboto, sans-serif">Roboto</option>
@@ -825,7 +863,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, fontSize: e.target.value }))}
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
-                      <option value="">Inherit</option>
+                      <option value="">Inherit {targetStyles?.fontSize ? `(${targetStyles.fontSize})` : ''}</option>
                       {activeStyles.fontSize && !["11px", "12px", "13px", "14px", "15px", "16px", "18px", "20px", "24px", "28px", "32px", "36px", "40px", "48px", "56px", "64px", "72px"].includes(activeStyles.fontSize) && (
                         <option value={activeStyles.fontSize}>{activeStyles.fontSize} (Current)</option>
                       )}
@@ -841,7 +879,10 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, fontWeight: e.target.value }))}
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
-                      <option value="">Inherit</option>
+                      <option value="">Inherit {targetStyles?.fontWeight ? `(${targetStyles.fontWeight})` : ''}</option>
+                      {activeStyles.fontWeight && !["100", "300", "400", "500", "600", "700", "800", "900", "normal", "bold"].includes(activeStyles.fontWeight) && (
+                        <option value={activeStyles.fontWeight}>{activeStyles.fontWeight} (Current)</option>
+                      )}
                       <option value="100">Thin (100)</option>
                       <option value="300">Light (300)</option>
                       <option value="400">Regular (400)</option>
@@ -887,7 +928,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, textTransform: e.target.value }))}
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
-                      <option value="">None</option>
+                      <option value="">None {targetStyles?.textTransform && targetStyles.textTransform !== 'none' ? `(${targetStyles.textTransform})` : ''}</option>
                       <option value="uppercase">UPPERCASE</option>
                       <option value="lowercase">lowercase</option>
                       <option value="capitalize">Capitalize</option>
@@ -900,7 +941,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                       onChange={(e) => setActiveStyles(prev => ({ ...prev, textAlign: e.target.value }))}
                       className="w-full px-2 py-1 bg-background border border-border rounded-lg text-[11px] font-medium focus:outline-none"
                     >
-                      <option value="">Inherit</option>
+                      <option value="">Inherit {targetStyles?.textAlign ? `(${targetStyles.textAlign})` : ''}</option>
                       <option value="left">Left</option>
                       <option value="center">Center</option>
                       <option value="right">Right</option>
