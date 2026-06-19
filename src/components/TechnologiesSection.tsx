@@ -416,7 +416,7 @@ const TechnologiesSection = () => {
                           <EditableText section="technologies" field="category" id={tech.id} value={tech.category} />
                         </span>
                       </div>
-                      <div className="relative z-[1] w-full mt-auto">
+                      <div className="relative z-[1] w-full mb-auto">
                         <ReadMoreText
                           text={tech.description}
                           clampClass="line-clamp-3"

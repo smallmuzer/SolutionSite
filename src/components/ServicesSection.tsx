@@ -219,7 +219,7 @@ const ServicesSection = () => {
             </span>
             <SectionHeaderToolbar section="services" isVisible={content.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
             <EditableText section="services" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
           </div>
         </AnimatedSection>

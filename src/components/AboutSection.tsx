@@ -175,10 +175,10 @@ const AboutSection = () => {
                 </span>
                 <SectionHeaderToolbar section="about" isVisible={content.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
               </h2>
-              <div className="text-gray-500 leading-relaxed mb-4 text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.description) ? undefined : (content.description_color || undefined) }}>
+              <div className="text-muted-foreground leading-relaxed mb-4 text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.description) ? undefined : (content.description_color || undefined) }}>
                 <EditableText section="about" field="description" value={content.description || "Systems Solutions Pvt Ltd is a tech-leading IT consulting and software development company in the Digital Era!"} colorField="description_color" />
               </div>
-              <div className="text-gray-500 leading-relaxed text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.vision) ? undefined : (content.vision_color || undefined) }}>
+              <div className="text-muted-foreground leading-relaxed text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.vision) ? undefined : (content.vision_color || undefined) }}>
                 <EditableText section="about" field="vision" value={content.vision || "Our journey began out of the passion for a unique position in the industry."} colorField="vision_color" />
               </div>
             </AnimatedSection>

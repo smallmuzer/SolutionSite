@@ -134,7 +134,7 @@ const Footer = () => {
     setAssociatedState(newItems);
 
     newItems.forEach((item, index) => {
-      if (item.id) {
+      if (item.id && (item as any).sort_order !== index) {
         editor.onUpdate("our_network", "sort_order", index, item.id);
       }
     });

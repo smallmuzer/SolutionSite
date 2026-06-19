@@ -5,7 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GlobalViewProvider } from "./components/ui-customizer-context";
-import { useContentSync, useSiteSettings } from "@/hooks/useSiteContent";
+import { useContentSync } from "@/hooks/useSiteContent";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 

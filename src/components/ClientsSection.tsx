@@ -580,7 +580,11 @@ const ClientsSection = () => {
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
     setClientsState(newItems);
-    newItems.forEach((item, idx) => { editor?.onUpdate("client_logos", "sort_order", idx, item.id); });
+    newItems.forEach((item, idx) => {
+      if (item.sort_order !== idx) {
+        editor?.onUpdate("client_logos", "sort_order", idx, item.id);
+      }
+    });
     setDraggedId(null);
   };
 
@@ -602,7 +606,11 @@ const ClientsSection = () => {
     const [moved] = newItems.splice(idx, 1);
     newItems.splice(targetIdx, 0, moved);
     setClientsState(newItems);
-    newItems.forEach((item, i) => { editor?.onUpdate("client_logos", "sort_order", i, item.id); });
+    newItems.forEach((item, i) => {
+      if (item.sort_order !== i) {
+        editor?.onUpdate("client_logos", "sort_order", i, item.id);
+      }
+    });
   };
 
   const clients = isEdit ? clientsState : rawClients;
@@ -644,7 +652,7 @@ const ClientsSection = () => {
             </span>
             <SectionHeaderToolbar section="clients" targetSection="client_logos" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
-          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]">
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />
           </div>
         </AnimatedSection>

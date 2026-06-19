@@ -591,7 +591,7 @@ const ProductCardList = ({
             id={product.id}
             text={product.description}
             clampClass="line-clamp-3"
-            textClass="text-[0.8125rem] font-semibold text-gray-500 dark:text-gray-400 leading-relaxed"
+            textClass="text-[0.8125rem] font-semibold text-muted-foreground leading-relaxed"
           />
           <div className="flex flex-wrap items-center gap-3 mt-auto pt-2">
             <div className="relative flex flex-col gap-2 mb-4 w-full group/features">
@@ -1101,7 +1101,7 @@ const ProductsSection = () => {
             />
           </h2>
           <div
-            className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]"
+            className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]"
             style={{ color: hasEmbeddedColor(header.subtitle) ? undefined : (header.subtitle_color || undefined) }}
           >
             <EditableText

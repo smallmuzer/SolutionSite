@@ -179,7 +179,7 @@ const ContactSection = () => {
               )}
             </span>
           </h2>
-          <div className="text-gray-500 max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
+          <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]" style={{ color: hasEmbeddedColor(content.subtitle) ? undefined : (content.subtitle_color || undefined) }}>
             <EditableText section="contact" field="subtitle" value={content.subtitle || ""} colorField="subtitle_color" />
           </div>
         </AnimatedSection>
