@@ -185,35 +185,31 @@ const AboutSection = () => {
           </div>
 
 
-          {/* Right: cards — images fully live from DB */}
-          <AnimatedSection delay={0.2}>
+          {/* Right: cards with center logo badge */}
+          <AnimatedSection delay={0.2} className="h-full flex flex-col">
             {view === "grid" ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="relative flex-1 flex flex-col">
+                <div className="grid grid-cols-2 gap-3 flex-1">
                 {cardData.map((card, idx) => {
                   const { Icon } = card;
                   const imgSrc = resolveImg(card.imgKey);
                   const isVisible = content[`card_visible_${card.key}`] !== false;
-                  
                   if (!editor?.isEditMode && !isVisible) return null;
 
                   return (
                     <div
-                      key={card.title}
-                      className={`glass-card relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""} ${!isVisible ? "opacity-50 grayscale" : ""}`}
-                      style={{
-                        minHeight: "clamp(120px, 16vw, 145px)",
-                        animationDelay: `${idx * 0.6}s`,
-                        animationDuration: `${4 + idx * 0.5}s`,
-                      }}
+                      key={card.key}
+                      className={`glass-card relative rounded-xl overflow-hidden group/item cursor-pointer border border-border/40 hover:glow-effect transition-all duration-300 hover:outline hover:outline-2 hover:outline-secondary/50 flex flex-col h-full ${draggedKey === card.key ? "opacity-20 scale-95" : ""} ${!isVisible ? "opacity-50 grayscale" : ""}`}
+                      style={{ animationDelay: `${idx * 0.6}s`, animationDuration: `${4 + idx * 0.5}s` }}
                       draggable={editor?.isEditMode}
                       onDragStart={(e) => handleDragStart(e, card.key)}
                       onDragEnd={() => setDraggedKey(null)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, card.key)}
                     >
-                      <EditorToolbar 
-                        section="about" 
-                        imageField={card.imgKey} 
+                      <EditorToolbar
+                        section="about"
+                        imageField={card.imgKey}
                         iconField={`card_icon_${card.key}`}
                         visibilityField={`card_visible_${card.key}`}
                         isVisible={isVisible}
@@ -230,48 +226,34 @@ const AboutSection = () => {
                         </div>
                       )}
                       {useImg && (
-                        <img
-                          src={imgSrc}
-                          alt={card.title}
-                          key={imgSrc}
+                        <img src={imgSrc} alt={card.title} key={imgSrc}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
-                          loading="lazy"
-                          decoding="async"
+                          loading="lazy" decoding="async"
                           onError={(e) => { (e.currentTarget as HTMLImageElement).src = card.fallback; }}
                         />
                       )}
-                      {useImg && (
-                        <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} transition-opacity duration-300 opacity-70 group-hover/item:opacity-95`} />
-                      )}
-                      <div className="relative z-10 p-4 h-full flex flex-col justify-end pointer-events-none">
+                      {useImg && <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} transition-opacity duration-300 opacity-70 group-hover/item:opacity-95`} />}
+                      <div className="relative z-10 px-4 pt-[38px] sm:pt-[46px] pb-[18px] flex-1 flex flex-col justify-end gap-1.5 pointer-events-none">
                         {!useImg && (
-                          <div className="text-secondary mb-2">
+                          <div className="text-secondary -mt-1.5 mb-1">
                             {(() => {
                               const iconVal = content[`card_icon_${card.key}`] || "";
-                              if (isHtmlIcon(iconVal)) {
-                                return <span className="text-[1.5rem]" dangerouslySetInnerHTML={{ __html: iconVal }} />;
-                              }
+                              if (isHtmlIcon(iconVal)) return <span className="text-[1.5rem]" dangerouslySetInnerHTML={{ __html: iconVal }} />;
                               const IconComp = (LucideIcons as any)[iconVal] || Icon;
                               return <IconComp size={24} />;
                             })()}
                           </div>
                         )}
-                        <h3 className={`font-heading font-bold text-[0.9375rem] mb-1 drop-shadow leading-snug pointer-events-auto ${useImg ? "text-white" : "text-foreground"}`}>
+                        <h3 className={`font-heading font-bold text-base leading-snug pointer-events-auto ${useImg ? "text-white" : "text-foreground"}`}>
                           <EditableText section="about" field={`card_title_${card.key}`} value={card.title} />
                         </h3>
                         <div className="pointer-events-auto">
                           <MobileReadMore
-                            section="about"
-                            field={card.key}
+                            section="about" field={card.key}
                             text={content[card.key] || card.desc}
-                            clampClass="line-clamp-2"
-                            textClass={`text-[0.7rem] sm:text-[0.8125rem] font-semibold leading-relaxed drop-shadow ${useImg ? "text-white/80" : "text-muted-foreground"}`}
+                            clampClass="line-clamp-3"
+                            textClass={`text-[0.85rem] leading-relaxed ${useImg ? "text-white/80" : "text-muted-foreground"}`}
                           />
-                        </div>
-                      </div>
-                      <div className="absolute top-3 right-3 z-20 opacity-0 group-hover/item:opacity-100 transition-all duration-300 translate-y-1 group-hover/item:translate-y-0">
-                        <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                          <ArrowUpRight size={14} className="text-white" />
                         </div>
                       </div>
                       {useImg && (
@@ -281,6 +263,30 @@ const AboutSection = () => {
                     </div>
                   );
                 })}
+                </div>
+                {/* Center logo badge at the intersection of the 4 cards */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+                  <div className="relative">
+                    <div className="absolute -inset-1.5 rounded-full border border-secondary/40 animate-pulse" style={{ animationDuration: "2s" }} />
+                    <div
+                      className="w-10 h-10 rounded-full bg-card border-2 border-secondary/50 shadow-lg flex items-center justify-center overflow-hidden"
+                      style={{ boxShadow: "0 0 12px 3px hsl(var(--secondary) / 0.2)" }}
+                    >
+                      <img
+                        src="/favicon.ico"
+                        alt="Logo"
+                        className="w-6 h-6 object-contain"
+                        onError={(e) => {
+                          const img = e.currentTarget as HTMLImageElement;
+                          img.style.display = "none";
+                          const fb = img.nextElementSibling as HTMLElement | null;
+                          if (fb) fb.style.display = "flex";
+                        }}
+                      />
+                      <span className="text-secondary font-bold text-xs hidden">S</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
