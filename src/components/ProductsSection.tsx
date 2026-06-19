@@ -102,7 +102,7 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id, colorFi
       if (!expanded) {
         setOverflows(el.scrollHeight > el.clientHeight + 6);
       }
-      
+
       const innerSpan = el.querySelector('span[style*="font-size"]');
       if (innerSpan) {
         setDynamicFontSize((innerSpan as HTMLElement).style.fontSize);
@@ -174,8 +174,8 @@ const ProductCard = ({
 
   return (
     <div
-      className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-[#11111f] rounded-[24px] overflow-hidden group/item cursor-pointer shadow-sm border-[0.5px] border-slate-200 dark:border-slate-800 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-all duration-300 ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
-      style={{ width: 300 }}
+      className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-[#11111f] rounded-[24px] overflow-hidden group/item cursor-pointer shadow-sm border-[0.5px] border-slate-200 dark:border-slate-800 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-[box-shadow,transform] duration-300 transform-gpu ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
+      style={{ width: 300, contain: "paint", willChange: "transform" }}
       {...getNavProps(() => {
         const url = product.contact_url || product.demo_url;
         if (url && url.startsWith("http")) window.open(url, "_blank");
@@ -187,12 +187,12 @@ const ProductCard = ({
       onDrop={onDrop ? (e) => onDrop(e, product.id) : undefined}
     >
       {/* Background Decorators */}
-      <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
+      <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none" style={{ transform: "translateZ(0)" }}>
         <svg width="48" height="48" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-           <pattern id={`dots-${product.id}`} x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-             <circle cx="2" cy="2" r="1.5" fill={themeColor} opacity="0.6" />
-           </pattern>
-           <rect width="40" height="40" fill={`url(#dots-${product.id})`} />
+          <pattern id={`dots-${product.id}`} x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.5" fill={themeColor} opacity="0.6" />
+          </pattern>
+          <rect width="40" height="40" fill={`url(#dots-${product.id})`} />
         </svg>
       </div>
       <div className="absolute top-0 left-0 w-24 h-24 rounded-br-[64px] opacity-10 pointer-events-none" style={{ backgroundColor: themeColor }} />
@@ -235,8 +235,9 @@ const ProductCard = ({
       <div className="p-3 sm:p-4 flex flex-col relative z-10 w-full flex-1">
         {/* Top Section: Image and Headers */}
         <div className="flex flex-row items-center gap-3">
-          <div className="w-[72px] h-[72px] shrink-0 relative">
-            <div className="absolute inset-0 rounded-full border-2 p-1" style={{ borderColor: themeColor }}>
+          <div className="w-[72px] h-[72px] shrink-0 relative flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-[1.25px] opacity-35 pointer-events-none" style={{ borderColor: themeColor }} />
+            <div className="w-[60px] h-[60px] rounded-full relative">
               {cardStyle === "image" ? (
                 <div className="w-full h-full rounded-full overflow-hidden shadow-sm">
                   <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" loading="lazy" />
@@ -296,10 +297,10 @@ const ProductCard = ({
             const draftKey = product.id ? `products:${product.id}:extra_text` : `products:extra_text`;
             const extraText = editor?.pendingChanges[draftKey] ?? product.extra_text;
             const features = extraText ? extraText.includes("|||") ? extraText.split("|||") : extraText.split(",") : [
-                "15 Days Free Trial",
-                "Cloud-based SaaS",
-                "24/7 Support",
-                "Custom Onboarding",
+              "15 Days Free Trial",
+              "Cloud-based SaaS",
+              "24/7 Support",
+              "Custom Onboarding",
             ];
 
             return features.map((feature, idx) => {
@@ -859,7 +860,7 @@ const ProductsSection = () => {
   const pausedRef = useRef<boolean>(false);
   const userInteractedRef = useRef<boolean>(false);
   const getNavProps = useLiveEditorNavigation();
-  const SPEED = 0.45;
+  const SPEED = 50; // Pixels per second for smooth scrolling
   const GAP = 24;
   const CARD_W = 300;
 
@@ -978,11 +979,25 @@ const ProductsSection = () => {
     if (!el) return;
     const itemW = CARD_W + GAP;
     const totalW = products.length * itemW;
-    const animate = () => {
-      if (!pausedRef.current) {
-        posRef.current += SPEED;
-        if (posRef.current >= totalW) posRef.current -= totalW;
-        if (el) el.style.transform = `translateX(-${posRef.current}px)`;
+
+    let lastTime: number | null = null;
+    let currentScroll = el.scrollLeft;
+
+    const animate = (time: number) => {
+      if (lastTime === null) lastTime = time;
+      const dt = time - lastTime;
+      lastTime = time;
+
+      if (!userInteractedRef.current && !pausedRef.current && dt < 100) {
+        currentScroll += (SPEED * dt) / 1000;
+        if (currentScroll >= totalW) {
+          currentScroll -= totalW;
+        }
+        el.scrollLeft = currentScroll;
+      } else {
+        // Sync internal scroll tracker with the physical scrollbar position 
+        // while the user is interacting or paused, so it resumes smoothly
+        currentScroll = el.scrollLeft;
       }
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -1149,31 +1164,30 @@ const ProductsSection = () => {
           </div>
         ) : globalView === "grid" ? (
           <div
-            className={`relative ${editor?.isEditMode ? "overflow-x-auto custom-scrollbar pb-4" : "overflow-hidden"}`}
-            style={
-              editor?.isEditMode
-                ? undefined
-                : {
-                  maskImage:
-                    "linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%)",
-                }
-            }
+            ref={trackRef}
+            className="relative overflow-x-auto custom-scrollbar pb-4"
             onMouseEnter={() => {
               pausedRef.current = true;
             }}
             onMouseLeave={() => {
               pausedRef.current = false;
+              userInteractedRef.current = false;
             }}
+            onWheel={() => { userInteractedRef.current = true; }}
+            onTouchStart={() => { userInteractedRef.current = true; }}
+            onTouchEnd={() => {
+              // Resume after a delay on touch devices where mouseleave doesn't fire
+              setTimeout(() => { userInteractedRef.current = false; }, 2500);
+            }}
+            onMouseDown={() => { userInteractedRef.current = true; }}
+            onKeyDown={() => { userInteractedRef.current = true; }}
           >
             <div
-              ref={trackRef}
-              className="flex"
+              className="flex w-max"
               style={{
                 gap: GAP,
-                willChange: "transform",
                 paddingBottom: 12,
                 paddingTop: 4,
-                transform: editor?.isEditMode ? "none" : undefined,
               }}
             >
               {(editor?.isEditMode ? products : tripled).map((product, i) => (
