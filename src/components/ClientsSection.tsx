@@ -357,13 +357,14 @@ const GRID_W = COLS * CARD_W + (COLS - 1) * GAP;
 const IMG_MAX_H = 44; // px — image area max height; leaves room for name
 
 const ClientCard = ({
-  client, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop, flexible = false
+  client, getNavProps, onMove, draggedId, onDragStart, onDragEnd, onDragOver, onDrop, flexible = false
 }: {
   client: ClientLogo;
   getNavProps: any;
   onMove?: (dir: "up" | "down" | "left" | "right") => void;
   draggedId?: string | null;
   onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragEnd?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, id: string) => void;
   flexible?: boolean; // true = fill grid cell, false = fixed 96x80 for slideshow
@@ -380,6 +381,7 @@ const ClientCard = ({
       {...getNavProps(() => { })}
       draggable={!!editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, client.id) : undefined}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop ? (e) => onDrop(e, client.id) : undefined}
     >
@@ -482,7 +484,7 @@ const ClientCard = ({
 
 const GridSlideshow = ({
   clients, getNavProps, startOffset = 0, reverse = false,
-  onMove, draggedId, onDragStart, onDragOver, onDrop, cols
+  onMove, draggedId, onDragStart, onDragEnd, onDragOver, onDrop, cols
 }: {
   clients: ClientLogo[];
   getNavProps: any;
@@ -491,6 +493,7 @@ const GridSlideshow = ({
   onMove?: (id: string, dir: "up" | "down" | "left" | "right") => void;
   draggedId?: string | null;
   onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragEnd?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, id: string) => void;
   cols?: number;
@@ -519,6 +522,7 @@ const GridSlideshow = ({
             onMove={onMove ? (dir) => onMove(client.id, dir) : undefined}
             draggedId={draggedId}
             onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
             onDragOver={onDragOver}
             onDrop={onDrop}
           />
@@ -565,7 +569,10 @@ const ClientsSection = () => {
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!isEdit || !draggedId || draggedId === targetId) return;
+    if (!isEdit || !draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
     const sourceIdx = clientsState.findIndex(c => c.id === draggedId);
     const targetIdx = clientsState.findIndex(c => c.id === targetId);
     if (sourceIdx === -1 || targetIdx === -1) return;
@@ -653,6 +660,7 @@ const ClientsSection = () => {
                     onMove={isEdit ? (dir) => handleMove(client.id, dir) : undefined}
                     draggedId={draggedId}
                     onDragStart={isEdit ? handleDragStart : undefined}
+                    onDragEnd={() => setDraggedId(null)}
                     onDragOver={isEdit ? handleDragOver : undefined}
                     onDrop={isEdit ? handleDrop : undefined}
                   />
@@ -663,18 +671,18 @@ const ClientsSection = () => {
             <>
               <div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}>
                 <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} reverse={false} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
+                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} reverse={false} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
                 </div>
                 <div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}>
                   <StaticGlobe clients={clients} getNavProps={getNavProps} />
                 </div>
                 <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={Math.ceil(clients.length / 2)} reverse={true} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
+                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={Math.ceil(clients.length / 2)} reverse={true} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
                 </div>
               </div>
               <div className="flex sm:hidden flex-col items-center gap-10">
                 <StaticGlobe clients={clients} getNavProps={getNavProps} />
-                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} cols={3} />
+                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} cols={3} />
               </div>
             </>
           )}

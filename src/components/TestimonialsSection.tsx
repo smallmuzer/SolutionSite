@@ -99,7 +99,10 @@ const TestimonialsSection = () => {
 
   const handleDrop = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
 
     const sourceIdx = testimonialsState.findIndex(t => t.id === draggedId);
     const targetIdx = testimonialsState.findIndex(t => t.id === targetId);
@@ -221,6 +224,7 @@ const TestimonialsSection = () => {
       className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
       draggable={editor?.isEditMode}
       onDragStart={(e) => handleDragStart(e, t.id)}
+      onDragEnd={() => setDraggedId(null)}
       onDragOver={handleDragOver}
       onDrop={(e) => handleDrop(e, t.id)}
     >

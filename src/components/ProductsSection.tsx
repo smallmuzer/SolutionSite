@@ -148,6 +148,7 @@ const ProductCard = ({
   onMove,
   draggedId,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDrop,
   onEditTypo,
@@ -160,6 +161,7 @@ const ProductCard = ({
   onMove?: (dir: "up" | "down" | "left" | "right") => void;
   draggedId?: string | null;
   onDragStart?: any;
+  onDragEnd?: any;
   onDragOver?: any;
   onDrop?: any;
   onEditTypo?: any;
@@ -183,6 +185,7 @@ const ProductCard = ({
       })}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop ? (e) => onDrop(e, product.id) : undefined}
     >
@@ -451,6 +454,7 @@ const ProductCardList = ({
   draggedId,
   onDragStart,
   onDragOver,
+  onDragEnd,
   onDrop,
   onEditTypo,
 }: {
@@ -461,6 +465,7 @@ const ProductCardList = ({
   onMove?: (dir: "up" | "down" | "left" | "right") => void;
   draggedId?: string | null;
   onDragStart?: any;
+  onDragEnd?: any;
   onDragOver?: any;
   onDrop?: any;
   onEditTypo?: any;
@@ -474,6 +479,7 @@ const ProductCardList = ({
       {...getNavProps(() => { })}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop ? (e) => onDrop(e, product.id) : undefined}
     >
@@ -903,7 +909,10 @@ const ProductsSection = () => {
 
   const handleDrop = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
 
     const sourceIdx = productsState.findIndex((t) => t.id === draggedId);
     const targetIdx = productsState.findIndex((t) => t.id === targetId);
@@ -1206,6 +1215,7 @@ const ProductsSection = () => {
                   }
                   draggedId={draggedId}
                   onDragStart={handleDragStart}
+                  onDragEnd={() => setDraggedId(null)}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   onEditTypo={setTypoFeature}
@@ -1229,6 +1239,7 @@ const ProductsSection = () => {
                   }
                   draggedId={draggedId}
                   onDragStart={handleDragStart}
+                  onDragEnd={() => setDraggedId(null)}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   onEditTypo={setTypoFeature}

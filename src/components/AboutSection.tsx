@@ -115,7 +115,10 @@ const AboutSection = () => {
 
   const handleDrop = (e: React.DragEvent, targetKey: string) => {
     e.preventDefault();
-    if (!editor?.isEditMode || !draggedKey || draggedKey === targetKey) return;
+    if (!editor?.isEditMode || !draggedKey || draggedKey === targetKey) {
+      setDraggedKey(null);
+      return;
+    }
 
     const sourceIdx = cardsState.findIndex(c => c.key === draggedKey);
     const targetIdx = cardsState.findIndex(c => c.key === targetKey);
@@ -204,6 +207,7 @@ const AboutSection = () => {
                       }}
                       draggable={editor?.isEditMode}
                       onDragStart={(e) => handleDragStart(e, card.key)}
+                      onDragEnd={() => setDraggedKey(null)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, card.key)}
                     >
@@ -292,6 +296,7 @@ const AboutSection = () => {
                       className={`glass-card flex items-center gap-4 p-4 group/item hover:glow-effect transition-all duration-300 cursor-pointer relative overflow-hidden border border-border/40 hover:outline hover:outline-2 hover:outline-secondary/50 ${draggedKey === card.key ? "opacity-20 scale-95" : ""} ${!isVisible ? "opacity-50 grayscale" : ""}`}
                       draggable={editor?.isEditMode}
                       onDragStart={(e) => handleDragStart(e, card.key)}
+                      onDragEnd={() => setDraggedKey(null)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, card.key)}
                     >

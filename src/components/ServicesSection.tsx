@@ -130,7 +130,10 @@ const ServicesSection = () => {
 
   const handleDrop = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
 
     const sourceIdx = services.findIndex(t => t.id === draggedId);
     const targetIdx = services.findIndex(t => t.id === targetId);
@@ -237,6 +240,7 @@ const ServicesSection = () => {
                     {...getNavProps(scrollTo)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, service.id)}
+                    onDragEnd={() => setDraggedId(null)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, service.id)}
                   >
@@ -321,6 +325,7 @@ const ServicesSection = () => {
                     {...getNavProps(scrollTo)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, service.id)}
+                    onDragEnd={() => setDraggedId(null)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, service.id)}
                   >

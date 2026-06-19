@@ -138,7 +138,10 @@ const TechnologiesSection = () => {
 
   const handleDrop = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
 
     const sourceIdx = techs.findIndex(t => t.id === draggedId);
     const targetIdx = techs.findIndex(t => t.id === targetId);
@@ -364,6 +367,7 @@ const TechnologiesSection = () => {
                     {...getNavProps(scrollToContact)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, tech.id)}
+                    onDragEnd={() => setDraggedId(null)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, tech.id)}
                   >
@@ -443,6 +447,7 @@ const TechnologiesSection = () => {
                     {...getNavProps(scrollToContact)}
                     draggable={editor?.isEditMode}
                     onDragStart={(e) => handleDragStart(e, tech.id)}
+                    onDragEnd={() => setDraggedId(null)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, tech.id)}
                   >

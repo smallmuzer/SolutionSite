@@ -51,7 +51,7 @@ function getJobMeta(job: CareerJob): { Icon: React.ElementType; bg: string; fg: 
   return { Icon: Briefcase, bg: "#1e3a5f", fg: "#93c5fd" };
 }
 
-const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, draggedId, onDragStart, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; delay?: number; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
+const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, draggedId, onDragStart, onDragEnd, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; delay?: number; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragEnd?: any; onDragOver?: any; onDrop?: any }) => {
   const { Icon, bg, fg } = getJobMeta(job);
   const [isExpanded, setIsExpanded] = useState(false);
   const editor = useLiveEditor();
@@ -71,6 +71,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
       {...getNavProps(onApply)}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, job.id) : undefined}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop ? (e) => onDrop(e, job.id) : undefined}
     >
@@ -153,7 +154,7 @@ const JobCard = ({ job, onApply, useImg, getNavProps, delay = 0, onMove, dragged
   );
 };
 
-const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragStart, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragOver?: any; onDrop?: any }) => {
+const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragStart, onDragEnd, onDragOver, onDrop }: { job: CareerJob; onApply: () => void; useImg: boolean; getNavProps: any; onMove?: (dir: "up" | "down" | "left" | "right") => void; draggedId?: string | null; onDragStart?: any; onDragEnd?: any; onDragOver?: any; onDrop?: any }) => {
   const { Icon, bg, fg } = getJobMeta(job);
   const editor = useLiveEditor();
   const careersContent = useSiteContent("careers");
@@ -166,6 +167,7 @@ const JobRow = ({ job, onApply, useImg, getNavProps, onMove, draggedId, onDragSt
       {...getNavProps(onApply)}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, job.id) : undefined}
+      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop ? (e) => onDrop(e, job.id) : undefined}
     >
@@ -245,7 +247,10 @@ const CareersSection = () => {
 
   const handleDrop = async (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (!editor?.isEditMode || !draggedId || draggedId === targetId) return;
+    if (!editor?.isEditMode || !draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
 
     const sourceIdx = jobsState.findIndex(t => t.id === draggedId);
     const targetIdx = jobsState.findIndex(t => t.id === targetId);
@@ -391,7 +396,7 @@ const CareersSection = () => {
         {editor?.isEditMode ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch max-w-[90rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
             {jobs.map((job) => (
-              <JobCard key={job.id} job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
+              <JobCard key={job.id} job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragEnd={() => setDraggedId(null)} onDragOver={handleDragOver} onDrop={handleDrop} />
             ))}
           </div>
         ) : (
@@ -404,9 +409,9 @@ const CareersSection = () => {
                   className={`h-full ${view === 'grid' ? 'w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)] max-w-sm' : 'w-full'}`}
                 >
                   {view === "grid" ? (
-                    <JobCard job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
+                    <JobCard job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragEnd={() => setDraggedId(null)} onDragOver={handleDragOver} onDrop={handleDrop} />
                   ) : (
-                    <JobRow job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} />
+                    <JobRow job={job} onApply={() => openApply(job)} useImg={useImg} getNavProps={getNavProps} onMove={editor?.isEditMode ? (dir) => handleMove(job.id, dir) : undefined} draggedId={draggedId} onDragStart={handleDragStart} onDragEnd={() => setDraggedId(null)} onDragOver={handleDragOver} onDrop={handleDrop} />
                   )}
                 </AnimatedSection>
               ))}
