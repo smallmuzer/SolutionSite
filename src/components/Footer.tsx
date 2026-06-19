@@ -233,85 +233,99 @@ const Footer = () => {
 
                 return (
                   <React.Fragment key={co.id || co.name}>
-                    <a
-                      href={hrefDraft}
-                      target={hrefDraft !== "#" ? "_blank" : undefined}
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        if (editor?.isEditMode) {
+                    {(() => {
+                      const Wrapper = editor?.isEditMode ? "div" : "a";
+                      const isExternal = hrefDraft && hrefDraft !== "#" && !hrefDraft.startsWith("#") && !hrefDraft.startsWith("/");
+                      const wrapperProps = editor?.isEditMode ? {
+                        onClick: (e: React.MouseEvent) => {
                           e.preventDefault();
+                        },
+                        onDoubleClick: () => {
+                          if (!hrefDraft || hrefDraft === "#") return;
+                          if (isExternal) {
+                            window.open(hrefDraft, "_blank");
+                          } else {
+                            const el = document.querySelector(hrefDraft);
+                            if (el) el.scrollIntoView({ behavior: "smooth" });
+                            else window.location.href = hrefDraft;
+                          }
                         }
-                      }}
-                      onPointerDown={() => editor?.setActiveElementId(`toolbar:our_network:${co.id}`)}
-                      onDoubleClick={() => {
-                        if (editor?.isEditMode && hrefDraft && hrefDraft !== "#") {
-                          window.open(hrefDraft, "_blank");
-                        }
-                      }}
-                      className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 sm:snap-center w-full sm:w-[380px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
-                    >
-                      <EditorToolbar
-                        section="our_network"
-                        id={co.id}
-                        isVisible={isVisible}
-                        imageField="logo_url"
-                        linkField="href"
-                        className="-top-4 right-2 scale-75"
-                        group="item"
-                        canClone={false}
-                        canMove={true}
-                        moveDirections={["left", "right"]}
-                        onMove={(dir) => handleNetworkMove(co.id || "", dir)}
-                      />
-                      {!isVisible && editor?.isEditMode && (
-                        <div className="absolute top-2 left-2 bg-amber-500/90 text-white rounded-full p-1 shadow-md flex items-center gap-1.5 z-20 text-[8px] font-bold px-2 pointer-events-none uppercase tracking-widest border border-amber-400/20">
-                          <EyeOff size={10} />
-                          <span>Hidden</span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
-                        style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
-                      <div className="flex items-center gap-3 relative z-10">
-                        <div className="relative shrink-0">
-                          <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white overflow-hidden border border-border/50 shadow-inner p-1">
-                            {logoDraft ? (
-                              <img
-                                key={logoDraft}
-                                src={logoDraft}
-                                alt={co.name}
-                                className="w-full h-full object-contain p-0.5"
-                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                              />
-                            ) : (
-                              co.flag && (co.flag.startsWith("/") || co.flag.startsWith("http") || co.flag.includes(".")) ? (
-                                <img src={co.flag} alt="flag" className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-2xl">{co.flag || "🏢"}</span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground">
-                              <EditableText section="our_network" field="name" id={co.id} value={co.name} />
-                            </h4>
-                            {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground shrink-0" />}
-                          </div>
-                          <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
-                            <EditableText section="our_network" field="subtitle" id={co.id} value={co.subtitle} />
-                          </span>
-                          <MobileReadMore
-                            section="our_network" field="desc" id={co.id}
-                            text={co.desc}
-                            clampClass="line-clamp-2"
-                            textClass="text-[0.8125rem] mt-1 leading-snug text-muted-foreground"
+                      } : {
+                        href: hrefDraft,
+                        target: isExternal ? "_blank" : undefined,
+                        rel: isExternal ? "noopener noreferrer" : undefined
+                      };
+
+                      return (
+                        <Wrapper
+                          {...wrapperProps as any}
+                          onPointerDown={() => editor?.setActiveElementId(`toolbar:our_network:${co.id}`)}
+                          className={`group relative rounded-xl p-4 overflow-visible transition-all duration-300 hover:-translate-y-0.5 shrink-0 sm:snap-center w-full sm:w-[380px] flex flex-col justify-center border border-border/40 group/item relative ${!isVisible ? 'opacity-40 grayscale-[0.5] border-dashed border-2' : ''}`}
+                        >
+                          <EditorToolbar
+                            section="our_network"
+                            id={co.id}
+                            isVisible={isVisible}
+                            imageField="logo_url"
+                            linkField="href"
+                            className="-top-4 right-2 scale-75"
+                            group="item"
+                            canClone={false}
+                            canMove={true}
+                            moveDirections={["left", "right"]}
+                            onMove={(dir) => handleNetworkMove(co.id || "", dir)}
                           />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity rounded-b-2xl"
-                        style={{ background: `linear-gradient(90deg, transparent, ${co.accent}80, transparent)` }} />
-                    </a>
+                          {!isVisible && editor?.isEditMode && (
+                            <div className="absolute top-2 left-2 bg-amber-500/90 text-white rounded-full p-1 shadow-md flex items-center gap-1.5 z-20 text-[8px] font-bold px-2 pointer-events-none uppercase tracking-widest border border-amber-400/20">
+                              <EyeOff size={10} />
+                              <span>Hidden</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-2xl"
+                            style={{ background: `radial-gradient(ellipse at top left, ${co.accent}18 0%, transparent 65%)` }} />
+                          <div className="flex items-center gap-3 relative z-10">
+                            <div className="relative shrink-0">
+                              <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white overflow-hidden border border-border/50 shadow-inner p-1">
+                                {logoDraft ? (
+                                  <img
+                                    key={logoDraft}
+                                    src={logoDraft}
+                                    alt={co.name}
+                                    className="w-full h-full object-contain p-0.5"
+                                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                  />
+                                ) : (
+                                  co.flag && (co.flag.startsWith("/") || co.flag.startsWith("http") || co.flag.includes(".")) ? (
+                                    <img src={co.flag} alt="flag" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-2xl">{co.flag || "🏢"}</span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-heading font-bold text-[0.9375rem] leading-tight text-foreground">
+                                  <EditableText section="our_network" field="name" id={co.id} value={co.name} />
+                                </h4>
+                                {co.href !== "#" && <ExternalLink size={12} className="text-muted-foreground shrink-0" />}
+                              </div>
+                              <span className="text-[0.6875rem] font-bold uppercase tracking-wider block" style={{ color: co.accent }}>
+                                <EditableText section="our_network" field="subtitle" id={co.id} value={co.subtitle} />
+                              </span>
+                              <MobileReadMore
+                                section="our_network" field="desc" id={co.id}
+                                text={co.desc}
+                                clampClass="line-clamp-2"
+                                textClass="text-[0.8125rem] mt-1 leading-snug text-muted-foreground"
+                              />
+                            </div>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity rounded-b-2xl"
+                            style={{ background: `linear-gradient(90deg, transparent, ${co.accent}80, transparent)` }} />
+                        </Wrapper>
+                      );
+                    })()}
 
                     {/* Handshake connector */}
                     {idx < associatedState.length - 1 && (
@@ -378,10 +392,10 @@ const Footer = () => {
                   />
                 )}
                 {logoPath ? (
-                  <div className="flex items-center justify-start shrink-0 bg-white/90 p-1.5 rounded-md" style={{ height: 60, width: "auto", maxWidth: 220 ,backgroundColor: "transparent"}}>
+                  <div className="flex items-center justify-start shrink-0 bg-white/90 p-1.5 rounded-md" style={{ height: 60, width: "auto", maxWidth: 220, backgroundColor: "transparent" }}>
                     <img src={logoPath} alt={siteName}
                       className="h-full w-auto object-contain object-left"
-                      onError={(e) => { 
+                      onError={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
                         if (target.getAttribute('data-error') !== 'true') {
                           target.setAttribute('data-error', 'true');
@@ -575,9 +589,34 @@ const Footer = () => {
                       )}
 
                       <div className="font-semibold text-slate-300 mb-3">
-                        <a href={`https://${(contact[linkField] || defaultLink).replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors inline-block" title="Visit website" onClick={(e) => { if (editor?.isEditMode) e.preventDefault(); }}>
-                          <EditableText section="footer" field={labelField} value={content[labelField] || defaultLabel} />
-                        </a>
+                        {(() => {
+                          const rawLink = contact[linkField] || defaultLink;
+                          const isInternal = rawLink.startsWith("#") || rawLink.startsWith("/");
+                          const linkUrl = isInternal ? rawLink : `https://${rawLink.replace(/^https?:\/\//, '')}`;
+                          const isExternal = !isInternal;
+                          
+                          const Wrapper = editor?.isEditMode ? "div" : "a";
+                          const wrapperProps = editor?.isEditMode ? {
+                            onClick: (e: React.MouseEvent) => e.preventDefault(),
+                            onDoubleClick: () => {
+                              if (isExternal) window.open(linkUrl, "_blank");
+                              else {
+                                const el = document.querySelector(linkUrl);
+                                if (el) el.scrollIntoView({ behavior: "smooth" });
+                                else window.location.href = linkUrl;
+                              }
+                            }
+                          } : {
+                            href: linkUrl,
+                            target: isExternal ? "_blank" : undefined,
+                            rel: isExternal ? "noopener noreferrer" : undefined
+                          };
+                          return (
+                            <Wrapper {...wrapperProps as any} className="hover:text-blue-400 transition-colors inline-block cursor-pointer" title="Visit website">
+                              <EditableText section="footer" field={labelField} value={content[labelField] || defaultLabel} />
+                            </Wrapper>
+                          );
+                        })()}
                         {editor?.isEditMode && (
                           <div className="text-[10px] text-slate-500 font-normal mt-1 block">
                             Link: <EditableText section="contact" field={linkField} value={contact[linkField] || defaultLink} />

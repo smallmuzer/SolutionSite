@@ -190,25 +190,8 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
     if (isOpen) {
       const { styles, innerHtml } = parseInlineStyles(initialValue);
 
-      // Merge computed targetStyles to show current font, padding, and text styles in the editor
-      const mergedStyles = { ...styles };
-      if (targetStyles) {
-        Object.keys(targetStyles).forEach((key) => {
-          const k = key as keyof ActiveStyles;
-          if (!mergedStyles[k] && targetStyles[k] && targetStyles[k] !== '0px' && targetStyles[k] !== 'rgba(0, 0, 0, 0)') {
-            let val = targetStyles[k];
-            if (k === 'textColor' || k === 'bgColor') {
-              val = rgbToHex(val);
-            }
-            if (k === 'fontFamily' && typeof val === 'string') {
-              val = val.replace(/['"]/g, "");
-            }
-            mergedStyles[k] = val;
-          }
-        });
-      }
-
-      setActiveStyles(mergedStyles);
+      // Set explicitly defined styles only, to avoid hardcoding computed theme values.
+      setActiveStyles(styles);
       setEditorHtml(innerHtml);
       undoStackRef.current = [];
       redoStackRef.current = [];
