@@ -118,7 +118,12 @@ const Footer = () => {
     });
 
   const [associatedState, setAssociatedState] = useState(associated);
-  useEffect(() => { setAssociatedState(associated); }, [associated]);
+  useEffect(() => {
+    setAssociatedState(prev => {
+      if (JSON.stringify(prev) === JSON.stringify(associated)) return prev;
+      return associated;
+    });
+  }, [associated]);
 
   const handleNetworkMove = (id: string, direction: "up" | "down" | "left" | "right") => {
     if (!editor?.isEditMode) return;
@@ -142,7 +147,16 @@ const Footer = () => {
 
   const settings = useSiteSettings();
   // Load logo + site name from settings (already in useSiteSettings)
-  const logoPath = settings.site_logo || "";
+  const baseLogoPath = settings.site_logo || "";
+  const siteUrl = settings.site_url || "";
+  const getFullLogoUrl = (path: string) => {
+    if (!path || path === "src/assets/logo.png") return "/logo.png";
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+    const cleanSiteUrl = siteUrl.endsWith("/") ? siteUrl.slice(0, -1) : siteUrl;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return cleanSiteUrl ? `${cleanSiteUrl}${cleanPath}` : cleanPath;
+  };
+  const logoPath = getFullLogoUrl(baseLogoPath);
   const siteName = settings.site_name || "Systems Solutions";
 
   const { data: servicesData } = useDbQuery<{ id: string; title: string; href?: string; is_visible?: boolean }[]>(
@@ -594,7 +608,7 @@ const Footer = () => {
                           const isInternal = rawLink.startsWith("#") || rawLink.startsWith("/");
                           const linkUrl = isInternal ? rawLink : `https://${rawLink.replace(/^https?:\/\//, '')}`;
                           const isExternal = !isInternal;
-                          
+
                           const Wrapper = editor?.isEditMode ? "div" : "a";
                           const wrapperProps = editor?.isEditMode ? {
                             onClick: (e: React.MouseEvent) => e.preventDefault(),

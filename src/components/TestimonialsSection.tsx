@@ -9,7 +9,7 @@ import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor } from
 const AVATAR_MAP: Record<string, string> = {};
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=random&color=fff&name=";
 
-const CARDS_PER_PAGE = 4;
+const CARDS_PER_PAGE = 3;
 
 const StarRating = ({ rating, id, editor }: { rating: number, id?: string, editor?: any }) => {
   const safeRating = Math.max(0, Math.min(5, rating || 5));
@@ -198,8 +198,8 @@ const TestimonialsSection = () => {
       <div className="container-wide">
         <div className="h-4 w-24 bg-muted mx-auto rounded mb-3" />
         <div className="h-10 w-64 bg-muted mx-auto rounded mb-14" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {[1, 2, 3].map(i => <div key={i} className="h-64 bg-muted/40 rounded-xl" />)}
         </div>
       </div>
     </section>
@@ -219,9 +219,48 @@ const TestimonialsSection = () => {
     </div>
   );
 
+  const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
+    const [expanded, setExpanded] = useState(false);
+    const [overflows, setOverflows] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const el = ref.current;
+      if (!el) return;
+      const check = () => {
+        if (!expanded) {
+          setOverflows(el.scrollHeight > el.clientHeight + 6);
+        }
+      };
+      const ro = new ResizeObserver(check);
+      ro.observe(el);
+      const t = setTimeout(check, 100);
+      window.addEventListener("resize", check);
+      return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
+    }, [text, expanded]);
+
+    return (
+      <div className="relative text-left w-full">
+        <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+          {section && field ? (
+            <EditableText section={section} field={field} id={id} value={text} />
+          ) : text}
+        </div>
+        {(overflows || expanded) && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            className="font-bold mt-1 text-[11px] text-[#38bdf8] hover:text-[#0284c7] transition-colors inline-flex"
+          >
+            Read {expanded ? "Less" : "More"}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
     <div
-      className={`glass-card p-5 sm:p-7 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
+      className={`glass-card p-4 sm:p-5 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
       draggable={editor?.isEditMode}
       onDragStart={(e) => handleDragStart(e, t.id)}
       onDragEnd={() => setDraggedId(null)}
@@ -261,15 +300,22 @@ const TestimonialsSection = () => {
           <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
         </div>
         <StarRating rating={t.rating} id={t.id} editor={editor} />
-        <div className="text-muted-foreground text-[0.875rem] leading-relaxed flex-1 w-full mt-1">
-          <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
+        <div className="flex-1 w-full mt-1">
+          <ReadMoreText
+            section="testimonials"
+            field="message"
+            id={t.id}
+            text={t.message}
+            clampClass="line-clamp-5"
+            textClass="text-muted-foreground text-[0.875rem] leading-relaxed"
+          />
         </div>
       </div>
     </div>
   );
 
   const ListCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div className={`glass-card p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
+    <div className={`glass-card p-3 sm:p-4 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
       <CornerDesigns />
       <EditorToolbar 
         section="testimonials" 
@@ -295,9 +341,14 @@ const TestimonialsSection = () => {
           <StarRating rating={t.rating} id={t.id} editor={editor} />
         </div>
         <div className="flex-1">
-          <div className="text-muted-foreground text-[0.875rem] leading-relaxed">
-            <EditableText section="testimonials" field="message" id={t.id} value={t.message} />
-          </div>
+          <ReadMoreText
+            section="testimonials"
+            field="message"
+            id={t.id}
+            text={t.message}
+            clampClass="line-clamp-5"
+            textClass="text-muted-foreground text-[0.875rem] leading-relaxed"
+          />
         </div>
       </div>
     </div>
@@ -322,14 +373,14 @@ const TestimonialsSection = () => {
         </AnimatedSection>
 
         {editor?.isEditMode ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch max-w-[90rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch max-w-[75rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
             {testimonials.map((t) => (
               <GridCard key={t.id} t={t} />
             ))}
           </div>
         ) : (
           <div 
-            className="max-w-[90rem] mx-auto px-4 overflow-hidden"
+            className="max-w-[75rem] mx-auto px-4 overflow-hidden"
             onMouseEnter={() => pausedRef.current = true}
             onMouseLeave={() => pausedRef.current = false}
             onTouchStart={() => pausedRef.current = true}
@@ -340,7 +391,7 @@ const TestimonialsSection = () => {
               style={{ transform: `translateX(-${currentPage * 100}%)` }}
             >
               {Array.from({ length: totalPages }).map((_, pageIdx) => (
-                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch px-1">
+                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch px-1">
                   {testimonials.slice(pageIdx * currentCardsPerPage, (pageIdx + 1) * currentCardsPerPage).map((t) => (
                     <div key={t.id} className="h-full">
                       <GridCard t={t} />

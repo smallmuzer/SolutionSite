@@ -62,6 +62,15 @@ const Header = () => {
 
   const demoLink = settings.demo_url || "https://demo.hrmetrics.com.mv/";
   const logoPath = settings.site_logo || null;
+  const siteUrl = settings.site_url || "";
+
+  const getFullLogoUrl = (path: string | null) => {
+    if (!path || path === "src/assets/logo.png") return DEFAULT_LOGO;
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+    const cleanSiteUrl = siteUrl.endsWith("/") ? siteUrl.slice(0, -1) : siteUrl;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return cleanSiteUrl ? `${cleanSiteUrl}${cleanPath}` : cleanPath;
+  };
   const siteName = settings.site_name || "Systems Solutions";
   const pendingHiddenNavItems = editor?.pendingChanges?.["settings:nav_hidden_items"];
   const settingsContent = useSiteContent("settings");
@@ -87,7 +96,7 @@ const Header = () => {
     if (!Array.isArray(custom) || custom.length === 0) {
       custom = DEFAULT_NAV;
     }
-    return custom as {label: string, href: string}[];
+    return custom as { label: string, href: string }[];
   };
 
   const customNavItems = useMemo(getBaseNavItems, [editor?.pendingChanges, settingsContent.nav_items, (settings as any).nav_items]);
@@ -99,7 +108,7 @@ const Header = () => {
     const pendingLabelKey = `settings:${labelKey}`;
     const pendingVal = editor?.pendingChanges?.[pendingKey];
     const pendingLabelVal = editor?.pendingChanges?.[pendingLabelKey];
-    
+
     let resolvedHref = pendingVal ?? settingsContent[key] ?? (settings as any)[key] ?? item.href;
     if (typeof resolvedHref === 'string') {
       resolvedHref = resolvedHref.trim();
@@ -215,7 +224,7 @@ const Header = () => {
     const base = [...customNavItems];
     const index = base.findIndex(i => i.href === href);
     if (index === -1) return;
-    
+
     if (direction === 'left' && index > 0) {
       [base[index - 1], base[index]] = [base[index], base[index - 1]];
     } else if (direction === 'right' && index < base.length - 1) {
@@ -248,7 +257,7 @@ const Header = () => {
     const canMoveRight = index !== -1 && index < customNavItems.length - 1;
 
     const baseClass = "flex items-center gap-0.5 bg-secondary text-secondary-foreground rounded-[4px] shadow-2xl p-[2px] z-[150] pointer-events-auto";
-    const className = isAbsolute 
+    const className = isAbsolute
       ? `absolute -top-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity ${baseClass}`
       : "flex items-center gap-0.5";
 
@@ -329,7 +338,7 @@ const Header = () => {
   const activeNavToolbar = (href: string) => editor?.activeElementId === `header-nav:${href}`;
 
   // Resolve logo: prefer DB path, fallback to bundled asset
-  const resolvedLogo = logoPath && logoPath !== "src/assets/logo.png" ? logoPath : DEFAULT_LOGO;
+  const resolvedLogo = getFullLogoUrl(logoPath);
 
   return (
     <header

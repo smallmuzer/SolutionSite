@@ -2285,20 +2285,7 @@ const AdminDashboard = () => {
                                   placeholder="info@solutions.com.mv"
                                   className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
                               </div>
-                              <div>
-                                <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Google Analytics Measurement ID</label>
-                                <input type="text" value={siteSettings.google_analytics_id || ""}
-                                  onChange={(e) => setSiteSettings(p => ({ ...p, google_analytics_id: e.target.value }))}
-                                  placeholder="G-XXXXXXXXXX"
-                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
-                              </div>
-                              <div>
-                                <label className="text-[0.6875rem] font-bold text-muted-foreground/80 mb-1.5 block uppercase tracking-tight">Microsoft Webmetrics Project ID</label>
-                                <input type="text" value={siteSettings.microsoft_clarity_id || ""}
-                                  onChange={(e) => setSiteSettings(p => ({ ...p, microsoft_clarity_id: e.target.value }))}
-                                  placeholder="YOUR_PROJECT_ID"
-                                  className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
-                              </div>
+
                             </div>
 
                             {/* Right Side: SMTP / Infrastructure */}
@@ -2333,6 +2320,23 @@ const AdminDashboard = () => {
                                 </div>
                                 <input value={siteSettings.smtp_user || ""} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_user: e.target.value }))} placeholder="Username" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
                                 <input type="password" value={siteSettings.smtp_pass || ""} onChange={(e) => setSiteSettings(p => ({ ...p, smtp_pass: e.target.value }))} placeholder="Password" className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none" />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase tracking-tight">Google Analytics ID</label>
+                                  <input type="text" value={siteSettings.google_analytics_id || ""}
+                                    onChange={(e) => setSiteSettings(p => ({ ...p, google_analytics_id: e.target.value }))}
+                                    placeholder="G-XXXXXXXXXX"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
+                                </div>
+                                <div>
+                                  <label className="text-[0.625rem] font-bold text-muted-foreground/80 mb-1 block uppercase tracking-tight">MS Webmetrics ID</label>
+                                  <input type="text" value={siteSettings.microsoft_clarity_id || ""}
+                                    onChange={(e) => setSiteSettings(p => ({ ...p, microsoft_clarity_id: e.target.value }))}
+                                    placeholder="YOUR_PROJECT_ID"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
+                                </div>
                               </div>
                             </div>
                           </div>
