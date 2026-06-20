@@ -170,12 +170,27 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
     document.documentElement.style.setProperty("--cinematic-asset", `url('${s.cinematic_asset}')`);
   }
 
+  if (s.site_favicon) {
+    const iconLinks = document.querySelectorAll("link[rel='icon']");
+    iconLinks.forEach((link: Element) => {
+      (link as HTMLLinkElement).href = s.site_favicon;
+    });
+  }
+  
+  if (s.site_logo) {
+    const appleLinks = document.querySelectorAll("link[rel='apple-touch-icon']");
+    appleLinks.forEach((link: Element) => {
+      (link as HTMLLinkElement).href = s.site_logo;
+    });
+  }
+
   // Dispatch with DB values so context always reflects DB settings
   window.dispatchEvent(new CustomEvent("ss:globalView", { detail: s.global_view || "grid" }));
   window.dispatchEvent(new CustomEvent("ss:cardStyle", { detail: s.card_style || "icon" }));
   window.dispatchEvent(new CustomEvent("ss:siteSettings", { detail: {
     site_name: s.site_name || "",
     site_logo: s.site_logo || "",
+    site_favicon: s.site_favicon || "",
     demo_url: s.demo_url || "",
     whatsapp_number: s.whatsapp_number || "",
     viber_number: s.viber_number || "",

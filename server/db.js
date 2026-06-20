@@ -73,6 +73,7 @@ db.exec(`
     site_name TEXT NOT NULL DEFAULT '',
     site_url TEXT DEFAULT '',
     site_logo TEXT NOT NULL DEFAULT '/logo.png',
+    site_favicon TEXT NOT NULL DEFAULT '/favicon.ico',
     whatsapp_number TEXT DEFAULT '',
     viber_number TEXT DEFAULT '',
     contact_email TEXT DEFAULT '',
@@ -311,6 +312,9 @@ try {
   }
   if (!settingsCols.includes("overall_bot_visible")) {
     db.exec("ALTER TABLE site_settings ADD COLUMN overall_bot_visible TEXT DEFAULT 'true';");
+  }
+  if (!settingsCols.includes("site_favicon")) {
+    db.exec("ALTER TABLE site_settings ADD COLUMN site_favicon TEXT DEFAULT '/favicon.ico';");
   }
 
   const testCols = db.prepare("PRAGMA table_info(testimonials)").all().map(c => c.name);

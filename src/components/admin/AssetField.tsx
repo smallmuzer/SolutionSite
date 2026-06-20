@@ -11,6 +11,7 @@ type AssetFieldProps = {
   placeholder?: string;
   previewClassName?: string;
   inputClassName?: string;
+  hidePicker?: boolean;
 };
 
 const defaultInputClassName = "w-full px-3 py-2 rounded-lg bg-transparent border border-border/60 text-foreground text-sm outline-none focus:border-secondary/70 focus:ring-1 focus:ring-secondary/30 transition-colors";
@@ -24,6 +25,7 @@ export default function AssetField({
   placeholder,
   previewClassName = defaultPreviewClassName,
   inputClassName = defaultInputClassName,
+  hidePicker = false,
 }: AssetFieldProps) {
   const [files, setFiles] = useState<{ name: string; publicUrl: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -87,14 +89,16 @@ export default function AssetField({
             }}
           />
         </label>
-        <button
-          type="button"
-          onClick={() => setPickerOpen((prev) => !prev)}
-          className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors"
-        >
-          <FolderOpen size={13} /> {pickerOpen ? "Hide Files" : "Pick Existing"}
-        </button>
-        {pickerOpen && (
+        {!hidePicker && (
+          <button
+            type="button"
+            onClick={() => setPickerOpen((prev) => !prev)}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors"
+          >
+            <FolderOpen size={13} /> {pickerOpen ? "Hide Files" : "Pick Existing"}
+          </button>
+        )}
+        {pickerOpen && !hidePicker && (
           <button
             type="button"
             onClick={() => void loadFiles(true)}

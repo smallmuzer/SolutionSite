@@ -230,7 +230,10 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = extname(String(file.originalname || "")).toLowerCase();
-    if (!ALLOWED_IMAGE_EXTS.has(ext) || !String(file.mimetype || "").startsWith("image/")) {
+    const mime = String(file.mimetype || "").toLowerCase();
+    const isImageExt = ALLOWED_IMAGE_EXTS.has(ext);
+    const isImageMime = mime.startsWith("image/") || mime.includes("icon") || (ext === ".ico" && mime === "application/octet-stream");
+    if (!isImageExt || !isImageMime) {
       cb(new Error("Only image uploads are allowed."));
       return;
     }
@@ -774,7 +777,7 @@ const TABLE_COLS = {
   products: ["id", "name", "tagline", "description", "image_url", "extra_text", "extra_color", "more_info_label", "demo_label", "contact_url", "is_popular", "is_visible", "sort_order", "created_at", "updated_at"],
   client_logos: ["id", "name", "logo_url", "is_visible", "sort_order", "created_at", "updated_at"],
   site_content: ["id", "section_key", "content", "created_at", "updated_at"],
-  site_settings: ["id", "site_name", "site_url", "site_logo", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "overall_bot_visible", "theme", "font_style", "header_font_family", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],
+  site_settings: ["id", "site_name", "site_url", "site_logo", "site_favicon", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "overall_bot_visible", "theme", "font_style", "header_font_family", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],
   social_links: ["id", "platform", "icon", "url", "color", "is_visible", "sort_order", "created_at", "updated_at"],
   seo_settings: ["id", "page_key", "title", "description", "keywords", "og_image", "updated_at", "updated_by"],
   users: ["id", "email", "password", "userrole", "is_active", "created_at", "updated_at"],
@@ -796,10 +799,9 @@ function filterCols(table, row) {
 }
 
 /**
- * Copies the site logo to public/logo.png and public/favicon.png
- * so that the favicon and default logo always stay in sync.
+ * Copies the site logo to public/logo.png
  */
-function syncLogoAndFavicon(logoPathRaw) {
+function syncLogo(logoPathRaw) {
   try {
     if (!logoPathRaw) return logoPathRaw;
 
@@ -826,7 +828,6 @@ function syncLogoAndFavicon(logoPathRaw) {
 
     const ext = extname(logoPath).toLowerCase() || ".png";
     const destLogo = join(publicRoot, "logo" + ext);
-    const destFavicon = join(publicRoot, "favicon.ico");
 
     // Clean up any old logos to prevent clutter (e.g. logo.png vs logo.webp)
     try {
@@ -839,9 +840,8 @@ function syncLogoAndFavicon(logoPathRaw) {
     } catch (e) { }
 
     copyFileSync(srcFile, destLogo);
-    copyFileSync(srcFile, destFavicon);
 
-    console.log(`[syncLogoAndFavicon] Copied ${srcFile} → logo${ext} + favicon.ico`);
+    console.log(`[syncLogo] Copied ${srcFile} → logo${ext}`);
 
     const timestamp = Date.now();
     const newLogoPath = `/logo${ext}?v=${timestamp}`;
@@ -850,8 +850,31 @@ function syncLogoAndFavicon(logoPathRaw) {
     db.prepare(`UPDATE site_settings SET site_logo = ? WHERE id = 'settings'`).run(newLogoPath);
     return newLogoPath;
   } catch (e) {
-    console.error("[syncLogoAndFavicon] Error:", e);
-    return logoPath;
+    console.error("[syncLogo] Error:", e);
+    return logoPathRaw;
+  }
+}
+
+function syncFavicon(faviconPathRaw) {
+  try {
+    if (!faviconPathRaw || faviconPathRaw.startsWith("/favicon.")) return faviconPathRaw;
+    const faviconPath = faviconPathRaw.split('?')[0];
+    const publicRoot = join(PUBLIC_ASSETS, "..");
+    let srcFile = join(publicRoot, faviconPath.startsWith("/") ? faviconPath : `/${faviconPath}`);
+    if (!existsSync(srcFile)) return faviconPathRaw;
+
+    const ext = extname(faviconPath).toLowerCase() || ".ico";
+    const destFavicon = join(publicRoot, "favicon" + ext);
+
+    copyFileSync(srcFile, destFavicon);
+    console.log(`[syncFavicon] Copied ${srcFile} → favicon${ext}`);
+
+    const newPath = `/favicon${ext}?v=${Date.now()}`;
+    db.prepare(`UPDATE site_settings SET site_favicon = ? WHERE id = 'settings'`).run(newPath);
+    return newPath;
+  } catch (e) {
+    console.error("[syncFavicon] Error:", e);
+    return faviconPathRaw;
   }
 }
 
@@ -874,8 +897,12 @@ function updateIndexHtml(settings) {
     });
 
     // Sync logo & favicon whenever settings are updated, and get final path
-    const finalLogoPath = syncLogoAndFavicon(settings.site_logo);
+    const finalLogoPath = syncLogo(settings.site_logo);
     settings.site_logo = finalLogoPath;
+    
+    if (settings.site_favicon) {
+      settings.site_favicon = syncFavicon(settings.site_favicon);
+    }
   } catch (e) {
     console.error("[updateIndexHtml] Error:", e);
   }

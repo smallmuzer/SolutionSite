@@ -53,6 +53,7 @@ import SEOManager from "@/components/admin/SEOManager";
 import SecurityPanel from "@/components/admin/SecurityPanel";
 import PageEditor from "@/components/admin/PageEditor";
 import LiveEditor from "@/components/admin/LiveEditor";
+import AssetField from "@/components/admin/AssetField";
 import { useUndoAction } from "@/hooks/useUndoAction";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { applySettings, saveThemePref, saveUserSettings, getUserSettings } from "@/hooks/useSiteSettings";
@@ -122,7 +123,7 @@ const AVAILABLE_FONTS: { label: string; value: string }[] = [
 ];
 
 interface SiteSettings {
-  site_name: string; site_url: string; site_logo: string; whatsapp_number: string; viber_number: string;
+  site_name: string; site_url: string; site_logo: string; site_favicon: string; whatsapp_number: string; viber_number: string;
   contact_email: string; contact_from_email: string;
   smtp_host: string; smtp_port: string; smtp_user: string; smtp_pass: string;
   demo_url: string; db_connection: string;
@@ -1281,6 +1282,7 @@ const AdminDashboard = () => {
     site_name: "Systems Solutions",
     site_url: "http://beta.solutions.com.mv",
     site_logo: "/assets/uploads/Logo.png",
+    site_favicon: "/favicon.ico",
     whatsapp_number: "9603011355",
     viber_number: "9489477144",
     contact_email: "info@solutions.com.mv",
@@ -2284,6 +2286,17 @@ const AdminDashboard = () => {
                                   onChange={(e) => setSiteSettings(p => ({ ...p, contact_email: e.target.value }))}
                                   placeholder="info@solutions.com.mv"
                                   className="w-full px-2 py-1.5 rounded-lg bg-background border border-border/60 text-[0.6875rem] outline-none focus:border-secondary" />
+                              </div>
+
+                              <div className="pt-1">
+                                <AssetField
+                                  label="Site Favicon (.ico)"
+                                  folder="branding"
+                                  value={siteSettings.site_favicon || ""}
+                                  onChange={(val) => setSiteSettings((p) => ({ ...p, site_favicon: val }))}
+                                  previewClassName="h-10 rounded-md object-contain mt-2 p-1 bg-background border border-border/50 shadow-sm"
+                                  hidePicker={true}
+                                />
                               </div>
 
                             </div>
