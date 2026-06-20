@@ -1757,6 +1757,7 @@ const AdminDashboard = () => {
   };
 
   const deleteSubmission = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this lead? This action cannot be undone.")) return;
     const item = submissions.find((s) => s.id === id);
     if (!item) return;
     const safeUndoId = `del-sub-${String(id).replace(/[^a-zA-Z0-9_-]/g, "")}`;
