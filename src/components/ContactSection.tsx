@@ -185,8 +185,8 @@ const ContactSection = () => {
         </AnimatedSection>
 
         <div className="grid grid-cols-1 lg:grid-cols-[5fr_6fr] gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
-          <AnimatedSection className="w-full h-full flex flex-col">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 flex-1 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
+          <AnimatedSection className="w-full h-full flex flex-col group/card">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 flex-1 flex flex-col h-full transition duration-300 group-hover/card:-translate-y-1 group-hover/card:shadow-md transform-gpu hover:border-slate-300 dark:hover:border-slate-700">
               <h3 className="font-heading font-semibold text-foreground text-[0.9375rem] mb-4">
                 <EditableText section="contact" field="label_office_info" value={content.label_office_info || "Office Information"} />
               </h3>
@@ -294,7 +294,7 @@ const ContactSection = () => {
                         const isWhatsApp = s.id === "sl-6";
                         const waLink = `https://wa.me/${(settings.whatsapp_number || "").replace(/[^0-9]/g, "")}`;
                         const finalHref = isViber ? "#" : (isWhatsApp ? waLink : dynamicHref);
-                        
+
                         return (
                           <div key={s.index} className={`relative group/soc ${!s.isVisible ? 'opacity-40' : ''}`}>
                             {!s.isVisible && editor?.isEditMode && (
@@ -303,15 +303,15 @@ const ContactSection = () => {
                               </span>
                             )}
                             <a href={finalHref}
-                               target={(!isViber && s.href) || isWhatsApp ? "_blank" : undefined} 
-                               rel="noopener noreferrer"
-                               onClick={(e) => {
-                                 if (isViber) {
-                                   e.preventDefault();
-                                   openViber(settings.viber_number);
-                                 }
-                               }}
-                               className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-all border"
+                              target={(!isViber && s.href) || isWhatsApp ? "_blank" : undefined}
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                if (isViber) {
+                                  e.preventDefault();
+                                  openViber(settings.viber_number);
+                                }
+                              }}
+                              className="w-9 h-9 rounded-[10px] flex items-center justify-center transition-all border"
                               style={{ backgroundColor: `${iconColor}14`, color: iconColor, borderColor: `${iconColor}26` }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.backgroundColor = iconColor;
@@ -336,9 +336,9 @@ const ContactSection = () => {
             </div>
           </AnimatedSection>
 
-          <AnimatedSection delay={0.2} className="w-full h-full flex flex-col">
+          <AnimatedSection delay={0.2} className="w-full h-full flex flex-col group/card">
             {submitted ? (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center flex-1 flex flex-col items-center justify-center h-full min-h-[400px] transition-all duration-300">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-8 text-center flex-1 flex flex-col items-center justify-center h-full min-h-[400px] transition duration-300 group-hover/card:-translate-y-1 group-hover/card:shadow-md transform-gpu">
                 <CheckCircle size={40} className="text-secondary mx-auto mb-3" />
                 <h3 className="font-heading font-bold text-[1.125rem] text-foreground mb-2">
                   <EditableText section="contact" field="label_thank_you" value={content.label_thank_you || "Thank You!"} />
@@ -354,7 +354,7 @@ const ContactSection = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 flex-1 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
+              <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 flex-1 flex flex-col h-full transition duration-300 group-hover/card:-translate-y-1 group-hover/card:shadow-md transform-gpu hover:border-slate-300 dark:hover:border-slate-700">
                 <h3 className="font-heading font-semibold text-foreground text-[0.9375rem] mb-3">
                   <EditableText section="contact" field="label_send_message" value={content.label_send_message || "Send a Message"} />
                 </h3>
