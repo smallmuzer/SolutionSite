@@ -23,8 +23,14 @@ const TrackingScripts = () => {
   const settings = useSiteSettings();
 
   useEffect(() => {
+    // Only load tracking tools on public production domains
+    const isLocalhost = window.location.hostname === "localhost" || 
+                        window.location.hostname === "127.0.0.1" || 
+                        window.location.hostname.startsWith("192.168.") || 
+                        !window.location.hostname.includes(".");
+
     // Google Analytics
-    if (settings.google_analytics_id) {
+    if (settings.google_analytics_id && !isLocalhost) {
       let script = document.getElementById("ga-script") as HTMLScriptElement;
       if (!script) {
         script = document.createElement("script");
@@ -48,7 +54,7 @@ const TrackingScripts = () => {
     }
 
     // Microsoft Clarity
-    if (settings.microsoft_clarity_id) {
+    if (settings.microsoft_clarity_id && !isLocalhost) {
       const script = document.getElementById("clarity-script");
       if (!script) {
         const inlineScript = document.createElement("script");

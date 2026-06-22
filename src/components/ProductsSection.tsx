@@ -25,7 +25,7 @@ import {
   CheckSquare,
   MousePointerClick
 } from "lucide-react";
-import { useGlobalView } from "./ui-customizer-context";
+
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import {
@@ -872,7 +872,7 @@ const ProductCardList = ({
 };
 
 const ProductsSection = () => {
-  const globalView = useGlobalView();
+  const globalView = "grid";
   const cardStyle = "image" as const;
   const [isMobileProducts, setIsMobileProducts] = useState(false);
   const [mobilePage, setMobilePage] = useState(0);

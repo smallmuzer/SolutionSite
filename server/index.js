@@ -62,14 +62,13 @@ const SAFE_TABLES = new Set([
   "technologies", "global_presence", "our_network"
 ]);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || isTrustedOrigin(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
+app.use(cors((req, callback) => {
+  const origin = req.header("Origin");
+  if (!origin || isTrustedOrigin(origin, req)) {
+    callback(null, { origin: true, credentials: true });
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
 }));
 app.use(express.json({ limit: "30mb" }));
 
@@ -140,19 +139,34 @@ app.use((req, res, next) => {
   next();
 });
 
-function isTrustedOrigin(origin) {
+function isTrustedOrigin(origin, req) {
   if (!origin) return false;
   try {
     const url = new URL(origin);
+    
+    // Always trust localhost/127.0.0.1
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    
+    // Check hardcoded TRUSTED_ORIGINS
     if (TRUSTED_ORIGINS.has(url.origin)) return true;
 
-    // Check dynamic site_url
+    // Check dynamic site_url from settings (allowing both www and non-www variants)
     const stmt = db.prepare("SELECT site_url FROM site_settings WHERE id = 'settings'");
     const settings = stmt.get();
     if (settings && settings.site_url) {
       const dbUrl = new URL(settings.site_url);
       if (url.origin === dbUrl.origin) return true;
+      
+      const dbHost = dbUrl.host.toLowerCase().replace(/^www\./, "");
+      const originHost = url.host.toLowerCase().replace(/^www\./, "");
+      if (dbHost === originHost) return true;
+    }
+    
+    // Check if origin matches the Host header of the current request (allowing www vs non-www)
+    if (req && req.headers.host) {
+      const reqHost = req.headers.host.toLowerCase().replace(/^www\./, "");
+      const originHost = url.host.toLowerCase().replace(/^www\./, "");
+      if (reqHost === originHost) return true;
     }
   } catch (e) {
     return false;
@@ -177,11 +191,11 @@ app.use((req, res, next) => {
 
   // No origin = proxied request from Vite dev server — allow it
   if (!origin) return next();
-  if (isTrustedOrigin(origin)) return next();
+  if (isTrustedOrigin(origin, req)) return next();
   if (referer) {
     try {
       const refererOrigin = new URL(referer).origin;
-      if (isTrustedOrigin(refererOrigin)) return next();
+      if (isTrustedOrigin(refererOrigin, req)) return next();
     } catch { }
   }
 
@@ -275,6 +289,17 @@ app.delete("/api/assets", (req, res) => {
 
     if (existsSync(filePath)) {
       unlinkSync(filePath);
+
+      // Clean up from dist as well if it exists
+      try {
+        const distFilePath = join(__dirname, "../dist/assets/uploads", safeName);
+        if (existsSync(distFilePath)) {
+          unlinkSync(distFilePath);
+        }
+      } catch (err) {
+        console.error("[delete] Warning: failed to delete file from dist directory:", err.message);
+      }
+
       res.json({ data: { success: true }, error: null });
     } else {
       res.status(404).json({ error: "File not found" });
@@ -1205,6 +1230,20 @@ app.post("/api/upload", (req, res) => {
     // Append a timestamp to bypass browser caching when overwriting existing files
     const timestamp = Date.now();
     const publicUrl = `/assets/uploads/${req.file.filename}?t=${timestamp}`;
+
+    // Synchronize to dist/assets/uploads if production build folder exists
+    try {
+      const distUploadsDir = join(__dirname, "../dist/assets/uploads");
+      if (existsSync(join(__dirname, "../dist"))) {
+        if (!existsSync(distUploadsDir)) {
+          mkdirSync(distUploadsDir, { recursive: true });
+        }
+        copyFileSync(req.file.path, join(distUploadsDir, req.file.filename));
+        console.log(`[upload] Successfully mirrored file to production build directory: ${req.file.filename}`);
+      }
+    } catch (copyErr) {
+      console.error("[upload] Warning: failed to mirror file to dist directory:", copyErr.message);
+    }
 
     res.json({ data: { publicUrl }, error: null });
   });
