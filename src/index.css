@@ -75,7 +75,6 @@
   .theme-transition section,
   .theme-transition .glass-card,
   .theme-transition .bg-card,
-  .theme-transition .border-border,
   .theme-transition h1,
   .theme-transition h2,
   .theme-transition h3,
@@ -90,7 +89,7 @@
   .theme-transition select,
   .theme-transition svg,
   .theme-transition path {
-    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
+    transition: background-color 0.4s ease, color 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
   }
 
   * {
