@@ -127,7 +127,10 @@ export function parseInlineStyles(html: string): { styles: ActiveStyles; innerHt
     else if (key === "text-transform") parsed.textTransform = val;
     else if (key === "text-align") parsed.textAlign = val;
     else if (key === "color") parsed.textColor = rgbToHex(val);
-    else if (key === "background-color") parsed.bgColor = rgbToHex(val);
+    else if (key === "background-color") {
+      const hex = rgbToHex(val);
+      parsed.bgColor = (hex.toLowerCase() === "#ffffff" || val.toLowerCase() === "white") ? "transparent" : hex;
+    }
     else if (key === "padding-top") parsed.paddingTop = val;
     else if (key === "padding-right") parsed.paddingRight = val;
     else if (key === "padding-bottom") parsed.paddingBottom = val;
@@ -165,6 +168,7 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
   const savedSelectionRef = useRef<Range | null>(null);
   const undoStackRef = useRef<string[]>([]);
   const redoStackRef = useRef<string[]>([]);
+  const [lastCustomTextColor, setLastCustomTextColor] = useState<string>("");
 
   // Helper to save the current selection
   const saveSelection = () => {
@@ -508,12 +512,12 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
       // Save if it differs from the computed targetStyle, OR if it was already explicitly set before.
       const shouldSave = (key: keyof ActiveStyles) => {
         if (!activeStyles[key]) return false;
-        
+
         let targetVal = targetStyles?.[key] || "";
         if (key === 'textColor' || key === 'bgColor') {
           targetVal = rgbToHex(targetVal);
         }
-        
+
         return activeStyles[key] !== targetVal || !!explicitStyles[key];
       };
 
@@ -953,39 +957,65 @@ export const TypographyEditorModal: React.FC<TypographyEditorModalProps> = ({
                 {/* Colors */}
                 <div className="grid grid-cols-2 gap-1.5">
                   <div>
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Text Color</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1 flex items-center justify-between">
+                      <span>Text Color</span>
+                      <button 
+                        onClick={() => {
+                          if (activeStyles.textColor) {
+                            // Turn AUTO ON: Save current color and clear it
+                            setLastCustomTextColor(activeStyles.textColor);
+                            setActiveStyles(prev => ({ ...prev, textColor: "" }));
+                          } else {
+                            // Turn AUTO OFF: Restore previous custom color, or default to current computed hex
+                            setActiveStyles(prev => ({ ...prev, textColor: lastCustomTextColor || rgbToHex(targetStyles?.textColor || "") || "#000000" }));
+                          }
+                        }}
+                        className={`text-[8px] px-1.5 py-0.5 rounded transition-colors ${!activeStyles.textColor ? "bg-secondary text-secondary-foreground font-bold" : "bg-muted text-muted-foreground hover:bg-secondary/20 hover:text-secondary"}`}
+                        title="Toggle between Auto (Theme) and Custom color"
+                      >
+                        AUTO
+                      </button>
+                    </label>
                     <div className="flex gap-1 items-center">
-                      <input
-                        type="color"
-                        value={activeStyles.textColor || rgbToHex(targetStyles?.textColor || "") || "#000000"}
-                        onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
-                        className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
-                      />
+                      <div className="relative shrink-0" title="Pick custom color (overrides theme)">
+                        <input
+                          type="color"
+                          value={activeStyles.textColor || rgbToHex(targetStyles?.textColor || "") || "#000000"}
+                          onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
+                          className="w-6 h-6 border border-border rounded cursor-pointer opacity-0 absolute inset-0 z-10"
+                        />
+                        <div
+                          className="w-6 h-6 border border-border rounded pointer-events-none flex items-center justify-center relative overflow-hidden"
+                          style={{ backgroundColor: activeStyles.textColor || "transparent" }}
+                        >
+                          {!activeStyles.textColor && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-full h-[1px] bg-red-500/50 rotate-45 absolute"></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <input
                         type="text"
-                        placeholder={rgbToHex(targetStyles?.textColor || "") || "Hex/RGB"}
+                        placeholder={activeStyles.textColor ? "" : "Theme Default"}
                         value={activeStyles.textColor}
                         onChange={(e) => setActiveStyles(prev => ({ ...prev, textColor: e.target.value }))}
                         className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
+                        title="Hex color code (leave empty for Auto theme)"
                       />
                     </div>
                   </div>
                   <div>
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Bg Highlight</label>
                     <div className="flex gap-1 items-center">
-                      <input
-                        type="color"
-                        value={activeStyles.bgColor || rgbToHex(targetStyles?.bgColor || "") || "#ffffff"}
-                        onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
-                        className="w-6 h-6 border border-border rounded cursor-pointer shrink-0 p-0"
+                      <div
+                        className="w-6 h-6 border border-border rounded shrink-0"
+                        style={{ backgroundColor: activeStyles.bgColor || rgbToHex(targetStyles?.bgColor || "") || "transparent" }}
+                        title="Current Text Background Color"
                       />
-                      <input
-                        type="text"
-                        placeholder={rgbToHex(targetStyles?.bgColor || "") || "Hex/RGB"}
-                        value={activeStyles.bgColor}
-                        onChange={(e) => setActiveStyles(prev => ({ ...prev, bgColor: e.target.value }))}
-                        className="w-full px-1.5 py-1 bg-background border border-border rounded text-[10px] font-mono focus:outline-none min-w-0"
-                      />
+                      <div className="w-full px-1.5 py-1 bg-muted/50 border border-border rounded text-[10px] font-mono text-muted-foreground truncate" title="Current Text Background Color">
+                        {activeStyles.bgColor || rgbToHex(targetStyles?.bgColor || "") || "None"}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useRef, useState, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -8,6 +8,7 @@ interface Props {
 
 const AnimatedSection = ({ children, className = "", delay = 0 }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -15,32 +16,33 @@ const AnimatedSection = ({ children, className = "", delay = 0 }: Props) => {
 
     // Skip animation if user prefers reduced motion
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.style.opacity = "1";
-      el.style.transform = "none";
+      setIsVisible(true);
       return;
     }
 
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.style.transition = `opacity 0.4s ease ${delay}s, transform 0.4s ease ${delay}s`;
-          el.style.opacity = "1";
-          el.style.transform = "translateY(0)";
+          setIsVisible(true);
           obs.disconnect();
         }
       },
-      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.05, rootMargin: "0px 0px -20px 0px" }
     );
 
     obs.observe(el);
     return () => obs.disconnect();
-  }, [delay]);
+  }, []);
 
   return (
     <div
       ref={ref}
       className={className}
-      style={{ opacity: 0, transform: "translateY(16px)" }}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? "none" : "translateY(16px)",
+        transition: isVisible ? `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s` : undefined,
+      }}
     >
       {children}
     </div>

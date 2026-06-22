@@ -388,7 +388,7 @@ const ClientCard = ({
       {/* Action toolbar — top edge centered, shows on hover only (grid mode only) */}
       {flexible && (
         <EditorToolbar
-          section="client_logos"
+          section="clients"
           id={client.id}
           isVisible={client.is_visible}
           imageField="logo_url"
@@ -436,7 +436,7 @@ const ClientCard = ({
           flexShrink: 0,
           marginTop: 'auto',
         }}>
-          <EditableText section="client_logos" field="name" id={client.id} value={client.name} />
+          <EditableText section="clients" field="name" id={client.id} value={client.name} />
         </span>
       </div>
 
@@ -582,7 +582,7 @@ const ClientsSection = () => {
     setClientsState(newItems);
     newItems.forEach((item, idx) => {
       if (item.sort_order !== idx) {
-        editor?.onUpdate("client_logos", "sort_order", idx, item.id);
+        editor?.onUpdate("clients", "sort_order", idx, item.id);
       }
     });
     setDraggedId(null);
@@ -608,7 +608,7 @@ const ClientsSection = () => {
     setClientsState(newItems);
     newItems.forEach((item, i) => {
       if (item.sort_order !== i) {
-        editor?.onUpdate("client_logos", "sort_order", i, item.id);
+        editor?.onUpdate("clients", "sort_order", i, item.id);
       }
     });
   };
@@ -650,7 +650,7 @@ const ClientsSection = () => {
                 <EditableText section="clients" field="highlight" value={header.highlight || "Industry Leaders"} colorField="highlight_color" />
               </span>
             </span>
-            <SectionHeaderToolbar section="clients" targetSection="client_logos" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
+            <SectionHeaderToolbar section="clients" targetSection="clients" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
           <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />

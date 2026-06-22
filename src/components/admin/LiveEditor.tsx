@@ -46,6 +46,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
   ]);
 
   const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});
+  const [discardKey, setDiscardKey] = useState(0);
   const [pickerConfig, setPickerConfig] = useState<{
     type: "image" | "icon" | "link" | "color";
     section: string;
@@ -206,10 +207,22 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
   };
 
   const handleDiscard = () => {
-    if (confirm("Are you sure you want to discard all unsaved changes?")) {
-      setPendingChanges({});
-      toast.info("Changes discarded");
-    }
+    toast("Discard unsaved changes?", {
+      description: "This action cannot be undone.",
+      action: {
+        label: "Discard",
+        onClick: () => {
+          setPendingChanges({});
+          setDiscardKey(prev => prev + 1);
+          window.dispatchEvent(new CustomEvent("ss:discardChanges"));
+          toast.success("Changes discarded successfully");
+        }
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
+      }
+    });
   };
 
   const handleHide = (section: string, id: string | undefined, currentVisibility: boolean) => {
@@ -348,7 +361,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     >
       <div className="relative min-h-screen bg-background pb-10 pointer-events-auto">
 
-        <div className="pointer-events-auto relative">
+        <div key={discardKey} className="pointer-events-auto relative">
           <Header />
           <HeroSection />
           <Suspense fallback={<SkeletonSection />}>
