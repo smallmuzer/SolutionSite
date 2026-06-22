@@ -91,8 +91,6 @@ function useDarkMode() {
     saveThemePref(theme);
     window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
     setIsDark(next);
-    // Keep uxDraft in sync so Settings page Visual Theme buttons reflect the change
-    window.dispatchEvent(new CustomEvent("ss:adminThemeChanged", { detail: theme }));
   };
   return { isDark, toggle };
 }
@@ -129,7 +127,7 @@ interface SiteSettings {
   demo_url: string; db_connection: string;
   social_linkedin: string; social_twitter: string; social_facebook: string; social_instagram: string;
   landline: string; enable_cinematic: boolean; cinematic_asset: string;
-  font_size: string; theme: string; font_style: string; enable_animations: boolean;
+  font_size: string; font_style: string; enable_animations: boolean;
   accent_color: string; global_view: string; card_style: string;
   hr_email: string;
   google_analytics_id: string;
@@ -1295,7 +1293,7 @@ const AdminDashboard = () => {
     social_instagram: "https://www.instagram.com/brilliantsystemssolutions",
     landline: "+91-452 238 7388", enable_cinematic: false,
     cinematic_asset: "/assets/uploads/modern_hero_glass_1775323942548.webp",
-    font_size: "medium", theme: "light", font_style: "'Inter', sans-serif",
+    font_size: "medium", font_style: "'Inter', sans-serif",
     enable_animations: true, accent_color: "#3b82f6", global_view: "grid", card_style: "glass",
     chatbot_enabled: "true",
     chatbot_script_url: "https://koya.hrmetrics.in/embed.js",
@@ -1315,7 +1313,7 @@ const AdminDashboard = () => {
 
   const [uxDraft, setUxDraft] = useState<any>({
     font_style: "'Inter', sans-serif", font_size: "medium", accent_color: "#3b82f6",
-    global_view: "grid", card_style: "icon", theme: "light"
+    global_view: "grid", card_style: "icon"
   });
 
   const dbFetch = useCallback(async (table: string, options: { method?: string; body?: any; query?: Record<string, string> } = {}) => {
@@ -1391,7 +1389,6 @@ const AdminDashboard = () => {
         accent_color: localPrefs.accent_color || c.accent_color || "#3b82f6",
         global_view: localPrefs.global_view || c.global_view || "grid",
         card_style: localPrefs.card_style || c.card_style || "icon",
-        theme: localPrefs.theme || c.theme || (document.documentElement.classList.contains("dark") ? "dark" : "light"),
       });
     }
   }, [dbFetch]);
@@ -1639,16 +1636,7 @@ const AdminDashboard = () => {
     toast.success("Settings saved successfully!");
   };
 
-  // Sync uxDraft.theme when sidebar sun/moon toggle is used
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const theme = (e as CustomEvent<string>).detail;
-      setUxDraft((p: any) => ({ ...p, theme }));
-      setSiteSettings((p) => ({ ...p, theme }));
-    };
-    window.addEventListener("ss:adminThemeChanged", handler);
-    return () => window.removeEventListener("ss:adminThemeChanged", handler);
-  }, []);
+
 
   // Real-time Preview: Apply UX changes immediately to the Admin Panel as they are drafted
   useEffect(() => {
@@ -2796,32 +2784,7 @@ const AdminDashboard = () => {
                           </div>
 
                           <div className="grid grid-cols-1 gap-2 bg-muted/20 p-3 rounded-2xl border border-border/50 flex-1">
-                            {/* Theme */}
-                            <div>
-                              <label className="text-[0.625rem] font-black text-muted-foreground uppercase tracking-widest mb-1 block px-1">Visual Theme</label>
-                              <div className="flex gap-1 p-0.5 bg-background border border-border rounded-xl">
-                                {["light", "dark"].map(t => (
-                                  <button key={t} onClick={() => {
-                                    const theme = t;
-                                    setUxDraft((p: any) => ({ ...p, theme }));
-                                    setSiteSettings(p => ({ ...p, theme }));
-                                    // Apply DOM + persist immediately
-                                    if (theme === "dark") document.documentElement.classList.add("dark");
-                                    else document.documentElement.classList.remove("dark");
-                                    saveThemePref(theme);
-                                    try {
-                                      const prefs = getUserSettings() || {};
-                                      prefs.theme = theme as any;
-                                      saveUserSettings(prefs);
-                                    } catch { /* ignore */ }
-                                    window.dispatchEvent(new CustomEvent("ss:themeChanged", { detail: theme }));
-                                  }}
-                                    className={`flex-1 py-1 rounded-lg text-[0.625rem] font-bold uppercase transition-all ${uxDraft.theme === t ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"}`}>
-                                    {t}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
+
 
                             {/* Font Family */}
                             <div className="xl:col-span-1">
@@ -2939,7 +2902,7 @@ const AdminDashboard = () => {
                         <button onClick={() => {
                           const defaults = {
                             font_style: "'Inter', sans-serif", font_size: "small", accent_color: "#3b82f6",
-                            global_view: "grid", card_style: "icon", theme: "light", header_font_family: ""
+                            global_view: "grid", card_style: "icon", header_font_family: ""
                           };
                           setUxDraft(defaults);
                           setSiteSettings(p => ({ ...p, ...defaults }));

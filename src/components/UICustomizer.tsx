@@ -34,6 +34,7 @@ function deleteCookie() {
   document.cookie = "bss-theme=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
   document.cookie = "bss-user-settings=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
   try {
+    localStorage.removeItem("bss-theme");
     sessionStorage.removeItem("bss-theme");
     sessionStorage.removeItem("bss-user-settings");
   } catch { /* ignore */ }

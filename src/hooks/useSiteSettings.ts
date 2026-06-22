@@ -39,23 +39,19 @@ function hasCookieConsent(): boolean {
 }
 
 export function saveThemePref(theme: string) {
-  if (hasCookieConsent()) {
-    const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `bss-theme=${theme}; expires=${exp}; path=/; SameSite=Lax`;
-  } else {
-    document.cookie = `bss-theme=${theme}; path=/; SameSite=Lax`;
-    try {
-      sessionStorage.setItem("bss-theme", theme);
-    } catch { /* ignore */ }
-  }
+  const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `bss-theme=${theme}; expires=${exp}; path=/; SameSite=Lax`;
+  try {
+    localStorage.setItem("bss-theme", theme);
+  } catch { /* ignore */ }
 }
 
 export function getThemePref(): string | null {
   try {
+    const local = localStorage.getItem("bss-theme");
+    if (local) return local;
     const m = document.cookie.split(";").find(c => c.trim().startsWith("bss-theme="));
     if (m) return decodeURIComponent(m.trim().slice("bss-theme=".length + 1));
-    const sess = sessionStorage.getItem("bss-theme");
-    if (sess) return sess;
   } catch { /* ignore */ }
   return null;
 }
@@ -87,19 +83,20 @@ export function applySettings(dbSettings: Record<string, any>, live = false) {
   let userPrefs: any = {};
   if (!live) {
     userPrefs = getUserSettings() || {};
-    const storedTheme = getThemePref();
-    if (storedTheme) {
-      userPrefs.theme = storedTheme;
-    }
   }
   const s = { ...dbSettings, ...userPrefs };
 
-  const theme = s.theme || "light";
-  if (theme === "dark") document.documentElement.classList.add("dark");
-  else if (theme === "light") document.documentElement.classList.remove("dark");
-  else {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
+  const storedTheme = getThemePref();
+  if (storedTheme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else if (storedTheme === "light") {
+    document.documentElement.classList.remove("dark");
+  } else {
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }
 
   const sizeVal = FONT_SIZE_MAP[s.font_size || "small"] || "14.5px";

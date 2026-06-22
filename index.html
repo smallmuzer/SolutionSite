@@ -16,19 +16,24 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
       rel="stylesheet" />
   </noscript>
-  <!-- GDPR-compliant synchronous theme initialization to prevent theme flash/reset on page load -->
   <script>
     (function () {
       try {
         var isDark = false;
-        var match = document.cookie.match(/(^| )bss-theme=([^;]+)/);
-        if (match) {
-          isDark = (decodeURIComponent(match[2].trim()) === 'dark');
+        var hasPref = false;
+        var local = localStorage.getItem('bss-theme');
+        if (local) {
+          isDark = (local === 'dark');
+          hasPref = true;
         } else {
-          var sess = sessionStorage.getItem('bss-theme');
-          if (sess) {
-            isDark = (sess === 'dark');
+          var match = document.cookie.match(/(^| )bss-theme=([^;]+)/);
+          if (match) {
+            isDark = (decodeURIComponent(match[2].trim()) === 'dark');
+            hasPref = true;
           }
+        }
+        if (!hasPref && window.matchMedia) {
+          isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
         if (isDark) {
           document.documentElement.classList.add('dark');
@@ -50,7 +55,8 @@
   <meta property="og:image" content="http://localhost:5173/assets/uploads/SystemSolutionFullLogo.png?v=1781949787316" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="http://localhost:5173/assets/uploads/SystemSolutionFullLogo.png?v=1781949787316" />
+  <meta name="twitter:image"
+    content="http://localhost:5173/assets/uploads/SystemSolutionFullLogo.png?v=1781949787316" />
 
 </head>
 
