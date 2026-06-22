@@ -158,6 +158,12 @@ const TrackingScripts = () => {
 // Wrapper to ensure useContentSync is called WITHIN the QueryClientProvider
 const AppContent = () => {
   useContentSync();
+  useEffect(() => {
+    const t = setTimeout(() => {
+      document.documentElement.classList.add("theme-transition");
+    }, 150);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <GlobalViewProvider>
       <TrackingScripts />

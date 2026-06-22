@@ -68,11 +68,29 @@
 
 @layer base {
 
-  /* Theme color transitions â€” only on non-interactive elements */
-  *:not(button):not(a):not(input):not(canvas):not([class*="animate-"]):not([style*="animation"]) {
-    transition-property: background-color, border-color, color;
-    transition-duration: 200ms;
-    transition-timing-function: ease;
+  /* Theme color transitions — targeted for a smooth, glitch-free switch without breaking custom element transitions */
+  .theme-transition body,
+  .theme-transition header,
+  .theme-transition footer,
+  .theme-transition section,
+  .theme-transition .glass-card,
+  .theme-transition .bg-card,
+  .theme-transition .border-border,
+  .theme-transition h1,
+  .theme-transition h2,
+  .theme-transition h3,
+  .theme-transition h4,
+  .theme-transition h5,
+  .theme-transition h6,
+  .theme-transition p,
+  .theme-transition span:not([class*="animate-"]),
+  .theme-transition label,
+  .theme-transition input,
+  .theme-transition textarea,
+  .theme-transition select,
+  .theme-transition svg,
+  .theme-transition path {
+    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
   }
 
   * {

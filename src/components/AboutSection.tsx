@@ -193,19 +193,13 @@ const AboutSection = () => {
 
             {/* Right: Main Image */}
             <AnimatedSection delay={0.2} className="h-full w-full flex lg:justify-end">
-              <div className="relative w-full ml-auto h-[280px] sm:h-[320px] lg:h-[360px] rounded-none overflow-hidden group">
+              <div className="relative w-full ml-auto h-[280px] sm:h-[320px] lg:h-[360px] rounded-2xl overflow-hidden group">
                 <img
                   src={resolveImg("about_main_img") || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"}
                   alt="About Us"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"; }}
                 />
-                {/* White curve swooping overlay */}
-                <div className="absolute -left-1 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none text-background">
-                  <svg viewBox="-10 0 110 100" className="w-[calc(100%+10px)] h-full fill-current" preserveAspectRatio="none">
-                    <path d="M-10,0 L100,0 C 50,0 0,50 0,100 L-10,100 Z" />
-                  </svg>
-                </div>
 
                 <EditorToolbar section="about" imageField="about_main_img" className="absolute z-50 top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
