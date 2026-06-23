@@ -10,6 +10,7 @@ import nodemailer from "nodemailer";
 import { EventEmitter } from "events";
 import { createServer } from "http";
 
+import * as XLSX from "xlsx";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.set("etag", false);
@@ -143,10 +144,10 @@ function isTrustedOrigin(origin, req) {
   if (!origin) return false;
   try {
     const url = new URL(origin);
-    
+
     // Always trust localhost/127.0.0.1
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
-    
+
     // Check hardcoded TRUSTED_ORIGINS
     if (TRUSTED_ORIGINS.has(url.origin)) return true;
 
@@ -156,12 +157,12 @@ function isTrustedOrigin(origin, req) {
     if (settings && settings.site_url) {
       const dbUrl = new URL(settings.site_url);
       if (url.origin === dbUrl.origin) return true;
-      
+
       const dbHost = dbUrl.host.toLowerCase().replace(/^www\./, "");
       const originHost = url.host.toLowerCase().replace(/^www\./, "");
       if (dbHost === originHost) return true;
     }
-    
+
     // Check if origin matches the Host header of the current request (allowing www vs non-www)
     if (req && req.headers.host) {
       const reqHost = req.headers.host.toLowerCase().replace(/^www\./, "");
@@ -870,7 +871,7 @@ function syncLogo(logoPathRaw) {
 
     const timestamp = Date.now();
     const newLogoPath = `/logo${ext}?v=${timestamp}`;
-    
+
     // Update DB to reflect the new root logo path with timestamp
     db.prepare(`UPDATE site_settings SET site_logo = ? WHERE id = 'settings'`).run(newLogoPath);
     return newLogoPath;
@@ -924,7 +925,7 @@ function updateIndexHtml(settings) {
     // Sync logo & favicon whenever settings are updated, and get final path
     const finalLogoPath = syncLogo(settings.site_logo);
     settings.site_logo = finalLogoPath;
-    
+
     if (settings.site_favicon) {
       settings.site_favicon = syncFavicon(settings.site_favicon);
     }
@@ -1225,7 +1226,7 @@ app.post("/api/upload", (req, res) => {
       return res.status(400).json({ error: err.message });
     }
     if (!req.file) return res.status(400).json({ error: "No file" });
-    
+
     // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
     // Append a timestamp to bypass browser caching when overwriting existing files
     const timestamp = Date.now();
@@ -1389,6 +1390,83 @@ app.get("/api/submissions/:id/replies", (req, res) => {
   const replies = db.prepare("SELECT * FROM submission_replies WHERE submission_id = ? ORDER BY datetime(created_at) ASC").all(id);
   res.json({ data: replies, error: null });
 });
+
+app.post("/api/read_external_excel", express.json(), (req, res) => {
+  try {
+    const { path } = req.body;
+    if (!path) return res.status(400).json({ error: "Path is required" });
+    if (!existsSync(path)) return res.status(404).json({ error: "File not found at specified path" });
+
+    const fileBuffer = readFileSync(path);
+    const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+    const newItems = rows.map((row, i) => ({
+      id: `tst-ext-${i}`,
+      name: row["Name"] || "",
+      company: row["Designation"] || "",
+      company_name: row["Company Name"] || "",
+      message: row["Message"] || "",
+      rating: parseFloat(row["Rating"]) || 5,
+      is_visible: String(row["Visible"]).toLowerCase() === "no" ? 0 : 1,
+      sort_order: i,
+      is_external: true
+    }));
+
+    res.json({ data: newItems });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to read excel file: " + e.message });
+  }
+});
+
+app.post("/api/write_external_excel", express.json(), (req, res) => {
+  try {
+    const { path, updates } = req.body;
+    if (!path) return res.status(400).json({ error: "Path is required" });
+    if (!updates || !Array.isArray(updates)) return res.status(400).json({ error: "Updates array is required" });
+    if (!existsSync(path)) return res.status(404).json({ error: "File not found at specified path" });
+
+    const fileBuffer = readFileSync(path);
+    const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+    for (const update of updates) {
+      const { index, data } = update;
+      if (index === undefined || index < 0 || index >= rows.length) continue;
+      
+      const row = rows[index];
+      if (data.name !== undefined) row["Name"] = data.name;
+      if (data.company !== undefined) row["Designation"] = data.company;
+      if (data.company_name !== undefined) row["Company Name"] = data.company_name;
+      if (data.message !== undefined) row["Message"] = data.message;
+      if (data.rating !== undefined) row["Rating"] = parseFloat(data.rating) || 5;
+      if (data.is_visible !== undefined) {
+        row["Visible"] = (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No";
+      }
+    }
+
+    const newWorksheet = XLSX.utils.json_to_sheet(rows);
+    workbook.Sheets[firstSheetName] = newWorksheet;
+    const writeBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    try {
+      writeFileSync(path, writeBuffer);
+    } catch (writeError) {
+      if (writeError.code === "EBUSY") {
+        return res.status(500).json({ error: "The Excel file is currently open or locked by another program (like Microsoft Excel). Please close it and try saving again." });
+      }
+      throw writeError;
+    }
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to write excel file: " + e.message });
+  }
+});
+
 app.get('/api/services', (req, res) => {
   try {
     const rows = db.prepare("SELECT * FROM services").all();
@@ -1646,7 +1724,6 @@ const PUBLIC_DIR = join(__dirname, "../public");
 app.use("/assets", express.static(join(PUBLIC_DIR, "assets")));
 
 if (existsSync(DIST_DIR)) {
-  // Explicitly mount dist/assets to /assets as a fallback for Vite builds
   app.use("/assets", express.static(join(DIST_DIR, "assets")));
   app.use(express.static(DIST_DIR, { index: false }));
 

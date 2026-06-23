@@ -53,6 +53,7 @@ import SEOManager from "@/components/admin/SEOManager";
 import SecurityPanel from "@/components/admin/SecurityPanel";
 import PageEditor from "@/components/admin/PageEditor";
 import LiveEditor from "@/components/admin/LiveEditor";
+import TestimonialsManager from "@/components/admin/TestimonialsManager";
 import AssetField from "@/components/admin/AssetField";
 import { useUndoAction } from "@/hooks/useUndoAction";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -95,7 +96,7 @@ function useDarkMode() {
   return { isDark, toggle };
 }
 
-type Tab = "inbox" | "website" | "sitehealth" | "settings" | "chat";
+type Tab = "inbox" | "testimonials" | "website" | "sitehealth" | "settings" | "chat";
 
 const AVAILABLE_FONTS: { label: string; value: string }[] = [
   { label: "Default Font", value: "" },
@@ -1835,6 +1836,7 @@ const AdminDashboard = () => {
 
   const sideItems: { key: Tab; icon: any; label: string }[] = [
     { key: "inbox", icon: MessageSquare, label: "Leads" },
+    { key: "testimonials", icon: Star, label: "Testimonials" },
     { key: "chat", icon: BotMessageSquare, label: "Live Chat" },
     { key: "website", icon: FileText, label: "Edit Website" },
     { key: "sitehealth", icon: Shield, label: "Site Health" },
@@ -1900,7 +1902,7 @@ const AdminDashboard = () => {
         </header>
 
         <main className="flex-1 p-4 lg:px-2 lg:py-4 overflow-auto">
-          {loading && tab !== "website" && tab !== "sitehealth" && tab !== "settings" ? (
+          {loading && tab !== "website" && tab !== "sitehealth" && tab !== "settings" && tab !== "testimonials" ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>
           ) : (
             <>
@@ -2201,6 +2203,7 @@ const AdminDashboard = () => {
                 </div>
               )}
 
+              {tab === "testimonials" && <TestimonialsManager userRole={userRole} />}
               {tab === "website" && <LiveEditor key="live-editor" userRole={userRole} />}
               {tab === "sitehealth" && (
                 <div>

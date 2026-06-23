@@ -47,15 +47,22 @@ const StarRating = ({ rating, id, editor }: { rating: number, id?: string, edito
     <div className="flex items-center justify-center sm:justify-start gap-1.5 mb-3 group/star">
       <div className="flex gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => {
-          if (i < fullStars) {
+          const fillPercentage = Math.max(0, Math.min(1, safeRating - i));
+          if (fillPercentage === 1) {
             return <Star key={i} size={12} className="text-amber-400 fill-amber-400" />;
-          } else if (i === fullStars && hasHalfStar) {
-            return <StarHalf key={i} size={12} className="text-amber-400 fill-amber-400" />;
+          } else if (fillPercentage > 0) {
+            return (
+              <div key={i} className="relative inline-block" style={{ width: 12, height: 12 }}>
+                <Star size={12} className="text-muted-foreground/30 absolute inset-0" />
+                <Star size={12} className="text-amber-400 fill-amber-400 absolute inset-0" style={{ clipPath: `inset(0 ${100 - (fillPercentage * 100)}% 0 0)` }} />
+              </div>
+            );
           } else {
             return <Star key={i} size={12} className="text-muted-foreground/30" />;
           }
         })}
       </div>
+      <span className="text-[11px] font-bold text-muted-foreground ml-0.5">{safeRating.toFixed(1)}</span>
       {editor?.isEditMode && id && (
         <button
           onClick={handleEdit}
@@ -171,17 +178,17 @@ const GridCard = ({
         </div>
       )}
       <div className="relative z-10 flex flex-col w-full h-full">
-        <div className="flex justify-between items-start mb-2 w-full">
-          <div className="flex flex-col items-start text-left flex-1 pr-2 min-w-0">
-            <div className="font-heading font-bold text-foreground text-[0.875rem] mb-0.5 min-h-[1.25rem] w-full">
+        <div className="flex flex-col mb-2 w-full">
+          <div className="flex justify-between items-start w-full">
+            <div className="font-heading font-bold text-foreground text-[0.875rem] leading-none flex-1 pr-2 min-w-0 text-left pt-1">
               <EditableText section="testimonials" field="name" id={t.id} value={t.name || (editor?.isEditMode ? "Client Name" : "")} />
             </div>
-            <div className="text-secondary text-[0.75rem] font-medium min-h-[1.125rem] w-full">
-              <EditableText section="testimonials" field="company" id={t.id} value={t.company || (editor?.isEditMode ? "Role / Position" : "")} />
+            <div className="shrink-0">
+              <StarRating rating={t.rating} id={t.id} editor={editor} />
             </div>
           </div>
-          <div className="shrink-0 pt-0.5">
-            <StarRating rating={t.rating} id={t.id} editor={editor} />
+          <div className="text-secondary text-[0.75rem] font-medium leading-none w-full text-left -mt-1.5">
+            <EditableText section="testimonials" field="company" id={t.id} value={t.company || (editor?.isEditMode ? "Role / Position" : "")} />
           </div>
         </div>
 
@@ -214,7 +221,7 @@ const GridCard = ({
               section="testimonials"
               field="message"
               id={t.id}
-              text={t.message || (editor?.isEditMode ? "Client testimonial message goes here." : "")}
+              text={(t.message || "").replace(/&nbsp;/g, ' ') || (editor?.isEditMode ? "Client testimonial message goes here." : "")}
               clampClass="line-clamp-3"
               textClass="text-muted-foreground text-[0.75rem] leading-relaxed min-h-[2rem]"
             />
@@ -225,7 +232,7 @@ const GridCard = ({
   );
 };
 
-const TestimonialsSection = () => {
+const TestimonialsSection = ({ searchTerm }: { searchTerm?: string }) => {
   const view = useGlobalView();
   const [currentPage, setCurrentPage] = useState(0);
   const userInteractedRef = useRef(false);
@@ -250,6 +257,38 @@ const TestimonialsSection = () => {
 
   const [testimonialsState, setTestimonialsState] = useState<any[]>([]);
   useEffect(() => { if (rawTestimonials) setTestimonialsState(rawTestimonials); }, [rawTestimonials]);
+
+  const [internalExternalData, setInternalExternalData] = useState<any[]>([]);
+  const excelPathDraft = editor?.pendingChanges["testimonials:external_excel_path"];
+  const excelPath = excelPathDraft !== undefined ? excelPathDraft : (headerContent?.external_excel_path || "");
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setRefetchTrigger(prev => prev + 1);
+    window.addEventListener("ss:contentSaved", handler);
+    return () => window.removeEventListener("ss:contentSaved", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!excelPath) {
+      setInternalExternalData([]);
+      return;
+    }
+    const fetchExternal = async () => {
+      try {
+        const res = await fetch("/api/read_external_excel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: excelPath })
+        });
+        const json = await res.json();
+        if (json.data) setInternalExternalData(json.data);
+      } catch (err) {
+        console.error("Failed to read external excel inside section", err);
+      }
+    };
+    fetchExternal();
+  }, [excelPath, refetchTrigger]);
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -323,17 +362,39 @@ const TestimonialsSection = () => {
   };
 
   const testimonials = useMemo(() => {
-    return testimonialsState ? testimonialsState.map((t: any) => {
-      const pendingImage = editor?.pendingChanges?.[`testimonials:${t.id}:avatar_url`];
-      const pendingVisibility = editor?.pendingChanges?.[`testimonials:${t.id}:is_visible`];
+    let list = testimonialsState ? testimonialsState.map((t: any) => {
       return {
-        id: t.id, name: t.name, company: t.company, company_name: t.company_name || "", rating: t.rating ?? 5,
-        message: t.message,
-        avatar_url: pendingImage !== undefined ? pendingImage : (t.avatar_url || ""),
-        is_visible: pendingVisibility !== undefined ? pendingVisibility : t.is_visible,
+        ...t,
+        name: editor?.pendingChanges[`testimonials:${t.id}:name`] ?? t.name,
+        company: editor?.pendingChanges[`testimonials:${t.id}:company`] ?? t.company,
+        company_name: editor?.pendingChanges[`testimonials:${t.id}:company_name`] ?? t.company_name,
+        message: editor?.pendingChanges[`testimonials:${t.id}:message`] ?? t.message,
+        rating: editor?.pendingChanges[`testimonials:${t.id}:rating`] ?? t.rating,
+        is_visible: editor?.pendingChanges[`testimonials:${t.id}:is_visible`] ?? t.is_visible,
+        avatar_url: editor?.pendingChanges[`testimonials:${t.id}:avatar_url`] ?? t.avatar_url,
+        sort_order: editor?.pendingChanges[`testimonials:${t.id}:sort_order`] ?? t.sort_order,
       };
     }) : [];
-  }, [testimonialsState, editor?.pendingChanges]);
+
+    let externalFiltered = internalExternalData || [];
+    if (!editor?.isEditMode) {
+      externalFiltered = externalFiltered.filter((t: any) => t.is_visible === 1 || t.is_visible === true);
+    }
+    if (externalFiltered.length > 0) {
+      list = [...list, ...externalFiltered];
+    }
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      list = list.filter(t =>
+        (t.name || "").toLowerCase().includes(lower) ||
+        (t.company || "").toLowerCase().includes(lower) ||
+        (t.company_name || "").toLowerCase().includes(lower) ||
+        (t.message || "").toLowerCase().includes(lower)
+      );
+    }
+    return list;
+  }, [testimonialsState, editor?.pendingChanges, searchTerm, internalExternalData, editor?.isEditMode]);
 
   const hideProfilesDraft = editor?.pendingChanges["testimonials:hide_profiles"] ?? headerContent.hide_profiles;
   const hideProfiles = hideProfilesDraft === "true" || hideProfilesDraft === true;
