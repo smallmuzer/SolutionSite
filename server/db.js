@@ -167,6 +167,7 @@ db.exec(`
     more_info_label TEXT,
     demo_label TEXT,
     contact_url TEXT NOT NULL DEFAULT '#contact',
+    demo_url TEXT,
     is_popular INTEGER NOT NULL DEFAULT 0,
     is_visible INTEGER NOT NULL DEFAULT 1,
     sort_order INTEGER NOT NULL DEFAULT 0,
@@ -496,7 +497,7 @@ try {
   const techCols = db.prepare("PRAGMA table_info(technologies)").all().map(c => c.name);
   if (!techCols.includes("name_color")) db.exec("ALTER TABLE technologies ADD COLUMN name_color TEXT NOT NULL DEFAULT '#3178C6';");
   if (!techCols.includes("category_color")) db.exec("ALTER TABLE technologies ADD COLUMN category_color TEXT NOT NULL DEFAULT '#3178C6';");
-// Auto-patching colors removed to avoid overwriting user settings.
+  // Auto-patching colors removed to avoid overwriting user settings.
 
   // Hero Stats: add suffix column if missing
   const heroStatsCols = db.prepare("PRAGMA table_info(hero_stats)").all().map(c => c.name);
@@ -504,6 +505,13 @@ try {
     db.exec("ALTER TABLE hero_stats ADD COLUMN suffix TEXT NOT NULL DEFAULT '+';");
     db.prepare("UPDATE hero_stats SET suffix='%' WHERE sort_order = 2").run();
     console.log('[db] Migration: added suffix column to hero_stats.');
+  }
+
+  // Products: add demo_url column if missing
+  const productCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
+  if (!productCols.includes("demo_url")) {
+    db.exec("ALTER TABLE products ADD COLUMN demo_url TEXT;");
+    console.log('[db] Migration: added demo_url column to products.');
   }
 
   // Hero Stats: clean duplicates and seed correctly

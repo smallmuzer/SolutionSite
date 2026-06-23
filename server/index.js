@@ -799,7 +799,7 @@ const TABLE_COLS = {
   services: ["id", "title", "description", "image_url", "icon", "is_visible", "sort_order", "created_at", "updated_at"],
   testimonials: ["id", "name", "company", "company_name", "message", "avatar_url", "rating", "is_visible", "sort_order", "created_at", "updated_at"],
   career_jobs: ["id", "title", "description", "location", "job_type", "image_url", "icon", "is_visible", "sort_order", "created_at", "updated_at"],
-  products: ["id", "name", "tagline", "description", "image_url", "extra_text", "extra_color", "more_info_label", "demo_label", "contact_url", "is_popular", "is_visible", "sort_order", "created_at", "updated_at"],
+  products: ["id", "name", "tagline", "description", "image_url", "extra_text", "extra_color", "more_info_label", "demo_label", "demo_url", "contact_url", "is_popular", "is_visible", "sort_order", "created_at", "updated_at"],
   client_logos: ["id", "name", "logo_url", "is_visible", "sort_order", "created_at", "updated_at"],
   site_content: ["id", "section_key", "content", "created_at", "updated_at"],
   site_settings: ["id", "site_name", "site_url", "site_logo", "site_favicon", "whatsapp_number", "viber_number", "contact_email", "contact_phone", "google_analytics_id", "microsoft_clarity_id", "contact_from_email", "hr_email", "smtp_host", "smtp_port", "smtp_user", "smtp_pass", "chatbot_enabled", "chatbot_script_url", "chatbot_api_key", "chatbot_title", "chatbot_subtitle", "chatbot_accent", "chatbot_accent2", "chatbot_bot_bubble", "chatbot_user_color", "chatbot_position", "chatbot_btn_size", "overall_bot_visible", "theme", "font_style", "header_font_family", "font_size", "card_style", "accent_color", "global_view", "nav_items", "created_at", "updated_at"],

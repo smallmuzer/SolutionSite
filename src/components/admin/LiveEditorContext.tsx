@@ -384,7 +384,7 @@ export const useLiveEditorNavigation = () => {
   const editor = useLiveEditor();
   const isEdit = editor?.isEditMode;
 
-  return (handler: () => void) => {
+  return (handler: (e?: React.MouseEvent) => void) => {
     return {
       onClick: (e: React.MouseEvent) => {
         if (isEdit) {
@@ -392,13 +392,13 @@ export const useLiveEditorNavigation = () => {
           // Do not call handler on single click in edit mode to allow text selection/editing
           return;
         }
-        handler();
+        handler(e);
       },
       onDoubleClick: (e: React.MouseEvent) => {
         if (isEdit) {
           e.preventDefault();
           e.stopPropagation();
-          handler();
+          handler(e);
         }
       }
     };
@@ -436,7 +436,7 @@ export const EditorToolbar: React.FC<{
   if (!editor?.isEditMode) return null;
 
   const actualCanHide = canHide !== undefined ? canHide : (id !== undefined || visibilityField !== undefined || onToggle !== undefined);
-  
+
   const isSmall = className.includes("scale-75") || className.includes("scale-[0.75]") || className.includes("scale-50");
   const btnPadding = isSmall ? "p-1" : "p-1.5";
 

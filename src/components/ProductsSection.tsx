@@ -168,6 +168,7 @@ const ProductCard = ({
   onReadMore?: () => void;
 }) => {
   const editor = useLiveEditor();
+  const [featuresExpanded, setFeaturesExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
   const badgeColor = product.extra_color || "#007600";
   const draftKeyTheme = product.id ? `products:${product.id}:extra_color` : `products:extra_color`;
@@ -177,10 +178,12 @@ const ProductCard = ({
   return (
     <div
       className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-[#11111f] rounded-[24px] overflow-hidden group/item cursor-pointer shadow-sm border-[0.5px] border-slate-200 dark:border-slate-800 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-[box-shadow,transform] duration-300 transform-gpu ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
-      style={{ width: 300, contain: "paint", willChange: "transform" }}
-      {...getNavProps(() => {
+      style={{ width: 320, contain: "paint", willChange: "transform" }}
+      {...getNavProps((e?: React.MouseEvent) => {
+        e?.stopPropagation();
         const url = product.contact_url || product.demo_url;
         if (url && url.startsWith("http")) window.open(url, "_blank");
+        else if (url && url.startsWith("#")) document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
         else onDemo();
       })}
       draggable={editor?.isEditMode}
@@ -307,97 +310,117 @@ const ProductCard = ({
               "Custom Onboarding",
             ];
 
-            return features.map((feature, idx) => {
-              const rawText = feature.trim();
-              if (!rawText) return null;
-              const isNegative = rawText.startsWith("!");
-              const cleanText = isNegative ? rawText.substring(1).trim() : rawText;
+            const maxFeatures = 5;
+            const hasMore = features.length > maxFeatures;
+            const visibleFeatures = featuresExpanded || editor?.isEditMode ? features : features.slice(0, maxFeatures);
 
-              const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
-              const hasStyles = Object.values(parsedStyles).some(v => !!v);
+            return (
+              <>
+                {visibleFeatures.map((feature, idx) => {
+                  const rawText = feature.trim();
+                  if (!rawText) return null;
+                  const isNegative = rawText.startsWith("!");
+                  const cleanText = isNegative ? rawText.substring(1).trim() : rawText;
 
-              const fColor = isNegative ? "#ef4444" : themeColor;
-              const inlineStyle: React.CSSProperties = { color: fColor };
-              if (hasStyles) {
-                if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
-                if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
-                if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
-                if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
-                if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
-                if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
-                if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
-                if (parsedStyles.textColor) inlineStyle.color = parsedStyles.textColor;
-                if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
-                if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
-                if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
-                if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
-                if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
-                if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
-                if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
-                if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
-                if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
-              }
-              const displayHtml = hasStyles ? innerHtml.replace(/(?<!-)\bcolor:\s*[^;"]+;?/gi, "") : cleanText;
+                  const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
+                  const hasStyles = Object.values(parsedStyles).some(v => !!v);
 
-              return (
-                <div key={idx} className="flex items-center gap-2 py-0.5 group/badge relative">
-                  <span
-                    style={inlineStyle}
-                    className={`text-[0.65rem] font-medium tracking-wide uppercase ${editor?.isEditMode ? "cursor-text hover:outline hover:outline-1 hover:outline-secondary/30 px-1" : ""}`}
-                    contentEditable={editor?.isEditMode}
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      if (!editor?.isEditMode) return;
-                      const newVal = e.currentTarget.textContent || "";
-                      const currentFeatures = [...features];
-                      currentFeatures[idx] = isNegative ? `! ${newVal}` : newVal;
-                      editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
-                    }}
-                    dangerouslySetInnerHTML={{ __html: displayHtml }}
-                  />
-                  {editor?.isEditMode && (
-                    <div
-                      role="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        const target = e.currentTarget.previousElementSibling as HTMLElement;
-                        let targetStyles: Record<string, string> | undefined = undefined;
-                        if (target) {
-                          const comp = window.getComputedStyle(target);
-                          targetStyles = {
-                            fontFamily: comp.fontFamily,
-                            fontSize: comp.fontSize,
-                            fontWeight: comp.fontWeight,
-                            textColor: comp.color,
-                          };
-                        }
-                        onEditTypo?.({ id: product.id, idx, value: cleanText, isNegative, extra_text: extraText, targetStyles });
-                      }}
-                      className="ml-auto p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0 opacity-0 group-hover/badge:opacity-100"
-                      title="Edit Text Style"
-                    >
-                      <span className="font-serif font-bold text-[10px] leading-none px-1 py-0.5">A</span>
+                  const fColor = isNegative ? "#ef4444" : themeColor;
+                  const inlineStyle: React.CSSProperties = { color: fColor };
+                  if (hasStyles) {
+                    if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
+                    if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
+                    if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
+                    if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
+                    if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
+                    if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
+                    if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
+                    if (parsedStyles.textColor) inlineStyle.color = parsedStyles.textColor;
+                    if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
+                    if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
+                    if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
+                    if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
+                    if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
+                    if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
+                    if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
+                    if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
+                    if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
+                  }
+                  const displayHtml = hasStyles ? innerHtml.replace(/(?<!-)\bcolor:\s*[^;"]+;?/gi, "") : cleanText;
+
+                  return (
+                    <div key={idx} className="flex items-center gap-2 py-0.5 group/badge relative">
+                      <span
+                        style={inlineStyle}
+                        className={`text-[0.65rem] font-medium tracking-wide uppercase ${editor?.isEditMode ? "cursor-text hover:outline hover:outline-1 hover:outline-secondary/30 px-1" : ""}`}
+                        contentEditable={editor?.isEditMode}
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          if (!editor?.isEditMode) return;
+                          const newVal = e.currentTarget.textContent || "";
+                          const currentFeatures = [...features];
+                          currentFeatures[idx] = isNegative ? `! ${newVal}` : newVal;
+                          editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
+                        }}
+                        dangerouslySetInnerHTML={{ __html: displayHtml }}
+                      />
+                      {editor?.isEditMode && (
+                        <div
+                          role="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const target = e.currentTarget.previousElementSibling as HTMLElement;
+                            let targetStyles: Record<string, string> | undefined = undefined;
+                            if (target) {
+                              const comp = window.getComputedStyle(target);
+                              targetStyles = {
+                                fontFamily: comp.fontFamily,
+                                fontSize: comp.fontSize,
+                                fontWeight: comp.fontWeight,
+                                textColor: comp.color,
+                              };
+                            }
+                            onEditTypo?.({ id: product.id, idx, value: cleanText, isNegative, extra_text: extraText, targetStyles });
+                          }}
+                          className="ml-auto p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0 opacity-0 group-hover/badge:opacity-100"
+                          title="Edit Text Style"
+                        >
+                          <span className="font-serif font-bold text-[10px] leading-none px-1 py-0.5">A</span>
+                        </div>
+                      )}
+                      {editor?.isEditMode && (
+                        <button
+                          onClick={() => {
+                            const currentFeatures = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map((s) => s.trim()) : [];
+                            currentFeatures.splice(idx, 1);
+                            editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
+                          }}
+                          className="ml-1 opacity-0 group-hover/badge:opacity-100 p-0.5 text-destructive hover:bg-destructive/10 rounded transition-all"
+                          title="Remove Feature"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                      {!editor?.isEditMode && hasMore && idx === visibleFeatures.length - 1 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setFeaturesExpanded(!featuresExpanded); }}
+                          className="ml-auto p-0.5 hover:bg-secondary/10 rounded-full transition-all shrink-0 border"
+                          style={{ color: themeColor, borderColor: themeColor }}
+                          title={featuresExpanded ? "Collapse" : "Expand"}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            {featuresExpanded ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
+                          </svg>
+                        </button>
+                      )}
                     </div>
-                  )}
-                  {editor?.isEditMode && (
-                    <button
-                      onClick={() => {
-                        const currentFeatures = extraText ? (extraText.includes("|||") ? extraText.split("|||") : extraText.split(",")).map((s) => s.trim()) : [];
-                        currentFeatures.splice(idx, 1);
-                        editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
-                      }}
-                      className="ml-1 opacity-0 group-hover/badge:opacity-100 p-0.5 text-destructive hover:bg-destructive/10 rounded transition-all"
-                      title="Remove Feature"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              );
-            });
+                  );
+                })}
+              </>
+            );
           })()}
         </div>
 
@@ -405,10 +428,13 @@ const ProductCard = ({
         <div className="flex items-center gap-2 mt-4 w-full shrink-0">
           <div className="flex-1 relative group/btn">
             <button
-              {...getNavProps(() => {
+              {...getNavProps((e?: React.MouseEvent) => {
+                e?.stopPropagation();
                 const url = product.contact_url;
                 if (url && url.startsWith("http")) {
                   window.open(url, "_blank");
+                } else if (url && url.startsWith("#")) {
+                  document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
                 } else {
                   onDemo();
                 }
@@ -430,10 +456,13 @@ const ProductCard = ({
 
           <div className="flex-1 relative group/btn">
             <button
-              {...getNavProps(() => {
+              {...getNavProps((e?: React.MouseEvent) => {
+                e?.stopPropagation();
                 const url = product.demo_url;
                 if (url && url.startsWith("http")) {
                   window.open(url, "_blank");
+                } else if (url && url.startsWith("#")) {
+                  document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
                 } else {
                   onDemo();
                 }
@@ -485,12 +514,19 @@ const ProductCardList = ({
   onEditTypo?: any;
 }) => {
   const editor = useLiveEditor();
+  const [featuresExpanded, setFeaturesExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
 
   return (
     <div
       className={`flex flex-col bg-white dark:bg-[#11111f] rounded-2xl border-[0.5px] border-blue-500/30 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500 transition-all duration-300 hover:ring-2 hover:ring-secondary/50 group/item relative ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
-      {...getNavProps(() => { })}
+      {...getNavProps((e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        const url = product.contact_url || product.demo_url;
+        if (url && url.startsWith("http")) window.open(url, "_blank");
+        else if (url && url.startsWith("#")) document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
+        else onDemo();
+      })}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
       onDragEnd={onDragEnd}
@@ -680,156 +716,178 @@ const ProductCardList = ({
                   : ["#16a34a"];
                 const fColorBase = fColors[0] || "#16a34a";
 
-                return features.map((feature, idx) => {
-                  const rawText = feature.trim();
-                  if (!rawText) return null;
-                  const isNegative = rawText.startsWith("!");
-                  const cleanText = isNegative
-                    ? rawText.substring(1).trim()
-                    : rawText;
+                const maxFeatures = 5;
+                const hasMore = features.length > maxFeatures;
+                const visibleFeatures = featuresExpanded || editor?.isEditMode ? features : features.slice(0, maxFeatures);
 
-                  const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
-                  const hasStyles = Object.values(parsedStyles).some(v => !!v);
+                return (
+                  <>
+                    {visibleFeatures.map((feature, idx) => {
+                      const rawText = feature.trim();
+                      if (!rawText) return null;
+                      const isNegative = rawText.startsWith("!");
+                      const cleanText = isNegative
+                        ? rawText.substring(1).trim()
+                        : rawText;
 
-                  const fColor = isNegative ? "#ef4444" : fColorBase;
+                      const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
+                      const hasStyles = Object.values(parsedStyles).some(v => !!v);
 
-                  const inlineStyle: React.CSSProperties = { color: fColor };
-                  if (hasStyles) {
-                    if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
-                    if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
-                    if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
-                    if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
-                    if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
-                    if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
-                    if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
-                    if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
-                    if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
-                    if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
-                    if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
-                    if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
-                    if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
-                    if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
-                    if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
-                    if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
-                  }
-                  const displayHtml = hasStyles ? innerHtml.replace(/(?<!-)\bcolor:\s*[^;"]+;?/gi, "") : cleanText;
+                      const fColor = isNegative ? "#ef4444" : fColorBase;
 
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-2 py-0.5 w-full max-w-sm group/badge hover:scale-[1.02] transition-transform"
-                    >
-                      <span
-                        style={inlineStyle}
-                        className={`text-[0.75rem] font-medium tracking-widest uppercase brightness-90 dark:brightness-125 inline-block rounded-sm ${editor?.isEditMode ? "cursor-text hover:outline hover:outline-1 hover:outline-secondary/30 px-1" : ""}`}
-                        contentEditable={editor?.isEditMode}
-                        suppressContentEditableWarning
-                        onBlur={(e) => {
-                          if (!editor?.isEditMode) return;
-                          const newVal = e.currentTarget.textContent || "";
-                          const currentFeatures = [...features];
-                          currentFeatures[idx] = isNegative ? `! ${newVal}` : newVal;
-                          editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
-                        }}
-                        dangerouslySetInnerHTML={{ __html: displayHtml }}
-                      />
-                      {editor?.isEditMode && (
+                      const inlineStyle: React.CSSProperties = { color: fColor };
+                      if (hasStyles) {
+                        if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
+                        if (parsedStyles.fontSize) inlineStyle.fontSize = parsedStyles.fontSize;
+                        if (parsedStyles.fontWeight) inlineStyle.fontWeight = parsedStyles.fontWeight as any;
+                        if (parsedStyles.lineHeight) inlineStyle.lineHeight = parsedStyles.lineHeight;
+                        if (parsedStyles.letterSpacing) inlineStyle.letterSpacing = parsedStyles.letterSpacing;
+                        if (parsedStyles.textTransform) inlineStyle.textTransform = parsedStyles.textTransform as any;
+                        if (parsedStyles.textAlign) inlineStyle.textAlign = parsedStyles.textAlign as any;
+                        if (parsedStyles.bgColor) inlineStyle.backgroundColor = parsedStyles.bgColor;
+                        if (parsedStyles.paddingTop) inlineStyle.paddingTop = parsedStyles.paddingTop;
+                        if (parsedStyles.paddingRight) inlineStyle.paddingRight = parsedStyles.paddingRight;
+                        if (parsedStyles.paddingBottom) inlineStyle.paddingBottom = parsedStyles.paddingBottom;
+                        if (parsedStyles.paddingLeft) inlineStyle.paddingLeft = parsedStyles.paddingLeft;
+                        if (parsedStyles.marginTop) inlineStyle.marginTop = parsedStyles.marginTop;
+                        if (parsedStyles.marginRight) inlineStyle.marginRight = parsedStyles.marginRight;
+                        if (parsedStyles.marginBottom) inlineStyle.marginBottom = parsedStyles.marginBottom;
+                        if (parsedStyles.marginLeft) inlineStyle.marginLeft = parsedStyles.marginLeft;
+                      }
+                      const displayHtml = hasStyles ? innerHtml.replace(/(?<!-)\bcolor:\s*[^;"]+;?/gi, "") : cleanText;
+
+                      return (
                         <div
-                          role="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            const target = e.currentTarget.previousElementSibling as HTMLElement;
-                            let targetStyles: Record<string, string> | undefined = undefined;
-                            if (target) {
-                              const comp = window.getComputedStyle(target);
-                              targetStyles = {
-                                fontFamily: comp.fontFamily,
-                                fontSize: comp.fontSize,
-                                fontWeight: comp.fontWeight,
-                                lineHeight: comp.lineHeight,
-                                letterSpacing: comp.letterSpacing,
-                                textTransform: comp.textTransform,
-                                textAlign: comp.textAlign,
-                                textColor: comp.color,
-                                bgColor: comp.backgroundColor,
-                                paddingTop: comp.paddingTop,
-                                paddingRight: comp.paddingRight,
-                                paddingBottom: comp.paddingBottom,
-                                paddingLeft: comp.paddingLeft,
-                                marginTop: comp.marginTop,
-                                marginRight: comp.marginRight,
-                                marginBottom: comp.marginBottom,
-                                marginLeft: comp.marginLeft
-                              };
-                            }
-                            onEditTypo?.({
-                              id: product.id,
-                              idx,
-                              value: cleanText,
-                              isNegative,
-                              extra_text: extraText,
-                              targetStyles,
-                            });
-                          }}
-                          className="ml-1 p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0 opacity-0 group-hover/badge:opacity-100"
-                          title="Edit Text Style"
+                          key={idx}
+                          className="flex items-center gap-2 py-0.5 w-full max-w-sm group/badge hover:scale-[1.02] transition-transform"
                         >
-                          <span className="font-serif font-bold text-[10px] leading-none px-1 py-0.5">
-                            A
-                          </span>
+                          <span
+                            style={inlineStyle}
+                            className={`text-[0.75rem] font-medium tracking-widest uppercase brightness-90 dark:brightness-125 inline-block rounded-sm ${editor?.isEditMode ? "cursor-text hover:outline hover:outline-1 hover:outline-secondary/30 px-1" : ""}`}
+                            contentEditable={editor?.isEditMode}
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                              if (!editor?.isEditMode) return;
+                              const newVal = e.currentTarget.textContent || "";
+                              const currentFeatures = [...features];
+                              currentFeatures[idx] = isNegative ? `! ${newVal}` : newVal;
+                              editor.onUpdate("products", "extra_text", currentFeatures.join("|||"), product.id);
+                            }}
+                            dangerouslySetInnerHTML={{ __html: displayHtml }}
+                          />
+                          {editor?.isEditMode && (
+                            <div
+                              role="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                const target = e.currentTarget.previousElementSibling as HTMLElement;
+                                let targetStyles: Record<string, string> | undefined = undefined;
+                                if (target) {
+                                  const comp = window.getComputedStyle(target);
+                                  targetStyles = {
+                                    fontFamily: comp.fontFamily,
+                                    fontSize: comp.fontSize,
+                                    fontWeight: comp.fontWeight,
+                                    lineHeight: comp.lineHeight,
+                                    letterSpacing: comp.letterSpacing,
+                                    textTransform: comp.textTransform,
+                                    textAlign: comp.textAlign,
+                                    textColor: comp.color,
+                                    bgColor: comp.backgroundColor,
+                                    paddingTop: comp.paddingTop,
+                                    paddingRight: comp.paddingRight,
+                                    paddingBottom: comp.paddingBottom,
+                                    paddingLeft: comp.paddingLeft,
+                                    marginTop: comp.marginTop,
+                                    marginRight: comp.marginRight,
+                                    marginBottom: comp.marginBottom,
+                                    marginLeft: comp.marginLeft
+                                  };
+                                }
+                                onEditTypo?.({
+                                  id: product.id,
+                                  idx,
+                                  value: cleanText,
+                                  isNegative,
+                                  extra_text: extraText,
+                                  targetStyles,
+                                });
+                              }}
+                              className="ml-1 p-0.5 hover:bg-secondary/20 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer bg-secondary/10 text-secondary shrink-0 opacity-0 group-hover/badge:opacity-100"
+                              title="Edit Text Style"
+                            >
+                              <span className="font-serif font-bold text-[10px] leading-none px-1 py-0.5">
+                                A
+                              </span>
+                            </div>
+                          )}
+                          {editor?.isEditMode && (
+                            <button
+                              onClick={() => {
+                                const currentFeatures = extraText
+                                  ? (extraText.includes("|||")
+                                    ? extraText.split("|||")
+                                    : extraText.split(",")
+                                  ).map((s) => s.trim())
+                                  : [];
+                                currentFeatures.splice(idx, 1);
+                                editor.onUpdate(
+                                  "products",
+                                  "extra_text",
+                                  currentFeatures.join("|||"),
+                                  product.id,
+                                );
+                              }}
+                              className="ml-auto opacity-0 group-hover/badge:opacity-100 p-0.5 text-destructive hover:bg-destructive/10 rounded transition-all"
+                              title="Remove Feature"
+                            >
+                              <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M18 6L6 18M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                          {!editor?.isEditMode && hasMore && idx === visibleFeatures.length - 1 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setFeaturesExpanded(!featuresExpanded); }}
+                              className="ml-auto p-0.5 hover:bg-secondary/10 rounded-full transition-all shrink-0 border"
+                              style={{ color: fColorBase, borderColor: fColorBase }}
+                              title={featuresExpanded ? "Collapse" : "Expand"}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                {featuresExpanded ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
+                              </svg>
+                            </button>
+                          )}
                         </div>
-                      )}
-                      {editor?.isEditMode && (
-                        <button
-                          onClick={() => {
-                            const currentFeatures = extraText
-                              ? (extraText.includes("|||")
-                                ? extraText.split("|||")
-                                : extraText.split(",")
-                              ).map((s) => s.trim())
-                              : [];
-                            currentFeatures.splice(idx, 1);
-                            editor.onUpdate(
-                              "products",
-                              "extra_text",
-                              currentFeatures.join("|||"),
-                              product.id,
-                            );
-                          }}
-                          className="ml-auto opacity-0 group-hover/badge:opacity-100 p-0.5 text-destructive hover:bg-destructive/10 rounded transition-all"
-                          title="Remove Feature"
-                        >
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18 6L6 18M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  );
-                });
+                      );
+                    })}
+                  </>
+                );
               })()}
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
+                {...getNavProps((e?: React.MouseEvent) => {
+                  e?.stopPropagation();
                   const url = product.contact_url;
                   if (url && url.startsWith("http")) {
                     window.open(url, "_blank");
+                  } else if (url && url.startsWith("#")) {
+                    document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
                   } else {
                     onDemo();
                   }
-                }}
+                })}
                 className="py-2.5 px-4 rounded-xl text-[10px] font-bold text-secondary border border-secondary transition-all duration-300 hover:bg-secondary/10 flex items-center"
               >
                 <EditableText
@@ -840,15 +898,17 @@ const ProductCardList = ({
                 />
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
+                {...getNavProps((e?: React.MouseEvent) => {
+                  e?.stopPropagation();
                   const url = product.demo_url;
                   if (url && url.startsWith("http")) {
                     window.open(url, "_blank");
+                  } else if (url && url.startsWith("#")) {
+                    document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
                   } else {
                     onDemo();
                   }
-                }}
+                })}
                 className="py-2.5 px-4 rounded-xl text-[10px] font-bold text-white transition-all duration-300 hover:opacity-90 active:scale-95 shadow-md flex items-center group-hover:bg-blue-600"
                 style={{ background: bg }}
               >
