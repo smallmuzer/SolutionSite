@@ -268,6 +268,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       else if (uiSection === "products") { defaults.name = "New Product"; defaults.description = "Product description"; defaults.tagline = "Premium"; defaults.extra_text = "Feature 1, Feature 2, Feature 3, Feature 4"; }
       else if (uiSection === "clients") { defaults.name = "New Client"; defaults.logo_url = ""; }
       else if (uiSection === "technologies") { defaults.name = "New Technology"; defaults.description = "Brief description of the tech stack."; defaults.category = "General"; }
+      else if (uiSection === "testimonials") { defaults.name = "New Client"; defaults.company = "Role / Position"; defaults.company_name = "Company Name"; defaults.message = "Client testimonial message goes here."; defaults.rating = 5; }
       else { defaults.title = "New Item"; defaults.name = "New Item"; }
 
       const newId = `temp_${Date.now()}`;
@@ -490,7 +491,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
       let table = config.section;
       if (table === "clients") table = "client_logos";
 
-      let url = config.id
+      const url = config.id
         ? `/api/db/${table}?id=${config.id}&_single=1`
         : `/api/db/site_content?section_key=${config.section}&_single=1`;
 
@@ -539,7 +540,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
       let table = config.section;
       if (table === "clients") table = "client_logos";
 
-      let url = config.id
+      const url = config.id
         ? `/api/db/${table}?id=${config.id}&_single=1`
         : `/api/db/site_content?section_key=${config.section}&_single=1`;
 

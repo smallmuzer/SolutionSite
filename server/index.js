@@ -797,7 +797,7 @@ const TABLE_COLS = {
   contact_submissions: ["id", "name", "full_name", "company_name", "email", "phone", "message", "status", "is_read", "website", "created_at"],
   job_applications: ["id", "applicant_name", "email", "phone", "job_id", "resume_url", "cover_letter", "status", "website", "created_at", "updated_at"],
   services: ["id", "title", "description", "image_url", "icon", "is_visible", "sort_order", "created_at", "updated_at"],
-  testimonials: ["id", "name", "company", "message", "avatar_url", "rating", "is_visible", "sort_order", "created_at", "updated_at"],
+  testimonials: ["id", "name", "company", "company_name", "message", "avatar_url", "rating", "is_visible", "sort_order", "created_at", "updated_at"],
   career_jobs: ["id", "title", "description", "location", "job_type", "image_url", "icon", "is_visible", "sort_order", "created_at", "updated_at"],
   products: ["id", "name", "tagline", "description", "image_url", "extra_text", "extra_color", "more_info_label", "demo_label", "contact_url", "is_popular", "is_visible", "sort_order", "created_at", "updated_at"],
   client_logos: ["id", "name", "logo_url", "is_visible", "sort_order", "created_at", "updated_at"],

@@ -9,7 +9,20 @@ import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor } from
 const AVATAR_MAP: Record<string, string> = {};
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=random&color=fff&name=";
 
-const CARDS_PER_PAGE = 3;
+const CARDS_PER_PAGE = 6;
+
+const MARQUEE_STYLE = `
+@keyframes testimonials-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 0.375rem)); }
+}
+.animate-t-marquee {
+  animation: testimonials-marquee 12s linear infinite;
+}
+.pause-marquee:hover .animate-t-marquee {
+  animation-play-state: paused;
+}
+`;
 
 const StarRating = ({ rating, id, editor }: { rating: number, id?: string, editor?: any }) => {
   const safeRating = Math.max(0, Math.min(5, rating || 5));
@@ -35,11 +48,11 @@ const StarRating = ({ rating, id, editor }: { rating: number, id?: string, edito
       <div className="flex gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => {
           if (i < fullStars) {
-            return <Star key={i} size={14} className="text-amber-400 fill-amber-400" />;
+            return <Star key={i} size={12} className="text-amber-400 fill-amber-400" />;
           } else if (i === fullStars && hasHalfStar) {
-            return <StarHalf key={i} size={14} className="text-amber-400 fill-amber-400" />;
+            return <StarHalf key={i} size={12} className="text-amber-400 fill-amber-400" />;
           } else {
-            return <Star key={i} size={14} className="text-muted-foreground/30" />;
+            return <Star key={i} size={12} className="text-muted-foreground/30" />;
           }
         })}
       </div>
@@ -52,6 +65,162 @@ const StarRating = ({ rating, id, editor }: { rating: number, id?: string, edito
           <Edit2 size={12} />
         </button>
       )}
+    </div>
+  );
+};
+
+const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      if (!expanded) {
+        setOverflows(el.scrollHeight > el.clientHeight + 6);
+      }
+    };
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    const t = setTimeout(check, 100);
+    window.addEventListener("resize", check);
+    return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
+  }, [text, expanded]);
+
+  return (
+    <div className="relative text-left w-full group/rm">
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+        {section && field ? (
+          <EditableText section={section} field={field} id={id} value={text} />
+        ) : text}
+      </div>
+      {overflows && !expanded && (
+        <div className="absolute bottom-[1px] right-0 flex items-center justify-end pl-8 bg-gradient-to-r from-transparent via-card to-card">
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            className="font-bold text-[10.5px] text-primary hover:underline bg-card pl-0.5 pr-1 whitespace-nowrap"
+          >
+            ... Read more
+          </button>
+        </div>
+      )}
+      {expanded && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+          className="font-bold text-[10.5px] text-primary hover:underline mt-1 block w-full text-left"
+        >
+          Read less
+        </button>
+      )}
+    </div>
+  );
+};
+
+const GridCard = ({
+  t, editor, hideProfiles, draggedId,
+  onDragStart, onDragEnd, onDragOver, onDrop, onMove
+}: {
+  t: any, editor: any, hideProfiles: boolean, draggedId: string | null,
+  onDragStart: (e: React.DragEvent, id: string) => void,
+  onDragEnd: () => void,
+  onDragOver: (e: React.DragEvent) => void,
+  onDrop: (e: React.DragEvent, id: string) => void,
+  onMove: (id: string, dir: "up" | "down" | "left" | "right") => void
+}) => {
+  const companies = useMemo(() => {
+    if (!t.company_name) return [];
+    return t.company_name.split(',').filter(Boolean).map((c: string) => c.replace(/<[^>]*>?/gm, '').trim());
+  }, [t.company_name]);
+
+  const isMarquee = !editor?.isEditMode && companies.length > 1;
+
+  return (
+    <div
+      className={`glass-card p-3 flex flex-col pb-2 sm:pb-3 text-left hover:glow-effect transition-all duration-300 h-full group/item relative border border-border border-l-4 border-l-orange-400 rounded-xl ${editor?.isEditMode ? "pb-10" : "pb-[1px]"} ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
+      draggable={!!editor?.isEditMode}
+      onDragStart={(e) => onDragStart(e, t.id)}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDrop={(e) => onDrop(e, t.id)}
+    >
+      <EditorToolbar
+        section="testimonials"
+        id={t.id}
+        isVisible={t.is_visible}
+        imageField="avatar_url"
+        profileHidden={hideProfiles}
+        onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
+        className="-top-5 right-2"
+      />
+      {editor?.isEditMode && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1.5 pointer-events-none">
+          <button onClick={(e) => { e.stopPropagation(); onMove(t.id, "up"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Up">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove(t.id, "down"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Down">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove(t.id, "left"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Left">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onMove(t.id, "right"); }} className="p-1.5 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-lg" title="Move Right">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
+        </div>
+      )}
+      <div className="relative z-10 flex flex-col w-full h-full">
+        <div className="flex justify-between items-start mb-2 w-full">
+          <div className="flex flex-col items-start text-left flex-1 pr-2 min-w-0">
+            <div className="font-heading font-bold text-foreground text-[0.875rem] mb-0.5 min-h-[1.25rem] w-full">
+              <EditableText section="testimonials" field="name" id={t.id} value={t.name || (editor?.isEditMode ? "Client Name" : "")} />
+            </div>
+            <div className="text-secondary text-[0.75rem] font-medium min-h-[1.125rem] w-full">
+              <EditableText section="testimonials" field="company" id={t.id} value={t.company || (editor?.isEditMode ? "Role / Position" : "")} />
+            </div>
+          </div>
+          <div className="shrink-0 pt-0.5">
+            <StarRating rating={t.rating} id={t.id} editor={editor} />
+          </div>
+        </div>
+
+        <div className="flex overflow-hidden mb-0.5 min-h-[1.25rem] w-full items-center relative pause-marquee">
+          {editor?.isEditMode ? (
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider text-primary border border-primary/20 bg-primary/5 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap max-w-full overflow-hidden text-ellipsis block min-w-[50px] min-h-[1.2rem]">
+              <EditableText section="testimonials" field="company_name" id={t.id} value={t.company_name || "Company Name"} />
+            </span>
+          ) : companies.length > 0 ? (
+            <div className={`flex flex-nowrap gap-1.5 w-max ${isMarquee ? 'animate-t-marquee' : ''}`}>
+              {companies.map((c, i) => (
+                <span key={i} className="text-[0.6rem] font-bold uppercase tracking-wider text-primary border border-primary/20 bg-primary/5 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">
+                  {c}
+                </span>
+              ))}
+              {isMarquee && companies.map((c, i) => (
+                <span key={`dup-${i}`} className="text-[0.6rem] font-bold uppercase tracking-wider text-primary border border-primary/20 bg-primary/5 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap" aria-hidden="true">
+                  {c}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+
+        <div className="flex gap-2 flex-1 w-full mt-0">
+          <div className="text-primary text-3xl font-serif leading-none opacity-40 select-none mt-1">“</div>
+          <div className="flex-1 pt-1">
+            <ReadMoreText
+              section="testimonials"
+              field="message"
+              id={t.id}
+              text={t.message || (editor?.isEditMode ? "Client testimonial message goes here." : "")}
+              clampClass="line-clamp-3"
+              textClass="text-muted-foreground text-[0.75rem] leading-relaxed min-h-[2rem]"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -129,8 +298,8 @@ const TestimonialsSection = () => {
     let step = 0;
     if (direction === "left") step = -1;
     else if (direction === "right") step = 1;
-    else if (direction === "up") step = -4; // Based on grid-cols-4 layout
-    else if (direction === "down") step = 4;
+    else if (direction === "up") step = -3; // Based on lg:grid-cols-3 layout
+    else if (direction === "down") step = 3;
 
     const targetIdx = Math.max(0, Math.min(testimonialsState.length - 1, idx + step));
     if (targetIdx === idx) return;
@@ -158,7 +327,7 @@ const TestimonialsSection = () => {
       const pendingImage = editor?.pendingChanges?.[`testimonials:${t.id}:avatar_url`];
       const pendingVisibility = editor?.pendingChanges?.[`testimonials:${t.id}:is_visible`];
       return {
-        id: t.id, name: t.name, company: t.company, rating: t.rating ?? 5,
+        id: t.id, name: t.name, company: t.company, company_name: t.company_name || "", rating: t.rating ?? 5,
         message: t.message,
         avatar_url: pendingImage !== undefined ? pendingImage : (t.avatar_url || ""),
         is_visible: pendingVisibility !== undefined ? pendingVisibility : t.is_visible,
@@ -173,12 +342,12 @@ const TestimonialsSection = () => {
 
   const currentCardsPerPage = isMobile ? 1 : CARDS_PER_PAGE;
   const totalPages = Math.max(1, Math.ceil(testimonials.length / currentCardsPerPage));
-  
+
   const goTo = (p: number, interaction = false) => {
     if (interaction) userInteractedRef.current = true;
     setCurrentPage(((p % totalPages) + totalPages) % totalPages);
   };
-  
+
   const pageCards = testimonials.slice(currentPage * currentCardsPerPage, (currentPage + 1) * currentCardsPerPage);
 
   useEffect(() => {
@@ -205,157 +374,9 @@ const TestimonialsSection = () => {
     </section>
   );
 
-  const CornerDesigns = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
-      {/* Top Left: Orange Leaf Shape */}
-      <svg className="absolute -top-1 -left-1 w-14 h-14 sm:w-16 sm:h-16 opacity-70 dark:opacity-60" viewBox="0 0 100 100">
-        <path d="M 10,90 C 10,40 40,10 90,10 C 90,60 60,90 10,90 Z" fill="#f97316"/>
-      </svg>
-      
-      {/* Bottom Right: Blue Leaf Shape */}
-      <svg className="absolute -bottom-1 -right-1 w-14 h-14 sm:w-16 sm:h-16 opacity-70 dark:opacity-60" viewBox="0 0 100 100">
-        <path d="M 10,90 C 10,40 40,10 90,10 C 90,60 60,90 10,90 Z" fill="#38bdf8"/>
-      </svg>
-    </div>
-  );
-
-  const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
-    const [expanded, setExpanded] = useState(false);
-    const [overflows, setOverflows] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      const el = ref.current;
-      if (!el) return;
-      const check = () => {
-        if (!expanded) {
-          setOverflows(el.scrollHeight > el.clientHeight + 6);
-        }
-      };
-      const ro = new ResizeObserver(check);
-      ro.observe(el);
-      const t = setTimeout(check, 100);
-      window.addEventListener("resize", check);
-      return () => { ro.disconnect(); clearTimeout(t); window.removeEventListener("resize", check); };
-    }, [text, expanded]);
-
-    return (
-      <div className="relative text-left w-full">
-        <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
-          {section && field ? (
-            <EditableText section={section} field={field} id={id} value={text} />
-          ) : text}
-        </div>
-        {(overflows || expanded) && (
-          <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            className="font-bold mt-1 text-[11px] text-[#38bdf8] hover:text-[#0284c7] transition-colors inline-flex"
-          >
-            Read {expanded ? "Less" : "More"}
-          </button>
-        )}
-      </div>
-    );
-  };
-
-  const GridCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div
-      className={`glass-card p-4 sm:p-5 flex flex-col items-center text-center hover:glow-effect transition-all duration-300 h-full group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
-      draggable={editor?.isEditMode}
-      onDragStart={(e) => handleDragStart(e, t.id)}
-      onDragEnd={() => setDraggedId(null)}
-      onDragOver={handleDragOver}
-      onDrop={(e) => handleDrop(e, t.id)}
-    >
-      <CornerDesigns />
-      <EditorToolbar 
-        section="testimonials" 
-        id={t.id} 
-        isVisible={t.is_visible} 
-        imageField="avatar_url" 
-        profileHidden={hideProfiles}
-        onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
-        className="-top-5 right-2"
-      />
-      {editor?.isEditMode && (
-        <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
-          <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "left"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Left">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); handleMove(t.id, "right"); }} className="p-1 bg-secondary/80 text-white rounded-full pointer-events-auto hover:scale-110 transition-transform shadow-sm" title="Move Right">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-          </button>
-        </div>
-      )}
-      <div className="relative z-10 flex flex-col items-center w-full h-full">
-        {!hideProfiles && (
-          <div className="w-20 h-20 rounded-full border-4 border-secondary/25 shadow-xl overflow-hidden bg-muted mb-4 shrink-0">
-            <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
-          </div>
-        )}
-        <div className="font-heading font-bold text-foreground text-[0.9375rem] mb-0.5">
-          <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
-        </div>
-        <div className="text-secondary text-[0.8125rem] font-medium mb-2 min-h-[1.25rem] flex items-center justify-center w-full">
-          <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
-        </div>
-        <StarRating rating={t.rating} id={t.id} editor={editor} />
-        <div className="flex-1 w-full mt-1">
-          <ReadMoreText
-            section="testimonials"
-            field="message"
-            id={t.id}
-            text={t.message}
-            clampClass="line-clamp-5"
-            textClass="text-muted-foreground text-[0.875rem] leading-relaxed"
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  const ListCard = ({ t }: { t: typeof testimonials[0] }) => (
-    <div className={`glass-card p-3 sm:p-4 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center hover:glow-effect transition-all duration-300 group/item relative border-2 border-primary/20 rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-xl rounded-bl-xl ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''}`}>
-      <CornerDesigns />
-      <EditorToolbar 
-        section="testimonials" 
-        id={t.id} 
-        isVisible={t.is_visible} 
-        profileHidden={hideProfiles}
-        onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
-        className="-top-5 right-2"
-      />
-      <div className="relative z-10 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center w-full">
-        <div className="flex flex-col items-center shrink-0 sm:w-28">
-          {!hideProfiles && (
-            <div className="w-[72px] h-[72px] rounded-full border-4 border-secondary/20 shadow-xl overflow-hidden bg-muted">
-              <img src={t.avatar_url || `${DEFAULT_AVATAR}${encodeURIComponent(t.name)}`} alt={t.name} className="w-full h-full object-cover" />
-            </div>
-          )}
-          <div className="font-heading font-semibold text-foreground text-[0.875rem] text-center mt-2">
-            <EditableText section="testimonials" field="name" id={t.id} value={t.name} />
-          </div>
-          <div className="text-secondary text-[0.75rem] text-center font-medium mb-1">
-            <EditableText section="testimonials" field="company" id={t.id} value={t.company} />
-          </div>
-          <StarRating rating={t.rating} id={t.id} editor={editor} />
-        </div>
-        <div className="flex-1">
-          <ReadMoreText
-            section="testimonials"
-            field="message"
-            id={t.id}
-            text={t.message}
-            clampClass="line-clamp-5"
-            textClass="text-muted-foreground text-[0.875rem] leading-relaxed"
-          />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <section id="testimonials" className="section-padding section-alt relative group">
+      <style dangerouslySetInnerHTML={{ __html: MARQUEE_STYLE }} />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-6">
           <span className="text-secondary font-semibold text-sm uppercase tracking-widest" style={{ color: headerContent.badge_color || undefined }}>
@@ -373,20 +394,31 @@ const TestimonialsSection = () => {
         </AnimatedSection>
 
         {editor?.isEditMode ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch max-w-[75rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch max-w-[85rem] mx-auto overflow-y-auto max-h-[80vh] p-2 custom-scrollbar">
             {testimonials.map((t) => (
-              <GridCard key={t.id} t={t} />
+              <GridCard
+                key={t.id}
+                t={t}
+                editor={editor}
+                hideProfiles={hideProfiles}
+                draggedId={draggedId}
+                onDragStart={handleDragStart}
+                onDragEnd={() => setDraggedId(null)}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onMove={handleMove}
+              />
             ))}
           </div>
         ) : (
-          <div 
-            className="max-w-[75rem] mx-auto px-4 overflow-hidden"
+          <div
+            className="max-w-[85rem] mx-auto px-4 overflow-hidden"
             onMouseEnter={() => pausedRef.current = true}
             onMouseLeave={() => pausedRef.current = false}
             onTouchStart={() => pausedRef.current = true}
             onTouchEnd={() => pausedRef.current = false}
           >
-            <div 
+            <div
               className="flex transition-transform duration-500 ease-in-out w-full"
               style={{ transform: `translateX(-${currentPage * 100}%)` }}
             >
@@ -394,7 +426,17 @@ const TestimonialsSection = () => {
                 <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch px-1">
                   {testimonials.slice(pageIdx * currentCardsPerPage, (pageIdx + 1) * currentCardsPerPage).map((t) => (
                     <div key={t.id} className="h-full">
-                      <GridCard t={t} />
+                      <GridCard
+                        t={t}
+                        editor={editor}
+                        hideProfiles={hideProfiles}
+                        draggedId={draggedId}
+                        onDragStart={handleDragStart}
+                        onDragEnd={() => setDraggedId(null)}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        onMove={handleMove}
+                      />
                     </div>
                   ))}
                 </div>

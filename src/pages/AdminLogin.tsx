@@ -70,7 +70,7 @@ const AdminLogin = () => {
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-foreground text-sm focus:ring-2 focus:ring-ring outline-none"
-                placeholder="admin@solutions.com.mv" />
+                placeholder="Enter your email" />
             </div>
           </div>
           <div>

@@ -29,6 +29,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     company TEXT NOT NULL DEFAULT '',
+    company_name TEXT NOT NULL DEFAULT '',
     message TEXT NOT NULL DEFAULT '',
     avatar_url TEXT,
     rating INTEGER NOT NULL DEFAULT 5,
@@ -327,6 +328,9 @@ try {
       tests.forEach((t, i) => updateStmt.run(i, t.id));
     })();
   }
+  if (!testCols.includes("company_name")) {
+    db.exec("ALTER TABLE testimonials ADD COLUMN company_name TEXT NOT NULL DEFAULT '';");
+  }
 
   // Add extra_text / extra_color / more_info_label / demo_label to products if missing
   const prodCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
@@ -618,9 +622,9 @@ seedIfEmpty("services", [
 ]);
 
 seedIfEmpty("testimonials", [
-  { id: "tst-1", name: "Ahmed Rasheed", company: "Villa Group", message: "Systems Solutions transformed our operations with their ERP system. The team was professional, responsive, and delivered exactly what we needed.", avatar_url: "/assets/testimonials/ahmed.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
-  { id: "tst-2", name: "Fatima Zahir", company: "OBLU Resorts", message: "Their web development team built us a stunning booking platform. Traffic and conversions have increased significantly since launch.", avatar_url: "/assets/testimonials/fatima.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
-  { id: "tst-3", name: "Dorji Wangchuk", company: "RCSC Bhutan", message: "Excellent consulting services. They understood our requirements perfectly and delivered a robust HR system on time and within budget.", avatar_url: "/assets/testimonials/dorji.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
+  { id: "tst-1", name: "Ahmed Rasheed", company: "CTO", company_name: "Villa Group", message: "Systems Solutions transformed our operations with their ERP system. The team was professional, responsive, and delivered exactly what we needed.", avatar_url: "/assets/testimonials/ahmed.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
+  { id: "tst-2", name: "Fatima Zahir", company: "Director", company_name: "OBLU Resorts", message: "Their web development team built us a stunning booking platform. Traffic and conversions have increased significantly since launch.", avatar_url: "/assets/testimonials/fatima.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
+  { id: "tst-3", name: "Dorji Wangchuk", company: "Manager", company_name: "RCSC Bhutan", message: "Excellent consulting services. They understood our requirements perfectly and delivered a robust HR system on time and within budget.", avatar_url: "/assets/testimonials/dorji.jpg", rating: 5, is_visible: 1, created_at: t0, updated_at: t0 },
 ]);
 
 seedIfEmpty("products", [

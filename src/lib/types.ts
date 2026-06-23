@@ -76,6 +76,7 @@ interface TableDefs {
     id: string;
     name: string;
     company: string;
+    company_name: string;
     message: string;
     avatar_url: string | null;
     rating: number;

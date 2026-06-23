@@ -190,7 +190,7 @@ const Footer = () => {
   const addressIdsDraft = editor?.pendingChanges["footer:address_ids"] ?? content.address_ids;
   let addressIds: string[] = ["1", "2"];
   if (addressIdsDraft) {
-    try { addressIds = typeof addressIdsDraft === "string" ? JSON.parse(addressIdsDraft) : addressIdsDraft; } catch (e) { }
+    try { addressIds = typeof addressIdsDraft === "string" ? JSON.parse(addressIdsDraft) : addressIdsDraft; } catch { /* ignore */ }
   }
 
   const handleAddAddress = () => {

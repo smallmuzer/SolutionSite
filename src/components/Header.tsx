@@ -88,7 +88,7 @@ const Header = () => {
   );
 
   const getBaseNavItems = () => {
-    let rawNavItems = editor?.pendingChanges?.["settings:nav_items"] ?? settingsContent.nav_items;
+    const rawNavItems = editor?.pendingChanges?.["settings:nav_items"] ?? settingsContent.nav_items;
     let custom = rawNavItems;
     if (typeof custom === 'string') {
       try { custom = JSON.parse(custom); } catch { custom = null; }
@@ -99,7 +99,7 @@ const Header = () => {
     return custom as { label: string, href: string }[];
   };
 
-  const customNavItems = useMemo(getBaseNavItems, [editor?.pendingChanges, settingsContent.nav_items, (settings as any).nav_items]);
+  const customNavItems = useMemo(getBaseNavItems, [editor?.pendingChanges, settingsContent.nav_items]);
 
   const navItems = customNavItems.map(item => {
     const key = `nav_link_${item.href.replace('#', '')}`;
