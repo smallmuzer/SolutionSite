@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import AnimatedSection from "./AnimatedSection";
-import { ChevronLeft, ChevronRight, Star, StarHalf, Edit2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, StarHalf, Edit2, FileSpreadsheet } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useGlobalView } from "./ui-customizer-context";
 import { useSiteContent } from "@/hooks/useSiteContent";
@@ -147,15 +147,25 @@ const GridCard = ({
 
   const isMarquee = !editor?.isEditMode && companies.length > 1;
 
+  const isExternalAndEdit = editor?.isEditMode && t.isExternalData;
+  const borderClasses = isExternalAndEdit
+    ? "border border-green-400 dark:border-green-500"
+    : "border border-border border-l-4 border-l-orange-400";
+
   return (
     <div
-      className={`glass-card p-3 flex flex-col pb-2 sm:pb-3 text-left hover:glow-effect transition-all duration-300 h-full group/item relative border border-border border-l-4 border-l-orange-400 rounded-xl ${editor?.isEditMode ? "pb-10" : "pb-[1px]"} ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
+      className={`glass-card p-3 flex flex-col pb-2 sm:pb-3 text-left hover:glow-effect transition-all duration-300 h-full group/item relative ${borderClasses} rounded-xl ${editor?.isEditMode ? "pb-10" : "pb-[1px]"} ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
       draggable={!!editor?.isEditMode}
       onDragStart={(e) => onDragStart(e, t.id)}
       onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, t.id)}
     >
+      {isExternalAndEdit && (
+        <div className="absolute top-1.5 right-1.5 text-green-500 bg-green-500/10 p-1 rounded-md z-10 pointer-events-none" title="Sourced from External Excel">
+          <FileSpreadsheet size={14} strokeWidth={2.5} />
+        </div>
+      )}
       <EditorToolbar
         section="testimonials"
         id={t.id}
@@ -385,7 +395,7 @@ const TestimonialsSection = ({ searchTerm }: { searchTerm?: string }) => {
       externalFiltered = externalFiltered.filter((t: any) => t.is_visible === 1 || t.is_visible === true);
     }
     if (externalFiltered.length > 0) {
-      list = [...list, ...externalFiltered];
+      list = [...list, ...externalFiltered.map((t: any) => ({ ...t, isExternalData: true }))];
     }
 
     if (searchTerm) {
@@ -485,8 +495,8 @@ const TestimonialsSection = ({ searchTerm }: { searchTerm?: string }) => {
           >
             <div className="relative flex w-full items-start">
               {Array.from({ length: totalPages }).map((_, pageIdx) => (
-                <div 
-                  key={pageIdx} 
+                <div
+                  key={pageIdx}
                   className={`w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch px-1 transition-all duration-500 ease-in-out ${pageIdx === currentPage ? 'relative z-10 opacity-100' : 'absolute top-0 left-0 z-0 opacity-0 pointer-events-none'}`}
                   style={{ transform: `translateX(${(pageIdx - currentPage) * 100}%)` }}
                 >
