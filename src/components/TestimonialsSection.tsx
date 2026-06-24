@@ -97,17 +97,21 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { tex
   }, [text, expanded]);
 
   return (
-    <div className="relative text-left w-full group/rm">
-      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+    <div className="relative text-left w-full group/rm flex flex-col">
+      <div
+        ref={ref}
+        className={`${textClass} ${expanded ? "" : clampClass} [&>span.relative]:block`}
+        style={!expanded ? { maxHeight: '58px', overflow: 'hidden' } : {}}
+      >
         {section && field ? (
-          <EditableText section={section} field={field} id={id} value={text} />
+          <EditableText tag="div" section={section} field={field} id={id} value={text} toolbarClassName="top-1 right-1" />
         ) : text}
       </div>
       {overflows && !expanded && (
-        <div className="absolute bottom-[1px] right-0 flex items-center justify-end pl-8 bg-gradient-to-r from-transparent via-card to-card">
+        <div className="absolute bottom-0 right-0 flex items-center justify-end pl-8 bg-gradient-to-r from-transparent via-card to-card z-10">
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-            className="font-bold text-[10.5px] text-primary hover:underline bg-card pl-0.5 pr-1 whitespace-nowrap"
+            className="font-bold text-[10.5px] text-primary hover:underline bg-card pl-1 pr-1 whitespace-nowrap"
           >
             ... Read more
           </button>
@@ -479,12 +483,13 @@ const TestimonialsSection = ({ searchTerm }: { searchTerm?: string }) => {
             onTouchStart={() => pausedRef.current = true}
             onTouchEnd={() => pausedRef.current = false}
           >
-            <div
-              className="flex transition-transform duration-500 ease-in-out w-full"
-              style={{ transform: `translateX(-${currentPage * 100}%)` }}
-            >
+            <div className="relative flex w-full items-start">
               {Array.from({ length: totalPages }).map((_, pageIdx) => (
-                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch px-1">
+                <div 
+                  key={pageIdx} 
+                  className={`w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch px-1 transition-all duration-500 ease-in-out ${pageIdx === currentPage ? 'relative z-10 opacity-100' : 'absolute top-0 left-0 z-0 opacity-0 pointer-events-none'}`}
+                  style={{ transform: `translateX(${(pageIdx - currentPage) * 100}%)` }}
+                >
                   {testimonials.slice(pageIdx * currentCardsPerPage, (pageIdx + 1) * currentCardsPerPage).map((t) => (
                     <div key={t.id} className="h-full">
                       <GridCard

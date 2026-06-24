@@ -81,9 +81,9 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id, onExpan
 
   return (
     <div className="relative">
-      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass}`}>
+      <div ref={ref} className={`${textClass} ${expanded ? "" : clampClass} [&>span.relative]:block`}>
         {section && field ? (
-          <EditableText section={section} field={field} id={id} value={text} />
+          <EditableText tag="div" section={section} field={field} id={id} value={text} toolbarClassName="top-1 right-1" />
         ) : text}
       </div>
       {(overflows || expanded) && (
