@@ -5,6 +5,8 @@ import { Play, LayoutGrid } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
+import { uploadProjectAsset } from "@/lib/assets";
+import { toast } from "sonner";
 
 const SEED_CLIENTS = [
   { id: "cl-0", name: "aaa Hotels & Resorts", logo_url: "/assets/clients/aaa-1.png", is_visible: true, sort_order: 0 },
@@ -579,13 +581,53 @@ const ClientsSection = () => {
     const newItems = [...clientsState];
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
-    setClientsState(newItems);
-    newItems.forEach((item, idx) => {
-      if (item.sort_order !== idx) {
-        editor?.onUpdate("clients", "sort_order", idx, item.id);
-      }
-    });
+    setClientsState(newItems.map((c, i) => ({ ...c, sort_order: i })));
     setDraggedId(null);
+    newItems.forEach((c, i) => {
+      fetch(`/api/db/client_logos?id=${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sort_order: i }) });
+    });
+  };
+
+  const bulkImportClients = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    toast.info(`Importing ${files.length} clients...`);
+    let importCount = 0;
+    
+    for (const file of files) {
+      let rawName = file.name;
+      const lastDot = rawName.lastIndexOf('.');
+      if (lastDot !== -1) {
+         rawName = rawName.substring(0, lastDot);
+      }
+      
+      const clientName = rawName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      
+      if (clientsState.some(c => c.name?.toLowerCase() === clientName.toLowerCase())) {
+         continue; 
+      }
+      
+      const uploadedUrl = await uploadProjectAsset("clients", file).catch(() => null);
+      if (!uploadedUrl) continue;
+      
+      const newId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      editor?.onUpdate("clients", "_clone", { 
+        name: clientName, 
+        logo_url: uploadedUrl, 
+        is_visible: true,
+        sort_order: clientsState.length + importCount 
+      }, newId);
+      
+      importCount++;
+    }
+    
+    if (importCount > 0) {
+       toast.success(`Staged ${importCount} clients! Click 'Save All Changes' to apply.`);
+    } else {
+       toast.error("No new clients were imported (duplicates or upload failed).");
+    }
+    e.target.value = "";
   };
 
   const handleMove = (id: string, direction: "up" | "down" | "left" | "right") => {
@@ -650,7 +692,7 @@ const ClientsSection = () => {
                 <EditableText section="clients" field="highlight" value={header.highlight || "Industry Leaders"} colorField="highlight_color" />
               </span>
             </span>
-            <SectionHeaderToolbar section="clients" targetSection="clients" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" />
+            <SectionHeaderToolbar section="clients" targetSection="clients" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" onBulkImport={bulkImportClients} />
           </h2>
           <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />

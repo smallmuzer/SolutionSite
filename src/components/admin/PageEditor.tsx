@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
-  Eye, EyeOff, Trash2, Plus, Edit2, Check, X, Save, Image,
+  Eye, EyeOff, Trash2, Plus, Edit2, Check, X, Save, Image, Upload,
   Star, Briefcase, Users, FileText, Phone, Globe, ChevronDown, ChevronUp,
   GripVertical, Home, Settings, Mail, MapPin, Building, Layers, Menu,
   Monitor, Smartphone, Code, Database, Cloud, Palette, BarChart, Shield,
@@ -519,6 +519,49 @@ const PageEditor = () => {
     if (data) { setClients([...clients, data]); setEditingClient(data.id); setTempClient(data); }
   };
 
+  const bulkImportClients = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    toast.info(`Importing ${files.length} clients...`);
+    const newClients = [];
+    for (const file of files) {
+      let rawName = file.name;
+      const lastDot = rawName.lastIndexOf('.');
+      if (lastDot !== -1) {
+        rawName = rawName.substring(0, lastDot);
+      }
+
+      const clientName = rawName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+      if (clients.some(c => c.name.toLowerCase() === clientName.toLowerCase()) ||
+        newClients.some(c => c.name.toLowerCase() === clientName.toLowerCase())) {
+        continue;
+      }
+
+      const uploadedUrl = await uploadFile(file, "clients");
+      if (!uploadedUrl) continue;
+
+      const { data, error } = await dbFetch("client_logos", {
+        method: "POST",
+        body: { name: clientName, logo_url: uploadedUrl, sort_order: clients.length + newClients.length }
+      });
+
+      if (data && !error) {
+        newClients.push(data);
+      }
+    }
+
+    if (newClients.length > 0) {
+      setClients(prev => [...prev, ...newClients]);
+      toast.success(`Successfully imported ${newClients.length} clients!`);
+      window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+    } else {
+      toast.error("No new clients were imported (duplicates or upload failed).");
+    }
+    e.target.value = "";
+  };
+
   const addTestimonial = async () => {
     const { data } = await dbFetch("testimonials", {
       method: "POST",
@@ -781,8 +824,8 @@ const PageEditor = () => {
                                     type="button"
                                     onClick={() => setTempHeroStat({ ...tempHeroStat, color: style.value })}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${isSelected
-                                        ? "border-secondary bg-secondary/10 text-secondary shadow-sm"
-                                        : "border-border/50 text-muted-foreground hover:bg-muted"
+                                      ? "border-secondary bg-secondary/10 text-secondary shadow-sm"
+                                      : "border-border/50 text-muted-foreground hover:bg-muted"
                                       }`}
                                   >
                                     <div className={`w-3 h-3 rounded-full ${style.cls}`}>
@@ -1054,9 +1097,15 @@ const PageEditor = () => {
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-foreground">Partners ({clients.length})</span>
-                  <button onClick={addClient} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm">
-                    <Plus size={14} /> Add New Client
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1.5 px-3 py-1.5 bg-muted text-foreground border border-border rounded-lg text-xs font-bold hover:bg-muted/80 transition-all shadow-sm cursor-pointer">
+                      <Upload size={14} /> Bulk Import Images
+                      <input type="file" multiple accept="image/*" className="hidden" onChange={bulkImportClients} />
+                    </label>
+                    <button onClick={addClient} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm">
+                      <Plus size={14} /> Add New Client
+                    </button>
+                  </div>
                 </div>
                 <p className="text-[0.6875rem] text-muted-foreground italic font-medium">Reorder by dragging cards (Desktop only)</p>
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -1069,8 +1118,8 @@ const PageEditor = () => {
                       onDrop={() => { if (dragIdx.current !== null) { moveClient(dragIdx.current, idx); dragIdx.current = null; } }}
                       onDragEnd={() => { dragIdx.current = null; }}
                       className={`border rounded-2xl transition-all duration-300 ${editingClient === c.id
-                          ? 'border-secondary/50 bg-secondary/5 p-4 shadow-lg ring-1 ring-secondary/20'
-                          : 'border-border/50 bg-card hover:bg-muted/30 hover:border-secondary/30 p-2.5 shadow-sm'
+                        ? 'border-secondary/50 bg-secondary/5 p-4 shadow-lg ring-1 ring-secondary/20'
+                        : 'border-border/50 bg-card hover:bg-muted/30 hover:border-secondary/30 p-2.5 shadow-sm'
                         } cursor-grab active:cursor-grabbing font-medium`}
                     >
                       {editingClient === c.id ? (

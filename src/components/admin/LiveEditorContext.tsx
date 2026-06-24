@@ -613,7 +613,8 @@ export const SectionHeaderToolbar: React.FC<{
   isVisible?: boolean;
   className?: string;
   onToggle?: () => void;
-}> = ({ section, targetSection, isVisible = true, className = "top-0 right-0", onToggle }) => {
+  onBulkImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ section, targetSection, isVisible = true, className = "top-0 right-0", onToggle, onBulkImport }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
@@ -621,6 +622,13 @@ export const SectionHeaderToolbar: React.FC<{
 
   return (
     <div className={`${isAbsolute ? "absolute" : ""} z-[100] flex items-center gap-2 ${className}`}>
+      {onBulkImport && (
+        <label className="py-1.5 px-3 bg-muted text-foreground rounded-lg shadow-xl border border-border hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer" title="Bulk Import Images">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Import</span>
+          <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => { e.stopPropagation(); onBulkImport(e); }} />
+        </label>
+      )}
       <button
         onClick={(e) => { e.stopPropagation(); editor.onAdd(targetSection || section); }}
         className="py-1.5 px-3 bg-secondary text-secondary-foreground rounded-lg shadow-xl border border-secondary/20 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold"
