@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync, writeFileSync, copyFileSync } from "fs";
+import { mkdirSync, existsSync, appendFileSync, readdirSync, unlinkSync, readFileSync, writeFileSync, copyFileSync, renameSync } from "fs";
 import { db, uuid, DB_PATH } from "./db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -1005,6 +1005,46 @@ app.post("/api/db/:table", (req, res) => {
     if (table === "site_settings") updateIndexHtml(inserted);
     const normalised = normaliseRow(table, inserted);
 
+    if (table === "client_logos" && normalised.name && normalised.logo_url) {
+
+      const sanitizeFilename = (name) => name.replace(/[<>:"/\\|?*]+/g, "").trim();
+      const rawUrl = normalised.logo_url.split("?")[0];
+      const ext = extname(rawUrl);
+
+      if (ext) {
+        const desiredBase = sanitizeFilename(normalised.name) + ext;
+        const currentBase = basename(rawUrl);
+
+        if (currentBase !== desiredBase) {
+          const oldPath = join(__dirname, "../public", rawUrl);
+          const newUrl = rawUrl.replace(currentBase, desiredBase);
+          const newPath = join(__dirname, "../public", newUrl);
+
+          if (existsSync(oldPath)) {
+            if (existsSync(newPath) && oldPath.toLowerCase() !== newPath.toLowerCase()) {
+              try { unlinkSync(newPath); } catch (e) { }
+            }
+
+            renameSync(oldPath, newPath);
+            db.prepare("UPDATE client_logos SET logo_url = ? WHERE id = ?").run(newUrl, normalised.id);
+            normalised.logo_url = newUrl;
+
+            const distOldPath = join(__dirname, "../dist", rawUrl);
+            const distNewPath = join(__dirname, "../dist", newUrl);
+            if (existsSync(distOldPath)) {
+              if (!existsSync(dirname(distNewPath))) {
+                mkdirSync(dirname(distNewPath), { recursive: true });
+              }
+              if (existsSync(distNewPath) && distOldPath.toLowerCase() !== distNewPath.toLowerCase()) {
+                try { unlinkSync(distNewPath); } catch (e) { }
+              }
+              renameSync(distOldPath, distNewPath);
+            }
+          }
+        }
+      }
+    }
+
     // Hooks for specific tables
     if (table === "contact_submissions") {
       // Honeypot spam check — if 'website' field is filled, it's a bot
@@ -1185,6 +1225,50 @@ app.patch("/api/db/:table", (req, res) => {
 
     const { sql, vals } = buildSelect(table, filters, "", true);
     const rows = db.prepare(sql).all(...vals).map(r => normaliseRow(table, r));
+
+    if (table === "client_logos" && rows.length > 0) {
+      const client = rows[0];
+      if (client.name && client.logo_url) {
+
+        const sanitizeFilename = (name) => name.replace(/[<>:"/\\|?*]+/g, "").trim();
+        const rawUrl = client.logo_url.split("?")[0];
+        const ext = extname(rawUrl);
+
+        if (ext) {
+          const desiredBase = sanitizeFilename(client.name) + ext;
+          const currentBase = basename(rawUrl);
+
+          if (currentBase !== desiredBase) {
+            const oldPath = join(__dirname, "../public", rawUrl);
+            const newUrl = rawUrl.replace(currentBase, desiredBase);
+            const newPath = join(__dirname, "../public", newUrl);
+
+            if (existsSync(oldPath)) {
+              if (existsSync(newPath) && oldPath.toLowerCase() !== newPath.toLowerCase()) {
+                try { unlinkSync(newPath); } catch (e) { }
+              }
+
+              renameSync(oldPath, newPath);
+              db.prepare("UPDATE client_logos SET logo_url = ? WHERE id = ?").run(newUrl, client.id);
+              rows[0].logo_url = newUrl;
+
+              const distOldPath = join(__dirname, "../dist", rawUrl);
+              const distNewPath = join(__dirname, "../dist", newUrl);
+              if (existsSync(distOldPath)) {
+                if (!existsSync(dirname(distNewPath))) {
+                  mkdirSync(dirname(distNewPath), { recursive: true });
+                }
+                if (existsSync(distNewPath) && distOldPath.toLowerCase() !== distNewPath.toLowerCase()) {
+                  try { unlinkSync(distNewPath); } catch (e) { }
+                }
+                renameSync(distOldPath, distNewPath);
+              }
+            }
+          }
+        }
+      }
+    }
+
     if (table === "site_content" || table === "seo_settings") secCache.lastFetch = 0;
     if (table === "site_settings" && rows[0]) updateIndexHtml(rows[0]);
 
@@ -1437,7 +1521,7 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
     for (const update of updates) {
       const { index, data } = update;
       if (index === undefined || index < 0 || index >= rows.length) continue;
-      
+
       const row = rows[index];
       if (data.name !== undefined) row["Name"] = data.name;
       if (data.company !== undefined) row["Designation"] = data.company;

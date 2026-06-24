@@ -584,12 +584,18 @@ const PageEditor = () => {
 
   const saveClient = async () => {
     if (!editingClient) return;
-    await dbFetch("client_logos", {
+    const { data, error } = await dbFetch("client_logos", {
       method: "PATCH",
       query: { id: editingClient },
       body: { name: tempClient.name, logo_url: tempClient.logo_url }
     });
-    setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...tempClient } : c));
+
+    if (!error && data) {
+      setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...data } : c));
+    } else {
+      setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...tempClient } : c));
+    }
+
     setEditingClient(null);
     toast.success("Client updated!");
     window.dispatchEvent(new CustomEvent("ss:contentSaved"));
@@ -710,8 +716,8 @@ const PageEditor = () => {
                       }
                       if (uploadedUrls.length > 0) {
                         const existing = siteContent.hero?.images || siteContent.hero?.hero_images || "";
-                        const newValue = existing 
-                          ? `${existing}, ${uploadedUrls.join(", ")}` 
+                        const newValue = existing
+                          ? `${existing}, ${uploadedUrls.join(", ")}`
                           : uploadedUrls.join(", ");
                         updateContent("hero", "images", newValue);
                         toast.success(`Successfully uploaded ${uploadedUrls.length} images!`);
@@ -774,11 +780,10 @@ const PageEditor = () => {
                                     key={style.value}
                                     type="button"
                                     onClick={() => setTempHeroStat({ ...tempHeroStat, color: style.value })}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${
-                                      isSelected
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${isSelected
                                         ? "border-secondary bg-secondary/10 text-secondary shadow-sm"
                                         : "border-border/50 text-muted-foreground hover:bg-muted"
-                                    }`}
+                                      }`}
                                   >
                                     <div className={`w-3 h-3 rounded-full ${style.cls}`}>
                                       {style.label === "Custom" && <Palette size={8} className="text-muted-foreground" />}
@@ -788,22 +793,22 @@ const PageEditor = () => {
                                 );
                               })}
                             </div>
-                            
+
                             {/* Color Picker for Custom Color */}
                             {(!["gradient", "#3b82f6", "#10b981", "#f59e0b"].includes(tempHeroStat.color)) && (
                               <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-1 duration-200">
                                 <div className="space-y-1 flex-1">
                                   <span className="text-[0.625rem] font-bold text-muted-foreground uppercase tracking-widest">Pick Custom Color</span>
                                   <div className="flex gap-2">
-                                    <input 
-                                      type="color" 
-                                      value={tempHeroStat.color.startsWith("#") ? tempHeroStat.color : "#3b82f6"} 
+                                    <input
+                                      type="color"
+                                      value={tempHeroStat.color.startsWith("#") ? tempHeroStat.color : "#3b82f6"}
                                       onChange={(e) => setTempHeroStat({ ...tempHeroStat, color: e.target.value })}
                                       className="w-10 h-8 rounded border-border cursor-pointer p-0.5 bg-background shadow-sm"
                                     />
-                                    <input 
-                                      type="text" 
-                                      value={tempHeroStat.color} 
+                                    <input
+                                      type="text"
+                                      value={tempHeroStat.color}
                                       onChange={(e) => setTempHeroStat({ ...tempHeroStat, color: e.target.value })}
                                       className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-xs font-mono"
                                       placeholder="#HEX"
@@ -821,7 +826,7 @@ const PageEditor = () => {
                       ) : (
                         <div className="flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-lg bg-background border border-border/50 flex flex-col items-center justify-center shadow-sm shrink-0`}>
-                            <span 
+                            <span
                               className={`text-sm font-black ${stat.color === 'gradient' ? 'gradient-text' : ''}`}
                               style={{ color: stat.color === 'gradient' ? undefined : stat.color }}
                             >
@@ -1063,11 +1068,10 @@ const PageEditor = () => {
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={() => { if (dragIdx.current !== null) { moveClient(dragIdx.current, idx); dragIdx.current = null; } }}
                       onDragEnd={() => { dragIdx.current = null; }}
-                      className={`border rounded-2xl transition-all duration-300 ${
-                        editingClient === c.id 
-                          ? 'border-secondary/50 bg-secondary/5 p-4 shadow-lg ring-1 ring-secondary/20' 
+                      className={`border rounded-2xl transition-all duration-300 ${editingClient === c.id
+                          ? 'border-secondary/50 bg-secondary/5 p-4 shadow-lg ring-1 ring-secondary/20'
                           : 'border-border/50 bg-card hover:bg-muted/30 hover:border-secondary/30 p-2.5 shadow-sm'
-                      } cursor-grab active:cursor-grabbing font-medium`}
+                        } cursor-grab active:cursor-grabbing font-medium`}
                     >
                       {editingClient === c.id ? (
                         <div className="space-y-4">
@@ -1106,7 +1110,7 @@ const PageEditor = () => {
                         <div className="flex items-center gap-3">
                           <GripVertical size={16} className="text-muted-foreground/20 shrink-0" />
                           <div className="w-14 h-14 rounded-xl bg-white border border-border/40 flex items-center justify-center p-2.5 shrink-0 shadow-sm relative group/logo">
-                            <img src={c.logo_url || ""} alt={c.name} className="max-w-full max-h-full object-contain transition-transform group-hover/logo:scale-110" 
+                            <img src={c.logo_url || ""} alt={c.name} className="max-w-full max-h-full object-contain transition-transform group-hover/logo:scale-110"
                               onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/100x100?text=Logo'; }} />
                           </div>
                           <div className="flex-1 min-w-0 pr-1">
@@ -1171,12 +1175,12 @@ const PageEditor = () => {
                             <InlineField label="Company" value={tempTestimonial.company || ""} onChange={(v) => setTempTestimonial({ ...tempTestimonial, company: v })} />
                             <div className="space-y-1">
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Rating Selection</label>
-                              <input 
-                                type="number" 
-                                min="0" 
-                                max="5" 
+                              <input
+                                type="number"
+                                min="0"
+                                max="5"
                                 step="0.1"
-                                value={tempTestimonial.rating ?? 5} 
+                                value={tempTestimonial.rating ?? 5}
                                 onChange={(e) => {
                                   let val = parseFloat(e.target.value);
                                   if (isNaN(val)) val = 0;
@@ -1470,7 +1474,7 @@ const PageEditor = () => {
             </div>
           </div>
         );
-      
+
       case "contact":
         return (
           <div className="space-y-4 pt-2">
