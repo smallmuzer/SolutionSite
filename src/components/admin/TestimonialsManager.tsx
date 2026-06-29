@@ -19,7 +19,7 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
   const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
-  
+
   const [externalExcelPath, setExternalExcelPath] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -28,15 +28,28 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
 
   const handleSaveAll = async () => {
     if (userRole === "viewer") return;
-    const entries = Object.entries(pendingChanges);
-    if (entries.length === 0) {
+
+    const excelAppends = testimonials
+      .filter(t => t.id.startsWith("tst-imp-"))
+      .map(t => {
+        const edits: any = {};
+        for (const [k, v] of Object.entries(pendingChanges)) {
+          if (k.startsWith(`testimonials:${t.id}:`)) {
+            edits[k.split(':').pop() as string] = v;
+          }
+        }
+        return { ...t, ...edits };
+      });
+
+    const entries = Object.entries(pendingChanges).filter(([k]) => k !== "testimonials:has_imports");
+    if (entries.length === 0 && excelAppends.length === 0) {
       toast.info("No changes to save");
       return;
     }
     setSaving(true);
     const grouped: Record<string, any> = {};
     const excelUpdates: { index: number; data: any }[] = [];
-    
+
     const excelPathDraft = pendingChanges["testimonials:external_excel_path"];
     const excelPath = excelPathDraft !== undefined ? excelPathDraft : externalExcelPath;
 
@@ -63,14 +76,14 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
       }
     }
     try {
-      if (excelUpdates.length > 0) {
+      if (excelUpdates.length > 0 || excelAppends.length > 0) {
         if (!excelPath) {
           throw new Error("Cannot save Excel edits: External Excel Path is not set.");
         }
         const excelRes = await fetch("/api/write_external_excel", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: excelPath, updates: excelUpdates })
+          body: JSON.stringify({ path: excelPath, updates: excelUpdates, appends: excelAppends })
         });
         const excelJson = await excelRes.json();
         if (excelJson.error) {
@@ -80,11 +93,11 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
 
       for (const [id, data] of Object.entries(grouped)) {
         if (id === "header") {
-           const existing = await dbSelect<any>("site_content", { section_key: "testimonials" }, { single: true });
-           const mergedContent = { ...(existing.data?.content || {}), ...data };
-           await dbUpdate("site_content", { section_key: "testimonials" }, { content: mergedContent });
+          const existing = await dbSelect<any>("site_content", { section_key: "testimonials" }, { single: true });
+          const mergedContent = { ...(existing.data?.content || {}), ...data };
+          await dbUpdate("site_content", { section_key: "testimonials" }, { content: mergedContent });
         } else {
-           await dbUpdate("testimonials", { id }, data);
+          await dbUpdate("testimonials", { id }, data);
         }
       }
       toast.success("Changes saved successfully!");
@@ -191,16 +204,16 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
 
   const handleAdd = async () => {
     if (userRole === "viewer") return;
-    const body = { 
+    const body = {
       id: `tst-${Date.now()}`,
-      name: "New Client", 
-      company: "Designation", 
-      company_name: "Company Name", 
-      message: "Testimonial message here...", 
-      avatar_url: "", 
-      rating: 5, 
-      is_visible: 1, 
-      sort_order: testimonials.length 
+      name: "New Client",
+      company: "Designation",
+      company_name: "Company Name",
+      message: "Testimonial message here...",
+      avatar_url: "",
+      rating: 5,
+      is_visible: 1,
+      sort_order: testimonials.length
     };
     await dbInsert("testimonials", body);
     loadData();
@@ -298,15 +311,15 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
           message: row["Message"] || "",
           rating: parseFloat(row["Rating"]) || 5,
           is_visible: String(row["Visible"]).toLowerCase() === "no" ? 0 : 1,
-          sort_order: 0
+          sort_order: testimonials.length + i,
+          isExternalData: true
         }));
 
-        for (const item of newItems) {
-          await dbInsert("testimonials", item);
-        }
-        toast.success(`Imported ${newItems.length} testimonials`);
-        loadData();
-        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        setTestimonials(prev => [...prev, ...newItems]);
+        setPendingChanges(prev => ({ ...prev, "testimonials:has_imports": true }));
+        toast.success(`Imported ${newItems.length} testimonials. Click Save Changes to append them to the Excel file.`);
+        // We do not call dbInsert or loadData to ensure they are not saved to the database.
+        // window.dispatchEvent(new CustomEvent("ss:contentSaved"));
       } catch (err: any) {
         toast.error("Failed to import: " + err.message);
       }
@@ -371,7 +384,7 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
       </div>
 
       <div className="bg-background rounded-xl border border-border mt-4 overflow-hidden relative min-h-[60vh] max-h-[85vh] overflow-y-auto">
-        <LiveEditorProvider 
+        <LiveEditorProvider
           userRole={userRole}
           pendingChanges={pendingChanges}
           onUpdate={(section: string, field: string, value: any, id?: string) => {
@@ -382,6 +395,9 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
             if (id) {
               const key = `${section}:${id}:is_visible`;
               setPendingChanges(prev => ({ ...prev, [key]: currentVisibility ? 0 : 1 }));
+            } else {
+              const key = `${section}:is_visible`;
+              setPendingChanges(prev => ({ ...prev, [key]: currentVisibility ? 0 : 1 }));
             }
           }}
           onDelete={async (section: string, id: string) => {
@@ -390,8 +406,8 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
             loadData();
             window.dispatchEvent(new CustomEvent("ss:contentSaved"));
           }}
-          onAdd={() => {}}
-          onClone={() => {}}
+          onAdd={() => { }}
+          onClone={() => { }}
           onSave={handleSaveAll}
           onPickImage={(section: string, field: string, id?: string) => {
             const url = prompt("Enter image URL:");
@@ -400,15 +416,15 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
               setPendingChanges(prev => ({ ...prev, [key]: url }));
             }
           }}
-          onPickMultiImage={() => {}}
-          onPickIcon={() => {}}
-          onPickLink={() => {}}
-          onPickColor={() => {}}
-          onOpenCustomizer={() => {}}
+          onPickMultiImage={() => { }}
+          onPickIcon={() => { }}
+          onPickLink={() => { }}
+          onPickColor={() => { }}
+          onOpenCustomizer={() => { }}
           handleSaveAll={handleSaveAll}
           handleDiscard={() => setPendingChanges({})}
         >
-          <TestimonialsSection searchTerm={searchTerm} />
+          <TestimonialsSection searchTerm={searchTerm} hideAddButton={true} hideEyeIcon={true} />
         </LiveEditorProvider>
       </div>
     </div>

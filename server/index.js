@@ -1518,7 +1518,7 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
     const worksheet = workbook.Sheets[firstSheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet);
 
-    for (const update of updates) {
+    for (const update of updates || []) {
       const { index, data } = update;
       if (index === undefined || index < 0 || index >= rows.length) continue;
 
@@ -1530,6 +1530,19 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
       if (data.rating !== undefined) row["Rating"] = parseFloat(data.rating) || 5;
       if (data.is_visible !== undefined) {
         row["Visible"] = (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No";
+      }
+    }
+
+    if (req.body.appends && Array.isArray(req.body.appends)) {
+      for (const data of req.body.appends) {
+        rows.push({
+          "Name": data.name || "",
+          "Designation": data.company || "",
+          "Company Name": data.company_name || "",
+          "Message": data.message || "",
+          "Rating": parseFloat(data.rating) || 5,
+          "Visible": (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No",
+        });
       }
     }
 

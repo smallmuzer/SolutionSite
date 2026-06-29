@@ -246,7 +246,7 @@ const GridCard = ({
   );
 };
 
-const TestimonialsSection = ({ searchTerm }: { searchTerm?: string }) => {
+const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searchTerm?: string, hideAddButton?: boolean, hideEyeIcon?: boolean }) => {
   const view = useGlobalView();
   const [currentPage, setCurrentPage] = useState(0);
   const userInteractedRef = useRef(false);
@@ -464,7 +464,7 @@ const TestimonialsSection = ({ searchTerm }: { searchTerm?: string }) => {
                 <EditableText section="testimonials" field="highlight" value={header.highlight || "Clients Say"} colorField="highlight_color" />
               </span>
             </span>
-            <SectionHeaderToolbar section="testimonials" isVisible={headerContent.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
+            <SectionHeaderToolbar section="testimonials" hideAddButton={hideAddButton} hideEyeIcon={hideEyeIcon} isVisible={headerContent.is_visible !== false} className="absolute right-0 top-1/2 -translate-y-1/2 scale-90" />
           </h2>
         </AnimatedSection>
 

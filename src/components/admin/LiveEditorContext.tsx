@@ -614,7 +614,9 @@ export const SectionHeaderToolbar: React.FC<{
   className?: string;
   onToggle?: () => void;
   onBulkImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}> = ({ section, targetSection, isVisible = true, className = "top-0 right-0", onToggle, onBulkImport }) => {
+  hideAddButton?: boolean;
+  hideEyeIcon?: boolean;
+}> = ({ section, targetSection, isVisible = true, className = "top-0 right-0", onToggle, onBulkImport, hideAddButton = false, hideEyeIcon = false }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
@@ -629,43 +631,47 @@ export const SectionHeaderToolbar: React.FC<{
           <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => { e.stopPropagation(); onBulkImport(e); }} />
         </label>
       )}
-      <button
-        onClick={(e) => { e.stopPropagation(); editor.onAdd(targetSection || section); }}
-        className="py-1.5 px-3 bg-secondary text-secondary-foreground rounded-lg shadow-xl border border-secondary/20 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-        <span>Add {section === 'our_network' ? 'Network' : section === 'our_products' ? 'Product' : section === 'client_logos' ? 'Client' : section === 'career_jobs' ? 'Job' : section === 'global_presence' ? 'Location' : section.charAt(0).toUpperCase() + section.slice(1)}</span>
-      </button>
+      {!hideAddButton && (
+        <button
+          onClick={(e) => { e.stopPropagation(); editor.onAdd(targetSection || section); }}
+          className="py-1.5 px-3 bg-secondary text-secondary-foreground rounded-lg shadow-xl border border-secondary/20 hover:scale-110 active:scale-95 transition-all flex items-center gap-1.5 text-xs font-semibold"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          <span>Add {section === 'our_network' ? 'Network' : section === 'our_products' ? 'Product' : section === 'client_logos' ? 'Client' : section === 'career_jobs' ? 'Job' : section === 'global_presence' ? 'Location' : section.charAt(0).toUpperCase() + section.slice(1)}</span>
+        </button>
+      )}
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          const draftKey = `${section}:is_visible`;
-          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
-          if (onToggle) onToggle();
-          else editor.onHide(section, undefined, currentVisibility);
-        }}
-        className={`p-1.5 rounded-lg shadow-xl border border-border/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center ${(() => {
-          const draftKey = `${section}:is_visible`;
-          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
-          return currentVisibility ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground';
-        })()}`}
-        title={(() => {
-          const draftKey = `${section}:is_visible`;
-          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
-          return currentVisibility ? "Hide Section" : "Show Section";
-        })()}
-      >
-        {(() => {
-          const draftKey = `${section}:is_visible`;
-          const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
-          return currentVisibility ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-          );
-        })()}
-      </button>
+      {!hideEyeIcon && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            const draftKey = `${section}:is_visible`;
+            const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+            if (onToggle) onToggle();
+            else editor.onHide(section, undefined, currentVisibility);
+          }}
+          className={`p-1.5 rounded-lg shadow-xl border border-border/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center ${(() => {
+            const draftKey = `${section}:is_visible`;
+            const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+            return currentVisibility ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground';
+          })()}`}
+          title={(() => {
+            const draftKey = `${section}:is_visible`;
+            const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+            return currentVisibility ? "Hide Section" : "Show Section";
+          })()}
+        >
+          {(() => {
+            const draftKey = `${section}:is_visible`;
+            const currentVisibility = editor?.pendingChanges?.[draftKey] !== undefined ? editor.pendingChanges[draftKey] : isVisible;
+            return currentVisibility ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+            );
+          })()}
+        </button>
+      )}
     </div>
   );
 };
