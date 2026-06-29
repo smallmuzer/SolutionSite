@@ -171,8 +171,8 @@ const GridCard = ({
         id={t.id}
         isVisible={t.is_visible}
         imageField="avatar_url"
-        profileHidden={hideProfiles}
-        onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
+        // profileHidden={hideProfiles}
+        // onToggleProfile={() => editor?.onUpdate("testimonials", "hide_profiles", !hideProfiles)}
         className="-top-5 right-2"
       />
       {editor?.isEditMode && (
@@ -230,7 +230,7 @@ const GridCard = ({
 
         <div className="flex gap-2 flex-1 w-full mt-0">
           <div className="text-primary text-3xl font-serif leading-none opacity-40 select-none mt-1">“</div>
-          <div className="flex-1 pt-1">
+          <div className="flex-1 pt-1 pb-3">
             <ReadMoreText
               section="testimonials"
               field="message"
