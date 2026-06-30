@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import AnimatedSection from "./AnimatedSection";
 import type { Tables } from "@/integrations/supabase/types";
-import { Play, LayoutGrid } from "lucide-react";
+import { Play, LayoutGrid, Upload, Download, Search, FolderOpen, FileSpreadsheet } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor, useLiveEditorNavigation } from "./admin/LiveEditorContext";
 import { uploadProjectAsset } from "@/lib/assets";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 const SEED_CLIENTS = [
   { id: "cl-0", name: "aaa Hotels & Resorts", logo_url: "/assets/clients/aaa-1.png", is_visible: true, sort_order: 0 },
@@ -51,7 +52,17 @@ const SEED_CLIENTS = [
   { id: "cl-39", name: "Maldives Stock Exchange", logo_url: "/assets/clients/Maldives-Stock-Exchange-300x67.jpg", is_visible: true, sort_order: 39 },
 ];
 
-type ClientLogo = Tables<"client_logos">;
+type ClientLogo = Tables<"client_logos"> & { file_name?: string };
+
+const getDisplayUrl = (url: string | null) => {
+  if (!url) return "";
+  if (url.includes(":\\") || url.startsWith("\\\\") || url.includes("\\") || (url.startsWith("/") && !url.startsWith("/assets/"))) {
+    if (!url.startsWith("/assets/") && !url.startsWith("http") && !url.startsWith("data:")) {
+      return `/api/client_image?path=${encodeURIComponent(url)}`;
+    }
+  }
+  return url;
+};
 
 const ClientLogoImage = ({ client }: { client: ClientLogo }) => {
   const clientName = client?.name || "";
@@ -65,7 +76,7 @@ const ClientLogoImage = ({ client }: { client: ClientLogo }) => {
     );
   }, [client?.id, clientName]);
 
-  const primarySrc = client?.logo_url || seedClient?.logo_url || "";
+  const primarySrc = getDisplayUrl(client?.logo_url || "") || seedClient?.logo_url || "";
   const [imgSrc, setImgSrc] = useState<string>(primarySrc);
   const [hasError, setHasError] = useState(false);
 
@@ -394,6 +405,7 @@ const ClientCard = ({
           id={client.id}
           isVisible={client.is_visible}
           imageField="logo_url"
+          imageValue={client.logo_url}
           className="-top-3 right-1 translate-x-0"
           group="item"
         />
@@ -542,17 +554,66 @@ const ClientsSection = () => {
 
   // Default to grid view in admin edit mode
   useEffect(() => { if (isEdit) setShowAll(true); }, [isEdit]);
-  const { data: dbClients } = useDbQuery<ClientLogo[]>("client_logos", isEdit ? {} : { is_visible: true }, { order: "sort_order" });
   const content = useSiteContent("clients");
-
-  const rawClients = (dbClients && dbClients.length > 0) ? dbClients : (SEED_CLIENTS as ClientLogo[]);
-
-  // Local sorted state for move/drag
   const [clientsState, setClientsState] = useState<ClientLogo[]>([]);
+  const excelPath = editor?.pendingChanges?.["clients:excel_path"] ?? content.excel_path;
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
   useEffect(() => {
-    const raw = (dbClients && dbClients.length > 0) ? dbClients : (SEED_CLIENTS as ClientLogo[]);
-    setClientsState(raw);
-  }, [dbClients]);
+    const handler = () => setRefetchTrigger(prev => prev + 1);
+    window.addEventListener("ss:contentSaved", handler);
+    return () => window.removeEventListener("ss:contentSaved", handler);
+  }, []);
+
+  const pendingImagePath = editor?.pendingChanges?.["clients:image_path"];
+  useEffect(() => {
+    if (!excelPath) {
+      setClientsState([]);
+      return;
+    }
+    const fetchExternal = async () => {
+      try {
+        const res = await fetch("/api/read_external_excel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: excelPath, type: "clients" })
+        });
+        const json = await res.json();
+
+        const imageFolderPath = editor?.pendingChanges?.["clients:image_path"] ?? content.image_path ?? "C:\\Shared\\sspl_bsspl\\ClientImages";
+        const cleanedFolderPath = imageFolderPath.replace(/[\\\/]+$/, '');
+
+        if (json.data) {
+          let data = json.data.map((c: any, i: number) => {
+            const fileName = c.file_name ?? "";
+            const cleanedFileName = fileName.replace(/^[\\\/]+/, '');
+            const separator = cleanedFolderPath.includes('\\') ? '\\' : '/';
+            const fullImagePath = fileName ? `${cleanedFolderPath}${separator}${cleanedFileName}` : (c.logo_url || "");
+            return {
+              id: c.id,
+              name: c.name,
+              logo_url: fullImagePath,
+              file_name: fileName,
+              is_visible: c.is_visible,
+              sort_order: c.sort_order
+            };
+          });
+
+          if (!isEdit) {
+            data = data.filter((c: any) => c.is_visible);
+          }
+          data.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+          setClientsState(data);
+        } else {
+          setClientsState([]);
+        }
+      } catch (err) {
+        console.error("Failed to read external excel inside clients section", err);
+        setClientsState([]);
+      }
+    };
+    fetchExternal();
+  }, [excelPath, refetchTrigger, isEdit, pendingImagePath]);
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -581,10 +642,12 @@ const ClientsSection = () => {
     const newItems = [...clientsState];
     const [moved] = newItems.splice(sourceIdx, 1);
     newItems.splice(targetIdx, 0, moved);
-    setClientsState(newItems.map((c, i) => ({ ...c, sort_order: i })));
+    setClientsState(newItems);
     setDraggedId(null);
     newItems.forEach((c, i) => {
-      fetch(`/api/db/client_logos?id=${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sort_order: i }) });
+      if (c.sort_order !== i) {
+        editor?.onUpdate("clients", "sort_order", i, c.id);
+      }
     });
   };
 
@@ -594,40 +657,88 @@ const ClientsSection = () => {
 
     toast.info(`Importing ${files.length} clients...`);
     let importCount = 0;
-    
+    const addedClients: ClientLogo[] = [];
+
     for (const file of files) {
       let rawName = file.name;
       const lastDot = rawName.lastIndexOf('.');
       if (lastDot !== -1) {
-         rawName = rawName.substring(0, lastDot);
+        rawName = rawName.substring(0, lastDot);
       }
-      
+
       const clientName = rawName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      
+
       if (clientsState.some(c => c.name?.toLowerCase() === clientName.toLowerCase())) {
-         continue; 
+        continue;
       }
-      
-      const uploadedUrl = await uploadProjectAsset("clients", file).catch(() => null);
+
+      // Upload to standard "uploads" folder. "Save Changes" will copy to ClientImages.
+      const uploadedUrl = await uploadProjectAsset("uploads", file).catch(() => null);
       if (!uploadedUrl) continue;
-      
-      const newId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      editor?.onUpdate("clients", "_clone", { 
-        name: clientName, 
-        logo_url: uploadedUrl, 
+
+      const newId = `cl-ext-${clientsState.length + importCount}`;
+      editor?.onUpdate("clients", "name", clientName, newId);
+      editor?.onUpdate("clients", "logo_url", uploadedUrl, newId);
+      // We also update file_name so that it persists back to excel
+      const fileName = file.name;
+      editor?.onUpdate("clients", "file_name", fileName, newId);
+      editor?.onUpdate("clients", "is_visible", true, newId);
+      editor?.onUpdate("clients", "sort_order", clientsState.length + importCount, newId);
+
+      addedClients.push({
+        id: newId,
+        name: clientName,
+        logo_url: uploadedUrl,
+        file_name: fileName,
         is_visible: true,
-        sort_order: clientsState.length + importCount 
-      }, newId);
-      
+        sort_order: clientsState.length + importCount,
+        is_external: true
+      } as unknown as ClientLogo);
+
       importCount++;
     }
-    
-    if (importCount > 0) {
-       toast.success(`Staged ${importCount} clients! Click 'Save All Changes' to apply.`);
+
+    if (addedClients.length > 0) {
+      setClientsState(prev => [...prev, ...addedClients]);
+      toast.success(`Staged ${addedClients.length} clients! Click 'Save All Changes' to apply.`);
     } else {
-       toast.error("No new clients were imported (duplicates or upload failed).");
+      toast.error("No new clients were imported (duplicates or upload failed).");
     }
     e.target.value = "";
+  };
+
+  const handleExport = () => {
+    try {
+      if (!clientsState || clientsState.length === 0) {
+        toast.error("No client data available to export.");
+        return;
+      }
+
+      const exportData = clientsState.map(c => ({
+        Id: c.id,
+        ClientName: c.name || "",
+        FileName: c.file_name || "",
+        IsVisible: c.is_visible ? 1 : 0,
+        SortOrder: c.sort_order ?? 0
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Client Logos");
+
+      let fileName = "client_logos.xlsx";
+      const customPath = editor?.pendingChanges?.["clients:excel_path"] ?? content.excel_path;
+      if (customPath) {
+        fileName = customPath.split('/').pop() || fileName;
+        if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) fileName += '.xlsx';
+      }
+
+      XLSX.writeFile(wb, fileName);
+      toast.success(`Exported ${exportData.length} clients to ${fileName}`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export clients data.");
+    }
   };
 
   const handleMove = (id: string, direction: "up" | "down" | "left" | "right") => {
@@ -655,7 +766,19 @@ const ClientsSection = () => {
     });
   };
 
-  const clients = isEdit ? clientsState : rawClients;
+  const clients = useMemo(() => {
+    let list = clientsState.map(c => ({
+      ...c,
+      name: editor?.pendingChanges[`clients:${c.id}:name`] ?? c.name,
+      logo_url: editor?.pendingChanges[`clients:${c.id}:logo_url`] ?? c.logo_url,
+      is_visible: editor?.pendingChanges[`clients:${c.id}:is_visible`] ?? c.is_visible,
+      sort_order: editor?.pendingChanges[`clients:${c.id}:sort_order`] ?? c.sort_order,
+    })).filter(c => !editor?.pendingChanges[`clients:${c.id}:_delete`]);
+
+    list.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    return list;
+  }, [clientsState, editor?.pendingChanges]);
+
   const effectiveShowAll = showAll;
   const header = {
     badge: content.badge || "Portfolio (Our Clients)",
@@ -692,11 +815,68 @@ const ClientsSection = () => {
                 <EditableText section="clients" field="highlight" value={header.highlight || "Industry Leaders"} colorField="highlight_color" />
               </span>
             </span>
-            <SectionHeaderToolbar section="clients" targetSection="clients" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" onBulkImport={bulkImportClients} />
+            <SectionHeaderToolbar section="clients" targetSection="clients" isVisible={content.is_visible !== false} className="absolute left-0 top-1/2 -translate-y-1/2 scale-90" hideAddButton={true} />
           </h2>
           <div className="text-muted-foreground max-w-2xl mx-auto text-[0.9375rem]">
             <EditableText section="clients" field="description" value={header.description || ""} colorField="description_color" />
           </div>
+
+          {isEdit && (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 p-2 rounded-lg border border-border bg-muted/40 max-w-fit mx-auto">
+              <div className="relative w-[180px]">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search clients..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-secondary transition-shadow h-7"
+                />
+              </div>
+
+              <div className="h-4 w-px bg-border hidden sm:block"></div>
+
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors h-7 shadow-sm cursor-pointer">
+                  <Upload className="w-3.5 h-3.5" />
+                  Import
+                  <input type="file" multiple accept="image/*" className="hidden" onChange={bulkImportClients} />
+                </label>
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-background border border-input text-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors h-7 shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export
+                </button>
+              </div>
+
+              <div className="h-4 w-px bg-border hidden sm:block"></div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-2.5 text-xs font-medium text-muted-foreground bg-background rounded-md border border-input focus-within:ring-1 focus-within:ring-secondary transition-colors h-7 shadow-sm">
+                  <FileSpreadsheet className="w-3.5 h-3.5 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={editor?.pendingChanges?.["clients:excel_path"] ?? content.excel_path ?? "/data/clients.xlsx"}
+                    onChange={(e) => editor?.onUpdate("clients", "excel_path", e.target.value)}
+                    className="bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-foreground w-[120px] truncate"
+                    placeholder="/data/clients.xlsx"
+                    title={editor?.pendingChanges?.["clients:excel_path"] ?? content.excel_path ?? "/data/clients.xlsx"}
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 text-xs font-medium text-muted-foreground bg-background rounded-md border border-input focus-within:ring-1 focus-within:ring-secondary transition-colors h-7 shadow-sm">
+                  <FolderOpen className="w-3.5 h-3.5 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={editor?.pendingChanges?.["clients:image_path"] ?? content.image_path ?? "C:\\Shared\\sspl_bsspl\\ClientImages"}
+                    onChange={(e) => editor?.onUpdate("clients", "image_path", e.target.value)}
+                    className="bg-transparent border-none outline-none focus:ring-0 p-0 text-xs text-foreground w-[120px] truncate"
+                    placeholder="C:\Shared\sspl_bsspl\ClientImages"
+                    title={editor?.pendingChanges?.["clients:image_path"] ?? content.image_path ?? "C:\\Shared\\sspl_bsspl\\ClientImages"}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </AnimatedSection>
         <AnimatedSection>
           {effectiveShowAll ? (

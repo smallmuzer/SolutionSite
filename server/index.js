@@ -1314,7 +1314,71 @@ app.post("/api/upload", (req, res) => {
     // Build public URL cleanly using the generated filename to avoid absolute path leakage on Windows
     // Append a timestamp to bypass browser caching when overwriting existing files
     const timestamp = Date.now();
-    const publicUrl = `/assets/uploads/${req.file.filename}?t=${timestamp}`;
+    let publicUrl = `/assets/uploads/${req.file.filename}?t=${timestamp}`;
+
+    const section = req.body?.section || req.query?.section;
+    if (section === "clients") {
+      try {
+        const row = db.prepare("SELECT content FROM site_content WHERE section_key = 'clients'").get();
+        let imagePath = "C:\\Shared\\sspl_bsspl\\ClientImages";
+        if (row && row.content) {
+          const content = JSON.parse(row.content);
+          if (content.image_path) {
+            imagePath = content.image_path;
+          }
+        }
+        if (!existsSync(imagePath)) {
+          mkdirSync(imagePath, { recursive: true });
+        }
+
+        // Use the ORIGINAL filename (with spaces etc.) for the client images folder
+        const originalFileName = String(req.file.originalname || req.file.filename);
+        const destPath = join(imagePath, originalFileName);
+
+        // If a file with the same name already exists, overwrite it
+        copyFileSync(req.file.path, destPath);
+        console.log(`[upload] Copied client image to external folder: ${destPath} (original name: ${originalFileName})`);
+
+        // Return the full external path so the UI can display the image via the proxy
+        publicUrl = destPath;
+
+        // Also update the Excel file FileName for the matching client row if clientId is provided
+        const clientId = req.body?.clientId;
+        if (clientId) {
+          try {
+            let excelPath = "";
+            if (row && row.content) {
+              const content = JSON.parse(row.content);
+              excelPath = content.excel_path || "";
+            }
+            if (excelPath && existsSync(excelPath)) {
+              const fileBuffer = readFileSync(excelPath);
+              const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const rows = XLSX.utils.sheet_to_json(worksheet);
+              const rowIndex = rows.findIndex(r => String(r["Id"]) === String(clientId));
+              if (rowIndex !== -1) {
+                rows[rowIndex]["FileName"] = originalFileName;
+                const newWorksheet = XLSX.utils.json_to_sheet(rows);
+                workbook.Sheets[firstSheetName] = newWorksheet;
+                const writeBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+                try {
+                  writeFileSync(excelPath, writeBuffer);
+                  console.log(`[upload] Updated Excel FileName for ${clientId} to ${originalFileName}`);
+                } catch (writeErr) {
+                  console.error("[upload] Failed to update Excel FileName:", writeErr.message);
+                }
+              }
+            }
+          } catch (excelErr) {
+            console.error("[upload] Failed to update Excel for client:", excelErr.message);
+          }
+        }
+      } catch (copyErr) {
+        console.error("[upload] Failed to copy client image to external folder:", copyErr.message);
+      }
+    }
 
     // Synchronize to dist/assets/uploads if production build folder exists
     try {
@@ -1334,7 +1398,140 @@ app.post("/api/upload", (req, res) => {
   });
 });
 
-// ── Bot mode toggle ───────────────────────────────────────────────────────────
+// ── Bulk client image import ──────────────────────────────────────────────────
+const uploadBulkMiddleware = upload.array("files", 100);
+app.post("/api/upload_client_bulk", (req, res) => {
+  uploadBulkMiddleware(req, res, async (err) => {
+    if (err) {
+      console.error("[bulk upload error]", err.message);
+      return res.status(400).json({ error: err.message });
+    }
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ error: "No files" });
+
+    try {
+      // Read site_content to get paths
+      const row = db.prepare("SELECT content FROM site_content WHERE section_key = 'clients'").get();
+      let imagePath = "C:\\Shared\\sspl_bsspl\\ClientImages";
+      let excelPath = "C:\\Shared\\sspl_bsspl\\Clients\\client_logos.xlsx";
+      if (row && row.content) {
+        const content = JSON.parse(row.content);
+        if (content.image_path) imagePath = content.image_path;
+        if (content.excel_path) excelPath = content.excel_path;
+      }
+
+      if (!existsSync(imagePath)) mkdirSync(imagePath, { recursive: true });
+      if (!existsSync(excelPath)) {
+        return res.status(400).json({ error: `Excel file not found: ${excelPath}` });
+      }
+
+      // Read Excel to determine next Id and SortOrder
+      const fileBuffer = readFileSync(excelPath);
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const existingRows = XLSX.utils.sheet_to_json(worksheet);
+
+      // Find max numeric id for generating next IDs
+      let maxId = 0;
+      let maxSortOrder = existingRows.length > 0 ? existingRows.length - 1 : -1;
+      for (const r of existingRows) {
+        const id = String(r["Id"] || "");
+        const numPart = parseInt(id.replace(/^cl-/, ""), 10);
+        if (!isNaN(numPart) && numPart > maxId) maxId = numPart;
+        const so = parseInt(r["SortOrder"], 10);
+        if (!isNaN(so) && so > maxSortOrder) maxSortOrder = so;
+      }
+
+      const existingFileNames = new Set(existingRows.map(r => String(r["FileName"] || "").toLowerCase()));
+      const existingClientNames = new Set(existingRows.map(r => String(r["ClientName"] || "").toLowerCase()));
+
+      const addedClients = [];
+      let idCounter = maxId;
+      let sortCounter = maxSortOrder;
+
+      for (const file of files) {
+        const originalFileName = String(file.originalname || file.filename);
+
+        // Skip duplicates by filename
+        if (existingFileNames.has(originalFileName.toLowerCase())) {
+          console.log(`[bulk] Skipping duplicate: ${originalFileName}`);
+          continue;
+        }
+
+        // Derive client name from file name (strip extension, humanize)
+        const namePart = originalFileName.lastIndexOf(".") !== -1
+          ? originalFileName.substring(0, originalFileName.lastIndexOf("."))
+          : originalFileName;
+        const clientName = namePart.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+        if (existingClientNames.has(clientName.toLowerCase())) {
+          console.log(`[bulk] Skipping duplicate client name: ${clientName}`);
+          continue;
+        }
+
+        // Copy file to ClientImages folder preserving original name
+        const destPath = join(imagePath, originalFileName);
+        try {
+          copyFileSync(file.path, destPath);
+        } catch (copyErr) {
+          console.error(`[bulk] Failed to copy ${originalFileName}:`, copyErr.message);
+          continue;
+        }
+
+        idCounter++;
+        sortCounter++;
+        const newId = `cl-${idCounter}`;
+
+        existingRows.push({
+          "Id": newId,
+          "ClientName": clientName,
+          "FileName": originalFileName,
+          "IsVisible": 1,
+          "SortOrder": sortCounter,
+        });
+
+        existingFileNames.add(originalFileName.toLowerCase());
+        existingClientNames.add(clientName.toLowerCase());
+
+        addedClients.push({
+          id: newId,
+          name: clientName,
+          file_name: originalFileName,
+          is_visible: 1,
+          sort_order: sortCounter,
+          logo_url: join(imagePath, originalFileName),
+          is_external: true,
+        });
+
+        console.log(`[bulk] Added client: ${clientName} (${originalFileName}) as ${newId}`);
+      }
+
+      if (addedClients.length === 0) {
+        return res.json({ data: { added: [], message: "All files were duplicates — nothing added." }, error: null });
+      }
+
+      // Write updated rows back to Excel
+      // Strip internal _sort_order metadata before writing
+      const cleanRows = existingRows.map(r => {
+        const { _sort_order, ...rest } = r;
+        return rest;
+      });
+      const newWorksheet = XLSX.utils.json_to_sheet(cleanRows);
+      workbook.Sheets[firstSheetName] = newWorksheet;
+      const writeBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+      writeFileSync(excelPath, writeBuffer);
+      console.log(`[bulk] Excel updated with ${addedClients.length} new rows`);
+
+      res.json({ data: { added: addedClients }, error: null });
+    } catch (e) {
+      console.error("[bulk upload] Fatal error:", e.message);
+      res.status(500).json({ error: e.message });
+    }
+  });
+});
+
+
 app.post("/api/bot/mode", (req, res) => {
   const { mode } = req.body || {};
   if (mode === "bot" || mode === "human") {
@@ -1477,7 +1674,7 @@ app.get("/api/submissions/:id/replies", (req, res) => {
 
 app.post("/api/read_external_excel", express.json(), (req, res) => {
   try {
-    const { path } = req.body;
+    const { path, type } = req.body;
     if (!path) return res.status(400).json({ error: "Path is required" });
     if (!existsSync(path)) return res.status(404).json({ error: "File not found at specified path" });
 
@@ -1487,19 +1684,31 @@ app.post("/api/read_external_excel", express.json(), (req, res) => {
     const worksheet = workbook.Sheets[firstSheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet);
 
-    const newItems = rows.map((row, i) => ({
-      id: `tst-ext-${i}`,
-      name: row["Name"] || "",
-      company: row["Designation"] || "",
-      company_name: row["Company Name"] || "",
-      message: row["Message"] || "",
-      rating: parseFloat(row["Rating"]) || 5,
-      is_visible: String(row["Visible"]).toLowerCase() === "no" ? 0 : 1,
-      sort_order: i,
-      is_external: true
-    }));
+    let newItems = [];
+    if (type === "clients") {
+      newItems = rows.map((row, i) => ({
+        id: row["Id"] || `cl-ext-${i}`,
+        name: row["ClientName"] || "",
+        file_name: row["FileName"] || "",
+        is_visible: String(row["IsVisible"]).toLowerCase() === "no" || row["IsVisible"] === 0 || row["IsVisible"] === false ? 0 : 1,
+        sort_order: row["SortOrder"] !== undefined ? parseInt(row["SortOrder"], 10) : i,
+        is_external: true
+      }));
+    } else {
+      newItems = rows.map((row, i) => ({
+        id: `tst-ext-${i}`,
+        name: row["Name"] || "",
+        company: row["Designation"] || "",
+        company_name: row["Company Name"] || "",
+        message: row["Message"] || "",
+        rating: parseFloat(row["Rating"]) || 5,
+        is_visible: String(row["Visible"]).toLowerCase() === "no" ? 0 : 1,
+        sort_order: i,
+        is_external: true
+      }));
+    }
 
-    res.json({ data: newItems });
+    res.json({ data: newItems, raw_data: rows });
   } catch (e) {
     res.status(500).json({ error: "Failed to read excel file: " + e.message });
   }
@@ -1507,9 +1716,9 @@ app.post("/api/read_external_excel", express.json(), (req, res) => {
 
 app.post("/api/write_external_excel", express.json(), (req, res) => {
   try {
-    const { path, updates } = req.body;
+    const { path, updates, type } = req.body;
     if (!path) return res.status(400).json({ error: "Path is required" });
-    if (!updates && !req.body.deletes && !req.body.appends) {
+    if (!updates && !req.body.deletes && !req.body.appends && !req.body.deleteIds) {
       return res.status(400).json({ error: "No changes provided (updates, deletes, or appends)" });
     }
     if (!existsSync(path)) return res.status(404).json({ error: "File not found at specified path" });
@@ -1522,24 +1731,40 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
 
     // Assign initial sort order to preserve original order if not updated
     rows.forEach((row, i) => {
-       row._sort_order = i;
+      row._sort_order = type === "clients" && row["SortOrder"] !== undefined ? parseInt(row["SortOrder"], 10) : i;
     });
 
     for (const update of updates || []) {
-      const { index, data } = update;
+      let { index, id, data } = update;
+      if (id !== undefined && type === "clients") {
+        index = rows.findIndex(row => String(row["Id"]) === String(id));
+      }
       if (index === undefined || index < 0 || index >= rows.length) continue;
 
       const row = rows[index];
-      if (data.name !== undefined) row["Name"] = data.name;
-      if (data.company !== undefined) row["Designation"] = data.company;
-      if (data.company_name !== undefined) row["Company Name"] = data.company_name;
-      if (data.message !== undefined) row["Message"] = data.message;
-      if (data.rating !== undefined) row["Rating"] = parseFloat(data.rating) || 5;
-      if (data.is_visible !== undefined) {
-        row["Visible"] = (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No";
-      }
-      if (data.sort_order !== undefined) {
-        row._sort_order = parseInt(data.sort_order, 10);
+
+      if (type === "clients") {
+        if (data.name !== undefined) row["ClientName"] = data.name;
+        if (data.file_name !== undefined) row["FileName"] = data.file_name;
+        if (data.is_visible !== undefined) {
+          row["IsVisible"] = (data.is_visible === 1 || data.is_visible === true || String(data.is_visible).toLowerCase() === "yes") ? 1 : 0;
+        }
+        if (data.sort_order !== undefined) {
+          row["SortOrder"] = parseInt(data.sort_order, 10);
+          row._sort_order = parseInt(data.sort_order, 10);
+        }
+      } else {
+        if (data.name !== undefined) row["Name"] = data.name;
+        if (data.company !== undefined) row["Designation"] = data.company;
+        if (data.company_name !== undefined) row["Company Name"] = data.company_name;
+        if (data.message !== undefined) row["Message"] = data.message;
+        if (data.rating !== undefined) row["Rating"] = parseFloat(data.rating) || 5;
+        if (data.is_visible !== undefined) {
+          row["Visible"] = (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No";
+        }
+        if (data.sort_order !== undefined) {
+          row._sort_order = parseInt(data.sort_order, 10);
+        }
       }
     }
 
@@ -1552,23 +1777,79 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
       }
     }
 
+    if (req.body.deleteIds && Array.isArray(req.body.deleteIds) && type === "clients") {
+      for (const id of req.body.deleteIds) {
+        const idx = rows.findIndex(row => String(row["Id"]) === String(id));
+        if (idx !== -1) {
+          rows.splice(idx, 1);
+        }
+      }
+    }
+
     if (req.body.appends && Array.isArray(req.body.appends)) {
+      let maxClientId = 0;
+      if (type === "clients") {
+        for (const r of rows) {
+          const idStr = String(r["Id"] || "");
+          const num = parseInt(idStr.replace(/^cl-(ext-)?/, ""), 10);
+          if (!isNaN(num) && num > maxClientId) maxClientId = num;
+        }
+      }
+
       for (const data of req.body.appends) {
-        rows.push({
-          "Name": data.name || "",
-          "Designation": data.company || "",
-          "Company Name": data.company_name || "",
-          "Message": data.message || "",
-          "Rating": parseFloat(data.rating) || 5,
-          "Visible": (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No",
-          "_sort_order": data.sort_order !== undefined ? parseInt(data.sort_order, 10) : rows.length
-        });
+        if (type === "clients") {
+          // Attempt to copy temporary image to ClientImages folder
+          if (data.logo_url && data.file_name && data.logo_url.startsWith("/assets/uploads/")) {
+            try {
+              const row = db.prepare("SELECT content FROM site_content WHERE section_key = 'clients'").get();
+              let imagePath = "C:\\Shared\\sspl_bsspl\\ClientImages";
+              if (row && row.content) {
+                const content = JSON.parse(row.content);
+                if (content.image_path) imagePath = content.image_path;
+              }
+              if (!existsSync(imagePath)) mkdirSync(imagePath, { recursive: true });
+
+              const srcFileName = data.logo_url.split("/").pop();
+              const srcPath = join(__dirname, "..", "public", "assets", "uploads", srcFileName);
+              const destPath = join(imagePath, data.file_name);
+
+              if (existsSync(srcPath)) {
+                copyFileSync(srcPath, destPath);
+                console.log(`[excel_write] Copied bulk staged image ${srcFileName} to ${destPath}`);
+              }
+            } catch (err) {
+              console.error("[excel_write] Failed to copy bulk staged image:", err.message);
+            }
+          }
+
+          maxClientId++;
+          const newId = `cl-${maxClientId}`;
+
+          rows.push({
+            "Id": newId,
+            "ClientName": data.name || "",
+            "FileName": data.file_name || "",
+            "IsVisible": (data.is_visible === 1 || data.is_visible === true) ? 1 : 0,
+            "SortOrder": data.sort_order !== undefined ? parseInt(data.sort_order, 10) : rows.length,
+            "_sort_order": data.sort_order !== undefined ? parseInt(data.sort_order, 10) : rows.length
+          });
+        } else {
+          rows.push({
+            "Name": data.name || "",
+            "Designation": data.company || "",
+            "Company Name": data.company_name || "",
+            "Message": data.message || "",
+            "Rating": parseFloat(data.rating) || 5,
+            "Visible": (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No",
+            "_sort_order": data.sort_order !== undefined ? parseInt(data.sort_order, 10) : rows.length
+          });
+        }
       }
     }
 
     // Sort rows by _sort_order
     rows.sort((a, b) => (a._sort_order || 0) - (b._sort_order || 0));
-    
+
     // Remove temporary _sort_order property before converting back to sheet
     rows.forEach(row => {
       delete row._sort_order;
@@ -1589,6 +1870,26 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: "Failed to write excel file: " + e.message });
+  }
+});
+
+app.get("/api/client_image", (req, res) => {
+  try {
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).send("Path required");
+    if (existsSync(filePath)) {
+      res.sendFile(resolve(filePath));
+    } else {
+      // Check if it's a relative path
+      const publicPath = join(__dirname, "../public", filePath);
+      if (existsSync(publicPath)) {
+        res.sendFile(resolve(publicPath));
+      } else {
+        res.status(404).send("File not found");
+      }
+    }
+  } catch (err) {
+    res.status(500).send("Error: " + err.message);
   }
 });
 

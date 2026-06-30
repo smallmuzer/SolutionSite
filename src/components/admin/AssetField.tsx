@@ -17,6 +17,16 @@ type AssetFieldProps = {
 const defaultInputClassName = "w-full px-3 py-2 rounded-lg bg-transparent border border-border/60 text-foreground text-sm outline-none focus:border-secondary/70 focus:ring-1 focus:ring-secondary/30 transition-colors";
 const defaultPreviewClassName = "h-14 rounded-lg object-cover mt-2 shadow-sm border border-border/50";
 
+const getDisplayUrl = (url: string | null) => {
+  if (!url) return "";
+  if (url.includes(":\\") || url.startsWith("\\\\") || url.includes("\\") || (url.startsWith("/") && !url.startsWith("/assets/"))) {
+    if (!url.startsWith("/assets/") && !url.startsWith("http") && !url.startsWith("data:")) {
+      return `/api/client_image?path=${encodeURIComponent(url)}`;
+    }
+  }
+  return url;
+};
+
 export default function AssetField({
   label,
   value,
@@ -54,7 +64,7 @@ export default function AssetField({
     if (!file) return;
     setUploading(true);
     try {
-      const publicUrl = await uploadProjectAsset("uploads", file);
+      const publicUrl = await uploadProjectAsset(folder, file);
       onChange(publicUrl);
       setPickerOpen(true);
       await loadFiles(true);
@@ -135,7 +145,7 @@ export default function AssetField({
       )}
       {value ? (
         <img
-          src={value}
+          src={getDisplayUrl(value)}
           alt="preview"
           className={previewClassName}
           onError={(e) => {

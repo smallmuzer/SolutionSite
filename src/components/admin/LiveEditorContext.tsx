@@ -23,7 +23,7 @@ interface LiveEditorContextType {
   onAdd: (section: string) => void;
   onClone: (section: string, id: string) => void;
   onSave: (section: string, id?: string) => void;
-  onPickImage: (section: string, field: string, id?: string) => void;
+  onPickImage: (section: string, field: string, id?: string, currentValue?: string) => void;
   onPickMultiImage: (section: string, field: string, id?: string) => void;
   onPickIcon: (section: string, field: string, id?: string) => void;
   onPickLink: (section: string, field: string, id?: string) => void;
@@ -416,7 +416,9 @@ export const EditorToolbar: React.FC<{
   canMove?: boolean;
   moveDirections?: ("up" | "down" | "left" | "right")[];
   imageField?: string;
+  imageValue?: string;
   imageField2?: string;
+  imageValue2?: string;
   multiImageField?: string;
   iconField?: string;
   linkField?: string;
@@ -431,7 +433,7 @@ export const EditorToolbar: React.FC<{
   onToggle?: () => void;
   onToggleProfile?: () => void;
   onDelete?: () => void;
-}> = ({ section, id, isVisible = true, canHide, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, imageField2, multiImageField, iconField, linkField, linkField2, colorField, colorField2, visibilityField, className = "", group = "item", profileHidden, onMove, onToggle, onToggleProfile, onDelete }) => {
+}> = ({ section, id, isVisible = true, canHide, canDelete = true, canClone = true, canAdd = false, canMove = false, moveDirections = ["up", "down", "left", "right"], imageField, imageValue, imageField2, imageValue2, multiImageField, iconField, linkField, linkField2, colorField, colorField2, visibilityField, className = "", group = "item", profileHidden, onMove, onToggle, onToggleProfile, onDelete }) => {
   const editor = useLiveEditor();
   if (!editor?.isEditMode) return null;
 
@@ -451,13 +453,13 @@ export const EditorToolbar: React.FC<{
   return (
     <div className={`absolute z-[999] flex items-center gap-3 ${group && !isTouchActive ? "opacity-0" : "opacity-100"} ${isTouchActive ? "scale-100" : "scale-90"} ${hoverClasses} transition-all duration-300 bg-card/95 backdrop-blur-md border border-border/50 ${isSmall ? "p-1 rounded-lg" : "p-1.5 rounded-xl"} shadow-2xl origin-top-right ${className || "top-2 right-2"}`}>
       {imageField && (
-        <button onClick={() => editor.onPickImage(section, imageField, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Image">
+        <button onClick={() => editor.onPickImage(section, imageField, id, imageValue)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Image">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
         </button>
       )}
 
       {imageField2 && (
-        <button onClick={() => editor.onPickImage(section, imageField2, id)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Secondary Image">
+        <button onClick={() => editor.onPickImage(section, imageField2, id, imageValue2)} className={`${btnPadding} hover:bg-secondary/10 rounded-lg text-secondary transition-colors`} title="Pick Secondary Image">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
         </button>
       )}

@@ -74,6 +74,9 @@ export async function uploadProjectAsset(folder: string, file: File) {
   const form = new FormData();
   form.append("path", `${targetFolder}/${safeName}`);
   form.append("file", file);
+  if (folder === "clients") {
+    form.append("section", "clients");
+  }
 
   const res = await fetch("/api/upload", { 
     method: "POST", 

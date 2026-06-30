@@ -28,6 +28,16 @@ const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
 const SkeletonSection = () => null;
 
+const getDisplayUrl = (url: string | null) => {
+  if (!url) return "";
+  if (url.includes(":\\") || url.startsWith("\\\\") || url.includes("\\") || (url.startsWith("/") && !url.startsWith("/assets/"))) {
+    if (!url.startsWith("/assets/") && !url.startsWith("http") && !url.startsWith("data:")) {
+      return `/api/client_image?path=${encodeURIComponent(url)}`;
+    }
+  }
+  return url;
+};
+
 const LiveEditor = ({ userRole }: { userRole?: string }) => {
   const { data: settings } = useSiteSettings();
   const queryClient = useQueryClient();
@@ -53,6 +63,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     field: string;
     id?: string;
     multi?: boolean;
+    initialValue?: string;
   } | null>(null);
 
   const handleUpdate = (section: string, field: string, value: any, id?: string) => {
@@ -73,58 +84,115 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
 
     const toastId = toast.loading("Saving all changes...");
     try {
-      // 1. Process Excel edits / deletions in testimonials
-      const excelUpdates: { index: number; data: any }[] = [];
-      const excelDeletes: number[] = [];
-      let excelPath = "";
+      // 1. Process Excel edits / deletions for testimonials and clients
+      for (const section of ["testimonials", "clients"]) {
+        const isTargetKey = (k: string) => {
+          if (section === "testimonials") {
+            return k.startsWith("testimonials:tst-ext-") || k.startsWith("testimonials:tst-");
+          } else {
+            return k.startsWith("clients:cl-ext-") || k.startsWith("clients:cl-");
+          }
+        };
 
-      const hasExcelChanges = Object.keys(pendingChanges).some(k => k.startsWith("testimonials:tst-ext-"));
-      if (hasExcelChanges) {
-        try {
-          const resp = await fetch("/api/db/site_content?section_key=testimonials&_single=1");
-          const json = await resp.json();
-          excelPath = json.data?.content?.external_excel_path || "";
-        } catch (e) {
-          console.error("Failed to fetch excel path", e);
-        }
+        const hasExcelChanges = Object.keys(pendingChanges).some(isTargetKey);
 
-        if (excelPath) {
-          for (const [key, value] of entries) {
-            if (key.startsWith("testimonials:tst-ext-")) {
-              const parts = key.split(':');
-              if (parts.length === 3) {
-                const [_, id, f] = parts;
-                const index = parseInt(id.replace("tst-ext-", ""), 10);
-                if (f === "_delete") {
-                  excelDeletes.push(index);
-                } else {
-                  let updateObj = excelUpdates.find(u => u.index === index);
-                  if (!updateObj) {
-                    updateObj = { index, data: {} };
-                    excelUpdates.push(updateObj);
+        if (hasExcelChanges) {
+          const excelUpdates: any[] = [];
+          const excelAppends: any[] = [];
+          const excelDeletes: number[] = [];
+          const excelDeleteIds: string[] = [];
+          let excelPath = "";
+
+          try {
+            const resp = await fetch(`/api/db/site_content?section_key=${section}&_single=1`);
+            const json = await resp.json();
+            excelPath = json.data?.content?.[section === "testimonials" ? "external_excel_path" : "excel_path"] || "";
+          } catch (e) {
+            console.error(`Failed to fetch excel path for ${section}`, e);
+          }
+
+          if (excelPath) {
+            for (const [key, value] of entries) {
+              if (isTargetKey(key)) {
+                const parts = key.split(':');
+                if (parts.length === 3) {
+                  const [_, id, f] = parts;
+                  const isExt = id.includes("-ext-");
+                  const indexStr = id.replace(section === "testimonials" ? "tst-ext-" : "cl-ext-", "")
+                                     .replace(section === "testimonials" ? "tst-" : "cl-", "");
+                  const index = parseInt(indexStr, 10);
+
+                  if (f === "_delete") {
+                    if (isExt || section === "testimonials") {
+                      excelDeletes.push(index);
+                    } else {
+                      excelDeleteIds.push(id);
+                    }
+                  } else {
+                    let updateObj;
+                    
+                    if (section === "clients" && isExt) {
+                      updateObj = excelAppends.find(u => u.id === id);
+                      if (!updateObj) {
+                        updateObj = { id, data: {} };
+                        excelAppends.push(updateObj);
+                      }
+                    } else if (isExt || section === "testimonials") {
+                      updateObj = excelUpdates.find(u => u.index === index);
+                      if (!updateObj) {
+                        updateObj = { index, data: {} };
+                        excelUpdates.push(updateObj);
+                      }
+                    } else {
+                      updateObj = excelUpdates.find(u => u.id === id);
+                      if (!updateObj) {
+                        updateObj = { id, data: {} };
+                        excelUpdates.push(updateObj);
+                      }
+                    }
+
+                    if (section === "clients" && f === "logo_url") {
+                      const fileNameWithParams = typeof value === "string" ? value.split(/[\\\/]/).pop() : value;
+                      updateObj.data["file_name"] = typeof fileNameWithParams === "string" ? fileNameWithParams.split("?")[0] : fileNameWithParams;
+                      updateObj.data["logo_url"] = typeof value === "string" ? value.split("?")[0] : value;
+                    } else {
+                      updateObj.data[f] = value;
+                    }
                   }
-                  updateObj.data[f] = value;
                 }
               }
             }
-          }
 
-          if (excelUpdates.length > 0 || excelDeletes.length > 0) {
-            const excelRes = await fetch("/api/write_external_excel", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ path: excelPath, updates: excelUpdates, deletes: excelDeletes })
-            });
-            const excelJson = await excelRes.json();
-            if (excelJson.error) {
-              throw new Error(`Excel Save Failed: ${excelJson.error}`);
+            if (excelUpdates.length > 0 || excelDeletes.length > 0 || excelDeleteIds.length > 0 || excelAppends.length > 0) {
+              const excelRes = await fetch("/api/write_external_excel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                  path: excelPath, 
+                  type: section, 
+                  updates: excelUpdates, 
+                  deletes: excelDeletes, 
+                  deleteIds: excelDeleteIds,
+                  appends: excelAppends.map(a => ({ id: a.id, ...a.data }))
+                })
+              });
+              const excelJson = await excelRes.json();
+              if (excelJson.error) {
+                throw new Error(`${section} Excel Save Failed: ${excelJson.error}`);
+              }
             }
           }
         }
       }
 
       // Filter out external excel changes from db grouped changes
-      const dbEntries = entries.filter(([key]) => !key.startsWith("testimonials:tst-ext-"));
+      const dbEntries = entries.filter(([key]) => {
+        const isExcelKey = key.startsWith("testimonials:tst-ext-") ||
+                           key.startsWith("testimonials:tst-") ||
+                           key.startsWith("clients:cl-ext-") ||
+                           key.startsWith("clients:cl-");
+        return !isExcelKey;
+      });
 
       // Group changes by section and id to minimize requests
       const grouped: Record<string, any> = {};
@@ -273,7 +341,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       },
       cancel: {
         label: "Cancel",
-        onClick: () => {}
+        onClick: () => { }
       }
     });
   };
@@ -324,7 +392,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       else if (uiSection === "testimonials") { defaults.name = "New Client"; defaults.company = "Role / Position"; defaults.company_name = "Company Name"; defaults.message = "Client testimonial message goes here."; defaults.rating = 5; }
       else { defaults.title = "New Item"; defaults.name = "New Item"; }
 
-      const newId = `temp_${Date.now()}`;
+      const newId = uiSection === "clients" ? `cl-ext-${Date.now()}` : uiSection === "testimonials" ? `tst-ext-${Date.now()}` : `temp_${Date.now()}`;
       setPendingChanges(prev => ({ ...prev, [`${uiSection}:${newId}:_clone`]: defaults }));
       toast.success(`Added new item to ${uiSection} (Draft). Click 'Save All Changes' to apply.`);
     } catch (err: any) {
@@ -370,8 +438,8 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
     toast.success(`Changes for ${section}${id ? ` item ${id}` : ""} saved successfully!`);
   };
 
-  const handlePickImage = (section: string, field: string, id?: string) => {
-    setPickerConfig({ type: "image", section, field, id, multi: false });
+  const onPickImage = (section: string, field: string, id?: string, currentValue?: string) => {
+    setPickerConfig({ type: "image", section, field, id, initialValue: currentValue });
   };
 
   const handlePickMultiImage = (section: string, field: string, id?: string) => {
@@ -403,7 +471,7 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
       onAdd={handleAdd}
       onClone={handleClone}
       onSave={handleSave}
-      onPickImage={handlePickImage}
+      onPickImage={onPickImage}
       onPickMultiImage={handlePickMultiImage}
       onPickIcon={handlePickIcon}
       onPickLink={handlePickLink}
@@ -510,19 +578,40 @@ const PickerModal = ({ config, onClose, onSelect }: {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("path", `uploads/${file.name}`);
+      if (config.section === "clients") {
+        formData.append("section", "clients");
+        if (config.id) {
+          formData.append("clientId", config.id);
+        }
+      }
       try {
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         const json = await res.json();
         if (json.data?.publicUrl) {
-          const bustUrl = json.data.publicUrl.split("?")[0] + "?v=" + Date.now();
+          const rawUrl = json.data.publicUrl;
+          const bustUrl = rawUrl.includes(":\\") || rawUrl.startsWith("\\\\") || rawUrl.includes("\\")
+            ? rawUrl
+            : rawUrl.split("?")[0] + "?v=" + Date.now();
           uploadedUrls.push(bustUrl);
         }
       } catch (err) { console.error(err); }
     }
 
     if (uploadedUrls.length > 0) {
-      syncAssets([...currentAssets, ...uploadedUrls]);
-      toast.success(`Added ${uploadedUrls.length} images`);
+      if (config.section === "clients" && !config.multi && config.id) {
+        // For client single image: the server already updated Excel FileName.
+        // Set the path as selected and immediately call onSelect to update pending changes.
+        const finalUrl = uploadedUrls[uploadedUrls.length - 1];
+        setManualValue(finalUrl);
+        setSelected([finalUrl]);
+        onSelect(finalUrl);
+        // Trigger content refresh so ClientsSection re-reads from Excel
+        window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        toast.success("Client image uploaded and saved");
+      } else {
+        syncAssets([...currentAssets, ...uploadedUrls]);
+        toast.success(`Added ${uploadedUrls.length} images`);
+      }
     }
     e.target.value = "";
   };
@@ -538,6 +627,39 @@ const PickerModal = ({ config, onClose, onSelect }: {
       if (pendingValue !== undefined) {
         setManualValue(pendingValue);
         setSelected(pendingValue ? [pendingValue] : []);
+        return;
+      }
+
+      if (config.section === "clients") {
+        fetch(`/api/db/site_content?section_key=clients&_single=1`)
+          .then(r => r.json())
+          .then(async (res) => {
+            const excelPath = res.data?.content?.excel_path || "/data/clients.xlsx";
+            const imagePath = res.data?.content?.image_path || "C:\\Shared\\sspl_bsspl\\ClientImages";
+            
+            try {
+              const excelRes = await fetch("/api/read_external_excel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: excelPath, type: "clients" })
+              });
+              const excelJson = await excelRes.json();
+              if (excelJson.data) {
+                const c = excelJson.data.find((row: any) => String(row.id) === String(config.id));
+                if (c) {
+                  const fileName = c.file_name ?? "";
+                  const cleanedFileName = fileName.replace(/^[\\\/]+/, '');
+                  const cleanedFolderPath = imagePath.replace(/[\\\/]+$/, '');
+                  const separator = cleanedFolderPath.includes('\\') ? '\\' : '/';
+                  const fullImagePath = fileName ? `${cleanedFolderPath}${separator}${cleanedFileName}` : (c.logo_url || "");
+                  setManualValue(fullImagePath);
+                  setSelected(fullImagePath ? [fullImagePath] : []);
+                }
+              }
+            } catch (e) {
+              console.error("Failed to fetch client logo path from excel", e);
+            }
+          });
         return;
       }
 
@@ -718,7 +840,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
               <div className="flex flex-wrap gap-2 border-b border-border/50 pb-4">
                 {currentAssets.map((asset, idx) => (
                   <div key={asset + idx} className="group relative h-[100px] w-fit min-w-[100px] max-w-[180px] rounded-lg overflow-hidden border border-border/40 bg-muted/10 shadow-sm flex items-center justify-center">
-                    <img src={asset} alt="" className="h-full w-auto object-contain bg-black/5" />
+                    <img src={getDisplayUrl(asset)} alt="" className="h-full w-auto object-contain bg-black/5" />
                     <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">Live</div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                       <button
@@ -782,6 +904,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
             {config.type === "image" ? (
               <ImageGrid
                 section={config.section}
+                clientId={config.id}
                 onSelect={(v) => {
                   if (config.multi) {
                     if (Array.isArray(v)) {
@@ -840,8 +963,9 @@ const PickerModal = ({ config, onClose, onSelect }: {
 };
 
 
-const ImageGrid = ({ section, onSelect, search, multi, selected }: {
+const ImageGrid = ({ section, clientId, onSelect, search, multi, selected }: {
   section: string;
+  clientId?: string;
   onSelect: (v: string | string[]) => void;
   search: string;
   multi?: boolean;
@@ -866,6 +990,13 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("path", `${folder}/${file.name}`);
+      
+      if (section === "clients") {
+        formData.append("section", "clients");
+        if (clientId) {
+          formData.append("clientId", clientId);
+        }
+      }
 
       try {
         const res = await fetch("/api/upload", {
@@ -874,7 +1005,12 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
         });
         const json = await res.json();
         if (json.error) throw new Error(json.error.message);
-        const bustUrl = json.data.publicUrl.split("?")[0] + "?v=" + Date.now();
+        
+        const rawUrl = json.data.publicUrl;
+        const bustUrl = rawUrl.includes(":\\") || rawUrl.startsWith("\\\\") || rawUrl.includes("\\")
+            ? rawUrl
+            : rawUrl.split("?")[0] + "?v=" + Date.now();
+            
         newUrls.push(bustUrl);
       } catch (err: any) {
         toast.error(`Upload failed for ${file.name}: ${err.message}`);
@@ -889,8 +1025,14 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
       if (multi) {
         onSelect(newUrls);
       } else {
-        setUploadedUrl(newUrls[newUrls.length - 1]);
-        onSelect(newUrls[newUrls.length - 1]);
+        const finalUrl = newUrls[newUrls.length - 1];
+        setUploadedUrl(finalUrl);
+        onSelect(finalUrl);
+        
+        // For client single image: Trigger content refresh so ClientsSection re-reads from Excel
+        if (section === "clients" && clientId) {
+           window.dispatchEvent(new CustomEvent("ss:contentSaved"));
+        }
       }
     }
   };
@@ -914,7 +1056,7 @@ const ImageGrid = ({ section, onSelect, search, multi, selected }: {
           onClick={() => onSelect(uploadedUrl)}
           className="group relative h-[120px] w-full bg-muted/20 rounded-xl overflow-hidden border border-secondary/30 ring-2 ring-secondary/50 ring-offset-2 ring-offset-background cursor-pointer flex items-center justify-center shadow-md transition-all hover:ring-secondary"
         >
-          <img src={uploadedUrl} alt="Uploaded Image" className="h-full w-auto max-w-full object-contain transition-transform group-hover:scale-105" />
+          <img src={getDisplayUrl(uploadedUrl)} alt="Uploaded Image" className="h-full w-auto max-w-full object-contain transition-transform group-hover:scale-105" />
 
           <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">
             Selected

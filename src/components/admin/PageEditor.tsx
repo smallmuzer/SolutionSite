@@ -42,6 +42,16 @@ async function uploadFile(file: File, folder = "uploads"): Promise<string | null
   return uploadProjectAsset(folder, file).catch(() => null);
 }
 
+const getDisplayUrl = (url: string | null) => {
+  if (!url) return "";
+  if (url.includes(":\\") || url.startsWith("\\\\") || url.includes("\\") || (url.startsWith("/") && !url.startsWith("/assets/"))) {
+    if (!url.startsWith("/assets/") && !url.startsWith("http") && !url.startsWith("data:")) {
+      return `/api/client_image?path=${encodeURIComponent(url)}`;
+    }
+  }
+  return url;
+};
+
 const ICON_OPTIONS = [
   // Core / Common
   { label: "Monitor", Icon: Monitor },
@@ -347,7 +357,35 @@ const PageEditor = () => {
     const [contentRes, servicesRes, clientsRes, testimonialsRes, careersRes, heroStatsRes] = await Promise.all([
       fetch("/api/db/site_content").then(r => r.json()),
       fetch("/api/db/services?_order=sort_order").then(r => r.json()),
-      fetch("/api/db/client_logos?_order=sort_order").then(r => r.json()),
+      fetch("/api/db/site_content").then(r => r.json()).then(async (res) => {
+        const excelPath = res.data?.find((row: any) => row.section_key === "clients")?.content?.excel_path || "/data/clients.xlsx";
+        const imagePath = res.data?.find((row: any) => row.section_key === "clients")?.content?.image_path || "C:\\Shared\\sspl_bsspl\\ClientImages";
+
+        const clientData = await fetch("/api/read_external_excel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: excelPath, type: "clients" })
+        }).then(r => r.json()).catch(() => ({ data: [] }));
+
+        if (clientData.data) {
+          return {
+            data: clientData.data.map((c: any) => {
+              const fileName = c.file_name ?? "";
+              const cleanedFileName = fileName.replace(/^[\\\/]+/, '');
+              const separator = imagePath.includes('\\') ? '\\' : '/';
+              return {
+                id: c.id,
+                name: c.name,
+                logo_url: fileName ? `${imagePath.replace(/[\\\/]+$/, '')}${separator}${cleanedFileName}` : (c.logo_url || ""),
+                file_name: fileName,
+                is_visible: c.is_visible,
+                sort_order: c.sort_order
+              };
+            })
+          };
+        }
+        return { data: [] };
+      }),
       fetch("/api/db/testimonials?_order=created_at.desc").then(r => r.json()),
       fetch("/api/db/career_jobs?_order=sort_order").then(r => r.json()),
       fetch("/api/db/hero_stats?_order=sort_order").then(r => r.json()),
@@ -478,11 +516,32 @@ const PageEditor = () => {
   const deleteLocation = (idx: number) => setLocations(locations.filter((_, i) => i !== idx));
 
   const toggleVisibility = async (table: string, id: string, current: boolean, setter: (val: any) => void) => {
+    if (table === "client_logos") {
+      const excelPath = siteContent.clients?.excel_path || "/data/clients.xlsx";
+      await fetch("/api/write_external_excel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: excelPath, type: "clients", updates: [{ id, data: { is_visible: !current } }] })
+      });
+      setter((prev: any[]) => prev.map((item: any) => item.id === id ? { ...item, is_visible: !current } : item));
+      return;
+    }
     await dbFetch(table, { method: "PATCH", query: { id }, body: { is_visible: !current } });
     setter((prev: any[]) => prev.map((item: any) => item.id === id ? { ...item, is_visible: !current } : item));
   };
 
   const deleteItem = async (table: string, id: string, setter: (val: any) => void) => {
+    if (table === "client_logos") {
+      const excelPath = siteContent.clients?.excel_path || "/data/clients.xlsx";
+      await fetch("/api/write_external_excel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: excelPath, type: "clients", deleteIds: [id] })
+      });
+      setter((prev: any[]) => prev.filter((item: any) => item.id !== id));
+      toast.success("Deleted!");
+      return;
+    }
     await dbFetch(table, { method: "DELETE", query: { id } });
     setter((prev: any[]) => prev.filter((item: any) => item.id !== id));
     toast.success("Deleted!");
@@ -497,9 +556,17 @@ const PageEditor = () => {
     updated.splice(toIdx, 0, moved);
     updated.forEach((c, i) => { c.sort_order = i; });
     setClients([...updated]);
-    for (const c of updated) {
-      await dbFetch("client_logos", { method: "PATCH", query: { id: c.id }, body: { sort_order: c.sort_order } });
-    }
+
+    const excelPath = siteContent.clients?.excel_path || "/data/clients.xlsx";
+    const updates = updated.map(c => {
+      return { id: c.id, data: { sort_order: c.sort_order } };
+    });
+
+    await fetch("/api/write_external_excel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: excelPath, type: "clients", updates })
+    });
     toast.success("Order saved!");
   };
 
@@ -512,11 +579,16 @@ const PageEditor = () => {
   };
 
   const addClient = async () => {
-    const { data } = await dbFetch("client_logos", {
+    const excelPath = siteContent.clients?.excel_path || "/data/clients.xlsx";
+    const newClient = { id: `cl-ext-${clients.length}`, name: "New Client", file_name: "", logo_url: "", sort_order: clients.length, is_visible: true };
+    await fetch("/api/write_external_excel", {
       method: "POST",
-      body: { name: "New Client", logo_url: "", sort_order: clients.length }
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: excelPath, type: "clients", appends: [newClient] })
     });
-    if (data) { setClients([...clients, data]); setEditingClient(data.id); setTempClient(data); }
+    setClients([...clients, newClient as any]);
+    setEditingClient(newClient.id);
+    setTempClient(newClient);
   };
 
   const bulkImportClients = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -525,6 +597,7 @@ const PageEditor = () => {
 
     toast.info(`Importing ${files.length} clients...`);
     const newClients = [];
+    const appends = [];
     for (const file of files) {
       let rawName = file.name;
       const lastDot = rawName.lastIndexOf('.');
@@ -535,25 +608,29 @@ const PageEditor = () => {
       const clientName = rawName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       if (clients.some(c => c.name.toLowerCase() === clientName.toLowerCase()) ||
-        newClients.some(c => c.name.toLowerCase() === clientName.toLowerCase())) {
+        newClients.some((c: any) => c.name.toLowerCase() === clientName.toLowerCase())) {
         continue;
       }
 
       const uploadedUrl = await uploadFile(file, "clients");
       if (!uploadedUrl) continue;
+      const fileName = file.name;
 
-      const { data, error } = await dbFetch("client_logos", {
+      const newClient = { id: `cl-ext-${clients.length + newClients.length}`, name: clientName, file_name: fileName, logo_url: uploadedUrl, is_visible: true, sort_order: clients.length + newClients.length };
+      appends.push(newClient);
+      newClients.push(newClient);
+    }
+
+    if (appends.length > 0) {
+      await fetch("/api/write_external_excel", {
         method: "POST",
-        body: { name: clientName, logo_url: uploadedUrl, sort_order: clients.length + newClients.length }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: siteContent.clients?.excel_path || "/data/clients.xlsx", type: "clients", appends })
       });
-
-      if (data && !error) {
-        newClients.push(data);
-      }
     }
 
     if (newClients.length > 0) {
-      setClients(prev => [...prev, ...newClients]);
+      setClients(prev => [...prev, ...newClients as any]);
       toast.success(`Successfully imported ${newClients.length} clients!`);
       window.dispatchEvent(new CustomEvent("ss:contentSaved"));
     } else {
@@ -627,17 +704,26 @@ const PageEditor = () => {
 
   const saveClient = async () => {
     if (!editingClient) return;
-    const { data, error } = await dbFetch("client_logos", {
-      method: "PATCH",
-      query: { id: editingClient },
-      body: { name: tempClient.name, logo_url: tempClient.logo_url }
+
+    const excelPath = siteContent.clients?.excel_path || "/data/clients.xlsx";
+
+    await fetch("/api/write_external_excel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: excelPath,
+        type: "clients",
+        updates: [{
+          id: editingClient,
+          data: {
+            name: tempClient.name,
+            file_name: tempClient.logo_url?.split(/[\\\/]/).pop() || (tempClient as any).file_name || "",
+          }
+        }]
+      })
     });
 
-    if (!error && data) {
-      setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...data } : c));
-    } else {
-      setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...tempClient } : c));
-    }
+    setClients((prev) => prev.map((c) => c.id === editingClient ? { ...c, ...tempClient } : c));
 
     setEditingClient(null);
     toast.success("Client updated!");
@@ -1145,7 +1231,7 @@ const PageEditor = () => {
                             </div>
                             {tempClient.logo_url && (
                               <div className="bg-white rounded-xl p-4 border border-border/50 shadow-inner flex items-center justify-center min-h-[100px] mt-2 group/prev relative">
-                                <img src={tempClient.logo_url} alt="preview" className="max-h-16 max-w-full object-contain transition-transform group-hover/prev:scale-110" />
+                                <img src={getDisplayUrl(tempClient.logo_url)} alt="preview" className="max-h-16 max-w-full object-contain transition-transform group-hover/prev:scale-110" />
                                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-muted text-[0.6rem] font-bold text-muted-foreground uppercase border border-border/50">Preview</div>
                               </div>
                             )}
@@ -1159,7 +1245,7 @@ const PageEditor = () => {
                         <div className="flex items-center gap-3">
                           <GripVertical size={16} className="text-muted-foreground/20 shrink-0" />
                           <div className="w-14 h-14 rounded-xl bg-white border border-border/40 flex items-center justify-center p-2.5 shrink-0 shadow-sm relative group/logo">
-                            <img src={c.logo_url || ""} alt={c.name} className="max-w-full max-h-full object-contain transition-transform group-hover/logo:scale-110"
+                            <img src={getDisplayUrl(c.logo_url || "")} alt={c.name} className="max-w-full max-h-full object-contain transition-transform group-hover/logo:scale-110"
                               onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/100x100?text=Logo'; }} />
                           </div>
                           <div className="flex-1 min-w-0 pr-1">
