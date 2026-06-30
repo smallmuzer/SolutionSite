@@ -73,9 +73,62 @@ const LiveEditor = ({ userRole }: { userRole?: string }) => {
 
     const toastId = toast.loading("Saving all changes...");
     try {
+      // 1. Process Excel edits / deletions in testimonials
+      const excelUpdates: { index: number; data: any }[] = [];
+      const excelDeletes: number[] = [];
+      let excelPath = "";
+
+      const hasExcelChanges = Object.keys(pendingChanges).some(k => k.startsWith("testimonials:tst-ext-"));
+      if (hasExcelChanges) {
+        try {
+          const resp = await fetch("/api/db/site_content?section_key=testimonials&_single=1");
+          const json = await resp.json();
+          excelPath = json.data?.content?.external_excel_path || "";
+        } catch (e) {
+          console.error("Failed to fetch excel path", e);
+        }
+
+        if (excelPath) {
+          for (const [key, value] of entries) {
+            if (key.startsWith("testimonials:tst-ext-")) {
+              const parts = key.split(':');
+              if (parts.length === 3) {
+                const [_, id, f] = parts;
+                const index = parseInt(id.replace("tst-ext-", ""), 10);
+                if (f === "_delete") {
+                  excelDeletes.push(index);
+                } else {
+                  let updateObj = excelUpdates.find(u => u.index === index);
+                  if (!updateObj) {
+                    updateObj = { index, data: {} };
+                    excelUpdates.push(updateObj);
+                  }
+                  updateObj.data[f] = value;
+                }
+              }
+            }
+          }
+
+          if (excelUpdates.length > 0 || excelDeletes.length > 0) {
+            const excelRes = await fetch("/api/write_external_excel", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ path: excelPath, updates: excelUpdates, deletes: excelDeletes })
+            });
+            const excelJson = await excelRes.json();
+            if (excelJson.error) {
+              throw new Error(`Excel Save Failed: ${excelJson.error}`);
+            }
+          }
+        }
+      }
+
+      // Filter out external excel changes from db grouped changes
+      const dbEntries = entries.filter(([key]) => !key.startsWith("testimonials:tst-ext-"));
+
       // Group changes by section and id to minimize requests
       const grouped: Record<string, any> = {};
-      for (const [key, value] of entries) {
+      for (const [key, value] of dbEntries) {
         const parts = key.split(':');
         if (parts.length === 3) { // section:id:field
           const [s, id, f] = parts;

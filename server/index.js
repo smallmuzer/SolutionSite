@@ -1509,7 +1509,9 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
   try {
     const { path, updates } = req.body;
     if (!path) return res.status(400).json({ error: "Path is required" });
-    if (!updates || !Array.isArray(updates)) return res.status(400).json({ error: "Updates array is required" });
+    if (!updates && !req.body.deletes && !req.body.appends) {
+      return res.status(400).json({ error: "No changes provided (updates, deletes, or appends)" });
+    }
     if (!existsSync(path)) return res.status(404).json({ error: "File not found at specified path" });
 
     const fileBuffer = readFileSync(path);
@@ -1517,6 +1519,11 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet);
+
+    // Assign initial sort order to preserve original order if not updated
+    rows.forEach((row, i) => {
+       row._sort_order = i;
+    });
 
     for (const update of updates || []) {
       const { index, data } = update;
@@ -1531,6 +1538,18 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
       if (data.is_visible !== undefined) {
         row["Visible"] = (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No";
       }
+      if (data.sort_order !== undefined) {
+        row._sort_order = parseInt(data.sort_order, 10);
+      }
+    }
+
+    if (req.body.deletes && Array.isArray(req.body.deletes)) {
+      const sortedDeletes = [...req.body.deletes].sort((a, b) => b - a);
+      for (const idx of sortedDeletes) {
+        if (idx >= 0 && idx < rows.length) {
+          rows.splice(idx, 1);
+        }
+      }
     }
 
     if (req.body.appends && Array.isArray(req.body.appends)) {
@@ -1542,9 +1561,18 @@ app.post("/api/write_external_excel", express.json(), (req, res) => {
           "Message": data.message || "",
           "Rating": parseFloat(data.rating) || 5,
           "Visible": (data.is_visible === 1 || data.is_visible === true) ? "Yes" : "No",
+          "_sort_order": data.sort_order !== undefined ? parseInt(data.sort_order, 10) : rows.length
         });
       }
     }
+
+    // Sort rows by _sort_order
+    rows.sort((a, b) => (a._sort_order || 0) - (b._sort_order || 0));
+    
+    // Remove temporary _sort_order property before converting back to sheet
+    rows.forEach(row => {
+      delete row._sort_order;
+    });
 
     const newWorksheet = XLSX.utils.json_to_sheet(rows);
     workbook.Sheets[firstSheetName] = newWorksheet;

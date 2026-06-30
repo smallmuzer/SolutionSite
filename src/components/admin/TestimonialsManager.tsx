@@ -402,7 +402,22 @@ export default function TestimonialsManager({ userRole }: { userRole: string }) 
           }}
           onDelete={async (section: string, id: string) => {
             if (!confirm("Are you sure you want to delete this?")) return;
-            await dbDelete(section, { id });
+            if (id.startsWith("tst-ext-")) {
+              const index = parseInt(id.replace("tst-ext-", ""), 10);
+              const excelRes = await fetch("/api/write_external_excel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: externalExcelPath, deletes: [index] })
+              });
+              const excelJson = await excelRes.json();
+              if (excelJson.error) {
+                toast.error(`Excel Delete Failed: ${excelJson.error}`);
+                return;
+              }
+              toast.success("Deleted from Excel successfully");
+            } else {
+              await dbDelete(section, { id });
+            }
             loadData();
             window.dispatchEvent(new CustomEvent("ss:contentSaved"));
           }}
