@@ -85,7 +85,7 @@ const StarRating = ({ rating, id, editor }: { rating: number, id?: string, edito
   );
 };
 
-const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string }) => {
+const ReadMoreText = ({ text, clampClass, textClass, section, field, id, onExpandedChange }: { text: string; clampClass: string; textClass: string; section?: string; field?: string; id?: string; onExpandedChange?: (expanded: boolean) => void }) => {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -119,7 +119,7 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { tex
       {overflows && !expanded && (
         <div className="absolute bottom-0 right-0 flex items-center justify-end pl-8 bg-gradient-to-r from-transparent via-card to-card z-10">
           <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); onExpandedChange?.(true); }}
             className="font-bold text-[10.5px] text-primary hover:underline bg-card pl-1 pr-1 whitespace-nowrap"
           >
             ... Read more
@@ -128,7 +128,7 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { tex
       )}
       {expanded && (
         <button
-          onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+          onClick={(e) => { e.stopPropagation(); setExpanded(false); onExpandedChange?.(false); }}
           className="font-bold text-[10.5px] text-primary hover:underline mt-1 block w-full text-left"
         >
           Read less
@@ -140,14 +140,15 @@ const ReadMoreText = ({ text, clampClass, textClass, section, field, id }: { tex
 
 const GridCard = ({
   t, editor, hideProfiles, draggedId,
-  onDragStart, onDragEnd, onDragOver, onDrop, onMove
+  onDragStart, onDragEnd, onDragOver, onDrop, onMove, onReadMoreToggle
 }: {
   t: any, editor: any, hideProfiles: boolean, draggedId: string | null,
   onDragStart: (e: React.DragEvent, id: string) => void,
   onDragEnd: () => void,
   onDragOver: (e: React.DragEvent) => void,
   onDrop: (e: React.DragEvent, id: string) => void,
-  onMove: (id: string, dir: "up" | "down" | "left" | "right") => void
+  onMove: (id: string, dir: "up" | "down" | "left" | "right") => void,
+  onReadMoreToggle?: (id: string, expanded: boolean) => void
 }) => {
   const companies = useMemo(() => {
     if (!t.company_name) return [];
@@ -247,6 +248,7 @@ const GridCard = ({
               text={(t.message || "").replace(/&nbsp;/g, ' ') || (editor?.isEditMode ? "Client testimonial message goes here." : "")}
               clampClass="line-clamp-2"
               textClass="text-muted-foreground text-[0.75rem] leading-relaxed min-h-[2rem]"
+              onExpandedChange={(expanded) => onReadMoreToggle?.(t.id, expanded)}
             />
           </div>
         </div>
@@ -352,6 +354,19 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
   }, [excelPath, refetchTrigger]);
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [expandedBookTestimonials, setExpandedBookTestimonials] = useState<Set<string>>(new Set());
+
+  const handleBookReadMoreToggle = (id: string, expanded: boolean) => {
+    setExpandedBookTestimonials(prev => {
+      const next = new Set(prev);
+      if (expanded) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  };
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     if (!editor?.isEditMode) return;
@@ -553,12 +568,12 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                 <div className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-2 md:p-4 pb-3 md:pb-5 pr-3 md:pr-6 mx-auto z-10">
 
                   {/* Diary Stitching Effect (Debossed groove + bright theme-colored thread) */}
-                  <div className="absolute top-1 left-1 bottom-1.5 right-1.5 md:top-2 md:left-2 md:bottom-2.5 md:right-3 border-[2px] border-dashed border-secondary/90 rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
+                  <div className="absolute top-1 left-1 bottom-1.5 right-1.5 md:top-2 md:left-2 md:bottom-2.5 md:right-3 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
 
                   {/* Classic Diary Ribbon Bookmark */}
                   <div className="absolute left-[65%] -bottom-4 md:-bottom-6 w-4 md:w-6 h-12 md:h-16 bg-red-600/90 shadow-[0_4px_6px_rgba(0,0,0,0.3)] z-0 origin-top rotate-[-2deg]" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
 
-                  <div className="w-full relative aspect-[625/580] md:aspect-[1250/530] rounded-sm bg-gradient-to-r from-[#e5e2da] via-[#faf8f5] to-[#e5e2da] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.3),_inset_0_2px_15px_rgba(0,0,0,0.1)] z-10 p-[3px] md:p-[6px]">
+                  <div className="w-full relative aspect-[625/600] md:aspect-[1250/560] rounded-sm bg-gradient-to-r from-[#e5e2da] via-[#faf8f5] to-[#e5e2da] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.3),_inset_0_2px_15px_rgba(0,0,0,0.1)] z-10 p-[3px] md:p-[6px]">
                     {/* Bulk page stack effect on margins */}
                     {/* Left stack lines */}
                     <div className="absolute left-[1px] top-1 bottom-1 w-[2px] md:w-[5px] pointer-events-none z-0 opacity-80 border-r border-[#d4d1c9]/40 dark:border-slate-800"
@@ -593,7 +608,7 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                     {/* @ts-ignore */}
                     <HTMLFlipBook
                       width={625}
-                      height={530}
+                      height={550}
                       size="stretch"
                       minWidth={300}
                       maxWidth={625}
@@ -646,10 +661,12 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                           <div className="hidden">1</div>
                         </div>,
 
-                        ...pages.map((pageCards, pIdx) => (
-                          <div key={`page-${pIdx}`} className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative">
-                            <div className="w-full h-full overflow-y-auto no-scrollbar flex flex-col relative">
-                              <div className="flex-1 min-h-[0.5rem]"></div>
+                        ...pages.map((pageCards, pIdx) => {
+                          const isPageExpanded = pageCards.some((t) => expandedBookTestimonials.has(t.id));
+
+                          return (
+                          <div key={`page-${pIdx}`} className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] page-turn-item relative">
+                            <div className={`w-full h-full ${isPageExpanded ? "overflow-y-auto no-scrollbar" : "overflow-hidden"} flex flex-col relative pt-3 md:pt-5`}>
                               <div className="flex flex-col gap-3 px-3 md:px-5 w-full shrink-0 relative z-10">
                                 {pageCards.map((t, rIdx) => (
                                   <div key={`${t.id}-${rIdx}`} className="overflow-hidden w-full">
@@ -663,18 +680,19 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                                       onDragOver={() => { }}
                                       onDrop={() => { }}
                                       onMove={() => { }}
+                                      onReadMoreToggle={handleBookReadMoreToggle}
                                     />
                                   </div>
                                 ))}
                               </div>
-                              <div className="flex-1 min-h-[24px] shrink-0"></div>
-                            </div>
-                            {/* Elegant Page Number */}
-                            <div className="absolute bottom-2 md:bottom-3 pt-[1px] w-full text-center text-[10px] md:text-[11px] text-primary font-bold font-serif pointer-events-none select-none">
-                              {pIdx + 1}
+                              {/* Elegant Page Number — inside flex so it's never clipped */}
+                              <div className="shrink-0 w-full text-center text-[10px] md:text-[11px] text-primary font-bold font-serif pointer-events-none select-none py-2 md:py-3 mt-auto">
+                                {pIdx + 1}
+                              </div>
                             </div>
                           </div>
-                        )),
+                          );
+                        }),
 
                         /* Premium Thank You Back Cover Page */
                         <div key="back-cover" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6">
