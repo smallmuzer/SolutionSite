@@ -187,7 +187,12 @@ export const EditableText: React.FC<{
     const [isEditing, setIsEditing] = useState(false);
 
     const draftKey = id ? `${section}:${id}:${field}` : `${section}:${field}`;
-    const displayValue = editor?.pendingChanges?.[draftKey] ?? value;
+    let displayValue = editor?.pendingChanges?.[draftKey] ?? value;
+    
+    if (typeof displayValue !== 'string') {
+      console.warn(`EditableText: expected string for ${draftKey}, got`, typeof displayValue, displayValue);
+      displayValue = String(displayValue);
+    }
 
     const [localValue, setLocalValue] = useState(displayValue);
 
