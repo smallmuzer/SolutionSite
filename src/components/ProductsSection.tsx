@@ -38,6 +38,14 @@ import {
 } from "./admin/LiveEditorContext";
 import { TypographyEditorModal, parseInlineStyles } from "./admin/TypographyEditorModal";
 
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules';
+
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
 function useIsDarkMode() {
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
@@ -1257,65 +1265,78 @@ const ProductsSection = () => {
           </div>
         </AnimatedSection>
 
-        {globalView === "grid" && isMobileProducts && !editor?.isEditMode ? (
+        {globalView === "grid" && !editor?.isEditMode ? (
           <div
-            className="max-w-3xl mx-auto px-1 overflow-hidden"
+            className="w-full relative px-2 sm:px-8 py-8 overflow-visible"
             onMouseEnter={() => pausedRef.current = true}
             onMouseLeave={() => pausedRef.current = false}
-            onTouchStart={() => pausedRef.current = true}
-            onTouchEnd={() => pausedRef.current = false}
           >
-            <div
-              className="flex transition-transform duration-500 ease-in-out w-full"
-              style={{ transform: `translateX(-${mobilePage * 100}%)` }}
+            <Swiper
+              key={`swiper-${products.length}`}
+              effect={'coverflow'}
+              grabCursor={true}
+              centeredSlides={true}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              loop={products.length > 0}
+              coverflowEffect={{
+                rotate: 20,
+                stretch: 0,
+                depth: 150,
+                modifier: 1,
+                slideShadows: false,
+              }}
+              pagination={{ clickable: true, dynamicBullets: true }}
+              navigation={{
+                nextEl: '.products-button-next',
+                prevEl: '.products-button-prev',
+              }}
+              speed={400}
+              autoplay={{
+                delay: 1500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              modules={[EffectCoverflow, Pagination, Navigation, Autoplay]}
+              className="w-full max-w-7xl mx-auto !pb-16 products-swiper !px-4 md:!px-12"
             >
-              {Array.from({ length: mobileTotalPages }).map((_, pageIdx) => (
-                <div key={pageIdx} className="w-full flex-shrink-0 grid grid-cols-1 gap-4 items-stretch px-1">
-                  {products.slice(pageIdx * mobileCardsPerPage, (pageIdx + 1) * mobileCardsPerPage).map((product) => (
-                    <div key={product.id} className="flex justify-center">
+              {(products.length > 0 && products.length < 6 ? [...products, ...products, ...products] : products).map((product, idx) => (
+                <SwiperSlide key={`${product.id}-${idx}`} className="h-auto">
+                  <div className="h-full w-full py-4 transition-transform duration-300 hover:-translate-y-2 flex justify-center">
+                    <div className="w-full max-w-[400px]">
                       <ProductCard
                         product={product}
                         onDemo={scrollToContact}
                         cardStyle={cardStyle}
                         getNavProps={getNavProps}
-                        draggedId={draggedId}
+                        draggedId={null}
                         onEditTypo={setTypoFeature}
                         onReadMore={() => { userInteractedRef.current = true; }}
                       />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </SwiperSlide>
               ))}
-            </div>
 
-            {mobileTotalPages > 1 && (
-              <div className="flex items-center justify-center gap-5 mt-8">
-                <button
-                  onClick={() => goToMobilePage(mobilePage - 1, true)}
-                  className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
-                  aria-label="Previous products"
-                >
-                  <ChevronLeft size={19} className="group-hover/nav:-translate-x-0.5 transition-transform" />
-                </button>
-                <div className="flex gap-2.5">
-                  {Array.from({ length: mobileTotalPages }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => goToMobilePage(i, true)}
-                      className={`h-1.5 rounded-full transition-all ${i === mobilePage ? "w-8 bg-secondary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`}
-                      aria-label={`Go to products page ${i + 1}`}
-                    />
-                  ))}
-                </div>
-                <button
-                  onClick={() => goToMobilePage(mobilePage + 1, true)}
-                  className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all text-foreground shadow-sm group/nav"
-                  aria-label="Next products"
-                >
-                  <ChevronRight size={19} className="group-hover/nav:translate-x-0.5 transition-transform" />
-                </button>
+              {/* Custom Navigation Arrows */}
+              <div className="products-button-prev absolute top-1/2 left-0 md:-left-4 -translate-y-1/2 z-50 cursor-pointer text-secondary w-10 h-10 md:w-12 md:h-12 bg-card border border-border rounded-full shadow-lg flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all hidden sm:flex">
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-            )}
+              <div className="products-button-next absolute top-1/2 right-0 md:-right-4 -translate-y-1/2 z-50 cursor-pointer text-secondary w-10 h-10 md:w-12 md:h-12 bg-card border border-border rounded-full shadow-lg flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all hidden sm:flex">
+                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+            </Swiper>
+
+            <style dangerouslySetInnerHTML={{
+              __html: `
+              .products-swiper .swiper-pagination-bullet { background: var(--secondary); opacity: 0.3; }
+              .products-swiper .swiper-pagination-bullet-active { opacity: 1; }
+              .products-button-prev.swiper-button-disabled,
+              .products-button-next.swiper-button-disabled { opacity: 0.35; cursor: auto; pointer-events: none; }
+            `}} />
           </div>
         ) : globalView === "grid" ? (
           <div
