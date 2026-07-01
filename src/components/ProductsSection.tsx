@@ -38,6 +38,71 @@ import {
 } from "./admin/LiveEditorContext";
 import { TypographyEditorModal, parseInlineStyles } from "./admin/TypographyEditorModal";
 
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class") {
+          setIsDark(document.documentElement.classList.contains("dark"));
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return isDark;
+}
+
+function adjustColorForDarkMode(color: string): string {
+  if (!color || !color.startsWith("#")) return color;
+  let hex = color.substring(1);
+  if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  if (hex.length !== 6) return color;
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  let newL = Math.max(0.65, Math.min(0.85, l));
+  if (l < 0.3) newL = 0.70;
+  let newS = Math.max(0.70, Math.min(0.90, s));
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  let rFinal, gFinal, bFinal;
+  if (newS === 0) {
+    rFinal = gFinal = bFinal = newL;
+  } else {
+    const q = newL < 0.5 ? newL * (1 + newS) : newL + newS - newL * newS;
+    const p = 2 * newL - q;
+    rFinal = hue2rgb(p, q, h + 1 / 3);
+    gFinal = hue2rgb(p, q, h);
+    bFinal = hue2rgb(p, q, h - 1 / 3);
+  }
+  const toHex = (x: number) => {
+    const hexVal = Math.round(x * 255).toString(16);
+    return hexVal.length === 1 ? "0" + hexVal : hexVal;
+  };
+  return `#${toHex(rFinal)}${toHex(gFinal)}${toHex(bFinal)}`;
+}
+
 const PRODUCT_ICON_CONFIG: Record<
   string,
   { Icon: React.ElementType; bg: string }
@@ -168,17 +233,19 @@ const ProductCard = ({
   onReadMore?: () => void;
 }) => {
   const editor = useLiveEditor();
+  const isDark = useIsDarkMode();
   const [featuresExpanded, setFeaturesExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
   const badgeColor = product.extra_color || "#007600";
   const draftKeyTheme = product.id ? `products:${product.id}:extra_color` : `products:extra_color`;
   const themeColorRaw = editor?.pendingChanges[draftKeyTheme] ?? product.extra_color ?? "#ff6600";
   const themeColor = themeColorRaw.split(",")[0].trim() || "#ff6600";
+  const displayColor = isDark ? adjustColorForDarkMode(themeColor) : themeColor;
 
   return (
     <div
-      className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-[#11111f] rounded-[24px] overflow-hidden group/item cursor-pointer shadow-sm border-[0.5px] border-slate-200 dark:border-slate-800 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-[box-shadow,transform] duration-300 transform-gpu ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
-      style={{ width: 320, contain: "paint", willChange: "transform" }}
+      className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-gradient-to-br dark:from-[#131326] dark:to-[#0a0a14] rounded-[24px] overflow-hidden group/item cursor-pointer shadow-sm border-[0.5px] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-[box-shadow,transform] duration-300 transform-gpu ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
+      style={{ width: 320, contain: "paint", willChange: "transform", borderColor: isDark ? "rgba(100,100,150,0.25)" : "rgba(226, 232, 240, 1)" }}
       {...getNavProps((e?: React.MouseEvent) => {
         e?.stopPropagation();
         const url = product.contact_url || product.demo_url;
@@ -196,12 +263,12 @@ const ProductCard = ({
       <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none" style={{ transform: "translateZ(0)" }}>
         <svg width="48" height="48" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <pattern id={`dots-${product.id}`} x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-            <circle cx="2" cy="2" r="1.5" fill={themeColor} opacity="0.6" />
+            <circle cx="2" cy="2" r="1.5" fill={displayColor} opacity="0.6" />
           </pattern>
           <rect width="40" height="40" fill={`url(#dots-${product.id})`} />
         </svg>
       </div>
-      <div className="absolute top-0 left-0 w-24 h-24 rounded-br-[64px] opacity-10 pointer-events-none" style={{ backgroundColor: themeColor }} />
+      <div className="absolute top-0 left-0 w-24 h-24 rounded-br-[64px] opacity-10 pointer-events-none" style={{ backgroundColor: displayColor }} />
 
       <EditorToolbar
         section="products"
@@ -233,7 +300,7 @@ const ProductCard = ({
         </div>
       )}
       {(product.is_popular || product.name === "HR-Metrics" || product.name === "BSOL") && (
-        <div className={`absolute top-4 right-4 z-20 flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[0.65rem] font-bold text-white shadow-sm tracking-wide`} style={{ backgroundColor: themeColor }}>
+        <div className={`absolute top-4 right-4 z-20 flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[0.65rem] font-bold text-white shadow-sm tracking-wide`} style={{ backgroundColor: displayColor }}>
           {product.name === "HR-Metrics" ? "Most Popular" : "Best Seller"}
         </div>
       )}
@@ -242,7 +309,7 @@ const ProductCard = ({
         {/* Top Section: Image and Headers */}
         <div className="flex flex-row items-center gap-3">
           <div className="w-[72px] h-[72px] shrink-0 relative flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-[1.25px] opacity-35 pointer-events-none" style={{ borderColor: themeColor }} />
+            <div className="absolute inset-0 rounded-full border-[1.25px] opacity-35 pointer-events-none" style={{ borderColor: displayColor }} />
             <div className="w-[60px] h-[60px] rounded-full relative">
               {cardStyle === "image" ? (
                 <div className="w-full h-full rounded-full overflow-hidden shadow-sm">
@@ -257,10 +324,10 @@ const ProductCard = ({
           </div>
 
           <div className="flex flex-col flex-1 justify-center">
-            <h3 className="font-bold text-left text-[1.1rem] leading-tight" style={{ color: themeColor }}>
+            <h3 className="font-bold text-left text-[1.1rem] leading-tight" style={{ color: displayColor }}>
               <EditableText section="products" field="name" id={product.id} value={product.name} colorField="name_color" />
             </h3>
-            <span className="text-[0.55rem] text-left font-extrabold uppercase tracking-[0.1em] mt-0.5 opacity-90" style={{ color: themeColor }}>
+            <span className="text-[0.55rem] text-left font-extrabold uppercase tracking-[0.1em] mt-0.5 opacity-90" style={{ color: displayColor }}>
               <EditableText section="products" field="tagline" id={product.id} value={product.tagline} colorField="tagline_color" />
             </span>
           </div>
@@ -277,13 +344,13 @@ const ProductCard = ({
             clampClass="line-clamp-2"
             textClass="text-[0.75rem] text-left font-medium text-slate-600 dark:text-slate-400 leading-relaxed"
             onExpand={onReadMore}
-            themeColor={themeColor}
+            themeColor={displayColor}
           />
         </div>
 
         {/* Features Box */}
         <div className="mt-3 rounded-xl p-2.5 flex flex-col gap-1.5 relative z-10 group/features mb-auto">
-          <div className="absolute inset-0 opacity-[0.05] pointer-events-none rounded-xl overflow-hidden" style={{ backgroundColor: themeColor }} />
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none rounded-xl overflow-hidden" style={{ backgroundColor: displayColor }} />
           {editor?.isEditMode && (
             <div className="absolute -top-3 right-0 opacity-0 group-hover/features:opacity-100 transition-opacity flex gap-1 bg-card rounded-md shadow-sm border border-border/50 p-0.5 z-10">
               <button
@@ -325,7 +392,7 @@ const ProductCard = ({
                   const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
                   const hasStyles = Object.values(parsedStyles).some(v => !!v);
 
-                  const fColor = isNegative ? "#ef4444" : themeColor;
+                  const fColor = isNegative ? "#ef4444" : displayColor;
                   const inlineStyle: React.CSSProperties = { color: fColor };
                   if (hasStyles) {
                     if (parsedStyles.fontFamily) inlineStyle.fontFamily = parsedStyles.fontFamily;
@@ -408,7 +475,7 @@ const ProductCard = ({
                         <button
                           onClick={(e) => { e.stopPropagation(); setFeaturesExpanded(!featuresExpanded); }}
                           className="ml-auto p-0.5 hover:bg-secondary/10 rounded-full transition-all shrink-0 border"
-                          style={{ color: themeColor, borderColor: themeColor }}
+                          style={{ color: displayColor, borderColor: displayColor }}
                           title={featuresExpanded ? "Collapse" : "Expand"}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -440,7 +507,7 @@ const ProductCard = ({
                 }
               })}
               className="w-full py-2 rounded-[8px] text-[10px] font-bold border transition-all flex justify-center bg-white dark:bg-transparent hover:opacity-80"
-              style={{ color: themeColor, borderColor: themeColor }}
+              style={{ color: displayColor, borderColor: displayColor }}
             >
               <EditableText section="products" field="more_info_label" id={product.id} value={product.more_info_label || "More Info"} />
             </button>
@@ -468,7 +535,7 @@ const ProductCard = ({
                 }
               })}
               className="w-full py-2 rounded-[8px] text-[10px] font-bold text-white transition-all shadow-sm flex justify-center gap-1.5 items-center hover:opacity-90"
-              style={{ backgroundColor: themeColor }}
+              style={{ backgroundColor: displayColor }}
             >
               <PlayCircle size={15} strokeWidth={2.5} />
               <EditableText section="products" field="demo_label" id={product.id} value={product.demo_label || "Demo"} />
@@ -514,12 +581,14 @@ const ProductCardList = ({
   onEditTypo?: any;
 }) => {
   const editor = useLiveEditor();
+  const isDark = useIsDarkMode();
   const [featuresExpanded, setFeaturesExpanded] = useState(false);
   const { Icon, bg } = getProductIcon(product.name);
 
   return (
     <div
-      className={`flex flex-col bg-white dark:bg-[#11111f] rounded-2xl border-[0.5px] border-blue-500/30 overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500 transition-all duration-300 hover:ring-2 hover:ring-secondary/50 group/item relative ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
+      className={`flex flex-col bg-white dark:bg-gradient-to-br dark:from-[#131326] dark:to-[#0a0a14] rounded-2xl border-[0.5px] overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(59,130,246,0.25)] hover:border-blue-500 transition-all duration-300 hover:ring-2 hover:ring-secondary/50 group/item relative ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
+      style={{ borderColor: isDark ? "rgba(100,100,150,0.25)" : "rgba(59, 130, 246, 0.3)" }}
       {...getNavProps((e?: React.MouseEvent) => {
         e?.stopPropagation();
         const url = product.contact_url || product.demo_url;
@@ -715,6 +784,7 @@ const ProductCardList = ({
                   ? extraColor.split(",").map((c) => c.trim())
                   : ["#16a34a"];
                 const fColorBase = fColors[0] || "#16a34a";
+                const displayColor = isDark ? adjustColorForDarkMode(fColorBase) : fColorBase;
 
                 const maxFeatures = 5;
                 const hasMore = features.length > maxFeatures;
@@ -733,7 +803,7 @@ const ProductCardList = ({
                       const { styles: parsedStyles, innerHtml } = parseInlineStyles(cleanText);
                       const hasStyles = Object.values(parsedStyles).some(v => !!v);
 
-                      const fColor = isNegative ? "#ef4444" : fColorBase;
+                      const fColor = isNegative ? "#ef4444" : displayColor;
 
                       const inlineStyle: React.CSSProperties = { color: fColor };
                       if (hasStyles) {
@@ -860,7 +930,7 @@ const ProductCardList = ({
                             <button
                               onClick={(e) => { e.stopPropagation(); setFeaturesExpanded(!featuresExpanded); }}
                               className="ml-auto p-0.5 hover:bg-secondary/10 rounded-full transition-all shrink-0 border"
-                              style={{ color: fColorBase, borderColor: fColorBase }}
+                              style={{ color: displayColor, borderColor: displayColor }}
                               title={featuresExpanded ? "Collapse" : "Expand"}
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
