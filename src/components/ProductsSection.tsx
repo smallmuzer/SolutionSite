@@ -252,15 +252,8 @@ const ProductCard = ({
 
   return (
     <div
-      className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-gradient-to-br dark:from-[#131326] dark:to-[#0a0a14] rounded-[24px] overflow-hidden group/item cursor-pointer shadow-sm border-[0.5px] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-[box-shadow,transform] duration-300 transform-gpu ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
+      className={`relative flex flex-col flex-shrink-0 bg-white dark:bg-gradient-to-br dark:from-[#131326] dark:to-[#0a0a14] rounded-[24px] overflow-hidden group/item shadow-sm border-[0.5px] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] transition-[box-shadow,transform] duration-300 transform-gpu ${!product.is_visible ? "opacity-50 grayscale" : ""} ${draggedId === product.id ? "opacity-20 scale-95" : ""}`}
       style={{ width: 320, contain: "paint", willChange: "transform", borderColor: isDark ? "rgba(100,100,150,0.25)" : "rgba(226, 232, 240, 1)" }}
-      {...getNavProps((e?: React.MouseEvent) => {
-        e?.stopPropagation();
-        const url = product.contact_url || product.demo_url;
-        if (url && url.startsWith("http")) window.open(url, "_blank");
-        else if (url && url.startsWith("#")) document.querySelector(url)?.scrollIntoView({ behavior: "smooth" });
-        else onDemo();
-      })}
       draggable={editor?.isEditMode}
       onDragStart={onDragStart ? (e) => onDragStart(e, product.id) : undefined}
       onDragEnd={onDragEnd}
@@ -313,7 +306,7 @@ const ProductCard = ({
         </div>
       )}
 
-      <div className="p-3 sm:p-4 flex flex-col relative z-10 w-full flex-1">
+      <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-2 sm:pb-3 flex flex-col relative z-10 w-full flex-1">
         {/* Top Section: Image and Headers */}
         <div className="flex flex-row items-center gap-3">
           <div className="w-[72px] h-[72px] shrink-0 relative flex items-center justify-center">
@@ -500,7 +493,7 @@ const ProductCard = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 mt-4 w-full shrink-0">
+        <div className="flex items-center gap-2 mt-2 w-full shrink-0">
           <div className="flex-1 relative group/btn">
             <button
               {...getNavProps((e?: React.MouseEvent) => {
@@ -1019,6 +1012,7 @@ const ProductsSection = () => {
   const posRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
   const userInteractedRef = useRef<boolean>(false);
+  const swiperRef = useRef<any>(null);
   const getNavProps = useLiveEditorNavigation();
   const SPEED = 50; // Pixels per second for smooth scrolling
   const GAP = 24;
@@ -1198,11 +1192,11 @@ const ProductsSection = () => {
   return (
     <section
       id="products"
-      className="section-padding relative overflow-hidden bg-background"
+      className="pt-10 pb-6 md:pt-16 md:pb-8 relative overflow-hidden bg-background"
     >
       <EditorToolbar section="products" canAdd />
       <div className="container-wide relative z-10">
-        <AnimatedSection className="text-center  mb-4 relative group">
+        <AnimatedSection className="text-center mb-0 relative group">
           <div className="inline-flex items-center gap-2 mb-3">
             <span
               className="text-secondary font-bold text-sm uppercase tracking-widest"
@@ -1267,13 +1261,35 @@ const ProductsSection = () => {
 
         {globalView === "grid" && !editor?.isEditMode ? (
           <div
-            className="w-full relative px-2 sm:px-8 py-8 overflow-visible"
-            onMouseEnter={() => pausedRef.current = true}
-            onMouseLeave={() => pausedRef.current = false}
+            className="w-full relative px-2 sm:px-8 pt-0 pb-2 overflow-visible"
+            onMouseEnter={() => {
+              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+                swiperRef.current.autoplay.start();
+              }
+            }}
+            onMouseLeave={() => {
+              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+                swiperRef.current.autoplay.start();
+              }
+            }}
+            onTouchStart={() => {
+              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+                swiperRef.current.autoplay.start();
+              }
+            }}
+            onTouchEnd={() => {
+              setTimeout(() => {
+                if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+                  swiperRef.current.autoplay.start();
+                }
+              }, 2500);
+            }}
           >
             <Swiper
-              key={`swiper-${products.length}`}
-              effect={'coverflow'}
+              onSwiper={(swiper) => swiperRef.current = swiper}
+              key={`swiper-${products.length}-${isMobileProducts}`}
+              effect={isMobileProducts ? 'slide' : 'coverflow'}
+              spaceBetween={isMobileProducts ? 30 : 0}
               grabCursor={true}
               centeredSlides={true}
               slidesPerView={1}
@@ -1296,16 +1312,21 @@ const ProductsSection = () => {
               }}
               speed={400}
               autoplay={{
-                delay: 1500,
+                delay: 2000,
                 disableOnInteraction: false,
-                pauseOnMouseEnter: true,
+                pauseOnMouseEnter: false,
+              }}
+              onClick={(swiper) => {
+                if (swiper.autoplay && swiper.autoplay.running) {
+                  swiper.autoplay.stop();
+                }
               }}
               modules={[EffectCoverflow, Pagination, Navigation, Autoplay]}
-              className="w-full max-w-7xl mx-auto !pb-16 products-swiper !px-4 md:!px-12"
+              className="w-full max-w-7xl mx-auto !pb-4 products-swiper !px-4 md:!px-12"
             >
               {(products.length > 0 && products.length < 6 ? [...products, ...products, ...products] : products).map((product, idx) => (
                 <SwiperSlide key={`${product.id}-${idx}`} className="h-auto">
-                  <div className="h-full w-full py-4 transition-transform duration-300 hover:-translate-y-2 flex justify-center">
+                  <div className="h-full w-full py-2 transition-transform duration-300 hover:-translate-y-2 flex justify-center">
                     <div className="w-full max-w-[400px]">
                       <ProductCard
                         product={product}
@@ -1322,16 +1343,17 @@ const ProductsSection = () => {
               ))}
 
               {/* Custom Navigation Arrows */}
-              <div className="products-button-prev absolute top-1/2 left-0 md:-left-4 -translate-y-1/2 z-50 cursor-pointer text-secondary w-10 h-10 md:w-12 md:h-12 bg-card border border-border rounded-full shadow-lg flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all hidden sm:flex">
-                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              <div className="products-button-prev absolute top-1/2 left-2 md:-left-4 -translate-y-1/2 z-50 cursor-pointer text-secondary w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-card border border-border rounded-full shadow-lg flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all">
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               </div>
-              <div className="products-button-next absolute top-1/2 right-0 md:-right-4 -translate-y-1/2 z-50 cursor-pointer text-secondary w-10 h-10 md:w-12 md:h-12 bg-card border border-border rounded-full shadow-lg flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all hidden sm:flex">
-                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              <div className="products-button-next absolute top-1/2 right-2 md:-right-4 -translate-y-1/2 z-50 cursor-pointer text-secondary w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-card border border-border rounded-full shadow-lg flex items-center justify-center hover:bg-secondary/10 hover:border-secondary/30 transition-all">
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               </div>
             </Swiper>
 
             <style dangerouslySetInnerHTML={{
               __html: `
+              .products-swiper .swiper-pagination { bottom: 0 !important; }
               .products-swiper .swiper-pagination-bullet { background: var(--secondary); opacity: 0.3; }
               .products-swiper .swiper-pagination-bullet-active { opacity: 1; }
               .products-button-prev.swiper-button-disabled,
@@ -1414,9 +1436,9 @@ const ProductsSection = () => {
           </div>
         )}
 
-        <AnimatedSection className="text-center mt-8">
+        <AnimatedSection className="text-center mt-0">
           <div className="text-xs text-muted-foreground">
-            {globalView === "grid" && <EditableText section="our_products" field="hover_hint" value={content.hover_hint || "Hover over any product to pause · "} />}
+            {globalView === "grid" && <EditableText section="our_products" field="hover_hint" value={content.hover_hint || "Click on the product to pause · "} />}
             <button
               onClick={scrollToContact}
               className="text-secondary underline underline-offset-2 hover:opacity-80"
