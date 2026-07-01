@@ -8,6 +8,13 @@ import { EditableText, EditorToolbar, SectionHeaderToolbar, useLiveEditor } from
 // @ts-ignore
 import HTMLFlipBook from "react-pageflip";
 
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCreative, Pagination, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-creative';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
 const AVATAR_MAP: Record<string, string> = {};
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?background=random&color=fff&name=";
 
@@ -358,6 +365,7 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
   const [expandedBookTestimonials, setExpandedBookTestimonials] = useState<Set<string>>(new Set());
 
   const handleBookReadMoreToggle = (id: string, expanded: boolean) => {
+    setIsPlaying(false);
     setExpandedBookTestimonials(prev => {
       const next = new Set(prev);
       if (expanded) {
@@ -459,17 +467,29 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
   // if pages is odd, we could push an empty page to make the back cover or right page blank, but pageflip handles it.
 
   const bookRef = useRef<any>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isInView, setIsInView] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showPauseHint, setShowPauseHint] = useState(false);
   const slideshowRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const totalPages = pages.length + 2; // cover + pages + back cover
+
+  useEffect(() => {
+    if (isDataLoading || !sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, [isDataLoading]);
 
   const goNext = () => bookRef.current?.pageFlip()?.flipNext();
   const goPrev = () => bookRef.current?.pageFlip()?.flipPrev();
 
   // Auto-slideshow effect
   useEffect(() => {
-    if (isPlaying && pages.length > 0) {
+    if (isPlaying && isInView && pages.length > 0) {
       slideshowRef.current = setInterval(() => {
         const flipbook = bookRef.current?.pageFlip();
         if (!flipbook) return;
@@ -483,7 +503,7 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
       }, 4000);
     }
     return () => { if (slideshowRef.current) clearInterval(slideshowRef.current); };
-  }, [isPlaying, pages.length]);
+  }, [isPlaying, isInView, pages.length]);
 
   const handleBookClick = () => {
     if (isPlaying) {
@@ -508,7 +528,7 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
   );
 
   return (
-    <section id="testimonials" className="section-padding section-alt relative group">
+    <section ref={sectionRef} id="testimonials" className="section-padding section-alt relative group">
       <style dangerouslySetInnerHTML={{ __html: MARQUEE_STYLE }} />
       <div className="container-wide">
         <AnimatedSection className="text-center mb-6">
@@ -565,191 +585,193 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                 )}
 
 
-                {/* Ultra-Premium Diary Cover Wrapper */}
-                <div
-                  className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-2 md:p-4 pr-3 md:pr-6 mx-auto z-10"
-                  style={!isMobile ? { transform: "perspective(1400px) rotateX(2.5deg)", transformOrigin: "center top" } : undefined}
-                >
+                {(() => {
+                  const pagesContent = [
+                    /* Premium Welcome Cover Page */
+                    <div key="cover-page" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6 w-full h-full">
+                      <div className="absolute inset-3 md:inset-5 border border-orange-400/40 rounded-[2rem] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
+                        {/* Halftone Dot Patterns */}
+                        <div className="absolute top-0 right-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at top right, black 20%, transparent 70%)' }} />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 20%, transparent 70%)' }} />
 
-                  {/* Diary Stitching Effect (Debossed groove + bright theme-colored thread) */}
-                  <div className="absolute top-1 left-1 bottom-1 right-1.5 md:top-2 md:left-2 md:bottom-2 md:right-3 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
-                  <div className="absolute left-1 right-[calc(50%+2rem)] bottom-1 md:left-2 md:right-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
-                  <div className="absolute right-1.5 left-[calc(50%+2rem)] bottom-1 md:right-3 md:left-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
+                        <div className="mt-auto flex flex-col items-center justify-center w-full relative z-10">
+                          <h2 className="text-5xl md:text-6xl text-orange-500 font-serif italic mb-3" style={{ fontFamily: 'cursive' }}>Welcome</h2>
+                          <h3 className="text-[10px] md:text-xs font-bold tracking-[0.2em] text-primary uppercase mb-8">To Our Client Feedback Book</h3>
 
-                  {/* Classic Diary Ribbon Bookmark */}
-                  <div className="absolute left-[65%] -bottom-4 md:-bottom-6 w-4 md:w-6 h-12 md:h-16 bg-red-600/90 shadow-[0_4px_6px_rgba(0,0,0,0.3)] z-0 origin-top rotate-[-2deg]" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
-
-                  <div className="w-full relative aspect-[625/600] md:aspect-[1250/560] rounded-sm bg-gradient-to-r from-[#e5e2da] via-[#faf8f5] to-[#e5e2da] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.3),_inset_0_2px_15px_rgba(0,0,0,0.1)] z-10 p-[3px] md:p-[6px]">
-                    {/* Sitting open-book base: soft surface shadow and page fan */}
-                    <div className="absolute left-[5%] right-[5%] -bottom-4 md:-bottom-5 h-5 md:h-7 rounded-[50%] bg-black/25 dark:bg-black/50 blur-lg pointer-events-none z-0" />
-                    <div className="absolute left-[3px] right-[3px] md:left-[6px] md:right-[6px] bottom-[2px] md:bottom-[3px] h-2 md:h-2.5 pointer-events-none z-0 opacity-80">
-                      <div className="absolute left-0 top-0 h-full w-[50.5%] rounded-bl-sm bg-gradient-to-b from-white via-[#f8fafc] to-[#d7dce4] dark:from-slate-700 dark:via-slate-800 dark:to-slate-950 shadow-[inset_0_2px_4px_rgba(255,255,255,0.75),_inset_0_-1px_2px_rgba(15,23,42,0.16)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.08),_inset_0_-1px_2px_rgba(0,0,0,0.45)]" style={{ clipPath: "polygon(0 0, 100% 0, 92% 100%, 9% 100%, 0 42%)" }} />
-                      <div className="absolute right-0 top-0 h-full w-[50.5%] rounded-br-sm bg-gradient-to-b from-white via-[#f8fafc] to-[#d7dce4] dark:from-slate-700 dark:via-slate-800 dark:to-slate-950 shadow-[inset_0_2px_4px_rgba(255,255,255,0.75),_inset_0_-1px_2px_rgba(15,23,42,0.16)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.08),_inset_0_-1px_2px_rgba(0,0,0,0.45)]" style={{ clipPath: "polygon(0 0, 100% 0, 100% 42%, 91% 100%, 8% 100%)" }} />
-                      <div className="absolute left-0 top-[45%] h-px w-[50%] bg-[#c9ced6]/70 dark:bg-slate-950/70" />
-                      <div className="absolute right-0 top-[45%] h-px w-[50%] bg-[#c9ced6]/70 dark:bg-slate-950/70" />
-                      <div className="absolute left-1/2 top-0 h-full w-8 -translate-x-1/2 rounded-b-full bg-gradient-to-b from-black/30 to-black/65 dark:from-black/55 dark:to-black/80 blur-[1px]" />
-                    </div>
-                    {/* Bulk page stack effect on margins */}
-                    {/* Left stack lines */}
-                    <div className="absolute left-[1px] top-1 bottom-1 w-[2px] md:w-[5px] pointer-events-none z-0 opacity-80 border-r border-[#d4d1c9]/40 dark:border-slate-800"
-                      style={{
-                        backgroundImage: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)',
-                      }} />
-                    {/* Right stack lines */}
-                    <div className="absolute right-[1px] top-1 bottom-1 w-[2px] md:w-[5px] pointer-events-none z-0 opacity-80 border-l border-[#d4d1c9]/40 dark:border-slate-800"
-                      style={{
-                        backgroundImage: 'repeating-linear-gradient(270deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)',
-                      }} />
-                    {/* Bottom stack lines */}
-                    <div className="absolute bottom-[1px] left-1 right-1 h-[1px] md:h-[3px] pointer-events-none z-0 opacity-60 border-t border-[#d4d1c9]/35 dark:border-slate-800"
-                      style={{
-                        backgroundImage: 'repeating-linear-gradient(180deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)',
-                      }} />
-
-
-                    {/* Realistic Deep Spine Fold */}
-                    {!isMobile && (
-                      <>
-                        {/* Broad deep shadow for page curvature */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[60px] -ml-[30px] pointer-events-none z-50 bg-gradient-to-r from-transparent via-black/30 to-transparent mix-blend-multiply dark:mix-blend-normal" />
-                        {/* Crisp dark center crease (narrower so pages look closer) */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] pointer-events-none z-50 bg-black/80 shadow-[0_0_4px_rgba(0,0,0,0.5)]" />
-                        <div className="absolute left-1/2 top-0 h-12 w-20 -translate-x-1/2 pointer-events-none z-50 bg-gradient-to-b from-black/35 to-transparent rounded-b-full blur-sm" />
-                        {/* Page curvature highlights to enhance 3D depth */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] -ml-[35px] pointer-events-none z-50 bg-gradient-to-r from-transparent to-white/20 mix-blend-overlay" />
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] ml-[15px] pointer-events-none z-50 bg-gradient-to-l from-transparent to-white/20 mix-blend-overlay" />
-                      </>
-                    )}
-
-                    {/* @ts-ignore */}
-                    <HTMLFlipBook
-                      width={625}
-                      height={550}
-                      size="stretch"
-                      minWidth={300}
-                      maxWidth={625}
-                      minHeight={400}
-                      maxHeight={800}
-                      maxShadowOpacity={0.5}
-                      showCover={false}
-                      mobileScrollSupport={true}
-                      usePortrait={isMobile}
-                      flippingTime={600}
-                      className="test-flipbook mx-auto bg-card"
-                      ref={bookRef}
-                    >
-                      {[
-                        /* Premium Welcome Cover Page */
-                        <div key="cover-page" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6">
-                          <div className="absolute inset-3 md:inset-5 border border-orange-400/40 rounded-[2rem] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
-                            {/* Halftone Dot Patterns */}
-                            <div className="absolute top-0 right-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at top right, black 20%, transparent 70%)' }} />
-                            <div className="absolute bottom-0 left-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 20%, transparent 70%)' }} />
-
-                            <div className="mt-auto flex flex-col items-center justify-center w-full relative z-10">
-                              <h2 className="text-5xl md:text-6xl text-orange-500 font-serif italic mb-3" style={{ fontFamily: 'cursive' }}>Welcome</h2>
-                              <h3 className="text-[10px] md:text-xs font-bold tracking-[0.2em] text-primary uppercase mb-8">To Our Client Feedback Book</h3>
-
-                              <div className="flex items-center gap-4 mb-10 w-full justify-center">
-                                <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
-                                <Star className="text-amber-500 fill-amber-500 w-5 h-5" />
-                                <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
-                              </div>
-
-                              <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-500 rounded-xl flex items-center justify-center mb-8 relative shadow-md">
-                                <span className="text-white text-4xl md:text-5xl font-serif font-bold leading-none mt-2">“</span>
-                                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rotate-45"></div>
-                              </div>
-
-                              <h4 className="text-base md:text-lg font-bold text-primary mb-3">We value your feedback!</h4>
-                              <p className="text-[11px] md:text-xs text-muted-foreground max-w-[220px] md:max-w-[260px] leading-relaxed">
-                                These testimonials reflect our commitment to delivering the best solutions and support to our valued clients.
-                              </p>
-                            </div>
-
-                            <div className="flex items-center gap-4 w-full justify-center mt-auto mb-2">
-                              <div className="h-px bg-red-400/50 w-10 md:w-12"></div>
-                              <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                              <div className="h-px bg-red-400/50 w-10 md:w-12"></div>
-                            </div>
+                          <div className="flex items-center gap-4 mb-10 w-full justify-center">
+                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
+                            <Star className="text-amber-500 fill-amber-500 w-5 h-5" />
+                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
                           </div>
-                          {/* Elegant Page Number */}
-                          <div className="hidden">1</div>
-                        </div>,
 
-                        ...pages.map((pageCards, pIdx) => {
-                          const isPageExpanded = pageCards.some((t) => expandedBookTestimonials.has(t.id));
-
-                          return (
-                            <div key={`page-${pIdx}`} className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] page-turn-item relative">
-                              <div className={`w-full h-full ${isPageExpanded ? "overflow-y-auto no-scrollbar" : "overflow-hidden"} flex flex-col relative pt-3 md:pt-5`}>
-                                <div className="flex flex-col gap-3 px-3 md:px-5 w-full shrink-0 relative z-10">
-                                  {pageCards.map((t, rIdx) => (
-                                    <div key={`${t.id}-${rIdx}`} className="overflow-hidden w-full">
-                                      <GridCard
-                                        t={t}
-                                        editor={editor}
-                                        hideProfiles={hideProfiles}
-                                        draggedId={null}
-                                        onDragStart={() => { }}
-                                        onDragEnd={() => { }}
-                                        onDragOver={() => { }}
-                                        onDrop={() => { }}
-                                        onMove={() => { }}
-                                        onReadMoreToggle={handleBookReadMoreToggle}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                                {/* Elegant Page Number — inside flex so it's never clipped */}
-                                <div className="shrink-0 w-full text-center text-[10px] md:text-[11px] text-primary font-bold font-serif pointer-events-none select-none py-2 md:py-3 mt-auto">
-                                  {pIdx + 1}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }),
-
-                        /* Premium Thank You Back Cover Page */
-                        <div key="back-cover" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6">
-                          <div className="absolute inset-3 md:inset-5 border border-orange-400/40 rounded-[2rem] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
-
-                            {/* Halftone Dot Patterns */}
-                            <div className="absolute top-0 right-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at top right, black 20%, transparent 70%)' }} />
-                            <div className="absolute bottom-0 left-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 20%, transparent 70%)' }} />
-
-                            <div className="my-auto flex flex-col items-center justify-center w-full relative z-10 pt-4">
-                              <h2 className="text-5xl md:text-6xl text-orange-500 font-serif italic mb-3" style={{ fontFamily: 'cursive' }}>Thank You!</h2>
-                              <h3 className="text-[10px] md:text-xs font-bold tracking-[0.15em] text-primary uppercase mb-8">For Sharing Your Feedback</h3>
-
-                              <div className="flex items-center gap-4 mb-10 w-full justify-center">
-                                <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
-                                <Star className="text-amber-500 fill-amber-500 w-5 h-5" />
-                                <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
-                              </div>
-
-                              <div className="mb-8">
-                                <svg className="w-14 h-14 md:w-16 md:h-16 text-red-500" fill="currentColor" viewBox="0 0 24 24" stroke="none"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                              </div>
-
-                              <p className="text-xs md:text-sm font-bold text-primary max-w-[250px] leading-relaxed mb-4">
-                                Your feedback inspires us to improve and deliver even better solutions.
-                              </p>
-                              <p className="text-xs md:text-sm font-bold text-primary max-w-[250px] leading-relaxed">
-                                We truly appreciate your time and valuable feedback!
-                              </p>
-                            </div>
-
+                          <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-500 rounded-xl flex items-center justify-center mb-8 relative shadow-md">
+                            <span className="text-white text-4xl md:text-5xl font-serif font-bold leading-none mt-2">“</span>
+                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rotate-45"></div>
                           </div>
-                          {/* Elegant Page Number */}
-                          <div className="hidden">
-                            {pages.length + 2}
+
+                          <h4 className="text-base md:text-lg font-bold text-primary mb-3">We value your feedback!</h4>
+                          <p className="text-[11px] md:text-xs text-muted-foreground max-w-[220px] md:max-w-[260px] leading-relaxed">
+                            These testimonials reflect our commitment to delivering the best solutions and support to our valued clients.
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-4 w-full justify-center mt-auto mb-2">
+                          <div className="h-px bg-red-400/50 w-10 md:w-12"></div>
+                          <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                          <div className="h-px bg-red-400/50 w-10 md:w-12"></div>
+                        </div>
+                      </div>
+                      <div className="hidden">1</div>
+                    </div>,
+
+                    ...pages.map((pageCards, pIdx) => {
+                      const isPageExpanded = pageCards.some((t) => expandedBookTestimonials.has(t.id));
+                      return (
+                        <div key={`page-${pIdx}`} className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] page-turn-item relative w-full h-full">
+                          <div className={`w-full h-full ${isPageExpanded ? "overflow-y-auto no-scrollbar" : "overflow-hidden"} flex flex-col relative pt-3 md:pt-5 pb-4 md:pb-0`}>
+                            <div className="flex flex-col gap-3 px-3 md:px-5 w-full shrink-0 relative z-10">
+                              {pageCards.map((t, rIdx) => (
+                                <div key={`${t.id}-${rIdx}`} className="overflow-hidden w-full">
+                                  <GridCard t={t} editor={editor} hideProfiles={hideProfiles} draggedId={null} onDragStart={() => { }} onDragEnd={() => { }} onDragOver={() => { }} onDrop={() => { }} onMove={() => { }} onReadMoreToggle={handleBookReadMoreToggle} />
+                                </div>
+                              ))}
+                            </div>
+                            <div className="shrink-0 w-full text-center text-[10px] md:text-[11px] text-primary font-bold font-serif pointer-events-none select-none py-2 md:py-3 mt-auto">
+                              {pIdx + 1}
+                            </div>
                           </div>
                         </div>
-                      ]}
-                    </HTMLFlipBook>
-                  </div>
-                </div>
+                      );
+                    }),
+
+                    /* Premium Thank You Back Cover Page */
+                    <div key="back-cover" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6 w-full h-full">
+                      <div className="absolute inset-3 md:inset-5 border border-orange-400/40 rounded-[2rem] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
+                        <div className="absolute top-0 right-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at top right, black 20%, transparent 70%)' }} />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 20%, transparent 70%)' }} />
+                        <div className="my-auto flex flex-col items-center justify-center w-full relative z-10 pt-4">
+                          <h2 className="text-5xl md:text-6xl text-orange-500 font-serif italic mb-3" style={{ fontFamily: 'cursive' }}>Thank You!</h2>
+                          <h3 className="text-[10px] md:text-xs font-bold tracking-[0.15em] text-primary uppercase mb-8">For Sharing Your Feedback</h3>
+                          <div className="flex items-center gap-4 mb-10 w-full justify-center">
+                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
+                            <Star className="text-amber-500 fill-amber-500 w-5 h-5" />
+                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
+                          </div>
+                          <div className="mb-8">
+                            <svg className="w-14 h-14 md:w-16 md:h-16 text-red-500" fill="currentColor" viewBox="0 0 24 24" stroke="none"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                          </div>
+                          <p className="text-xs md:text-sm font-bold text-primary max-w-[250px] leading-relaxed mb-4">
+                            Your feedback inspires us to improve and deliver even better solutions.
+                          </p>
+                          <p className="text-xs md:text-sm font-bold text-primary max-w-[250px] leading-relaxed">
+                            We truly appreciate your time and valuable feedback!
+                          </p>
+                        </div>
+                      </div>
+                      <div className="hidden">{pages.length + 2}</div>
+                    </div>
+                  ];
+
+                  return isMobile ? (
+                    <div className="w-full max-w-[400px] mx-auto relative mt-6 mb-2 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-b-xl rounded-t-md bg-[#faf8f5] dark:bg-slate-900 border border-border/50 z-10 pt-4">
+                      {/* Spiral Binding Top Decoration */}
+                      <div className="absolute -top-3 left-0 right-0 h-6 z-50 flex justify-evenly px-6 pointer-events-none">
+                        {Array.from({ length: 14 }).map((_, i) => (
+                          <div key={i} className="w-2.5 h-7 bg-gradient-to-b from-gray-300 via-gray-100 to-gray-400 rounded-full shadow-[0_3px_5px_rgba(0,0,0,0.5)] border border-gray-400/50 relative">
+                            {/* Punch hole illusion */}
+                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-2 bg-black/60 rounded-full"></div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Swiper
+                        direction="vertical"
+                        loop={true}
+                        effect="creative"
+                        style={{ perspective: '1200px' }}
+                        creativeEffect={{
+                          prev: { shadow: true, translate: [0, '100%', 50], rotate: [130, 0, 0], origin: 'top center', opacity: 0 },
+                          next: { translate: [0, '-100%', -50], scale: 0.9, opacity: 0.5 },
+                        }}
+                        speed={1000}
+                        roundLengths={true}
+                        modules={[EffectCreative, Pagination, Navigation]}
+                        grabCursor={true}
+                        className="test-flipbook w-full h-[450px] rounded-b-xl transition-all duration-300"
+                        onSwiper={(swiper) => {
+                          (bookRef as any).current = {
+                            pageFlip: () => ({
+                              flipNext: () => swiper.slideNext(),
+                              flipPrev: () => swiper.slidePrev(),
+                              getCurrentPageIndex: () => 1,
+                              getPageCount: () => Infinity,
+                              flip: (i: number) => swiper.slideToLoop(i),
+                            })
+                          };
+                        }}
+                      >
+                        {pagesContent.map((page: any, i) => (
+                          <SwiperSlide key={i} className="w-full h-full bg-[#faf8f5] dark:bg-slate-900 overflow-hidden">
+                            {page}
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                    </div>
+                  ) : (
+                    <div className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-2 md:p-4 pr-3 md:pr-6 mx-auto z-10">
+                      {/* Diary Stitching Effect */}
+                      <div className="absolute top-1 left-1 bottom-1 right-1.5 md:top-2 md:left-2 md:bottom-2 md:right-3 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
+                      <div className="absolute left-1 right-[calc(50%+2rem)] bottom-1 md:left-2 md:right-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
+                      <div className="absolute right-1.5 left-[calc(50%+2rem)] bottom-1 md:right-3 md:left-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
+
+                      {/* Classic Diary Ribbon Bookmark */}
+                      <div className="absolute left-[65%] -bottom-4 md:-bottom-6 w-4 md:w-6 h-12 md:h-16 bg-red-600/90 shadow-[0_4px_6px_rgba(0,0,0,0.3)] z-0 origin-top rotate-[-2deg]" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
+
+                      <div className="w-full relative aspect-[625/600] md:aspect-[1250/560] rounded-sm bg-gradient-to-r from-[#e5e2da] via-[#faf8f5] to-[#e5e2da] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.3),_inset_0_2px_15px_rgba(0,0,0,0.1)] z-10 p-[3px] md:p-[6px]">
+                        {/* Sitting open-book base */}
+                        <div className="absolute left-[5%] right-[5%] -bottom-4 md:-bottom-5 h-5 md:h-7 rounded-[50%] bg-black/25 dark:bg-black/50 blur-lg pointer-events-none z-0" />
+                        <div className="absolute left-[3px] right-[3px] md:left-[6px] md:right-[6px] bottom-[2px] md:bottom-[3px] h-2 md:h-2.5 pointer-events-none z-0 opacity-80">
+                          <div className="absolute left-0 top-0 h-full w-[50.5%] rounded-bl-sm bg-gradient-to-b from-white via-[#f8fafc] to-[#d7dce4] dark:from-slate-700 dark:via-slate-800 dark:to-slate-950 shadow-[inset_0_2px_4px_rgba(255,255,255,0.75),_inset_0_-1px_2px_rgba(15,23,42,0.16)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.08),_inset_0_-1px_2px_rgba(0,0,0,0.45)]" style={{ clipPath: "polygon(0 0, 100% 0, 92% 100%, 9% 100%, 0 42%)" }} />
+                          <div className="absolute right-0 top-0 h-full w-[50.5%] rounded-br-sm bg-gradient-to-b from-white via-[#f8fafc] to-[#d7dce4] dark:from-slate-700 dark:via-slate-800 dark:to-slate-950 shadow-[inset_0_2px_4px_rgba(255,255,255,0.75),_inset_0_-1px_2px_rgba(15,23,42,0.16)] dark:shadow-[inset_0_2px_4px_rgba(255,255,255,0.08),_inset_0_-1px_2px_rgba(0,0,0,0.45)]" style={{ clipPath: "polygon(0 0, 100% 0, 100% 42%, 91% 100%, 8% 100%)" }} />
+                          <div className="absolute left-0 top-[45%] h-px w-[50%] bg-[#c9ced6]/70 dark:bg-slate-950/70" />
+                          <div className="absolute right-0 top-[45%] h-px w-[50%] bg-[#c9ced6]/70 dark:bg-slate-950/70" />
+                          <div className="absolute left-1/2 top-0 h-full w-8 -translate-x-1/2 rounded-b-full bg-gradient-to-b from-black/30 to-black/65 dark:from-black/55 dark:to-black/80 blur-[1px]" />
+                        </div>
+                        {/* Bulk page stack effect on margins */}
+                        <div className="absolute left-[1px] top-1 bottom-1 w-[2px] md:w-[5px] pointer-events-none z-0 opacity-80 border-r border-[#d4d1c9]/40 dark:border-slate-800" style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)' }} />
+                        <div className="absolute right-[1px] top-1 bottom-1 w-[2px] md:w-[5px] pointer-events-none z-0 opacity-80 border-l border-[#d4d1c9]/40 dark:border-slate-800" style={{ backgroundImage: 'repeating-linear-gradient(270deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)' }} />
+                        <div className="absolute bottom-[1px] left-1 right-1 h-[1px] md:h-[3px] pointer-events-none z-0 opacity-60 border-t border-[#d4d1c9]/35 dark:border-slate-800" style={{ backgroundImage: 'repeating-linear-gradient(180deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)' }} />
+
+                        {/* Realistic Deep Spine Fold */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[60px] -ml-[30px] pointer-events-none z-50 bg-gradient-to-r from-transparent via-black/30 to-transparent mix-blend-multiply dark:mix-blend-normal" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] pointer-events-none z-50 bg-black/80 shadow-[0_0_4px_rgba(0,0,0,0.5)]" />
+                        <div className="absolute left-1/2 top-0 h-12 w-20 -translate-x-1/2 pointer-events-none z-50 bg-gradient-to-b from-black/35 to-transparent rounded-b-full blur-sm" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] -ml-[35px] pointer-events-none z-50 bg-gradient-to-r from-transparent to-white/20 mix-blend-overlay" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] ml-[15px] pointer-events-none z-50 bg-gradient-to-l from-transparent to-white/20 mix-blend-overlay" />
+
+                        {/* @ts-ignore */}
+                        <HTMLFlipBook
+                          width={625}
+                          height={550}
+                          size="stretch"
+                          minWidth={300}
+                          maxWidth={625}
+                          minHeight={400}
+                          maxHeight={800}
+                          maxShadowOpacity={0.5}
+                          showCover={false}
+                          mobileScrollSupport={true}
+                          usePortrait={false}
+                          flippingTime={600}
+                          className="test-flipbook mx-auto bg-card"
+                          ref={bookRef}
+                        >
+                          {pagesContent}
+                        </HTMLFlipBook>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Play/Pause toggle — sits neatly below the book */}
                 <div className="flex justify-center mt-4">

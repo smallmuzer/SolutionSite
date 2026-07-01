@@ -1117,6 +1117,19 @@ const ProductsSection = () => {
     ...(content || {}),
   };
 
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => setIsInView(entries.some(entry => entry.isIntersecting)),
+      { threshold: 0.2 }
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    if (trackRef.current) observer.observe(trackRef.current);
+    return () => observer.disconnect();
+  }, [globalView]);
+
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
     const update = () => setIsMobileProducts(media.matches);
@@ -1130,15 +1143,34 @@ const ProductsSection = () => {
   }, [products.length, globalView]);
 
   useEffect(() => {
-    if (globalView !== "grid" || isMobileProducts || products.length === 0 || editor?.isEditMode)
+    if (swiperRef.current && swiperRef.current.autoplay) {
+      if (isInView) {
+        swiperRef.current.slideToLoop(0, 0);
+        setTimeout(() => {
+          if (swiperRef.current && swiperRef.current.autoplay) {
+            swiperRef.current.slideNext();
+            swiperRef.current.autoplay.start();
+          }
+        }, 100);
+      } else {
+        swiperRef.current.autoplay.stop();
+        swiperRef.current.slideToLoop(0, 0);
+      }
+    }
+  }, [isInView]);
+
+  useEffect(() => {
+    if (globalView !== "grid" || isMobileProducts || products.length === 0 || editor?.isEditMode || !isInView)
       return;
     const el = trackRef.current;
     if (!el) return;
+
+    el.scrollLeft = 0;
     const itemW = CARD_W + GAP;
     const totalW = products.length * itemW;
 
     let lastTime: number | null = null;
-    let currentScroll = el.scrollLeft;
+    let currentScroll = 0;
 
     const animate = (time: number) => {
       if (lastTime === null) lastTime = time;
@@ -1160,7 +1192,7 @@ const ProductsSection = () => {
     };
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [products, globalView, isMobileProducts, editor?.isEditMode]);
+  }, [products, globalView, isMobileProducts, editor?.isEditMode, isInView]);
 
   const scrollToContact = () =>
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
@@ -1177,14 +1209,17 @@ const ProductsSection = () => {
   };
 
   useEffect(() => {
-    if (!isMobileProducts || globalView !== "grid" || editor?.isEditMode || mobileTotalPages <= 1) return;
+    if (!isMobileProducts || globalView !== "grid" || editor?.isEditMode || mobileTotalPages <= 1 || !isInView) {
+      setMobilePage(0);
+      return;
+    }
     const interval = setInterval(() => {
       if (!userInteractedRef.current && !pausedRef.current) {
         setMobilePage(prev => (prev + 1) % mobileTotalPages);
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [isMobileProducts, globalView, editor?.isEditMode, mobileTotalPages]);
+  }, [isMobileProducts, globalView, editor?.isEditMode, mobileTotalPages, isInView]);
 
   if (!editor?.isEditMode && content?.is_visible === false) return null;
   if (!dbProducts && !products.length) return null;
@@ -1261,6 +1296,7 @@ const ProductsSection = () => {
 
         {globalView === "grid" && !editor?.isEditMode ? (
           <div
+            ref={sectionRef}
             className="w-full relative px-2 sm:px-8 pt-0 pb-2 overflow-visible"
             onMouseEnter={() => {
               if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
@@ -1286,7 +1322,10 @@ const ProductsSection = () => {
             }}
           >
             <Swiper
-              onSwiper={(swiper) => swiperRef.current = swiper}
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+                swiper.autoplay.stop();
+              }}
               key={`swiper-${products.length}-${isMobileProducts}`}
               effect={isMobileProducts ? 'slide' : 'coverflow'}
               spaceBetween={isMobileProducts ? 30 : 0}
@@ -1327,7 +1366,7 @@ const ProductsSection = () => {
               {(products.length > 0 && products.length < 6 ? [...products, ...products, ...products] : products).map((product, idx) => (
                 <SwiperSlide key={`${product.id}-${idx}`} className="h-auto">
                   <div className="h-full w-full py-2 transition-transform duration-300 hover:-translate-y-2 flex justify-center">
-                    <div className="w-full max-w-[400px]">
+                    <div className="w-full max-w-[400px] flex justify-center">
                       <ProductCard
                         product={product}
                         onDemo={scrollToContact}
@@ -1335,7 +1374,12 @@ const ProductsSection = () => {
                         getNavProps={getNavProps}
                         draggedId={null}
                         onEditTypo={setTypoFeature}
-                        onReadMore={() => { userInteractedRef.current = true; }}
+                        onReadMore={() => {
+                          userInteractedRef.current = true;
+                          if (swiperRef.current?.autoplay) {
+                            swiperRef.current.autoplay.stop();
+                          }
+                        }}
                       />
                     </div>
                   </div>
