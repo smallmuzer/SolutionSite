@@ -551,6 +551,7 @@ const ClientsSection = () => {
   const getNavProps = useLiveEditorNavigation();
   const isEdit = editor?.isEditMode;
   const [showAll, setShowAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Default to grid view in admin edit mode
   useEffect(() => { if (isEdit) setShowAll(true); }, [isEdit]);
@@ -779,6 +780,15 @@ const ClientsSection = () => {
     return list;
   }, [clientsState, editor?.pendingChanges]);
 
+  const filteredClients = useMemo(() => {
+    if (!searchQuery.trim()) return clients;
+    const lowerQuery = searchQuery.toLowerCase();
+    return clients.filter(c => 
+      c.name?.toLowerCase().includes(lowerQuery) || 
+      (c as any).file_name?.toLowerCase().includes(lowerQuery)
+    );
+  }, [clients, searchQuery]);
+
   const effectiveShowAll = showAll;
   const header = {
     badge: content.badge || "Portfolio (Our Clients)",
@@ -828,6 +838,8 @@ const ClientsSection = () => {
                 <input
                   type="text"
                   placeholder="Search clients..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 text-xs bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-secondary transition-shadow h-7"
                 />
               </div>
@@ -881,7 +893,7 @@ const ClientsSection = () => {
         <AnimatedSection>
           {effectiveShowAll ? (
             <div className="flex flex-wrap justify-center gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ paddingTop: isEdit ? 16 : 0 }}>
-              {clients.map((client) => (
+              {filteredClients.map((client) => (
                 <div key={client.id} className="w-[calc(33.333%-10.66px)] sm:w-[calc(25%-12px)] md:w-[calc(20%-16px)] lg:w-[calc(16.666%-16.66px)]">
                   <ClientCard
                     client={client}
@@ -901,23 +913,23 @@ const ClientsSection = () => {
             <>
               <div className="hidden sm:flex items-center justify-center" style={{ gap: 48, overflow: "visible" }}>
                 <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} reverse={false} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
+                  <GridSlideshow clients={filteredClients} getNavProps={getNavProps} startOffset={0} reverse={false} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
                 </div>
                 <div style={{ position: "relative", zIndex: 1, flexShrink: 0, overflow: "visible" }}>
-                  <StaticGlobe clients={clients} getNavProps={getNavProps} />
+                  <StaticGlobe clients={filteredClients} getNavProps={getNavProps} />
                 </div>
                 <div style={{ position: "relative", zIndex: 0, flexShrink: 0 }}>
-                  <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={Math.ceil(clients.length / 2)} reverse={true} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
+                  <GridSlideshow clients={filteredClients} getNavProps={getNavProps} startOffset={Math.ceil(filteredClients.length / 2)} reverse={true} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} />
                 </div>
               </div>
               <div className="flex sm:hidden flex-col items-center gap-10">
-                <StaticGlobe clients={clients} getNavProps={getNavProps} />
-                <GridSlideshow clients={clients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} cols={3} />
+                <StaticGlobe clients={filteredClients} getNavProps={getNavProps} />
+                <GridSlideshow clients={filteredClients} getNavProps={getNavProps} startOffset={0} onMove={isEdit ? handleMove : undefined} draggedId={draggedId} onDragStart={isEdit ? handleDragStart : undefined} onDragEnd={() => setDraggedId(null)} onDragOver={isEdit ? handleDragOver : undefined} onDrop={isEdit ? handleDrop : undefined} cols={3} />
               </div>
             </>
           )}
           <p className="text-xs text-muted-foreground mt-1 text-center bg-muted/20   px-4 rounded-full w-fit mx-auto">
-            {clients.length} <EditableText section="clients" field="clients_summary" value={content.clients_summary || "clients across Maldives, Bhutan &amp; beyond"} />
+            {filteredClients.length} <EditableText section="clients" field="clients_summary" value={content.clients_summary || "clients across Maldives, Bhutan &amp; beyond"} />
           </p>
         </AnimatedSection>
       </div>
