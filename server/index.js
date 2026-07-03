@@ -1877,6 +1877,10 @@ app.get("/api/client_image", (req, res) => {
   try {
     const filePath = req.query.path;
     if (!filePath) return res.status(400).send("Path required");
+
+    // Prevent browser caching for dynamically updated client images
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
     if (existsSync(filePath)) {
       res.sendFile(resolve(filePath));
     } else {

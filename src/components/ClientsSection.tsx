@@ -435,21 +435,22 @@ const ClientCard = ({
         </div>
 
         {/* Company name — always at bottom, zero extra margin */}
-        <span style={{
-          fontSize: flexible ? 10 : 9,
-          lineHeight: 1.2,
-          textAlign: 'center',
-          fontWeight: 700,
-          color: 'hsl(var(--foreground))',
-          width: '100%',
-          padding: flexible ? '2px 6px 6px 6px' : '0 4px 4px 4px',
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          flexShrink: 0,
-          marginTop: 'auto',
-        }}>
+        <span
+          style={{
+            fontSize: flexible ? 8 : 6.5,
+            lineHeight: 1.05,
+            textAlign: 'center',
+            fontWeight: 700,
+            color: 'hsl(var(--foreground))',
+            width: '100%',
+            padding: flexible ? '2px 6px 6px 6px' : '0 4px 4px 4px',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            flexShrink: 0,
+            marginTop: 'auto',
+          }}>
           <EditableText section="clients" field="name" id={client.id} value={client.name} />
         </span>
       </div>
@@ -667,7 +668,7 @@ const ClientsSection = () => {
         rawName = rawName.substring(0, lastDot);
       }
 
-      const clientName = rawName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const clientName = rawName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       if (clientsState.some(c => c.name?.toLowerCase() === clientName.toLowerCase())) {
         continue;
@@ -783,8 +784,8 @@ const ClientsSection = () => {
   const filteredClients = useMemo(() => {
     if (!searchQuery.trim()) return clients;
     const lowerQuery = searchQuery.toLowerCase();
-    return clients.filter(c => 
-      c.name?.toLowerCase().includes(lowerQuery) || 
+    return clients.filter(c =>
+      c.name?.toLowerCase().includes(lowerQuery) ||
       (c as any).file_name?.toLowerCase().includes(lowerQuery)
     );
   }, [clients, searchQuery]);

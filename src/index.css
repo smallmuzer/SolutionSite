@@ -1066,3 +1066,19 @@ section[id] {
   height: 50%;
   background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
 }
+
+/* Remove unwanted outlines and focus rings from testimonials flipbook */
+.test-flipbook,
+.test-flipbook:focus,
+.test-flipbook:focus-visible,
+.test-flipbook *,
+.test-flipbook *:focus,
+.test-flipbook *:focus-visible,
+.stPageFlip,
+.stPageFlip:focus,
+.stPageFlip:focus-visible,
+.stPageFlip *,
+.stPageFlip *:focus,
+.stPageFlip *:focus-visible {
+  outline: none !important;
+}

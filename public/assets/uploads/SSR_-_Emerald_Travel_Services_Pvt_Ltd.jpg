@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html class="k-ff k-ff152"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><script type="text/javascript" async="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/analytics_aIfc.js" nonce="690e9ce7-992f-474e-8c51-2e86829febce"></script><script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/1196433357365064_aIfc.js" async=""></script><script async="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/fbevents_aIfc.js"></script><script type="text/javascript" async="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/bat_aIfc.js" nonce="690e9ce7-992f-474e-8c51-2e86829febce"></script><script type="text/javascript" async="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/HnXRgy41nJQAy84yQNoOjVdXbiakk_VcepyzOYEdqqOz0YbYnJQ_aIfc" nonce="690e9ce7-992f-474e-8c51-2e86829febce"></script><script type="text/javascript" async="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/HnXRgy41mu4YurhHILtm-lwrbiakk_VcepyzOYEdqqOz0YbYnJQ_aIfc" nonce="690e9ce7-992f-474e-8c51-2e86829febce"></script><script defer="defer" referrerpolicy="origin" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/s_aIfc.js"></script><script async="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/Untitled_aIfc"></script><script>(function(w,i,g){w[g]=w[g]||[];if(typeof w[g].push=='function')w[g].push(i)})
+(window,'GTM-P5BFK4K','google_tags_first_party');</script><script>(function(w,d,s,l){w[l]=w[l]||[];(function(){w[l].push(arguments);})('set', 'developer_id.dY2E1Nz', true);
+		var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s);j.async=true;j.src='/cxx8/';
+		f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer');</script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Headers | HR-MetricS - HCM Enterprise Application</title>
+    <link rel="shortcut icon" href="https://hr.sunsiyam.com/favicon.ico?v=2">
+
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/css_002_aIfc.css" rel="stylesheet">
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/css_aIfc.css" rel="stylesheet">
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/css2_aIfc.css" rel="stylesheet">
+    <link rel="stylesheet" href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/all_aIfc.css">
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/Lms_aIfc.css" rel="stylesheet">
+
+
+    <!-- Core -->
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/bootstrap.min_aIfc.css" rel="stylesheet">
+<script>(function() {
+                var loadFallback,
+                    len = document.styleSheets.length;
+                for (var i = 0; i < len; i++) {
+                    var sheet = document.styleSheets[i];
+                    if (sheet.href.indexOf('https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css') !== -1) {
+                        var meta = document.createElement('meta');
+                        meta.className = 'visually-hidden';
+                        document.head.appendChild(meta);
+                        var value = window.getComputedStyle(meta).getPropertyValue('position');
+                        document.head.removeChild(meta);
+                        if (value !== 'absolute') {
+                            document.write('<link href="/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />');
+                        }
+                    }
+                }
+                return true;
+            }())||document.write('<script src="/Content/bootstrap"><\/script>');</script>
+
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/font-awesome.min_aIfc.css" rel="stylesheet">
+<script>(function() {
+                var loadFallback,
+                    len = document.styleSheets.length;
+                for (var i = 0; i < len; i++) {
+                    var sheet = document.styleSheets[i];
+                    if (sheet.href.indexOf('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css') !== -1) {
+                        var meta = document.createElement('meta');
+                        meta.className = 'fa';
+                        document.head.appendChild(meta);
+                        var value = window.getComputedStyle(meta).getPropertyValue('font-family');
+                        document.head.removeChild(meta);
+                        if (value !== 'FontAwesome') {
+                            document.write('<link href="/Content/font-awesome.min.css" rel="stylesheet" type="text/css" />');
+                        }
+                    }
+                }
+                return true;
+            }())||document.write('<script src="/Content/fontawesome"><\/script>');</script>
+
+
+    <!-- Theme -->
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/theme_aIfc.css" rel="stylesheet">
+
+
+
+    <!-- Site -->
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo.common.min_aIfc.css" rel="stylesheet">
+<script>(function() {
+                var loadFallback,
+                    len = document.styleSheets.length;
+                for (var i = 0; i < len; i++) {
+                    var sheet = document.styleSheets[i];
+                    if (sheet.href.indexOf('https://kendo.cdn.telerik.com/2023.1.117/styles/kendo.common.min.css') !== -1) {
+                        var meta = document.createElement('meta');
+                        meta.className = 'span.k-dropdown';
+                        document.head.appendChild(meta);
+                        var value = window.getComputedStyle(meta).getPropertyValue('background-image');
+                        document.head.removeChild(meta);
+                        if (value !== 'none') {
+                            document.write('<link href="/Content/kendo.common.min.css" rel="stylesheet" type="text/css" />');
+                        }
+                    }
+                }
+                return true;
+            }())||document.write('<script src="/Content/kendo"><\/script>');</script>
+
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo.fiori.min_aIfc.css" rel="stylesheet">
+<script>(function() {
+                var loadFallback,
+                    len = document.styleSheets.length;
+                for (var i = 0; i < len; i++) {
+                    var sheet = document.styleSheets[i];
+                    if (sheet.href.indexOf('https://kendo.cdn.telerik.com/2023.1.117/styles/kendo.fiori.min.css') !== -1) {
+                        var meta = document.createElement('meta');
+                        meta.className = 'span.k-dropdown';
+                        document.head.appendChild(meta);
+                        var value = window.getComputedStyle(meta).getPropertyValue('background-image');
+                        document.head.removeChild(meta);
+                        if (value !== 'none') {
+                            document.write('<link href="/Content/kendo.fiori.min.css" rel="stylesheet" type="text/css" />');
+                        }
+                    }
+                }
+                return true;
+            }())||document.write('<script src="/Content/kendo-theme"><\/script>');</script>
+
+    <link href="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/site_aIfc.css" rel="stylesheet">
+
+
+
+    
+
+    <!-- Scripts -->
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/jquery.min_aIfc.js"></script>
+<script>(window.jQuery)||document.write('<script src="/bundles/jquery"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo.all.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_all"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo.aspnetmvc.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_mvc"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/vue.min_aIfc.js"></script>
+<script>(window.Vue)||document.write('<script src="/bundles/vue"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo-dateinputs-vue-wrapper.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_vue_dateinputs"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo-dropdowns-vue-wrapper.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_vue_dropdowns"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo-inputs-vue-wrapper.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_vue_inputs"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo-datasource-vue-wrapper.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_vue_datasource"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo-upload-vue-wrapper.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_vue_upload"><\/script>');</script>
+
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/kendo.culture.en-CA.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/kendo_culture"><\/script>');</script>
+
+    
+    <script type="text/javascript">
+        kendo.culture("en-CA");
+        var DATE_FORMAT = "dd-MMM-yyyy";
+        var DATETIME_FORMAT = "dd-MMM-yyyy hh:mm tt";
+    </script>
+<script data-cfasync="false" nonce="690e9ce7-992f-474e-8c51-2e86829febce">try{(function(w,d){!function(mw,mx,my,mz){if(mw.zaraz)console.error("zaraz is loaded twice");else{mw[my]=mw[my]||{};mw[my].executed=[];mw.zaraz={deferred:[],listeners:[]};mw.zaraz._v="5887";mw.zaraz._n="690e9ce7-992f-474e-8c51-2e86829febce";mw.zaraz.q=[];mw.zaraz._f=function(mA){return async function(){var mB=Array.prototype.slice.call(arguments);mw.zaraz.q.push({m:mA,a:mB})}};for(const mC of["track","set","debug"])mw.zaraz[mC]=mw.zaraz._f(mC);mw.zaraz.init=()=>{var mD=mx.getElementsByTagName(mz)[0],mE=mx.createElement(mz),mF=mx.getElementsByTagName("title")[0];mF&&(mw[my].t=mx.getElementsByTagName("title")[0].text);mw[my].x=Math.random();mw[my].w=mw.screen.width;mw[my].h=mw.screen.height;mw[my].j=mw.innerHeight;mw[my].e=mw.innerWidth;mw[my].l=mw.location.href;mw[my].r=mx.referrer;mw[my].k=mw.screen.colorDepth;mw[my].n=mx.characterSet;mw[my].o=(new Date).getTimezoneOffset();if(mw.dataLayer)for(const mG of Object.entries(Object.entries(dataLayer).reduce((mH,mI)=>({...mH[1],...mI[1]}),{})))zaraz.set(mG[0],mG[1],{scope:"page"});mw[my].q=[];for(;mw.zaraz.q.length;){const mJ=mw.zaraz.q.shift();mw[my].q.push(mJ)}mE.defer=!0;for(const mK of[localStorage,sessionStorage])Object.keys(mK||{}).filter(mM=>mM.startsWith("_zaraz_")).forEach(mL=>{try{mw[my]["z_"+mL.slice(7)]=JSON.parse(mK.getItem(mL))}catch{mw[my]["z_"+mL.slice(7)]=mK.getItem(mL)}});mE.referrerPolicy="origin";mE.src="/cdn-cgi/zaraz/s.js?z="+btoa(encodeURIComponent(JSON.stringify(mw[my])));mD.parentNode.insertBefore(mE,mD)};["complete","interactive"].includes(mx.readyState)?zaraz.init():mw.addEventListener("DOMContentLoaded",zaraz.init)}}(w,d,"zarazData","script");window.zaraz._p=async nn=>new Promise(no=>{if(nn){nn.e&&nn.e.forEach(np=>{try{const nq=d.querySelector("script[nonce]"),nr=nq?.nonce||nq?.getAttribute("nonce"),ns=d.createElement("script");nr&&(ns.nonce=nr);ns.innerHTML=np;ns.onload=()=>{d.head.removeChild(ns)};d.head.appendChild(ns)}catch(nt){console.error(`Error executing script: ${np}\n`,nt)}});Promise.allSettled((nn.f||[]).map(nu=>fetch(nu[0],nu[1])))}no()});zaraz._p({"e":["(function(w,d){})(window,document)"]});})(window,document)}catch(e){throw fetch("/cdn-cgi/zaraz/t"),e;};</script><script>(function(w,d){})(window,document)</script><script>(function(w,d){;w.zarazData.executed.push("Pageview");})(window,document)</script><script>(function(w,d){})(window,document)</script><script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/187076289_aIfc.js" type="text/javascript" async="" data-ueto="ueto_4d4349dc9f"></script><script>(function(w,d){{(function(w,d){zaraz.__zarazMCListeners={"google-analytics_v4_ajwE":["visibilityChange"]};})(window,document);}})(window,document)</script><script>(function(w,d){{(function(w,d){zaraz.__zarazMCListeners={"google-analytics_v4_ajwE":["visibilityChange"]};})(window,document);}})(window,document)</script><script>(function(w,d){{(function(w,d){zaraz.__zarazMCListeners={"google-analytics_v4_ajwE":["visibilityChange"]};})(window,document);}})(window,document)</script><script>(function(w,d){{(function(w,d){zaraz.__zarazMCListeners={"google-analytics_v4_ajwE":["visibilityChange"]};})(window,document);}})(window,document)</script></head>
+<body class="theme-light">
+    <div class="app header-default side-nav-dark side-nav-folded default-fold">
+        <div class="layout">
+            <!-- Header START -->
+            <div class="header navbar">
+                <div class="header-container">
+                    <div class="nav-logo">
+                        <a href="">
+                            <div class="logo logo-sm">
+                                
+                                <img class="dlogo" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/Logo_aIfc.png" height="40">
+                            </div>
+                            
+                            <div class="" style=" margin-left: 17px;">
+                                <img class="nav-logo-text" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/HRMetricSLogoText_aIfc.png" height="40">
+                            </div>
+                        </a>
+                    </div>
+                    <ul class="nav-left">
+                        <li>
+                            <a class="sidenav-fold-toggler" href="javascript:void(0);">
+                                <i class="mdi mdi-menu"></i>
+                            </a>
+                            <a class="sidenav-expand-toggler" href="javascript:void(0);">
+                                <i class="mdi mdi-menu"></i>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="">
+                            <a href="javascript:void(0);" onclick=" switchEntity()">
+
+                                <i class="fa fa-cog"></i>
+
+                                <span class="ni-entity-name">SUN SIYAM IRU VELI</span>
+                                
+                            </a>
+                        </li>
+                        <li id="lapp" class="notifications dropdown dropdown-animated scale-left nnotification"><a id="nCnt" href="javascript:lapp.showNotification(1)" class="counter" style="">302</a> <a id="ddNotify" href="" data-bs-toggle="dropdown" class="dropdown-toggle"><i class="mdi mdi-bell-ring-outline"></i></a> <ul class="dropdown-menu dropdown-lg p-v-0"><li class="p-v-15 p-h-20 border bottom text-dark"><h5 class="m-b-0"><i class="mdi mdi-bell-ring-outline p-r-10"></i> <span>Notifications</span></h5></li> <li><ul data-ps-id="4dd7fe22-ef52-768c-1578-925c0cee0098" class="list-media overflow-y-auto relative scrollable ps-container ps-theme-default" style="max-height: 300px; overflow-y: auto !important;"> <div class="ps-scrollbar-x-rail" style="left: 0px; bottom: 0px;"><div tabindex="0" class="ps-scrollbar-x" style="left: 0px; width: 0px;"></div></div> <div class="ps-scrollbar-y-rail" style="top: 0px; right: 0px;"><div tabindex="0" class="ps-scrollbar-y" style="top: 0px; height: 0px;"></div></div> <div class="ps-scrollbar-x-rail" style="left: 0px; bottom: 3px;"><div class="ps-scrollbar-x" style="left: 0px; width: 0px;"></div></div><div class="ps-scrollbar-y-rail" style="top: 0px; right: 3px;"><div class="ps-scrollbar-y" style="top: 0px; height: 0px;"></div></div></ul></li></ul></li>
+                        <li class="scale-left">
+                            <a href="" class="dropdown-toggle" data-bs-toggle="dropdown" style="height: 40px;padding-top: 5px;padding-right: 0">
+                                <span class="material-symbols-sharp">apps</span>
+                            </a>
+                            <div id="srchapp" class="dropdown-menu dropdown-menu-end dropdown-lg p-v-0" style="margin-top: 0px; min-width: 350px;"><div class="top-menu"><input type="text" placeholder="Search" class="top-menu-search"> <!----> <div class="row" style="margin-top: 15px; clear: both;"><div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Analytics/General"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(66, 133, 244);">monitoring</span> <span class="top-menu-text">Analytics</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Profile/General"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(234, 67, 53);">person</span> <span class="top-menu-text">HRIS &amp; Actions</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/PerformanceRating/PerformanceRatings"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(251, 188, 5);">auto_fix</span> <span class="top-menu-text">Appraisal Manager</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Attendance/AttendanceBoard"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(3, 51, 166);">schedule</span> <span class="top-menu-text">Time &amp; Attendance</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Leave/LeaveStatus"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(254, 55, 143);">flight</span> <span class="top-menu-text">Leave Management</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Finance/SalaryAddition"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(155, 89, 182);">payments</span> <span class="top-menu-text">Payroll Manager</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/ExpatriateDetail/ExpatriateDetail"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(65, 217, 244);">supervisor_account</span> <span class="top-menu-text">Expatriate Process</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/OrganisationStructure/Entity"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(66, 133, 244);">settings_suggest</span> <span class="top-menu-text">Control Panel</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Accomodation/Accomodations"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(254, 55, 143);">redeem</span> <span class="top-menu-text">Compensations</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Training/Courses"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(65, 217, 244);">thumb_up</span> <span class="top-menu-text">Corporate - LMS</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Dashboard/Dashboard"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(251, 188, 5);">explore</span> <span class="top-menu-text">My Page</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Task/Dashboard"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(234, 67, 53);">task_alt</span> <span class="top-menu-text">Task Management</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Recruitment/Vacancies"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(66, 133, 244);">work</span> <span class="top-menu-text">Recruitment</span></a></div> <div class="col-4 top-menu-item"><a href="https://hr.sunsiyam.com/Admin/UserRegistration"><span class="material-symbols-sharp top-menu-icon" style="color: rgb(65, 217, 244);">admin_panel_settings</span> <span class="top-menu-text">Administration</span></a></div></div></div></div>
+                        </li>
+                        <li class="user-profile scale-left">
+                            <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
+                                    <div class="media-img">
+                                        <div class="icon-avatar aimg-sm aimg-p">
+                                            <span class="user-img">P</span>
+                                        </div>
+                                    </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-md p-v-0">
+                                <li>
+                                    <ul class="list-media">
+                                        <li class="list-item p-15">
+
+                                                <div class="media-img">
+                                                    <div class="icon-avatar aimg-sm aimg-p">
+                                                        <span class="user-img">P</span>
+                                                    </div>
+                                                </div>
+                                            <div class="info">
+                                                <span class="title text-semibold">PrasannaJS</span>
+                                                <span class="sub-title">Administrator</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a href="https://hr.sunsiyam.com/Authenticate/Logout">
+                                        <i class="fa fa-sign-out"></i>
+                                        <span>Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Header END -->
+            <!-- Side Nav START -->
+            
+<div class="side-nav expand-lg">
+    <div class="side-nav-inner">
+        <ul class="side-nav-menu scrollable ps-container ps-active-y" data-ps-id="bb691ffd-120c-14f8-a412-03d969c0f3a7">
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #4285f4;">monitoring</i>
+                            </span>
+                            <span class="title">Analytics</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Analytics/General">Dashboard</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Analytics/Positions">Organisation Structure</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Report/Reports">Reports</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #ea4335;">person</i>
+                            </span>
+                            <span class="title">HRIS &amp; Actions</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Profile/General">Staff Details</a></li>
+                                <li><a href="https://hr.sunsiyam.com/HRPlansActions/Contract">Job Contract</a></li>
+                                <li><a href="https://hr.sunsiyam.com/HRPlansActions/JobDescription">Job Description</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Dislodgement/Dislodgement">HR Actions</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Profile/Candidates">New Recruitment</a></li>
+                                <li><a href="https://hr.sunsiyam.com/InformationCorrection/InformationCorrection">Information Correction</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #fbbc05;">auto_fix</i>
+                            </span>
+                            <span class="title">Appraisal Manager</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/PerformanceRating/PerformanceRatings">Performance Rating</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Probation/ProbationCompletion">Probation</a></li>
+                                <li><a href="https://hr.sunsiyam.com/PerformanceRating/EvaluationList">Evaluation</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Voting/AddVoting">Voting</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Questions/Templates">Templates</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #0333a6;">schedule</i>
+                            </span>
+                            <span class="title">Time &amp; Attendance</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Attendance/AttendanceBoard">Attendance Board</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Adjustment/AttendanceAdjustment">Attendance Adjustment</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Attendance/RemoteWork">Remote Work</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Attendance/WorkHourAdjustment">Work Hour Adjustment</a></li>
+                                <li><a href="https://hr.sunsiyam.com/OverTime/OverTime">Over Time</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Attendance/SpecialWorkHour">Special Work Hours</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Shift/ShiftAdjustment">Work Shift</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #FE378F;">flight</i>
+                            </span>
+                            <span class="title">Leave Management</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Leave/LeaveStatus">Leave Status</a></li>
+                                <li><a href="https://hr.sunsiyam.com/LeaveBalance/LeaveBalance">Leave Balance</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Leave/LeaveRequest">Leave Request</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Leave/LeaveAdjustment">Leave Adjustment</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Leave/LeavePlaner">Leave Planner</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Leave/BlackOutPeriod">BlackOut Period</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Travel/Tickets">Travel</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #9B59B6;">payments</i>
+                            </span>
+                            <span class="title">Payroll Manager</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Finance/SalaryAddition">Salary Adjustments</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Finance/MakePayments">Make Payments</a></li>
+                                <li><a href="https://hr.sunsiyam.com/ServiceCharge/ServiceCharges">Service Charge</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Payroll/AttendanceCreation">Attendance &amp; Payroll</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #41d9f4;">supervisor_account</i>
+                            </span>
+                            <span class="title">Expatriate Process</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/ExpatriateDetail/ExpatriateDetail">Expatriate Details</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Expatriate/ApplyProcess">Expatriate Process</a></li>
+                                <li><a href="https://hr.sunsiyam.com/ExpatriateSettings/EmployerQuotaSite">Expatriate Settings</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Expatriate/EACancellation">EA Cancellation</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #4285f4;">settings_suggest</i>
+                            </span>
+                            <span class="title">Control Panel</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/OrganisationStructure/Entity">Organisational Structure</a></li>
+                                <li><a href="https://hr.sunsiyam.com/ControlPanel/EntitySettings">Attendance Settings</a></li>
+                                <li><a href="https://hr.sunsiyam.com/ControlPanel/LeaveSettings">Leave Settings</a></li>
+                                <li><a href="https://hr.sunsiyam.com/ControlPanel/SalaryPolicies">Salary Panel</a></li>
+                                <li><a href="https://hr.sunsiyam.com/ReferenceLetter/Configuration">Reference Letters</a></li>
+                                <li><a href="https://hr.sunsiyam.com/CountryAndCity/CountryAndCity">Country And City</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Journal/Ledgers">Journal Voucher</a></li>
+                                <li><a href="https://hr.sunsiyam.com/controlPanel/ClearanceCategory">Clearance</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #FE378F;">redeem</i>
+                            </span>
+                            <span class="title">Compensations</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Accomodation/Accomodations">Accomodation</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Health/MedicalReimbursements">Medical Reimbursements</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Benefits/CompanyAccessories">Company Assets</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Benefits/UtilityPayments">Utility Charges</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Benefits/Bonus">Bonus</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Benefits/NonCashRemunerations">Non Cash Remunerations</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Finance/RRAllowance">R&amp;R Allowance</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #41d9f4;">thumb_up</i>
+                            </span>
+                            <span class="title">Corporate - LMS</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Training/Courses">Courses</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Trainer/Dashboard">Trainers</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Trainer/QuestionTemplate">Questions</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #fbbc05;">explore</i>
+                            </span>
+                            <span class="title">My Page</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Dashboard/Dashboard">Dashboard</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Announcement/Announcement">Announcements</a></li>
+                                <li><a href="https://hr.sunsiyam.com/MyPage/Holidays">Holidays</a></li>
+                                <li><a href="https://hr.sunsiyam.com/MyPage/SalarySlip">Salary Slip</a></li>
+                                <li><a href="https://hr.sunsiyam.com/MyPage/MyTrainings">My Trainings</a></li>
+                                <li><a href="https://hr.sunsiyam.com/MyPage/LoanDeduction">Loan / Deduction</a></li>
+                                <li><a href="https://hr.sunsiyam.com/SalaryAdvance/SalaryAdvance">Vacation Pay</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Admin/AuditLog">Audit Log</a></li>
+                                <li><a href="https://hr.sunsiyam.com/MyPage/Description">Job Description</a></li>
+                                <li><a href="https://hr.sunsiyam.com/GatePass/GatePass">Gate Pass</a></li>
+                                <li><a href="https://hr.sunsiyam.com/MyPage/HotlineDirectory">Hotline Directory</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #ea4335;">task_alt</i>
+                            </span>
+                            <span class="title">Task Management</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Task/Dashboard">Dashboard</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Task/Tasks">Tasks</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Task/TaskSummary">Task Summary</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #4285f4;">work</i>
+                            </span>
+                            <span class="title">Recruitment</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Recruitment/Vacancies">Vacancies</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Recruitment/Candidates">Applicants</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Recruitment/InterviewPanel">Interview Panel</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Recruitment/CVPool">CV Pool</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Recruitment/StaffOnBoard">Staff On Board</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Recruitment/BlackList">Black List</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Screening/QuestionTemplate">Questions</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle" href="javascript:void(0);">
+                            <span class="icon-holder">
+                                <i class="material-symbols-sharp" style="color: #41d9f4;">admin_panel_settings</i>
+                            </span>
+                            <span class="title">Administration</span>
+                                <span class="arrow"><i class="mdi mdi-chevron-right"></i></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                                <li><a href="https://hr.sunsiyam.com/Admin/UserRegistration">User Rights Management</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Admin/BioMachines">Device Manager</a></li>
+                                <li><a href="https://hr.sunsiyam.com/Admin/Signatory">Configurations</a></li>
+                        </ul>
+                    </li>
+        <div class="ps-scrollbar-x-rail" style="left: 0px; bottom: 3px;"><div class="ps-scrollbar-x" style="left: 0px; width: 0px;"></div></div><div class="ps-scrollbar-y-rail" style="top: 0px; height: 570px; right: 3px;"><div class="ps-scrollbar-y" style="top: 0px; height: 546px;"></div></div></ul>
+    </div>
+</div>
+
+            <!-- Side Nav END -->
+            <!-- Page Container START -->
+            <div class="page-container">
+                <!-- Content Wrapper START -->
+                <div class="main-content">
+                    <div id="divAlert"></div>
+                    
+    
+<div class="c-breadcrumbs hidden-xs">
+    <ul>
+            <li>
+                <a href="https://hr.sunsiyam.com/Admin/UserRegistration">User Rights Management</a>
+            </li>
+            <li>
+                <a href="https://hr.sunsiyam.com/Admin/BioMachines">Device Manager</a>
+            </li>
+            <li>
+                <a href="https://hr.sunsiyam.com/Admin/Signatory" class="active">Configurations</a>
+            </li>
+    </ul>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('.c-breadcrumbs a[href="/Admin/ReportHeaders"]').addClass('active');
+    });
+</script>
+    
+
+<ul class="tab" id="userRightsTab">
+        <li>
+            <a href="https://hr.sunsiyam.com/Admin/Signatory">Signatory</a>
+        </li>
+        <li>
+            <a href="https://hr.sunsiyam.com/Admin/Notifications">Notifications</a>
+        </li>
+        <li>
+            <a href="https://hr.sunsiyam.com/Admin/EmailConfiguration">Email Configuration</a>
+        </li>
+        <li>
+            <a href="https://hr.sunsiyam.com/Admin/DocumentContacts">Document Contacts</a>
+        </li>
+        <li class="selected">
+            <a href="https://hr.sunsiyam.com/Admin/ReportHeaders">Report Headers</a>
+        </li>
+</ul>
+<script type="text/javascript">
+    $(function () {
+        $('.tab a[href="/Admin/ReportHeaders"]').parent().addClass('selected');
+        $('.c-breadcrumbs a[href="' + $('.tab a:first').attr('href') + '"]').addClass('active');
+    });
+</script>
+
+
+
+                    
+
+<style type="text/css">
+    .rpt-img {
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        display: inline-block;
+        width: 100%;
+        height: 100px;
+        background-color: white;
+    }
+    .c-tbl{
+        width: 100%;
+    }
+        .c-tbl th {
+            background-color: #2a3f54;
+            padding: 5px;
+            border-left: 1px solid gray;
+            border-bottom: 1px solid gray;
+            color: white;
+            font-weight: normal;
+        }
+        .c-tbl td {
+            padding: 5px;
+            border-left: 1px solid #eaeaea;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+    .rpt-cntrls-cnt{
+        position: relative;
+    }
+    .rpt-cntrls {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 5px 5px 2px 10px;
+        /*border-radius: 0 0 0 5px;*/
+        background-color: #ecf3f3;
+    }
+        .rpt-cntrls .fa-cloud-upload{
+            color: navy !important;
+            font-size: 19px;
+        }
+        .rpt-cntrls .fa-trash-o {
+            color: red !important;
+            font-size: 19px;
+            margin-left: 5px;
+        }
+</style>
+<div class="g-title">
+    <span class="g-text">Reports</span>
+</div>
+<div id="app"><table class="c-tbl"><tbody><tr><th style="text-align: center; width: 30px;">#</th> <th style="width: 250px;">Entity</th> <th>Header Image</th> <th>Footer Image</th> <th>Logo</th> <th>Stamp</th> <th style="width: 150px;"></th></tr> <tr><td style="text-align: center;">1</td> <td>Sun Siyam Iru Veli</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_1.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(1)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(1)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(1)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=LogoImage_1.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(1)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteLogo(1)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(1)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_1" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">2</td> <td>Sun Siyam Iru Fushi</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_2.jpg&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(2)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(2)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportFooter_2.jpg&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(2)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteFooter(2)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=LogoImage_2.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(2)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteLogo(2)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(2)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_2" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;" checked="checked"></td></tr><tr><td style="text-align: center;">3</td> <td>Sun Construction And Engineering</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_3.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(3)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(3)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(3)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(3)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=StampImage_3.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(3)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteStamp(3)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_3" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">4</td> <td>Sun Transport</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_4.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(4)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(4)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(4)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(4)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=StampImage_4.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(4)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteStamp(4)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_4" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">5</td> <td>Emerald Travel Services Pvt Ltd</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_5.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(5)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(5)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(5)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(5)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=StampImage_5.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(5)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteStamp(5)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_5" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">6</td> <td>Impex Fisheries Pvt Ltd</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_6.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(6)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(6)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportFooter_6.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(6)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteFooter(6)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(6)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(6)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_6" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">7</td> <td>Sun Trails Pvt Ltd</td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(7)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(7)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(7)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(7)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_7" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">8</td> <td>Siyam World</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_8.jpg&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(8)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(8)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportFooter_8.jpg&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(8)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteFooter(8)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(8)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(8)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_8" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">9</td> <td>Sun Siyam Resorts</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_9.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(9)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(9)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportFooter_9.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(9)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteFooter(9)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=LogoImage_9.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(9)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteLogo(9)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=StampImage_9.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(9)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteStamp(9)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_9" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;" checked="checked"></td></tr><tr><td style="text-align: center;">10</td> <td>Sun Siyam Vilureef</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_10.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(10)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(10)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(10)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(10)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(10)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_10" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">11</td> <td>Sun Siyam Olhuveli</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_11.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(11)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(11)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportFooter_11.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(11)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteFooter(11)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(11)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(11)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_11" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">12</td> <td>Sun Travels And Tours</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_12.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(12)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(12)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(12)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(12)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=StampImage_12.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(12)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteStamp(12)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_12" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">13</td> <td>Wego Pvt Ltd</td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(14)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(14)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(14)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(14)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_14" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">14</td> <td>Sun Siyam Media</td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportHeader_15.png&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(15)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteHeader(15)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><div class="rpt-img" style="background-image: url(&quot;/Admin/ReportImage?Img=ReportFooter_15.jpg&amp;t=1782997060385&quot;);"></div> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(15)" class="fa fa-cloud-upload"></a> <a href="javascript:app.deleteFooter(15)" class="fa fa-trash-o"></a></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(15)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(15)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_15" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">15</td> <td>Crate Crafters Pvt. Ltd</td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(16)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(16)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(16)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(16)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_16" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr><tr><td style="text-align: center;">16</td> <td>Sun Siyam Resorts EXCOM</td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadHeader(17)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadFooter(17)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadLogo(17)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt"><!----> <div class="rpt-cntrls"><a href="javascript:app.uploadStamp(17)" class="fa fa-cloud-upload"></a> <!----></div></td> <td class="rpt-cntrls-cnt" style="text-align: center;"><input type="checkbox" id="reportcheckbox_17" name="reportcheckbox" class="k-checkbox chkcol" style="text-align: center;"></td></tr></tbody></table></div>
+<div id="ProfileImg" style="display: none;">
+    <div class="k-widget k-upload k-upload-async k-upload-empty"><div class="k-dropzone"><div class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-base k-upload-button"><input id="ImageFile" name="ImageFile" type="file" data-role="upload" aria-label="Select files..." autocomplete="off"><span>Select files...</span></div><em class="k-dropzone-hint">Drop files here to upload</em></div></div><script>
+	kendo.syncReady(function(){jQuery("#ImageFile").kendoUpload({"upload":ImageFile_Upload,"success":ImageFile_Success,"multiple":false,"async":{"saveUrl":"/Admin/UpdateReportHeader","autoUpload":true},"validation":{"allowedExtensions":[".png",".jpg",".jpeg"]}});});
+</script>
+</div>
+
+                </div>
+                <!-- Content Wrapper END -->
+                <!-- Footer START -->
+                <footer class="content-footer" style="text-align:center;">
+                    <div class="footer">
+                        <div class="copyright">
+                            <span>Copyrights © 2026 <a href="http://solutions.com.mv/" target="_blank">Systems Solutions</a>. All rights reserved.</span>
+                            <span style="display: none;">2026.6.20.244</span>
+                            <span class="go-right">
+                                
+                            </span>
+                        </div>
+                    </div>
+                    <!--Incompleted ASKHR-->
+                </footer>
+                <!-- Footer END -->
+            </div>
+            <!-- Page Container END -->
+        </div>
+    </div>
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/bootstrap.bundle.min_aIfc.js"></script>
+<script>(window.bootstrap)||document.write('<script src="/bundles/bootstrap"><\/script>');</script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/theme_aIfc"></script>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/scripts_aIfc"></script><div class="k-widget k-window k-alert-window k-alert-wnd positioncenter" tabindex="0" style="min-width: 90px; min-height: 50px; display: none; top: 0px; left: 0px;" data-role="draggable"><div class="k-window-titlebar k-hstack"><span class="k-window-title"></span><div class="k-window-actions k-hstack"><a role="button" href="#" class="k-button k-button-md k-rounded-md k-button-flat k-button-flat-base k-icon-button k-window-action" aria-label="Close"><span class="k-button-icon k-icon k-i-close"></span></a></div></div><div class="k-alert k-window-content" data-role="window" style="" tabindex="0"></div><div aria-hidden="true" class="k-resize-handle k-resize-n"></div><div aria-hidden="true" class="k-resize-handle k-resize-e"></div><div aria-hidden="true" class="k-resize-handle k-resize-s"></div><div aria-hidden="true" class="k-resize-handle k-resize-w"></div><div aria-hidden="true" class="k-resize-handle k-resize-se"></div><div aria-hidden="true" class="k-resize-handle k-resize-sw"></div><div aria-hidden="true" class="k-resize-handle k-resize-ne"></div><div aria-hidden="true" class="k-resize-handle k-resize-nw"></div></div><div class="k-widget k-window k-alert-window k-confirm-wnd positioncenter" tabindex="0" style="min-width: 90px; min-height: 50px; display: none; top: 0px; left: 0px;" data-role="draggable"><div class="k-window-titlebar k-hstack"><span class="k-window-title"></span><div class="k-window-actions k-hstack"><a role="button" href="#" class="k-button k-button-md k-rounded-md k-button-flat k-button-flat-base k-icon-button k-window-action" aria-label="Close"><span class="k-button-icon k-icon k-i-close"></span></a></div></div><div class="k-confirm k-window-content" data-role="window" style="" tabindex="0"></div><div aria-hidden="true" class="k-resize-handle k-resize-n"></div><div aria-hidden="true" class="k-resize-handle k-resize-e"></div><div aria-hidden="true" class="k-resize-handle k-resize-s"></div><div aria-hidden="true" class="k-resize-handle k-resize-w"></div><div aria-hidden="true" class="k-resize-handle k-resize-se"></div><div aria-hidden="true" class="k-resize-handle k-resize-sw"></div><div aria-hidden="true" class="k-resize-handle k-resize-ne"></div><div aria-hidden="true" class="k-resize-handle k-resize-nw"></div></div><div class="k-widget k-window k-alert-window k-prompt-wnd positioncenter" tabindex="0" style="min-width: 90px; min-height: 50px; display: none; top: 0px; left: 0px;" data-role="draggable"><div class="k-window-titlebar k-hstack"><span class="k-window-title"></span><div class="k-window-actions k-hstack"><a role="button" href="#" class="k-button k-button-md k-rounded-md k-button-flat k-button-flat-base k-icon-button k-window-action" aria-label="Close"><span class="k-button-icon k-icon k-i-close"></span></a></div></div><div class="k-prompt k-window-content" data-role="window" style="" tabindex="0"></div><div aria-hidden="true" class="k-resize-handle k-resize-n"></div><div aria-hidden="true" class="k-resize-handle k-resize-e"></div><div aria-hidden="true" class="k-resize-handle k-resize-s"></div><div aria-hidden="true" class="k-resize-handle k-resize-w"></div><div aria-hidden="true" class="k-resize-handle k-resize-se"></div><div aria-hidden="true" class="k-resize-handle k-resize-sw"></div><div aria-hidden="true" class="k-resize-handle k-resize-ne"></div><div aria-hidden="true" class="k-resize-handle k-resize-nw"></div></div>
+
+    <script src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/jszip.min_aIfc.js"></script>
+<script>(window.kendo)||document.write('<script src="/bundles/jszip"><\/script>');</script>
+
+
+    
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                Items: [],
+                Item: null,
+                Option: ""
+            },
+            created: function () {
+                this.load();
+            },
+            methods: {
+                load: function () {
+                    $.getData("/Admin/ReadReportHeaders", null, function (res) {
+                        app.Items = res;
+                    });
+                },
+                getTime: function () {
+                    return new Date().getTime()
+                },
+                selectItem: function (id) {
+                    this.Item = this.Items.filter(x => x.ID == id)[0];
+                },
+                uploadHeader: function (id) {
+                    this.selectItem(id);
+                    this.Option = "UPDATE_REPORT_HEADER";
+                    $('#ImageFile').click();
+                },
+                uploadFooter: function (id) {
+                    this.selectItem(id);
+                    this.Option = "UPDATE_REPORT_FOOTER";
+                    $('#ImageFile').click();
+                },
+                uploadLogo: function (id) {
+                    this.selectItem(id);
+                    this.Option = "UPDATE_LOGO";
+                    $('#ImageFile').click();
+                },
+                uploadStamp: function (id) {
+                    this.selectItem(id);
+                    this.Option = "UPDATE_STAMP";
+                    $('#ImageFile').click();
+                },
+                deleteHeader: function (id) {
+                    this.selectItem(id);
+                    kendoConfirm("Do you want to Remove this Image?", function () {
+                        $.getData("/Admin/RemoveReportHeader", { Option: "REMOVE_REPORT_HEADER", ID: id, ExistingImage: app.Item.ReportHeaderImage }, app.onSuccess);
+                    });
+                },
+                deleteFooter: function (id) {
+                    this.selectItem(id);
+                    kendoConfirm("Do you want to Remove this Image?", function () {
+                        $.getData("/Admin/RemoveReportHeader", { Option: "REMOVE_REPORT_FOOTER", ID: id, ExistingImage: app.Item.ReportFooterImage }, app.onSuccess);
+                    });
+                },
+                deleteLogo: function (id) {
+                    this.selectItem(id);
+                    kendoConfirm("Do you want to Remove this Image?", function () {
+                        $.getData("/Admin/RemoveReportHeader", { Option: "REMOVE_LOGO", ID: id, ExistingImage: app.Item.LogoImage }, app.onSuccess);
+                    });
+                },
+                deleteStamp: function (id) {
+                    this.selectItem(id);
+                    kendoConfirm("Do you want to Remove this Image?", function () {
+                        $.getData("/Admin/RemoveReportHeader", { Option: "REMOVE_STAMP", ID: id, ExistingImage: app.Item.LogoImage }, app.onSuccess);
+                    });
+                },
+                reportHeaderFooterChecked: function (id) {
+                    this.selectItem(id);
+                    if ($('#reportcheckbox_'+id).prop("checked")) {
+                         kendoConfirm("Do you want to enable this Image?", function () {
+                             $.getData("/Admin/CheckReportImage", { Option: "UPDATE_ISREPORTHEADERIMAGE", ID: id, Message: "Selected Image Saved." }, app.onSuccess);
+                    });
+                    }
+                    else {
+                         kendoConfirm("Do you want to disable this Image?", function () {
+                             $.getData("/Admin/CheckReportImage", { Option: "REMOVE_ISREPORTHEADERIMAGE", ID: id, Message: "Selected Image Removed."}, app.onSuccess);
+                    });
+                    }
+                },
+                onSuccess: function (res) {
+                    kendoAlert(res.Message, res.HasError);
+                    if (res.HasError)
+                        return;
+                    this.load();
+                }
+            }
+        });
+
+        function ImageFile_Upload(e) {
+            var img = "", imageName;
+            if (app.Option == "UPDATE_REPORT_HEADER") {
+                img = app.Item.ReportHeaderImage;
+                imageName = "ReportHeader";
+            }
+            else if (app.Option == "UPDATE_REPORT_FOOTER") {
+                img = app.Item.ReportFooterImage;
+                imageName = "ReportFooter";
+            }
+            else if (app.Option == "UPDATE_LOGO") {
+                img = app.Item.LogoImage;
+                imageName = "LogoImage";
+            }
+            else {
+                img = app.Item.StampImage;
+                imageName = "StampImage";
+            }
+
+            e.data = {
+                Option: app.Option,
+                ID: app.Item.ID,
+                ExistingImage: img,
+                ImageName: imageName
+            };
+        }
+
+        function ImageFile_Success(e) {
+            app.onSuccess(e.response);
+        }
+    </script>
+
+
+            <script>
+	kendo.syncReady(function(){jQuery("#wndDivision").kendoWindow({"modal":true,"iframe":false,"draggable":false,"scrollable":true,"pinned":false,"title":"Switch Entity","resizable":false,"actions":["Close"]});});
+</script>
+
+
+            <script type="text/javascript">
+
+                function switchEntity() {
+                    $('#ddMainEntity').getKendoComboBox().value("");
+                    $('#wndDivision').getKendoWindow().open();
+                    $('#wndDivision').getKendoWindow().center();
+                    setTimeout(function () {
+                        $('#ddMainEntity').getKendoComboBox().focus();
+                    }, 500);
+                }
+
+                function ddMainEntity_Change() {
+                    if (this.selectedIndex == -1)
+                        return;
+                    $.post('/Admin/SwitchEntity', { ID: this.value() }, function (data) {
+                        if (data.HasError) {
+                            kendoAlert(data.Message, true);
+                            return;
+                        }
+                        localStorage.setItem("NotificationCount", "NONE");
+                        var hasQueryString = false;
+                        if (hasQueryString)
+                            location.href = "/Announcement/Announcement";
+                        else
+                            location.reload();
+                    });
+                }
+
+            </script>
+        <script>
+	kendo.syncReady(function(){jQuery("#EmployeePopUpWindow").kendoWindow({"iframe":false,"draggable":false,"scrollable":true,"pinned":false,"title":"Employee List","resizable":false,"actions":["Close"]});});
+</script>
+
+    <script type="text/javascript">
+        $(function () {
+            $("#EmployeePopUpWindow").on("click", ".k-grid-content tr", function () {
+                var dataItem = $("#gdEmployeeList").getKendoGrid().dataItem($(this));
+                var btnID = $('#gdEmployeeList').attr("data-sender");
+                var $ddEmp = $('#' + btnID).parent().prev().find('[data-role=combobox]').getKendoComboBox();
+                $ddEmp.value(dataItem.ID);
+                $ddEmp.trigger("change");
+                $('#EmployeePopUpWindow').getKendoWindow().close();
+            });
+
+        });
+
+        function OpenEmpWnd(btnID) {
+            btnID = btnID ? btnID : 'btnSearch';
+            $('#EmployeePopUpWindow').getKendoWindow().open();
+            $('#gdEmployeeList').attr("data-sender", btnID).getKendoGrid().dataSource.data($('#' + btnID).parent().prev().find('[data-role=combobox]').getKendoComboBox().dataSource.data());
+            $('#EmployeePopUpWindow').getKendoWindow().center();
+        }
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            if (localStorage.getItem("NotificationCount") == 'NONE') {
+               lapp.resetCount()
+            }
+            else {
+                lapp.setNCount();
+            }
+        });
+        //var lappchat = new Vue({
+        //    el: '#lappchat',
+        //    data: {
+        //        IsAskHR: appChat.IsAppChat
+        //    }
+        //});
+        var lapp = new Vue({
+            el: '#lapp',
+            data: {
+                input: {"NotificationType":null,"EmpID":null,"FullName":null,"Details":null,"EventDate":new Date(1,0,1,0,0,0,0),"WebLink":null,"MobileLink":null,"AccessMode":0,"Icon":null,"Color":null},
+                NotificationList: [],
+                AccessMode: -1
+            },
+            computed: {
+                filteredItems: function() {
+                    var accessMode = this.AccessMode;
+                    return $.grep(this.NotificationList, function(x) {
+                        return accessMode == -1 || x.AccessMode == accessMode
+                        });
+                }
+            },
+            methods: {
+                weburl: function (url) {
+                    window.location.href = url;
+                },
+                showNotification: function (e) {
+                    if (e == 1)
+                        $('#ddNotify').dropdown('toggle');
+                     var self = this;
+                    $.postData('/General/ReadPendingNotifications', null, function (res) {
+                        self.NotificationList = res.Data;
+                    });
+                },
+                filter: function (e) {
+                    this.AccessMode = e;
+                },
+                setNCount: function () {
+                    var cnt = localStorage.getItem("NotificationCount");
+                    $("#nCnt").text(cnt);
+                    if (cnt == 0)
+                        $("#nCnt").hide();
+                    else
+                        $("#nCnt").show();
+                },
+                resetCount: function (e) {
+                     $.postData('/General/GetNotificationCount', null, function (res) {
+                        var returnedData = $.grep(res, function (item, index) {
+                            return item.NotificationType == "Notifications";
+                        });
+                        localStorage.setItem("NotificationCount", returnedData[0].Count);
+                        lapp.setNCount();
+                    });
+                }
+            }
+        });
+    </script>
+
+    <script type="text/javascript">
+        var srchapp = new Vue({
+            el: "#srchapp",
+            data:{
+                SearchText: "",
+                Menus: [{"MenuName":"Analytics","ClassName":"monitoring","Color":"#4285f4","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Dashboard","ClassName":null,"Color":null,"Url":"/Analytics/General","MenuOrder":0,"Form":"Dashboard - General","MenuItems":[{"MenuName":"General","ClassName":null,"Color":null,"Url":"/Analytics/General","MenuOrder":0,"Form":"Dashboard - General","MenuItems":[]},{"MenuName":"Employment","ClassName":null,"Color":null,"Url":"/Analytics/Employment","MenuOrder":0,"Form":"Dashboard - Employment","MenuItems":[]},{"MenuName":"Attendance","ClassName":null,"Color":null,"Url":"/Analytics/Attendance","MenuOrder":0,"Form":"Dashboard - Attendance","MenuItems":[]},{"MenuName":"Finance","ClassName":null,"Color":null,"Url":"/Analytics/Finance","MenuOrder":0,"Form":"Dashboard - Finance","MenuItems":[]},{"MenuName":"Recruitment","ClassName":null,"Color":null,"Url":"/Analytics/Recruitment","MenuOrder":0,"Form":"Dashboard - Recruitment","MenuItems":[]},{"MenuName":"Gate Pass","ClassName":null,"Color":null,"Url":"/Analytics/GatePass","MenuOrder":0,"Form":"Dashboard - GatePass","MenuItems":[]},{"MenuName":"Corporate - LMS","ClassName":null,"Color":null,"Url":"/Analytics/CorporateLMS","MenuOrder":0,"Form":"Analytics - Corporate - LMS","MenuItems":[]},{"MenuName":"Event Calendar","ClassName":null,"Color":null,"Url":"/Analytics/EventCalendar","MenuOrder":0,"Form":"Dashboard - EventCalander","MenuItems":[]}]},{"MenuName":"Organisation Structure","ClassName":null,"Color":null,"Url":"/Analytics/Positions","MenuOrder":0,"Form":"Analytics - Organisation Structure","MenuItems":[{"MenuName":"Positions","ClassName":null,"Color":null,"Url":"/Analytics/Positions","MenuOrder":0,"Form":"Analytics - Organisation Structure","MenuItems":[]},{"MenuName":"Organisation Structure","ClassName":null,"Color":null,"Url":"/Analytics/OrganisationStructure","MenuOrder":0,"Form":"Analytics - Organisation Structure","MenuItems":[]}]},{"MenuName":"Reports","ClassName":null,"Color":null,"Url":"/Report/Reports","MenuOrder":0,"Form":"Analytics - Reports","MenuItems":[{"MenuName":"Reports","ClassName":null,"Color":null,"Url":"/Report/Reports","MenuOrder":0,"Form":"Analytics - Reports","MenuItems":[]},{"MenuName":"MIS","ClassName":null,"Color":null,"Url":"/Report/MIS","MenuOrder":0,"Form":"Analytics - MIS","MenuItems":[]}]}]},{"MenuName":"HRIS & Actions","ClassName":"person","Color":"#ea4335","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Staff Details","ClassName":null,"Color":null,"Url":"/Profile/General","MenuOrder":0,"Form":"HRIS & Actions - General","MenuItems":[{"MenuName":"General","ClassName":null,"Color":null,"Url":"/Profile/General","MenuOrder":0,"Form":"HRIS & Actions - General","MenuItems":[]},{"MenuName":"Employment","ClassName":null,"Color":null,"Url":"/Profile/Employment","MenuOrder":0,"Form":"HRIS & Actions - Employment","MenuItems":[]},{"MenuName":"Salary","ClassName":null,"Color":null,"Url":"/Profile/Salary","MenuOrder":0,"Form":"HRIS & Actions - Salary","MenuItems":[]},{"MenuName":"Other Users","ClassName":null,"Color":null,"Url":"/Profile/OtherUsers","MenuOrder":0,"Form":"HRIS & Actions - OtherUsers","MenuItems":[]},{"MenuName":"Employee History","ClassName":null,"Color":null,"Url":"/Profile/EmployeeHistory","MenuOrder":0,"Form":"HRIS & Actions - Employee History","MenuItems":[]}]},{"MenuName":"Job Contract","ClassName":null,"Color":null,"Url":"/HRPlansActions/Contract","MenuOrder":0,"Form":"HRIS & Actions - Contract","MenuItems":[]},{"MenuName":"Job Description","ClassName":null,"Color":null,"Url":"/HRPlansActions/JobDescription","MenuOrder":0,"Form":"HRIS & Actions - Job Description","MenuItems":[]},{"MenuName":"HR Actions","ClassName":null,"Color":null,"Url":"/Dislodgement/Dislodgement","MenuOrder":0,"Form":"HRIS & Actions - Dislodgement","MenuItems":[{"MenuName":"Dislodgment","ClassName":null,"Color":null,"Url":"/Dislodgement/Dislodgement","MenuOrder":0,"Form":"HRIS & Actions - Dislodgement","MenuItems":[]},{"MenuName":"Admonition","ClassName":null,"Color":null,"Url":"/HRPlansActions/Admonition","MenuOrder":0,"Form":"HRIS & Actions - Admonition","MenuItems":[]},{"MenuName":"Suspension","ClassName":null,"Color":null,"Url":"/HRPlansActions/Suspensions","MenuOrder":0,"Form":"HRIS & Actions - Suspension","MenuItems":[]},{"MenuName":"Separation","ClassName":null,"Color":null,"Url":"/Separation/Separation","MenuOrder":0,"Form":"HRIS & Actions - Termination","MenuItems":[]},{"MenuName":"Reports","ClassName":null,"Color":null,"Url":"/HRPlansActions/EmployeeReports","MenuOrder":0,"Form":"HRIS & Actions - Reports","MenuItems":[]},{"MenuName":"Reference Letters","ClassName":null,"Color":null,"Url":"/ReferenceLetter/Requests","MenuOrder":0,"Form":"HRIS & Actions - Reference Letter Requests","MenuItems":[]}]},{"MenuName":"New Recruitment","ClassName":null,"Color":null,"Url":"/Profile/Candidates","MenuOrder":0,"Form":"HRIS & Actions - New Recruitment","MenuItems":[]},{"MenuName":"Information Correction","ClassName":null,"Color":null,"Url":"/InformationCorrection/InformationCorrection","MenuOrder":0,"Form":"HRIS & Actions - Information Correction","MenuItems":[]}]},{"MenuName":"Appraisal Manager","ClassName":"auto_fix","Color":"#fbbc05","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Performance Rating","ClassName":null,"Color":null,"Url":"/PerformanceRating/PerformanceRatings","MenuOrder":0,"Form":"Appraisal - Performance Rating","MenuItems":[{"MenuName":"Performance Rating","ClassName":null,"Color":null,"Url":"/PerformanceRating/PerformanceRatings","MenuOrder":0,"Form":"Appraisal - Performance Rating","MenuItems":[]},{"MenuName":"Peer Settings","ClassName":null,"Color":null,"Url":"/PerformanceRating/PeersConfiguration","MenuOrder":0,"Form":"Appraisal - Peer Configuration","MenuItems":[]},{"MenuName":"Mappings","ClassName":null,"Color":null,"Url":"/PerformanceRating/Mappings","MenuOrder":0,"Form":"Appraisal - Mappings","MenuItems":[]}]},{"MenuName":"Probation","ClassName":null,"Color":null,"Url":"/Probation/ProbationCompletion","MenuOrder":0,"Form":"Appraisal - Probation","MenuItems":[]},{"MenuName":"Evaluation","ClassName":null,"Color":null,"Url":"/PerformanceRating/EvaluationList","MenuOrder":0,"Form":"Appraisal - Evaluation","MenuItems":[]},{"MenuName":"Voting","ClassName":null,"Color":null,"Url":"/Voting/AddVoting","MenuOrder":0,"Form":"Voting - Setting","MenuItems":[{"MenuName":"Configure Voting","ClassName":null,"Color":null,"Url":"/Voting/AddVoting","MenuOrder":0,"Form":"Voting - Setting","MenuItems":[]},{"MenuName":"Voting Result","ClassName":null,"Color":null,"Url":"/Voting/VotingResult","MenuOrder":0,"Form":"Voting - Result","MenuItems":[]},{"MenuName":"Voting Status","ClassName":null,"Color":null,"Url":"/Voting/VotingStatus","MenuOrder":0,"Form":"Voting - Status","MenuItems":[]}]},{"MenuName":"Templates","ClassName":null,"Color":null,"Url":"/Questions/Templates","MenuOrder":0,"Form":"Appraisal - Question Templates","MenuItems":[]}]},{"MenuName":"Time & Attendance","ClassName":"schedule","Color":"#0333a6","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Attendance Board","ClassName":null,"Color":null,"Url":"/Attendance/AttendanceBoard","MenuOrder":0,"Form":"","MenuItems":[{"MenuName":"Attendance Board","ClassName":null,"Color":null,"Url":"/Attendance/AttendanceBoard","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Attendance Monthly View","ClassName":null,"Color":null,"Url":"/AttendanceBoard/MonthlyView","MenuOrder":0,"Form":"Attendance - Attendance Board","MenuItems":[]},{"MenuName":"Today Status","ClassName":null,"Color":null,"Url":"/Attendance/TodayStatus","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Conflicted Punches","ClassName":null,"Color":null,"Url":"/Attendance/ConflictedPunches","MenuOrder":0,"Form":"","MenuItems":[]}]},{"MenuName":"Attendance Adjustment","ClassName":null,"Color":null,"Url":"/Adjustment/AttendanceAdjustment","MenuOrder":0,"Form":"Attendance - Attendance Adjustment","MenuItems":[]},{"MenuName":"Remote Work","ClassName":null,"Color":null,"Url":"/Attendance/RemoteWork","MenuOrder":0,"Form":"Attendance - Remote Work","MenuItems":[]},{"MenuName":"Work Hour Adjustment","ClassName":null,"Color":null,"Url":"/Attendance/WorkHourAdjustment","MenuOrder":0,"Form":"Attendance - Work Hour Adjustment","MenuItems":[]},{"MenuName":"Over Time","ClassName":null,"Color":null,"Url":"/OverTime/OverTime","MenuOrder":0,"Form":"Attendance - OverTime","MenuItems":[{"MenuName":"Over Time","ClassName":null,"Color":null,"Url":"/OverTime/OverTime","MenuOrder":0,"Form":"Attendance - OverTime","MenuItems":[]},{"MenuName":"Over Time Monthly View","ClassName":null,"Color":null,"Url":"/OverTime/MonthlyView","MenuOrder":0,"Form":"Attendance - OverTime","MenuItems":[]}]},{"MenuName":"Special Work Hours","ClassName":null,"Color":null,"Url":"/Attendance/SpecialWorkHour","MenuOrder":0,"Form":"Attendance - Special Work Hour Individual","MenuItems":[{"MenuName":"Individual","ClassName":null,"Color":null,"Url":"/Attendance/SpecialWorkHour","MenuOrder":0,"Form":"Attendance - Special Work Hour Individual","MenuItems":[]},{"MenuName":"Over All","ClassName":null,"Color":null,"Url":"/Attendance/SpecialDay","MenuOrder":0,"Form":"Attendance - Special Work Hour Over All","MenuItems":[]}]},{"MenuName":"Work Shift","ClassName":null,"Color":null,"Url":"/Shift/ShiftAdjustment","MenuOrder":0,"Form":"Attendance - Shift Adjustment","MenuItems":[{"MenuName":"Shift Adjustment","ClassName":null,"Color":null,"Url":"/Shift/ShiftAdjustment","MenuOrder":0,"Form":"Attendance - Shift Adjustment","MenuItems":[]},{"MenuName":"Daily View","ClassName":null,"Color":null,"Url":"/Shift/DailyView","MenuOrder":0,"Form":"Attendance - Shift Schedule","MenuItems":[]},{"MenuName":"Monthy View","ClassName":null,"Color":null,"Url":"/Shift/MonthlyView","MenuOrder":0,"Form":"Attendance - Shift Schedule","MenuItems":[]},{"MenuName":"Shift Settings","ClassName":null,"Color":null,"Url":"/Shift/ShiftSettings","MenuOrder":0,"Form":"Attendance - Shift Settings","MenuItems":[]},{"MenuName":"Shift Groups","ClassName":null,"Color":null,"Url":"/Shift/ShiftGroups","MenuOrder":0,"Form":"Attendance - Shift Settings","MenuItems":[]}]}]},{"MenuName":"Leave Management","ClassName":"flight","Color":"#FE378F","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Leave Status","ClassName":null,"Color":null,"Url":"/Leave/LeaveStatus","MenuOrder":0,"Form":"Leave - Leave Status","MenuItems":[]},{"MenuName":"Leave Balance","ClassName":null,"Color":null,"Url":"/LeaveBalance/LeaveBalance","MenuOrder":0,"Form":"Leave - Leave Balance","MenuItems":[]},{"MenuName":"Leave Request","ClassName":null,"Color":null,"Url":"/Leave/LeaveRequest","MenuOrder":0,"Form":"Leave - Leave Request","MenuItems":[]},{"MenuName":"Leave Adjustment","ClassName":null,"Color":null,"Url":"/Leave/LeaveAdjustment","MenuOrder":0,"Form":"Leave - Leave Adjustment","MenuItems":[]},{"MenuName":"Leave Planner","ClassName":null,"Color":null,"Url":"/Leave/LeavePlaner","MenuOrder":0,"Form":"Leave - Leave Planner","MenuItems":[]},{"MenuName":"BlackOut Period","ClassName":null,"Color":null,"Url":"/Leave/BlackOutPeriod","MenuOrder":0,"Form":"Leave - BlackOut Period","MenuItems":[]},{"MenuName":"Travel","ClassName":null,"Color":null,"Url":"/Travel/Tickets","MenuOrder":0,"Form":"Travel - Tickets","MenuItems":[{"MenuName":"Tickets","ClassName":null,"Color":null,"Url":"/Travel/Tickets","MenuOrder":0,"Form":"Travel - Tickets","MenuItems":[]},{"MenuName":"Offical Trips","ClassName":null,"Color":null,"Url":"/Travel/OfficialTrips","MenuOrder":0,"Form":"Travel - Official Trips","MenuItems":[]},{"MenuName":"Expenses","ClassName":null,"Color":null,"Url":"/Travel/TripExpenses","MenuOrder":0,"Form":"Travel - Trip Expenses","MenuItems":[]},{"MenuName":"Travel Settings","ClassName":null,"Color":null,"Url":"/Travel/ExpenseCategorySettings","MenuOrder":0,"Form":"Travel - Expense Category","MenuItems":[{"MenuName":"Expense Category Settings","ClassName":null,"Color":null,"Url":"/Travel/ExpenseCategorySettings","MenuOrder":0,"Form":"Travel - Expense Category","MenuItems":[]},{"MenuName":"Travel Allowance","ClassName":null,"Color":null,"Url":"/Travel/TravelAllowance","MenuOrder":0,"Form":"Travel - Travel Allowance","MenuItems":[]},{"MenuName":"Airport Settings","ClassName":null,"Color":null,"Url":"/Travel/AirportSetting","MenuOrder":0,"Form":"Travel - Airports","MenuItems":[]},{"MenuName":"Agency Settings","ClassName":null,"Color":null,"Url":"/Travel/AgencySetting","MenuOrder":0,"Form":"Travel - Agency Setting","MenuItems":[]}]}]}]},{"MenuName":"Payroll Manager","ClassName":"payments","Color":"#9B59B6","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Salary Adjustments","ClassName":null,"Color":null,"Url":"/Finance/SalaryAddition","MenuOrder":0,"Form":"Payroll - Salary Additions","MenuItems":[{"MenuName":"Salary Additions","ClassName":null,"Color":null,"Url":"/Finance/SalaryAddition","MenuOrder":0,"Form":"Payroll - Salary Additions","MenuItems":[]},{"MenuName":"Salary Deductions","ClassName":null,"Color":null,"Url":"/Finance/Deduction","MenuOrder":0,"Form":"Payroll - Salary Deductions","MenuItems":[]},{"MenuName":"Monthly Deductions","ClassName":null,"Color":null,"Url":"/Finance/MonthlyDeduction","MenuOrder":0,"Form":"Payroll - Monthly Deductions","MenuItems":[]},{"MenuName":"Deduction Exception","ClassName":null,"Color":null,"Url":"/Finance/DeductionException","MenuOrder":0,"Form":"Payroll - Deduction Exception","MenuItems":[]},{"MenuName":"Other Taxable Remunerations","ClassName":null,"Color":null,"Url":"/Finance/OtherTaxableRemunerations","MenuOrder":0,"Form":"Payroll - Other Taxable Remunerations","MenuItems":[]},{"MenuName":"Hold Salary","ClassName":null,"Color":null,"Url":"/Finance/HoldSalary","MenuOrder":0,"Form":"Payroll - Hold Salary","MenuItems":[]}]},{"MenuName":"Make Payments","ClassName":null,"Color":null,"Url":"/Finance/MakePayments","MenuOrder":0,"Form":"Payroll - Make Payments","MenuItems":[]},{"MenuName":"Service Charge","ClassName":null,"Color":null,"Url":"/ServiceCharge/ServiceCharges","MenuOrder":0,"Form":"Payroll - Service Charges","MenuItems":[{"MenuName":"Service Charge","ClassName":null,"Color":null,"Url":"/ServiceCharge/ServiceCharges","MenuOrder":0,"Form":"Payroll - Service Charges","MenuItems":[]},{"MenuName":"Service Charge Payments","ClassName":null,"Color":null,"Url":"/ServiceCharge/ServiceChargePayments","MenuOrder":0,"Form":"Payroll - Service Charges","MenuItems":[]},{"MenuName":"Service Charge Manual Payments","ClassName":null,"Color":null,"Url":"/ServiceCharge/ServiceChargeManualPayments","MenuOrder":0,"Form":"Payroll - Service Charges","MenuItems":[]}]},{"MenuName":"Attendance & Payroll","ClassName":null,"Color":null,"Url":"/Payroll/AttendanceCreation","MenuOrder":0,"Form":"Payroll - Attendance","MenuItems":[{"MenuName":"Attendance Creation","ClassName":null,"Color":null,"Url":"/Payroll/AttendanceCreation","MenuOrder":0,"Form":"Payroll - Attendance","MenuItems":[]},{"MenuName":"Attendance Verification","ClassName":null,"Color":null,"Url":"/Payroll/AttendanceVerification","MenuOrder":0,"Form":"Payroll - Attendance","MenuItems":[]},{"MenuName":"Salary Creation","ClassName":null,"Color":null,"Url":"/Payroll/SalaryCreation","MenuOrder":0,"Form":"Payroll - Salary","MenuItems":[]},{"MenuName":"Payroll Documents","ClassName":null,"Color":null,"Url":"/Payroll/Documents","MenuOrder":0,"Form":"Payroll - Documents","MenuItems":[]}]}]},{"MenuName":"Expatriate Process","ClassName":"supervisor_account","Color":"#41d9f4","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Expatriate Details","ClassName":null,"Color":null,"Url":"/ExpatriateDetail/ExpatriateDetail","MenuOrder":0,"Form":"Expatriate - Expatriate Details","MenuItems":[]},{"MenuName":"Expatriate Process","ClassName":null,"Color":null,"Url":"/Expatriate/ApplyProcess","MenuOrder":0,"Form":"Expatriate - Apply Process","MenuItems":[{"MenuName":"Apply Process","ClassName":null,"Color":null,"Url":"/Expatriate/ApplyProcess","MenuOrder":0,"Form":"Expatriate - Apply Process","MenuItems":[]},{"MenuName":"Pending Payment","ClassName":null,"Color":null,"Url":"/Expatriate/PendingPayment","MenuOrder":0,"Form":"Expatriate - Payment Process","MenuItems":[]},{"MenuName":"Payment Approval","ClassName":null,"Color":null,"Url":"/Expatriate/PaymentProcess","MenuOrder":0,"Form":"Expatriate - Payment Process","MenuItems":[]},{"MenuName":"Process Verification","ClassName":null,"Color":null,"Url":"/Expatriate/ProcessVerification","MenuOrder":0,"Form":"Expatriate - Process Verification","MenuItems":[]}]},{"MenuName":"Expatriate Settings","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/EmployerQuotaSite","MenuOrder":0,"Form":"Expatriate - Employer","MenuItems":[{"MenuName":"Employers / Quota Site","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/EmployerQuotaSite","MenuOrder":0,"Form":"Expatriate - Employer","MenuItems":[]},{"MenuName":"Quota","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/Quota","MenuOrder":0,"Form":"Expatriate - Quota","MenuItems":[]},{"MenuName":"Slots","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/Slot","MenuOrder":0,"Form":"Expatriate - Slot","MenuItems":[]},{"MenuName":"Deposit Payment Setting","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/DepositPaymentSetting","MenuOrder":0,"Form":"Expatriate - Deposit Payment Setting","MenuItems":[]},{"MenuName":"Agency Setting","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/AgencySettings","MenuOrder":0,"Form":"Expatriate - Agency Settings","MenuItems":[]},{"MenuName":"Mail Alert Setting","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/ExpatriateMailAlertSetting","MenuOrder":0,"Form":"Expatriate - Mail Alert Setting","MenuItems":[]},{"MenuName":"Process Setting","ClassName":null,"Color":null,"Url":"/ExpatriateSettings/ProcessSettings","MenuOrder":0,"Form":"Expatriate - Control Panel","MenuItems":[]}]},{"MenuName":"EA Cancellation","ClassName":null,"Color":null,"Url":"/Expatriate/EACancellation","MenuOrder":0,"Form":"Expatriate - EA Cancellation","MenuItems":[{"MenuName":"EA Cancellation","ClassName":null,"Color":null,"Url":"/Expatriate/EACancellation","MenuOrder":0,"Form":"Expatriate - EA Cancellation","MenuItems":[]},{"MenuName":"EACancellationHistory","ClassName":null,"Color":null,"Url":"/Expatriate/EACancellationHistory","MenuOrder":0,"Form":"Expatriate - EA Cancellation History","MenuItems":[]}]}]},{"MenuName":"Control Panel","ClassName":"settings_suggest","Color":"#4285f4","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Organisational Structure","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Entity","MenuOrder":0,"Form":"Control Panel - Entity","MenuItems":[{"MenuName":"Entity","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Entity","MenuOrder":0,"Form":"Control Panel - Entity","MenuItems":[]},{"MenuName":"Division","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Division","MenuOrder":0,"Form":"Control Panel - Division","MenuItems":[]},{"MenuName":"Department","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Department","MenuOrder":0,"Form":"Control Panel - Department","MenuItems":[]},{"MenuName":"Section","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Section","MenuOrder":0,"Form":"Control Panel - Section","MenuItems":[]},{"MenuName":"Designation","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Designation","MenuOrder":0,"Form":"Control Panel - Designation","MenuItems":[]},{"MenuName":"Levels","ClassName":null,"Color":null,"Url":"/OrganisationStructure/DesignationLevel","MenuOrder":0,"Form":"Control Panel - Level","MenuItems":[]},{"MenuName":"Plannings","ClassName":null,"Color":null,"Url":"/OrganisationStructure/Plannings","MenuOrder":0,"Form":"Control Panel - Plannings","MenuItems":[]},{"MenuName":"Designation Category & Grades","ClassName":null,"Color":null,"Url":"/Grade/DesignationCategory","MenuOrder":0,"Form":"Control Panel - Designation Categories","MenuItems":[]},{"MenuName":"Notice Period","ClassName":null,"Color":null,"Url":"/OrganisationStructure/NoticePeriod","MenuOrder":0,"Form":"Control Panel - Notice Period","MenuItems":[]}]},{"MenuName":"Attendance Settings","ClassName":null,"Color":null,"Url":"/ControlPanel/EntitySettings","MenuOrder":0,"Form":"Control Panel - Attendance Settings","MenuItems":[{"MenuName":"Attendance Settings","ClassName":null,"Color":null,"Url":"/ControlPanel/EntitySettings","MenuOrder":0,"Form":"Control Panel - Attendance Settings","MenuItems":[]},{"MenuName":"Holidays & Adjustment Types","ClassName":null,"Color":null,"Url":"/ControlPanel/Holidays","MenuOrder":0,"Form":"Control Panel - Attendance Settings","MenuItems":[]},{"MenuName":"Attendance Policy","ClassName":null,"Color":null,"Url":"/AttendancePolicy/Policies","MenuOrder":0,"Form":"Control Panel - Attendance Settings","MenuItems":[]}]},{"MenuName":"Leave Settings","ClassName":null,"Color":null,"Url":"/ControlPanel/LeaveSettings","MenuOrder":0,"Form":"Control Panel - Leave Settings","MenuItems":[{"MenuName":"Leave Types & Approvals","ClassName":null,"Color":null,"Url":"/ControlPanel/LeaveSettings","MenuOrder":0,"Form":"Control Panel - Leave Settings","MenuItems":[]},{"MenuName":"Leave Policies","ClassName":null,"Color":null,"Url":"/ControlPanel/CategoryLeaves","MenuOrder":0,"Form":"Control Panel - Leave Settings","MenuItems":[]},{"MenuName":"Rest and Relax","ClassName":null,"Color":null,"Url":"/ControlPanel/BenefitCategory","MenuOrder":0,"Form":"Control Panel - RestandRelax","MenuItems":[]}]},{"MenuName":"Salary Panel","ClassName":null,"Color":null,"Url":"/ControlPanel/SalaryPolicies","MenuOrder":0,"Form":"Control Panel - Salary Policies","MenuItems":[{"MenuName":"Salary Policies","ClassName":null,"Color":null,"Url":"/ControlPanel/SalaryPolicies","MenuOrder":0,"Form":"Control Panel - Salary Policies","MenuItems":[]},{"MenuName":"Bank Details","ClassName":null,"Color":null,"Url":"/ControlPanel/BankDetails","MenuOrder":0,"Form":"Control Panel - Bank Details","MenuItems":[]},{"MenuName":"Denominations & MiraProfessions","ClassName":null,"Color":null,"Url":"/ControlPanel/Denominations","MenuOrder":0,"Form":"Control Panel - Denomination","MenuItems":[]},{"MenuName":"Salary Settings","ClassName":null,"Color":null,"Url":"/ControlPanel/SalarySettings","MenuOrder":0,"Form":"Control Panel - Salary Settings","MenuItems":[]},{"MenuName":"Salary Advance","ClassName":null,"Color":null,"Url":"/ControlPanel/SalaryAdvance","MenuOrder":0,"Form":"Control Panel - Salary Advance","MenuItems":[]}]},{"MenuName":"Reference Letters","ClassName":null,"Color":null,"Url":"/ReferenceLetter/Configuration","MenuOrder":0,"Form":"Control Panel - Reference Letters","MenuItems":[]},{"MenuName":"Country And City","ClassName":null,"Color":null,"Url":"/CountryAndCity/CountryAndCity","MenuOrder":0,"Form":"Control Panel - Masters","MenuItems":[{"MenuName":"Country And City","ClassName":null,"Color":null,"Url":"/CountryAndCity/CountryAndCity","MenuOrder":0,"Form":"Control Panel - Masters","MenuItems":[]}]},{"MenuName":"Journal Voucher","ClassName":null,"Color":null,"Url":"/Journal/Ledgers","MenuOrder":0,"Form":"Control Panel - Ledgers","MenuItems":[{"MenuName":"Ledgers","ClassName":null,"Color":null,"Url":"/Journal/Ledgers","MenuOrder":0,"Form":"Control Panel - Ledgers","MenuItems":[]},{"MenuName":"General Ledgers","ClassName":null,"Color":null,"Url":"/Journal/GeneralLedgers","MenuOrder":0,"Form":"Control Panel - GeneralLedgers","MenuItems":[]},{"MenuName":"Cost Centres","ClassName":null,"Color":null,"Url":"/Journal/CostCentres","MenuOrder":0,"Form":"Control Panel - CostCenter","MenuItems":[]},{"MenuName":"JV Integrations","ClassName":null,"Color":null,"Url":"/Journal/JVIntegrations","MenuOrder":0,"Form":"Control Panel - JVIntegrations","MenuItems":[]}]},{"MenuName":"Clearance","ClassName":null,"Color":null,"Url":"/controlPanel/ClearanceCategory","MenuOrder":0,"Form":"Control Panel - Clearance Categories","MenuItems":[{"MenuName":"Clearance Categories","ClassName":null,"Color":null,"Url":"/controlPanel/ClearanceCategory","MenuOrder":0,"Form":"Control Panel - Clearance Categories","MenuItems":[]}]}]},{"MenuName":"Compensations","ClassName":"redeem","Color":"#FE378F","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Accomodation","ClassName":null,"Color":null,"Url":"/Accomodation/Accomodations","MenuOrder":0,"Form":"Compensations - Accomodations","MenuItems":[{"MenuName":"Accomodations","ClassName":null,"Color":null,"Url":"/Accomodation/Accomodations","MenuOrder":0,"Form":"Compensations - Accomodations","MenuItems":[]},{"MenuName":"Availability","ClassName":null,"Color":null,"Url":"/Accomodation/Availability","MenuOrder":0,"Form":"Compensations - Accomodations","MenuItems":[]},{"MenuName":"Accomodation Settings","ClassName":null,"Color":null,"Url":"/Accomodation/AccomodationSettings","MenuOrder":0,"Form":"Compensations - Accomodation Settings","MenuItems":[]}]},{"MenuName":"Medical Reimbursements","ClassName":null,"Color":null,"Url":"/Health/MedicalReimbursements","MenuOrder":0,"Form":"Compensations - Medical Reimbursement","MenuItems":[]},{"MenuName":"Company Assets","ClassName":null,"Color":null,"Url":"/Benefits/CompanyAccessories","MenuOrder":0,"Form":"Compensations - Company Assets","MenuItems":[]},{"MenuName":"Utility Charges","ClassName":null,"Color":null,"Url":"/Benefits/UtilityPayments","MenuOrder":0,"Form":"Compensations - Utility Charges","MenuItems":[]},{"MenuName":"Bonus","ClassName":null,"Color":null,"Url":"/Benefits/Bonus","MenuOrder":0,"Form":"Compensations - Bonus","MenuItems":[]},{"MenuName":"Non Cash Remunerations","ClassName":null,"Color":null,"Url":"/Benefits/NonCashRemunerations","MenuOrder":0,"Form":"Compensations - Non Cash/Other Remunerations","MenuItems":[]},{"MenuName":"R&R Allowance","ClassName":null,"Color":null,"Url":"/Finance/RRAllowance","MenuOrder":0,"Form":"Compensations - RR Allowances","MenuItems":[]}]},{"MenuName":"Corporate - LMS","ClassName":"thumb_up","Color":"#41d9f4","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Courses","ClassName":null,"Color":null,"Url":"/Training/Courses","MenuOrder":0,"Form":"Corporate - LMS - Courses","MenuItems":[{"MenuName":"Course Management","ClassName":null,"Color":null,"Url":"/Training/Courses","MenuOrder":0,"Form":"Corporate - LMS - Courses","MenuItems":[]}]},{"MenuName":"Trainers","ClassName":null,"Color":null,"Url":"/Trainer/Dashboard","MenuOrder":0,"Form":"Corporate - LMS - Trainers Dasboard","MenuItems":[{"MenuName":"Dashboard","ClassName":null,"Color":null,"Url":"/Trainer/Dashboard","MenuOrder":0,"Form":"Corporate - LMS - Trainers Dasboard","MenuItems":[]},{"MenuName":"Batches","ClassName":null,"Color":null,"Url":"/Trainer/Batches","MenuOrder":0,"Form":"Corporate - LMS - Trainers Batches","MenuItems":[]},{"MenuName":"Reviews","ClassName":null,"Color":null,"Url":"/Trainer/TraineeReview","MenuOrder":0,"Form":"Corporate - LMS - Trainers Review","MenuItems":[]}]},{"MenuName":"Questions","ClassName":null,"Color":null,"Url":"/Trainer/QuestionTemplate","MenuOrder":0,"Form":"Corporate - LMS - Question Template","MenuItems":[]}]},{"MenuName":"My Page","ClassName":"explore","Color":"#fbbc05","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Dashboard","ClassName":null,"Color":null,"Url":"/Dashboard/Dashboard","MenuOrder":0,"Form":"","MenuItems":[{"MenuName":"General View","ClassName":null,"Color":null,"Url":"/Dashboard/Dashboard","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Timeline View","ClassName":null,"Color":null,"Url":"/Dashboard/TimeLineView","MenuOrder":0,"Form":"","MenuItems":[]}]},{"MenuName":"Announcements","ClassName":null,"Color":null,"Url":"/Announcement/Announcement","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Holidays","ClassName":null,"Color":null,"Url":"/MyPage/Holidays","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Salary Slip","ClassName":null,"Color":null,"Url":"/MyPage/SalarySlip","MenuOrder":0,"Form":"","MenuItems":[{"MenuName":"Salary Slip","ClassName":null,"Color":null,"Url":"/MyPage/SalarySlip","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Reports","ClassName":null,"Color":null,"Url":"/MyPage/Reports","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Income Tax","ClassName":null,"Color":null,"Url":"/MyPage/IncomeTax","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Salary Details","ClassName":null,"Color":null,"Url":"/MyPage/SalaryDetails","MenuOrder":0,"Form":"My Page - Salary Details","MenuItems":[]}]},{"MenuName":"My Trainings","ClassName":null,"Color":null,"Url":"/MyPage/MyTrainings","MenuOrder":0,"Form":"","MenuItems":[{"MenuName":"My Trainings","ClassName":null,"Color":null,"Url":"/MyPage/MyTrainings","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Certification","ClassName":null,"Color":null,"Url":"/TalentDevelopment/Education","MenuOrder":0,"Form":"","MenuItems":[]}]},{"MenuName":"Loan / Deduction","ClassName":null,"Color":null,"Url":"/MyPage/LoanDeduction","MenuOrder":0,"Form":"My Page - Loan / Deduction","MenuItems":[]},{"MenuName":"Vacation Pay","ClassName":null,"Color":null,"Url":"/SalaryAdvance/SalaryAdvance","MenuOrder":0,"Form":"My Page - Salary Advance","MenuItems":[]},{"MenuName":"Audit Log","ClassName":null,"Color":null,"Url":"/Admin/AuditLog","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Job Description","ClassName":null,"Color":null,"Url":"/MyPage/Description","MenuOrder":0,"Form":"","MenuItems":[]},{"MenuName":"Gate Pass","ClassName":null,"Color":null,"Url":"/GatePass/GatePass","MenuOrder":0,"Form":"My Page - Gate Pass","MenuItems":[]},{"MenuName":"Hotline Directory","ClassName":null,"Color":null,"Url":"/MyPage/HotlineDirectory","MenuOrder":0,"Form":"My Page - Hotline Directory","MenuItems":[]}]},{"MenuName":"Task Management","ClassName":"task_alt","Color":"#ea4335","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Dashboard","ClassName":null,"Color":null,"Url":"/Task/Dashboard","MenuOrder":0,"Form":"Task - Dashboard","MenuItems":[]},{"MenuName":"Tasks","ClassName":null,"Color":null,"Url":"/Task/Tasks","MenuOrder":0,"Form":"Task - Tasks","MenuItems":[]},{"MenuName":"Task Summary","ClassName":null,"Color":null,"Url":"/Task/TaskSummary","MenuOrder":0,"Form":"Task - Tasks","MenuItems":[]}]},{"MenuName":"Recruitment","ClassName":"work","Color":"#4285f4","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"Vacancies","ClassName":null,"Color":null,"Url":"/Recruitment/Vacancies","MenuOrder":0,"Form":"Recruitment - Vacancies","MenuItems":[]},{"MenuName":"Applicants","ClassName":null,"Color":null,"Url":"/Recruitment/Candidates","MenuOrder":0,"Form":"Recruitment - Candidates","MenuItems":[]},{"MenuName":"Interview Panel","ClassName":null,"Color":null,"Url":"/Recruitment/InterviewPanel","MenuOrder":0,"Form":"Recruitment - Interview Panel","MenuItems":[]},{"MenuName":"CV Pool","ClassName":null,"Color":null,"Url":"/Recruitment/CVPool","MenuOrder":0,"Form":"Recruitment - CV Pool","MenuItems":[]},{"MenuName":"Staff On Board","ClassName":null,"Color":null,"Url":"/Recruitment/StaffOnBoard","MenuOrder":0,"Form":"Recruitment - Staff On Board","MenuItems":[]},{"MenuName":"Black List","ClassName":null,"Color":null,"Url":"/Recruitment/BlackList","MenuOrder":0,"Form":"Recruitment - Black List","MenuItems":[]},{"MenuName":"Questions","ClassName":null,"Color":null,"Url":"/Screening/QuestionTemplate","MenuOrder":0,"Form":"Recruitment - Question Template","MenuItems":[]}]},{"MenuName":"Administration","ClassName":"admin_panel_settings","Color":"#41d9f4","Url":"","MenuOrder":0,"Form":null,"MenuItems":[{"MenuName":"User Rights Management","ClassName":null,"Color":null,"Url":"/Admin/UserRegistration","MenuOrder":0,"Form":"Admin - User Registration","MenuItems":[{"MenuName":"User Registration","ClassName":null,"Color":null,"Url":"/Admin/UserRegistration","MenuOrder":0,"Form":"Admin - User Registration","MenuItems":[]},{"MenuName":"User Group Rights","ClassName":null,"Color":null,"Url":"/Admin/UserGroups","MenuOrder":0,"Form":"Admin - User Rights","MenuItems":[]},{"MenuName":"Login Histories","ClassName":null,"Color":null,"Url":"/Admin/LoginHistories","MenuOrder":0,"Form":"Admin - Login Histories","MenuItems":[]}]},{"MenuName":"Device Manager","ClassName":null,"Color":null,"Url":"/Admin/BioMachines","MenuOrder":0,"Form":"Admin - Bio Machines","MenuItems":[{"MenuName":"Bio Machines","ClassName":null,"Color":null,"Url":"/Admin/BioMachines","MenuOrder":0,"Form":"Admin - Bio Machines","MenuItems":[]},{"MenuName":"Bio Logs","ClassName":null,"Color":null,"Url":"/Admin/BioLogs","MenuOrder":0,"Form":"Admin - Bio Logs","MenuItems":[]}]},{"MenuName":"Configurations","ClassName":null,"Color":null,"Url":"/Admin/Signatory","MenuOrder":0,"Form":"Admin - Signatory","MenuItems":[{"MenuName":"Signatory","ClassName":null,"Color":null,"Url":"/Admin/Signatory","MenuOrder":0,"Form":"Admin - Signatory","MenuItems":[]},{"MenuName":"Notifications","ClassName":null,"Color":null,"Url":"/Admin/Notifications","MenuOrder":0,"Form":"Admin - Templates","MenuItems":[]},{"MenuName":"Email Configuration","ClassName":null,"Color":null,"Url":"/Admin/EmailConfiguration","MenuOrder":0,"Form":"Admin - Email Configuration","MenuItems":[]},{"MenuName":"Document Contacts","ClassName":null,"Color":null,"Url":"/Admin/DocumentContacts","MenuOrder":0,"Form":"Admin - Document Contacts","MenuItems":[]},{"MenuName":"Report Headers","ClassName":null,"Color":null,"Url":"/Admin/ReportHeaders","MenuOrder":0,"Form":"Admin - Templates","MenuItems":[]}]}]}]
+            },
+            computed: {
+                filteredItems: function () {
+                    var searchText = this.SearchText;
+                    if(!searchText || searchText.length <= 2)
+                        return [];
+
+                    return this.Menus.filter(function (x) {
+                        return compareObj(x.MenuName, searchText)
+                            || compareObj(x.Url, searchText)
+                            || compareObj(x.Tags, searchText)
+                            || x.MenuItems.some(y => compareObj(y.MenuName, searchText) || compareObj(y.Url, searchText) || compareObj(y.Tags, searchText)
+                                || y.MenuItems.some(z => compareObj(z.MenuName, searchText) || compareObj(z.Url, searchText) || compareObj(z.Tags, searchText)))
+                    });
+                }
+            },
+            methods:{
+                getMenus: function (menus) {
+                    var searchText = this.SearchText;
+
+                    return menus.filter(function (x) {
+                        return compareObj(x.MenuName, searchText)
+                            || compareObj(x.Url, searchText)
+                            || compareObj(x.Tags, searchText)
+                            || x.MenuItems.some(y => compareObj(y.MenuName, searchText) || compareObj(y.Url, searchText) || compareObj(y.Tags, searchText))
+                    });
+                }
+            }
+        })
+    </script>
+    <script type="text/javascript">
+     $(function () {
+         var $node = $('.side-nav-inner li a[href="/Admin/ReportHeaders"]');
+         $node.addClass('active');
+         $node.parents('li').addClass('active');
+     });
+    </script>
+
+       
+
+
+
+
+<div data-role="popup" style="display: none; position: absolute;" class="k-popup k-group k-reset" aria-hidden="true"><div class="k-list k-list-md" id="ddMainEntity-list"><div class="k-list-group-sticky-header" style="display:none"></div><div class="k-list-content k-list-scroller" unselectable="on"><ul unselectable="on" tabindex="-1" aria-hidden="true" id="ddMainEntity_listbox" data-role="staticlist" role="listbox" class="k-list-ul" aria-live="polite"></ul></div><div class="k-no-data" style="display: none;"></div></div></div><div class="k-widget k-window" tabindex="0" style="min-width: 90px; min-height: 50px; display: none;" role="dialog" aria-labelledby="wndDivision_wnd_title"><div class="k-window-titlebar k-hstack"><span class="k-window-title" id="wndDivision_wnd_title">Switch Entity</span><div class="k-window-actions k-hstack"><a role="button" href="#" class="k-button k-button-md k-rounded-md k-button-flat k-button-flat-base k-icon-button k-window-action" aria-label="Close"><span class="k-button-icon k-icon k-i-close"></span></a></div></div><div id="wndDivision" style="" data-role="window" class="k-window-content" tabindex="0">
+<span style="width: 300px;" class="k-input k-combobox k-combobox-clearable k-input-solid k-input-md k-rounded-md"><input name="ddMainEntity_input" class="k-input-inner" type="text" autocomplete="off" style="" title="" role="combobox" aria-expanded="false" tabindex="0" aria-disabled="false" aria-readonly="false" aria-autocomplete="list" aria-controls="ddMainEntity_listbox"><span unselectable="on" class="k-clear-value k-hidden" title="clear" role="button" tabindex="-1"><span class="k-icon k-i-x"></span></span><button type="button" class="k-input-button k-button k-button-md k-button-solid k-button-solid-base k-icon-button" aria-label="expand combobox" role="button" tabindex="-1"><span class="k-icon k-i-arrow-s k-button-icon"></span></button><input id="ddMainEntity" name="ddMainEntity" style="width: 300px; display: none;" type="text" data-role="combobox" aria-disabled="false" aria-readonly="false"></span>
+                </div></div><div class="k-widget k-window" tabindex="0" style="min-width: 90px; min-height: 50px; display: none;" role="dialog" aria-labelledby="EmployeePopUpWindow_wnd_title"><div class="k-window-titlebar k-hstack"><span class="k-window-title" id="EmployeePopUpWindow_wnd_title">Employee List</span><div class="k-window-actions k-hstack"><a role="button" href="#" class="k-button k-button-md k-rounded-md k-button-flat k-button-flat-base k-icon-button k-window-action" aria-label="Close"><span class="k-button-icon k-icon k-i-close"></span></a></div></div><div id="EmployeePopUpWindow" style="" data-role="window" class="k-window-content" tabindex="0">
+<div class="k-widget k-grid k-grid-display-block" id="gdEmployeeList" style="max-width:800px;" data-role="grid"><div class="k-grid-header" style="padding-right: 0px;"><div class="k-grid-header-wrap k-auto-scrollable" data-role="resizable"><table role="none"><colgroup><col style="width:80px"><col style="width:160px"><col style="width:160px"><col style="width:160px"><col style="width:160px"></colgroup><thead role="rowgroup"><tr role="row"><th aria-sort="none" class="k-header k-filterable" data-field="EmpID" data-index="0" data-title="Emp ID" id="26e85a2d-7fd0-4654-a95a-7a3dc052f9eb" role="columnheader" scope="col" data-role="columnsorter"><a aria-hidden="true" aria-label="Emp ID filter column settings" class="k-grid-filter" href="javascript:void(0)" title="Emp ID filter column settings" tabindex="-1"><span class="k-icon k-i-filter"></span></a><span class="k-cell-inner"><span class="k-link"><span class="k-column-title">Emp ID</span></span></span></th><th aria-sort="none" class="k-header k-filterable" data-field="FullName" data-index="1" data-title="Name" id="2153082a-98e3-4ede-a80e-a077d459ac57" role="columnheader" scope="col" data-role="columnsorter"><a aria-hidden="true" aria-label="Name filter column settings" class="k-grid-filter" href="javascript:void(0)" title="Name filter column settings" tabindex="-1"><span class="k-icon k-i-filter"></span></a><span class="k-cell-inner"><span class="k-link"><span class="k-column-title">Name</span></span></span></th><th aria-sort="none" class="k-header k-filterable" data-field="Division" data-index="2" data-title="Division" id="24a9a4d3-ff34-4902-a272-c71b614fcf84" role="columnheader" scope="col" data-role="columnsorter"><a aria-hidden="true" aria-label="Division filter column settings" class="k-grid-filter" href="javascript:void(0)" title="Division filter column settings" tabindex="-1"><span class="k-icon k-i-filter"></span></a><span class="k-cell-inner"><span class="k-link"><span class="k-column-title">Division</span></span></span></th><th aria-sort="none" class="k-header k-filterable" data-field="Department" data-index="3" data-title="Department" id="ddcc2104-1016-4ce2-aa98-085d8a30d161" role="columnheader" scope="col" data-role="columnsorter"><a aria-hidden="true" aria-label="Department filter column settings" class="k-grid-filter" href="javascript:void(0)" title="Department filter column settings" tabindex="-1"><span class="k-icon k-i-filter"></span></a><span class="k-cell-inner"><span class="k-link"><span class="k-column-title">Department</span></span></span></th><th aria-sort="none" class="k-header k-filterable" data-field="Section" data-index="4" data-title="Section" id="46b2fbf5-76d2-41e9-b6fc-6e9cffe941f2" role="columnheader" scope="col" data-role="columnsorter"><a aria-hidden="true" aria-label="Section filter column settings" class="k-grid-filter" href="javascript:void(0)" title="Section filter column settings" tabindex="-1"><span class="k-icon k-i-filter"></span></a><span class="k-cell-inner"><span class="k-link"><span class="k-column-title">Section</span></span></span></th></tr></thead></table></div></div><div class="k-grid-content k-auto-scrollable" style="height:200px"><table id="070af3e3-0e22-46c5-906c-57206687edff" role="grid" data-role="selectable" class="k-selectable"><colgroup><col style="width:80px"><col style="width:160px"><col style="width:160px"><col style="width:160px"><col style="width:160px"></colgroup><tbody id="5e261b30-4622-446e-b447-e5d0c260f67b" role="rowgroup"><tr class="k-no-data"><td colspan="5"></td></tr></tbody></table></div></div>
+    </div></div>
+<script type="text/javascript" id="" charset="">!function(b,e,f,g,a,c,d){b.fbq||(a=b.fbq=function(){a.callMethod?a.callMethod.apply(a,arguments):a.queue.push(arguments)},b._fbq||(b._fbq=a),a.push=a,a.loaded=!0,a.version="2.0",a.queue=[],c=e.createElement(f),c.async=!0,c.src=g,d=e.getElementsByTagName(f)[0],d.parentNode.insertBefore(c,d))}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","1196433357365064");fbq("track","PageView");</script>
+<noscript>
+ <img height="1" width="1" src="https://www.facebook.com/tr?id=1196433357365064&amp;ev=PageView
+&amp;noscript=1">
+</noscript>
+<div style="width: 0px; height: 0px; display: none; visibility: hidden;" id="batBeacon667015409944"><img style="width: 0px; height: 0px; display: none; visibility: hidden;" id="batBeacon275406236217" width="0" height="0" alt="" src="SSR%20-%20Emerald%20Travel%20Services%20Pvt%20Ltd_files/0_aIfc"></div></body></html>

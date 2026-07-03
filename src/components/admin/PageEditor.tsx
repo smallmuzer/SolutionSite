@@ -605,7 +605,7 @@ const PageEditor = () => {
         rawName = rawName.substring(0, lastDot);
       }
 
-      const clientName = rawName.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const clientName = rawName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
       if (clients.some(c => c.name.toLowerCase() === clientName.toLowerCase()) ||
         newClients.some((c: any) => c.name.toLowerCase() === clientName.toLowerCase())) {

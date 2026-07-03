@@ -844,7 +844,7 @@ const PickerModal = ({ config, onClose, onSelect }: {
                     <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-emerald-500/90 text-white text-[8px] font-black uppercase rounded shadow-sm backdrop-blur-sm">Live</div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                       <button
-                        onClick={() => window.open(asset, "_blank")}
+                        onClick={() => window.open(getDisplayUrl(asset), "_blank")}
                         className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform"
                         title="View Full Image"
                       >
@@ -1066,7 +1066,7 @@ const ImageGrid = ({ section, clientId, onSelect, search, multi, selected }: {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(uploadedUrl, "_blank");
+                window.open(getDisplayUrl(uploadedUrl), "_blank");
               }}
               className="p-1 bg-blue-500 text-white rounded hover:scale-110 transition-transform"
               title="View Full Image"
