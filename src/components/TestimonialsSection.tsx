@@ -675,10 +675,18 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                   ];
 
                   return isMobile ? (
-                    <div className="w-full max-w-[400px] mx-auto relative mt-6 mb-2 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] rounded-[2rem] bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 border-[6px] border-slate-200 dark:border-slate-800 z-10 pt-6 pb-2 px-1">
-                      {/* Device Top Bezel details */}
-                      <div className="absolute top-2 left-1/2 -translate-x-1/2 h-1.5 w-16 bg-slate-300 dark:bg-slate-700 rounded-full pointer-events-none z-50"></div>
-
+                    <div className="w-full max-w-[400px] mx-auto relative mt-8 mb-4 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-b-xl rounded-t-sm bg-card border border-border z-10 pt-5 pb-2 px-1">
+                      {/* Spiral Binding Top Rings */}
+                      <div className="absolute -top-3 left-0 right-0 flex justify-evenly px-4 z-50 pointer-events-none">
+                        {[...Array(14)].map((_, i) => (
+                          <div key={i} className="relative w-2 h-6 md:w-2.5 md:h-7">
+                            <div className="absolute inset-0 bg-gradient-to-b from-zinc-300 via-zinc-100 to-zinc-400 rounded-full shadow-[0_2px_3px_rgba(0,0,0,0.4),inset_0_-1px_1px_rgba(255,255,255,0.8)] border border-zinc-400/80 z-10" />
+                            {/* Ring hole effect */}
+                            <div className="absolute top-[75%] left-1/2 -translate-x-1/2 w-2.5 h-2.5 md:w-3 md:h-3 bg-black rounded-full z-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
+                          </div>
+                        ))}
+                      </div>
+                      
                       <Swiper
                         direction="vertical"
                         loop={true}
@@ -713,11 +721,11 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                       </Swiper>
                     </div>
                   ) : (
-                    <div className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-2 md:p-4 mx-auto z-10">
+                    <div className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-1.5 md:p-3 mx-auto z-10">
                       {/* Diary Stitching Effect */}
-                      <div className="absolute top-1 left-1 bottom-1 right-1 md:top-2 md:left-2 md:bottom-2 md:right-2 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
-                      <div className="absolute left-1 right-[calc(50%+2rem)] bottom-1 md:left-2 md:right-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
-                      <div className="absolute right-1 left-[calc(50%+2rem)] bottom-1 md:right-2 md:left-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
+                      <div className="absolute top-[3px] left-[3px] bottom-[3px] right-[3px] md:top-1.5 md:left-1.5 md:bottom-1.5 md:right-1.5 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
+                      <div className="absolute left-[3px] right-[calc(50%+2rem)] bottom-[3px] md:left-1.5 md:right-[calc(50%+2.75rem)] md:bottom-1.5 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
+                      <div className="absolute right-[3px] left-[calc(50%+2rem)] bottom-[3px] md:right-1.5 md:left-[calc(50%+2.75rem)] md:bottom-1.5 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
 
                       {/* Classic Diary Ribbon Bookmark */}
                       <div className="absolute left-[65%] -bottom-4 md:-bottom-6 w-4 md:w-6 h-12 md:h-16 bg-red-600/90 shadow-[0_4px_6px_rgba(0,0,0,0.3)] z-0 origin-top rotate-[-2deg]" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />

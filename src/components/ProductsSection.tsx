@@ -1217,7 +1217,7 @@ const ProductsSection = () => {
       if (!userInteractedRef.current && !pausedRef.current) {
         setMobilePage(prev => (prev + 1) % mobileTotalPages);
       }
-    }, 3000);
+    }, 1800);
     return () => clearInterval(interval);
   }, [isMobileProducts, globalView, editor?.isEditMode, mobileTotalPages, isInView]);
 
@@ -1351,7 +1351,7 @@ const ProductsSection = () => {
               }}
               speed={400}
               autoplay={{
-                delay: 2000,
+                delay: 1200,
                 disableOnInteraction: false,
                 pauseOnMouseEnter: false,
               }}
