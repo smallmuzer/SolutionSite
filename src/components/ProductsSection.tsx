@@ -1013,6 +1013,8 @@ const ProductsSection = () => {
   const pausedRef = useRef<boolean>(false);
   const userInteractedRef = useRef<boolean>(false);
   const swiperRef = useRef<any>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [showPauseHint, setShowPauseHint] = useState(false);
   const getNavProps = useLiveEditorNavigation();
   const SPEED = 50; // Pixels per second for smooth scrolling
   const GAP = 24;
@@ -1144,20 +1146,20 @@ const ProductsSection = () => {
 
   useEffect(() => {
     if (swiperRef.current && swiperRef.current.autoplay) {
-      if (isInView) {
+      if (isInView && isPlaying) {
         swiperRef.current.slideToLoop(0, 0);
         setTimeout(() => {
-          if (swiperRef.current && swiperRef.current.autoplay) {
+          if (swiperRef.current && swiperRef.current.autoplay && isPlaying) {
             swiperRef.current.slideNext();
             swiperRef.current.autoplay.start();
           }
         }, 100);
       } else {
         swiperRef.current.autoplay.stop();
-        swiperRef.current.slideToLoop(0, 0);
+        if (!isInView) swiperRef.current.slideToLoop(0, 0);
       }
     }
-  }, [isInView]);
+  }, [isInView, isPlaying]);
 
   useEffect(() => {
     if (globalView !== "grid" || isMobileProducts || products.length === 0 || editor?.isEditMode || !isInView)
@@ -1177,7 +1179,7 @@ const ProductsSection = () => {
       const dt = time - lastTime;
       lastTime = time;
 
-      if (!userInteractedRef.current && !pausedRef.current && dt < 100) {
+      if (isPlaying && !userInteractedRef.current && !pausedRef.current && dt < 100) {
         currentScroll += (SPEED * dt) / 1000;
         if (currentScroll >= totalW) {
           currentScroll -= totalW;
@@ -1192,7 +1194,7 @@ const ProductsSection = () => {
     };
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [products, globalView, isMobileProducts, editor?.isEditMode, isInView]);
+  }, [products, globalView, isMobileProducts, editor?.isEditMode, isInView, isPlaying]);
 
   const scrollToContact = () =>
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
@@ -1299,23 +1301,23 @@ const ProductsSection = () => {
             ref={sectionRef}
             className="w-full relative px-2 sm:px-8 pt-0 pb-2 overflow-visible"
             onMouseEnter={() => {
-              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running && isPlaying) {
                 swiperRef.current.autoplay.start();
               }
             }}
             onMouseLeave={() => {
-              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running && isPlaying) {
                 swiperRef.current.autoplay.start();
               }
             }}
             onTouchStart={() => {
-              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+              if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running && isPlaying) {
                 swiperRef.current.autoplay.start();
               }
             }}
             onTouchEnd={() => {
               setTimeout(() => {
-                if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running) {
+                if (swiperRef.current?.autoplay && !swiperRef.current.autoplay.running && isPlaying) {
                   swiperRef.current.autoplay.start();
                 }
               }, 2500);
@@ -1403,6 +1405,31 @@ const ProductsSection = () => {
               .products-button-prev.swiper-button-disabled,
               .products-button-next.swiper-button-disabled { opacity: 0.35; cursor: auto; pointer-events: none; }
             `}} />
+
+            {/* Play/Pause toggle — matching testimonials section */}
+            <div className="flex justify-center mt-6 z-20 relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPlaying(p => {
+                    const newIsPlaying = !p;
+                    if (swiperRef.current?.autoplay) {
+                      if (newIsPlaying) swiperRef.current.autoplay.start();
+                      else swiperRef.current.autoplay.stop();
+                    }
+                    return newIsPlaying;
+                  });
+                }}
+                className="flex items-center gap-2 px-5 py-2 rounded-full text-[11px] font-bold border border-border bg-card text-primary hover:bg-secondary/10 shadow-md transition-all"
+                title={isPlaying ? "Pause Auto Slide" : "Resume Auto Slide"}
+              >
+                {isPlaying ? (
+                  <><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg> Pause Auto Slide</>
+                ) : (
+                  <><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg> Resume Auto Slide</>
+                )}
+              </button>
+            </div>
           </div>
         ) : globalView === "grid" ? (
           <div
@@ -1452,6 +1479,23 @@ const ProductsSection = () => {
                   onEditTypo={setTypoFeature}
                 />
               ))}
+            </div>
+            {/* Play/Pause toggle — matching testimonials section */}
+            <div className="flex justify-center mt-6 z-20 relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPlaying(p => !p);
+                }}
+                className="flex items-center gap-2 px-5 py-2 rounded-full text-[11px] font-bold border border-border bg-card text-primary hover:bg-secondary/10 shadow-md transition-all"
+                title={isPlaying ? "Pause Auto Slide" : "Resume Auto Slide"}
+              >
+                {isPlaying ? (
+                  <><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg> Pause Auto Slide</>
+                ) : (
+                  <><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg> Resume Auto Slide</>
+                )}
+              </button>
             </div>
           </div>
         ) : (
