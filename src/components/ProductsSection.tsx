@@ -1229,7 +1229,7 @@ const ProductsSection = () => {
   return (
     <section
       id="products"
-      className="pt-10 pb-6 md:pt-16 md:pb-8 relative overflow-hidden bg-background"
+      className="pt-2 pb-6 md:pt-2 md:pb-8 relative overflow-hidden bg-background"
     >
       <EditorToolbar section="products" canAdd />
       <div className="container-wide relative z-10">
