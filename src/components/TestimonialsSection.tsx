@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import AnimatedSection from "./AnimatedSection";
-import { ChevronLeft, ChevronRight, Star, StarHalf, Edit2, FileSpreadsheet, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, StarHalf, Edit2, FileSpreadsheet, Heart, Sparkles, Quote } from "lucide-react";
 import { useDbQuery } from "@/hooks/useDbQuery";
 import { useGlobalView } from "./ui-customizer-context";
 import { useSiteContent } from "@/hooks/useSiteContent";
@@ -168,11 +168,11 @@ const GridCard = ({
   const isExternalAndEdit = editor?.isEditMode && t.isExternalData;
   const borderClasses = isExternalAndEdit
     ? "border border-green-400 dark:border-green-500"
-    : "border border-border border-l-4 border-l-orange-400";
+    : "border border-border border-l-[3px] border-l-secondary bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm";
 
   return (
     <div
-      className={`glass-card w-full p-3 flex flex-col pb-2 sm:pb-3 text-left hover:glow-effect transition-all duration-300 h-full group/item relative ${borderClasses} rounded-xl ${editor?.isEditMode ? "pb-10" : "pb-[1px]"} ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
+      className={`w-full p-3 flex flex-col pb-2 sm:pb-3 text-left hover:shadow-md transition-all duration-300 h-full group/item relative ${borderClasses} rounded-xl ${editor?.isEditMode ? "pb-10" : "pb-[1px]"} ${!t.is_visible ? 'opacity-40 grayscale-[0.5]' : ''} ${draggedId === t.id ? "opacity-20 scale-95" : ""}`}
       draggable={!!editor?.isEditMode}
       onDragStart={(e) => onDragStart(e, t.id)}
       onDragEnd={onDragEnd}
@@ -246,9 +246,9 @@ const GridCard = ({
         </div>
 
 
-        <div className="flex gap-2 flex-1 w-full mt-0">
-          <div className="text-primary text-3xl font-serif leading-none opacity-40 select-none mt-1">“</div>
-          <div className="flex-1 pt-1 pb-3">
+        <div className="flex gap-2 flex-1 w-full mt-1.5">
+          <Quote className="text-secondary/40 w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex-1 pt-0 pb-3">
             <ReadMoreText
               section="testimonials"
               field="message"
@@ -588,37 +588,35 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                 {(() => {
                   const pagesContent = [
                     /* Premium Welcome Cover Page */
-                    <div key="cover-page" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6 w-full h-full">
-                      <div className="absolute inset-3 md:inset-5 border border-orange-400/40 rounded-[2rem] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
-                        {/* Halftone Dot Patterns */}
-                        <div className="absolute top-0 right-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at top right, black 20%, transparent 70%)' }} />
-                        <div className="absolute bottom-0 left-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 20%, transparent 70%)' }} />
+                    <div key="cover-page" className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 shadow-[inset_-10px_0_20px_rgba(0,0,0,0.02)] dark:shadow-[inset_-10px_0_20px_rgba(0,0,0,0.3)] border-r border-r-slate-200 dark:border-r-slate-800 overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6 w-full h-full">
+                      <div className="absolute inset-3 md:inset-5 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
+                        {/* Grid Pattern */}
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
                         <div className="mt-auto flex flex-col items-center justify-center w-full relative z-10">
-                          <h2 className="text-5xl md:text-6xl text-orange-500 font-serif italic mb-3" style={{ fontFamily: 'cursive' }}>Welcome</h2>
-                          <h3 className="text-[10px] md:text-xs font-bold tracking-[0.2em] text-primary uppercase mb-8">To Our Client Feedback Book</h3>
+                          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-secondary via-blue-500 to-accent bg-clip-text text-transparent mb-2">Welcome</h2>
+                          <h3 className="text-[9px] md:text-[10px] font-bold tracking-[0.25em] text-[#64748b] dark:text-[#94a3b8] uppercase mb-8">Client Testimonial Feed</h3>
 
-                          <div className="flex items-center gap-4 mb-10 w-full justify-center">
-                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
-                            <Star className="text-amber-500 fill-amber-500 w-5 h-5" />
-                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
+                          <div className="flex items-center gap-4 mb-8 w-full justify-center">
+                            <div className="h-px bg-slate-200 dark:bg-slate-800 w-12 md:w-16"></div>
+                            <Star className="text-amber-400 fill-amber-400 animate-spin w-5 h-5" style={{ animationDuration: '4s' }} />
+                            <div className="h-px bg-slate-200 dark:bg-slate-800 w-12 md:w-16"></div>
                           </div>
 
-                          <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-500 rounded-xl flex items-center justify-center mb-8 relative shadow-md">
-                            <span className="text-white text-4xl md:text-5xl font-serif font-bold leading-none mt-2">“</span>
-                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-orange-500 rotate-45"></div>
+                          <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-secondary to-accent rounded-xl flex items-center justify-center mb-8 shadow-lg shadow-secondary/20">
+                            <Quote className="text-white w-5 h-5 md:w-6 md:h-6" />
                           </div>
 
-                          <h4 className="text-base md:text-lg font-bold text-primary mb-3">We value your feedback!</h4>
-                          <p className="text-[11px] md:text-xs text-muted-foreground max-w-[220px] md:max-w-[260px] leading-relaxed">
-                            These testimonials reflect our commitment to delivering the best solutions and support to our valued clients.
+                          <h4 className="text-sm md:text-base font-bold text-[#1e293b] dark:text-slate-200 mb-2">Digital Feedback Ledger</h4>
+                          <p className="text-[10px] md:text-[11px] text-[#64748b] dark:text-[#94a3b8] max-w-[220px] md:max-w-[260px] leading-relaxed">
+                            A curated dashboard of feedback, success stories, and reviews from our valued enterprise clients.
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-4 w-full justify-center mt-auto mb-2">
-                          <div className="h-px bg-red-400/50 w-10 md:w-12"></div>
-                          <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                          <div className="h-px bg-red-400/50 w-10 md:w-12"></div>
+                        <div className="flex items-center gap-4 w-full justify-center mt-auto mb-2 opacity-60">
+                          <div className="h-px bg-slate-200 dark:bg-slate-800 w-10 md:w-12"></div>
+                          <span className="text-[8px] font-mono tracking-widest text-[#94a3b8]">VERIFIED CLIENTS</span>
+                          <div className="h-px bg-slate-200 dark:bg-slate-800 w-10 md:w-12"></div>
                         </div>
                       </div>
                       <div className="hidden">1</div>
@@ -627,7 +625,7 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                     ...pages.map((pageCards, pIdx) => {
                       const isPageExpanded = pageCards.some((t) => expandedBookTestimonials.has(t.id));
                       return (
-                        <div key={`page-${pIdx}`} className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] page-turn-item relative w-full h-full">
+                        <div key={`page-${pIdx}`} className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 shadow-[inset_-10px_0_20px_rgba(0,0,0,0.02)] dark:shadow-[inset_-10px_0_20px_rgba(0,0,0,0.3)] border-r border-r-slate-200 dark:border-r-slate-800 page-turn-item relative w-full h-full">
                           <div className={`w-full h-full ${isPageExpanded ? "overflow-y-auto no-scrollbar" : "overflow-hidden"} flex flex-col relative pt-3 md:pt-5 pb-4 md:pb-0`}>
                             <div className="flex flex-col gap-3 px-3 md:px-5 w-full shrink-0 relative z-10">
                               {pageCards.map((t, rIdx) => (
@@ -636,8 +634,8 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                                 </div>
                               ))}
                             </div>
-                            <div className="shrink-0 w-full text-center text-[10px] md:text-[11px] text-primary font-bold font-serif pointer-events-none select-none py-2 md:py-3 mt-auto">
-                              {pIdx + 1}
+                            <div className="shrink-0 w-full text-center text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-mono tracking-widest pointer-events-none select-none py-2 md:py-3 mt-auto">
+                              PAGE {String(pIdx + 1).padStart(2, '0')}
                             </div>
                           </div>
                         </div>
@@ -645,25 +643,29 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                     }),
 
                     /* Premium Thank You Back Cover Page */
-                    <div key="back-cover" className="bg-gradient-to-r from-card via-card to-card/95 shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.03)] dark:shadow-[inset_-20px_0_40px_-10px_rgba(0,0,0,0.4)] border-r-[3px] border-r-[#e5e7eb] dark:border-r-[#1f2937] border-b-[3px] border-b-[#d1d5db] dark:border-b-[#111827] overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6 w-full h-full">
-                      <div className="absolute inset-3 md:inset-5 border border-orange-400/40 rounded-[2rem] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
-                        <div className="absolute top-0 right-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at top right, black 20%, transparent 70%)' }} />
-                        <div className="absolute bottom-0 left-0 w-48 h-48 opacity-40 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #f97316 1.5px, transparent 1.5px)', backgroundSize: '10px 10px', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 20%, transparent 70%)' }} />
+                    <div key="back-cover" className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 shadow-[inset_-10px_0_20px_rgba(0,0,0,0.02)] dark:shadow-[inset_-10px_0_20px_rgba(0,0,0,0.3)] border-r border-r-slate-200 dark:border-r-slate-800 overflow-hidden page-turn-item relative flex flex-col items-center justify-center p-3 md:p-6 w-full h-full">
+                      <div className="absolute inset-3 md:inset-5 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-[1px] flex flex-col items-center justify-center text-center p-4 pb-8 overflow-hidden">
+                        {/* Grid Pattern */}
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+
                         <div className="my-auto flex flex-col items-center justify-center w-full relative z-10 pt-4">
-                          <h2 className="text-5xl md:text-6xl text-orange-500 font-serif italic mb-3" style={{ fontFamily: 'cursive' }}>Thank You!</h2>
-                          <h3 className="text-[10px] md:text-xs font-bold tracking-[0.15em] text-primary uppercase mb-8">For Sharing Your Feedback</h3>
-                          <div className="flex items-center gap-4 mb-10 w-full justify-center">
-                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
-                            <Star className="text-amber-500 fill-amber-500 w-5 h-5" />
-                            <div className="h-px bg-amber-400/50 w-12 md:w-16"></div>
+                          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-secondary via-blue-500 to-accent bg-clip-text text-transparent mb-2">Thank You!</h2>
+                          <h3 className="text-[9px] md:text-[10px] font-bold tracking-[0.2em] text-[#64748b] dark:text-[#94a3b8] uppercase mb-8">For Sharing Your Feedback</h3>
+                          
+                          <div className="flex items-center gap-4 mb-8 w-full justify-center">
+                            <div className="h-px bg-slate-200 dark:bg-slate-800 w-12 md:w-16"></div>
+                            <Star className="text-amber-400 fill-amber-400 animate-spin w-5 h-5" style={{ animationDuration: '4s' }} />
+                            <div className="h-px bg-slate-200 dark:bg-slate-800 w-12 md:w-16"></div>
                           </div>
-                          <div className="mb-8">
-                            <svg className="w-14 h-14 md:w-16 md:h-16 text-red-500" fill="currentColor" viewBox="0 0 24 24" stroke="none"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                          
+                          <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center mb-8 shadow-lg shadow-red-500/20 animate-bounce">
+                            <Heart className="text-white fill-white w-5 h-5 md:w-6 md:h-6" />
                           </div>
-                          <p className="text-xs md:text-sm font-bold text-primary max-w-[250px] leading-relaxed mb-4">
+                          
+                          <p className="text-xs md:text-sm font-bold text-[#1e293b] dark:text-slate-200 max-w-[250px] leading-relaxed mb-3">
                             Your feedback inspires us to improve and deliver even better solutions.
                           </p>
-                          <p className="text-xs md:text-sm font-bold text-primary max-w-[250px] leading-relaxed">
+                          <p className="text-[11px] md:text-xs text-[#64748b] dark:text-[#94a3b8] max-w-[250px] leading-relaxed">
                             We truly appreciate your time and valuable feedback!
                           </p>
                         </div>
@@ -673,16 +675,9 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                   ];
 
                   return isMobile ? (
-                    <div className="w-full max-w-[400px] mx-auto relative mt-6 mb-2 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-b-xl rounded-t-md bg-[#faf8f5] dark:bg-slate-900 border border-border/50 z-10 pt-4">
-                      {/* Spiral Binding Top Decoration */}
-                      <div className="absolute -top-3 left-0 right-0 h-6 z-50 flex justify-evenly px-6 pointer-events-none">
-                        {Array.from({ length: 14 }).map((_, i) => (
-                          <div key={i} className="w-2.5 h-7 bg-gradient-to-b from-gray-300 via-gray-100 to-gray-400 rounded-full shadow-[0_3px_5px_rgba(0,0,0,0.5)] border border-gray-400/50 relative">
-                            {/* Punch hole illusion */}
-                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-2 bg-black/60 rounded-full"></div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="w-full max-w-[400px] mx-auto relative mt-6 mb-2 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] rounded-[2rem] bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 border-[6px] border-slate-200 dark:border-slate-800 z-10 pt-6 pb-2 px-1">
+                      {/* Device Top Bezel details */}
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 h-1.5 w-16 bg-slate-300 dark:bg-slate-700 rounded-full pointer-events-none z-50"></div>
 
                       <Swiper
                         direction="vertical"
@@ -718,11 +713,11 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                       </Swiper>
                     </div>
                   ) : (
-                    <div className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-2 md:p-4 pr-3 md:pr-6 mx-auto z-10">
+                    <div className="w-full relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.4)] rounded-md md:rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 border-t border-white/20 border-b-[4px] border-b-black/30 border-r-[3px] border-r-black/20 p-2 md:p-4 mx-auto z-10">
                       {/* Diary Stitching Effect */}
-                      <div className="absolute top-1 left-1 bottom-1 right-1.5 md:top-2 md:left-2 md:bottom-2 md:right-3 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
+                      <div className="absolute top-1 left-1 bottom-1 right-1 md:top-2 md:left-2 md:bottom-2 md:right-2 border-[2px] border-dashed rounded-sm md:rounded-lg pointer-events-none z-0 opacity-90 border-secondary/90 dark:border-white/70" style={{ outline: '2px solid rgba(0,0,0,0.15)', outlineOffset: '-2px', boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px rgba(0,0,0,0.5)' }} />
                       <div className="absolute left-1 right-[calc(50%+2rem)] bottom-1 md:left-2 md:right-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
-                      <div className="absolute right-1.5 left-[calc(50%+2rem)] bottom-1 md:right-3 md:left-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
+                      <div className="absolute right-1 left-[calc(50%+2rem)] bottom-1 md:right-2 md:left-[calc(50%+2.75rem)] md:bottom-2 border-t-[2px] border-dashed border-secondary/90 dark:border-white/70 pointer-events-none z-0 opacity-95 shadow-[0_0_3px_rgba(0,0,0,0.45)]" />
 
                       {/* Classic Diary Ribbon Bookmark */}
                       <div className="absolute left-[65%] -bottom-4 md:-bottom-6 w-4 md:w-6 h-12 md:h-16 bg-red-600/90 shadow-[0_4px_6px_rgba(0,0,0,0.3)] z-0 origin-top rotate-[-2deg]" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
@@ -742,15 +737,16 @@ const TestimonialsSection = ({ searchTerm, hideAddButton, hideEyeIcon }: { searc
                         <div className="absolute right-[1px] top-1 bottom-1 w-[2px] md:w-[5px] pointer-events-none z-0 opacity-80 border-l border-[#d4d1c9]/40 dark:border-slate-800" style={{ backgroundImage: 'repeating-linear-gradient(270deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)' }} />
                         <div className="absolute bottom-[1px] left-1 right-1 h-[1px] md:h-[3px] pointer-events-none z-0 opacity-60 border-t border-[#d4d1c9]/35 dark:border-slate-800" style={{ backgroundImage: 'repeating-linear-gradient(180deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px)' }} />
 
-                        {/* Realistic Deep Spine Fold */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[60px] -ml-[30px] pointer-events-none z-50 bg-gradient-to-r from-transparent via-black/30 to-transparent mix-blend-multiply dark:mix-blend-normal" />
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] pointer-events-none z-50 bg-black/80 shadow-[0_0_4px_rgba(0,0,0,0.5)]" />
-                        <div className="absolute left-1/2 top-0 h-12 w-20 -translate-x-1/2 pointer-events-none z-50 bg-gradient-to-b from-black/35 to-transparent rounded-b-full blur-sm" />
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] -ml-[35px] pointer-events-none z-50 bg-gradient-to-r from-transparent to-white/20 mix-blend-overlay" />
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] ml-[15px] pointer-events-none z-50 bg-gradient-to-l from-transparent to-white/20 mix-blend-overlay" />
+                        {/* Digital Sleek Spine Fold (Reduced Darkness) */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[40px] -ml-[20px] pointer-events-none z-50 bg-gradient-to-r from-transparent via-black/5 to-transparent dark:via-black/20 mix-blend-multiply dark:mix-blend-normal" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] -ml-[0.5px] pointer-events-none z-50 bg-black/10 dark:bg-black/30 shadow-[0_0_2px_rgba(0,0,0,0.1)]" />
+                        <div className="absolute left-1/2 top-0 h-12 w-20 -translate-x-1/2 pointer-events-none z-50 bg-gradient-to-b from-black/5 to-transparent dark:from-black/10 rounded-b-full blur-sm" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] -ml-[35px] pointer-events-none z-50 bg-gradient-to-r from-transparent to-white/10 mix-blend-overlay" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-[20px] ml-[15px] pointer-events-none z-50 bg-gradient-to-l from-transparent to-white/10 mix-blend-overlay" />
 
                         {/* @ts-ignore */}
                         <HTMLFlipBook
+                          key={`flipbook-${pagesContent.length}`}
                           width={625}
                           height={550}
                           size="stretch"
